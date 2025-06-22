@@ -19,6 +19,7 @@ on:
 
 jobs:
   deploy:
+    name: iOS Deploy ${{ github.event.inputs.version_tag }} to ${{ github.event.inputs.environment }}
     runs-on: macos-latest
     
     steps:
@@ -58,11 +59,13 @@ jobs:
     - name: Install dependencies
       working-directory: ./react-native
       run: |
+        echo "📦 Installing dependencies for ${{ github.event.inputs.version_tag }}"
         npm ci
         
     - name: Install iOS dependencies
       working-directory: ./react-native/ios
       run: |
+        echo "🍎 Installing iOS dependencies for ${{ github.event.inputs.version_tag }}"
         pod install
         
     - name: Setup Xcode
