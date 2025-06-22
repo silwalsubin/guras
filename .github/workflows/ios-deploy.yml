@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version_tag:
-        description: 'Select version to deploy'
+        description: 'Select version to deploy (e.g., v1.0.1, v1.0.2)'
         required: true
         type: string
-        default: 'latest'
+        default: 'v1.0.1'
       environment:
         description: 'Deployment environment'
         required: true
@@ -26,6 +26,21 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: ${{ github.event.inputs.version_tag }}
+        
+    - name: Validate version tag
+      run: |
+        VERSION_TAG="${{ github.event.inputs.version_tag }}"
+        echo "📦 Deploying version: $VERSION_TAG"
+        
+        # Check if the tag exists
+        if ! git tag | grep -q "^$VERSION_TAG$"; then
+          echo "❌ Error: Tag '$VERSION_TAG' does not exist!"
+          echo "Available tags:"
+          git tag | sort -V
+          exit 1
+        fi
+        
+        echo "✅ Tag '$VERSION_TAG' found and validated"
         
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -58,6 +73,7 @@ jobs:
     - name: Build and Archive
       working-directory: ./react-native/ios
       run: |
+        echo "🏗️ Building and archiving version ${{ github.event.inputs.version_tag }}"
         xcodebuild -workspace Guras.xcworkspace \
                    -scheme Guras \
                    -configuration Release \
@@ -68,6 +84,7 @@ jobs:
     - name: Export IPA
       working-directory: ./react-native/ios
       run: |
+        echo "📦 Exporting IPA for version ${{ github.event.inputs.version_tag }}"
         xcodebuild -exportArchive \
                    -archivePath ./build/Guras.xcarchive \
                    -exportPath ./build/ipa \
@@ -77,6 +94,7 @@ jobs:
       if: ${{ github.event.inputs.environment == 'testflight' }}
       run: |
         echo "📱 Uploading to TestFlight..."
+        echo "Version: ${{ github.event.inputs.version_tag }}"
         # For now, just create a placeholder - you'll need to set up App Store Connect API
         echo "✅ TestFlight upload would happen here with proper API setup"
         
@@ -84,6 +102,7 @@ jobs:
       if: ${{ github.event.inputs.environment == 'app-store' }}
       run: |
         echo "🏪 Uploading to App Store..."
+        echo "Version: ${{ github.event.inputs.version_tag }}"
         # For now, just create a placeholder - you'll need to set up App Store Connect API
         echo "✅ App Store upload would happen here with proper API setup"
         
@@ -96,10 +115,13 @@ jobs:
         
     - name: Deployment Summary
       run: |
-        echo "🚀 Deployment completed!"
-        echo "Version: ${{ github.event.inputs.version_tag }}"
-        echo "Environment: ${{ github.event.inputs.environment }}"
-        echo "IPA: Available in artifacts"
+        echo "🎉 ========================================="
+        echo "🚀 Deployment completed successfully!"
+        echo "📦 Version: ${{ github.event.inputs.version_tag }}"
+        echo "🌍 Environment: ${{ github.event.inputs.environment }}"
+        echo "📱 IPA: Available in artifacts"
+        echo "📦 Artifact: ios-ipa-${{ github.event.inputs.version_tag }}"
+        echo "🎉 ========================================="
         echo ""
         echo "📝 Note: To enable actual App Store uploads, you need to:"
         echo "1. Set up App Store Connect API credentials"
