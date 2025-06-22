@@ -1,9 +1,21 @@
 name: iOS Deploy to App Store
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Select version to deploy'
+        required: true
+        type: string
+        default: 'latest'
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'testflight'
+        type: choice
+        options:
+        - testflight
+        - app-store
 
 jobs:
   deploy:
@@ -12,7 +24,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+      with:
+        ref: ${{ github.event.inputs.version_tag }}
+        
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -59,8 +73,18 @@ jobs:
                    -exportPath ./build/ipa \
                    -exportOptionsPlist exportOptions.plist
                    
-    - name: Upload to App Store Connect
+    - name: Upload to TestFlight
+      if: ${{ github.event.inputs.environment == 'testflight' }}
       uses: apple-actions/upload-testflight@v1
+      with:
+        app-path: ./react-native/ios/build/ipa/Guras.ipa
+        api-key: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        api-issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        
+    - name: Upload to App Store
+      if: ${{ github.event.inputs.environment == 'app-store' }}
+      uses: apple-actions/upload-app-store@v1
       with:
         app-path: ./react-native/ios/build/ipa/Guras.ipa
         api-key: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
@@ -70,6 +94,13 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ios-ipa
+        name: ios-ipa-${{ github.event.inputs.version_tag }}
         path: react-native/ios/build/ipa/
-        retention-days: 30 
+        retention-days: 30
+        
+    - name: Deployment Summary
+      run: |
+        echo "🚀 Deployment completed!"
+        echo "Version: ${{ github.event.inputs.version_tag }}"
+        echo "Environment: ${{ github.event.inputs.environment }}"
+        echo "IPA: Available in artifacts" 

@@ -90,9 +90,17 @@ This project includes automated CI/CD pipelines using GitHub Actions:
 - **Action**: Builds the iOS app and runs tests
 - **Artifacts**: Build artifacts are uploaded for 7 days
 
-### Deployment Pipeline
-- **Trigger**: Push a tag starting with `v` (e.g., `v1.0.0`)
-- **Action**: Builds, archives, and uploads to App Store Connect
+### Auto Versioning Pipeline
+- **Trigger**: After successful builds
+- **Action**: Automatically generates semantic versions (YYYY.MM.DD.COMMIT_COUNT)
+- **Output**: Creates git tags and updates app.json version
+
+### Manual Deployment Pipeline
+- **Trigger**: Manual workflow dispatch
+- **Features**: 
+  - Dropdown to select from available version tags
+  - Choice between TestFlight and App Store deployment
+  - Full build and archive process
 - **Requirements**: App Store Connect API credentials
 
 ### Setup for App Store Deployment
@@ -114,10 +122,16 @@ This project includes automated CI/CD pipelines using GitHub Actions:
    - Replace `YOUR_TEAM_ID` with your actual Apple Developer Team ID
 
 4. **Deploy**:
-   ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
-   ```
+   - **Automatic**: Every successful build creates a new version tag
+   - **Manual**: Go to Actions → Manual Deploy to App Store → Run workflow
+   - Select version tag from dropdown
+   - Choose deployment environment (TestFlight or App Store)
+
+### Version Format
+- **Format**: `YYYY.MM.DD.COMMIT_COUNT` (e.g., `2024.01.15.3`)
+- **Auto-generated**: Based on date and commit count for the day
+- **Tagged**: Each version is automatically tagged in git
+- **Tracked**: Version is updated in `app.json`
 
 ## 🏗️ Infrastructure as Code (IaC)
 
