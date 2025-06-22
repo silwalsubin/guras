@@ -78,13 +78,11 @@ jobs:
       run: |
         echo "🔧 Patching Node.js paths in shell scripts..."
         
-        # Find and patch all shell scripts in Pods
-        find ./react-native/ios/Pods -type f -name '*.sh' -exec sed -i '' 's|/Users/subinsilwal/.nvm/versions/node/v22.16.0/bin/node|node|g' {} +
-        find ./react-native/ios/Pods -type f -name '*.sh' -exec sed -i '' 's|/Users/subinsilwal/.nvm/versions/node/.*/bin/node|node|g' {} +
+        # Find and patch all shell scripts in Pods - use generic patterns
+        find ./react-native/ios/Pods -type f -name '*.sh' -exec sed -i '' 's|/Users/.*/\.nvm/versions/node/.*/bin/node|node|g' {} +
         find ./react-native/ios/Pods -type f -name '*.sh' -exec sed -i '' 's|/Users/.*/\.nvm/versions/node/.*/bin/node|node|g' {} +
         
         # Also patch any hardcoded node paths in the main project
-        find ./react-native/ios -type f -name '*.sh' -exec sed -i '' 's|/Users/subinsilwal/.nvm/versions/node/v22.16.0/bin/node|node|g' {} +
         find ./react-native/ios -type f -name '*.sh' -exec sed -i '' 's|/Users/.*/\.nvm/versions/node/.*/bin/node|node|g' {} +
         
         echo "✅ Node.js paths patched in shell scripts"
@@ -93,6 +91,25 @@ jobs:
         echo "📋 Found shell scripts in Pods:"
         find ./react-native/ios/Pods -type f -name '*.sh' | head -10
         
+    - name: Disable Hermes for CI build
+      working-directory: ./react-native/ios
+      run: |
+        echo "🚫 Disabling Hermes for CI build to avoid script issues"
+        
+        # Create a backup of the original Podfile
+        cp Podfile Podfile.backup
+        
+        # Modify Podfile to exclude Hermes
+        sed -i '' '/hermes-engine/d' Podfile
+        
+        echo "✅ Hermes excluded from Podfile for CI build"
+        
+    - name: Reinstall iOS dependencies without Hermes
+      working-directory: ./react-native/ios
+      run: |
+        echo "🍎 Reinstalling iOS dependencies without Hermes for version ${{ steps.version.outputs.version }}"
+        pod install
+
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
