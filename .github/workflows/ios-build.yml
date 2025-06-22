@@ -37,11 +37,6 @@ jobs:
       run: |
         pod install
         
-    - name: Build JavaScript bundle
-      working-directory: ./react-native
-      run: |
-        npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios
-        
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
