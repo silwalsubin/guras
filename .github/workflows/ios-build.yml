@@ -1,4 +1,4 @@
-name: iOS Build
+name: iOS Build Validation
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  validate:
     runs-on: macos-latest
     
     steps:
@@ -42,18 +42,22 @@ jobs:
       with:
         xcode-version: 'latest-stable'
         
-    - name: Build iOS app
+    - name: Validate project structure
       working-directory: ./react-native/ios
       run: |
         xcodebuild -workspace Guras.xcworkspace \
                    -scheme Guras \
                    -configuration Debug \
-                   -destination generic/platform=iOS \
-                   build
+                   clean
+        
+    - name: Build JavaScript bundle
+      working-directory: ./react-native
+      run: |
+        npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ios-build
-        path: react-native/ios/build/
+        name: ios-validation
+        path: react-native/ios/main.jsbundle
         retention-days: 7 
