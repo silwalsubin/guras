@@ -85,15 +85,14 @@ Before running the React Native project, make sure you have the following instal
 
 This project includes automated CI/CD pipelines using GitHub Actions:
 
-### Build Pipeline
-- **Trigger**: Push to `master` branch or pull requests
-- **Action**: Builds the iOS app and runs tests
-- **Artifacts**: Build artifacts are uploaded for 7 days
-
-### Auto Versioning Pipeline
-- **Trigger**: After successful builds
-- **Action**: Automatically generates semantic versions (YYYY.MM.DD.COMMIT_COUNT)
-- **Output**: Creates git tags and updates app.json version
+### Build & Version Pipeline
+- **Trigger**: Push to `master` branch, pull requests, or manual dispatch
+- **Action**: 
+  - Builds the iOS app and validates project structure
+  - Generates unique semantic versions (1.0.BUILD_NUMBER)
+  - Creates git tags and updates app.json version
+  - Uploads build artifacts with version information
+- **Artifacts**: Build artifacts are uploaded for 7 days with version-specific naming
 
 ### Manual Deployment Pipeline
 - **Trigger**: Manual workflow dispatch
@@ -123,15 +122,16 @@ This project includes automated CI/CD pipelines using GitHub Actions:
 
 4. **Deploy**:
    - **Automatic**: Every successful build creates a new version tag
-   - **Manual**: Go to Actions → Manual Deploy to App Store → Run workflow
+   - **Manual**: Go to Actions → iOS Deploy to App Store → Run workflow
    - Select version tag from dropdown
    - Choose deployment environment (TestFlight or App Store)
 
 ### Version Format
-- **Format**: `YYYY.MM.DD.COMMIT_COUNT` (e.g., `2024.01.15.3`)
-- **Auto-generated**: Based on date and commit count for the day
+- **Format**: `1.0.BUILD_NUMBER` (e.g., `1.0.1`, `1.0.2`, `1.0.15`)
+- **Auto-generated**: Based on incrementing build number
+- **Unique**: Each build gets a unique, sequential number
 - **Tagged**: Each version is automatically tagged in git
-- **Tracked**: Version is updated in `app.json`
+- **Tracked**: Version is updated in `app.json` during build process
 
 ## 🏗️ Infrastructure as Code (IaC)
 
