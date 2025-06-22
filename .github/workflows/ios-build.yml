@@ -73,6 +73,10 @@ jobs:
       run: |
         echo "🍎 Installing iOS dependencies for version ${{ steps.version.outputs.version }}"
         pod install
+
+    - name: Patch Hermes and RN scripts to use correct node path
+      run: |
+        find ./react-native/ios/Pods -type f -name '*.sh' -exec sed -i '' 's|/Users/subinsilwal/.nvm/versions/node/v22.16.0/bin/node|node|g' {} +
         
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
