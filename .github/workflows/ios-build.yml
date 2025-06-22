@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+    inputs:
+      create_archive:
+        description: 'Create archive for deployment'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -176,6 +182,34 @@ jobs:
                    NODE_BINARY="$NODE_BINARY" \
                    build
         
+    - name: Create Archive for Deployment
+      working-directory: ./react-native/ios
+      run: |
+        echo "📦 Creating archive for version ${{ steps.version.outputs.version }}"
+        xcodebuild -workspace Guras.xcworkspace \
+                   -scheme Guras \
+                   -configuration Release \
+                   -destination generic/platform=iOS \
+                   -archivePath ./build/Guras.xcarchive \
+                   CODE_SIGN_IDENTITY="" \
+                   CODE_SIGNING_REQUIRED=NO \
+                   CODE_SIGNING_ALLOWED=NO \
+                   NODE_BINARY="$NODE_BINARY" \
+                   clean archive
+                   
+        echo "✅ Archive created successfully"
+        
+    - name: Export IPA
+      working-directory: ./react-native/ios
+      run: |
+        echo "📦 Exporting IPA for version ${{ steps.version.outputs.version }}"
+        xcodebuild -exportArchive \
+                   -archivePath ./build/Guras.xcarchive \
+                   -exportPath ./build/ipa \
+                   -exportOptionsPlist exportOptions.plist
+                   
+        echo "✅ IPA exported successfully"
+        
     - name: Create and push tag
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: |
@@ -207,6 +241,8 @@ jobs:
         path: |
           react-native/ios/main.jsbundle
           react-native/app.json
+          react-native/ios/build/Guras.xcarchive
+          react-native/ios/build/ipa/
         retention-days: 7
         
     - name: Build Summary
@@ -216,5 +252,7 @@ jobs:
         echo "📦 Version: ${{ steps.version.outputs.version }}"
         echo "🏷️ Tag: v${{ steps.version.outputs.version }}"
         echo "📱 Bundle: Available in artifacts"
+        echo "📦 Archive: Available in artifacts"
+        echo "📦 IPA: Available in artifacts"
         echo "📦 Artifact: ios-build-v${{ steps.version.outputs.version }}"
         echo "🎉 =========================================" 

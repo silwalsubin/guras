@@ -43,108 +43,59 @@ jobs:
         
         echo "✅ Tag '$VERSION_TAG' found and validated"
         
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
       with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: react-native/package-lock.json
+        name: ios-build-${{ github.event.inputs.version_tag }}
+        path: ./react-native/
         
-    - name: Setup Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.1'
-        bundler-cache: true
-        
-    - name: Install dependencies
-      working-directory: ./react-native
+    - name: Verify artifacts
       run: |
-        echo "📦 Installing dependencies for ${{ github.event.inputs.version_tag }}"
-        npm ci
+        echo "🔍 Verifying downloaded artifacts for ${{ github.event.inputs.version_tag }}"
         
-    - name: Install iOS dependencies
-      working-directory: ./react-native/ios
-      run: |
-        echo "🍎 Installing iOS dependencies for ${{ github.event.inputs.version_tag }}"
-        pod install
+        # Check if archive exists
+        if [ -d "./react-native/ios/build/Guras.xcarchive" ]; then
+          echo "✅ Archive found: ./react-native/ios/build/Guras.xcarchive"
+        else
+          echo "❌ Error: Archive not found!"
+          echo "Available files:"
+          find ./react-native -name "*.xcarchive" -o -name "*.ipa" 2>/dev/null || echo "No archives found"
+          exit 1
+        fi
         
-    - name: Patch Hermes and RN scripts to use correct node path
-      run: |
-        echo "🔧 Patching Node.js paths in shell scripts..."
+        # Check if IPA exists
+        if [ -d "./react-native/ios/build/ipa" ]; then
+          echo "✅ IPA directory found: ./react-native/ios/build/ipa"
+          ls -la ./react-native/ios/build/ipa/
+        else
+          echo "❌ Error: IPA directory not found!"
+          exit 1
+        fi
         
-        # Find and patch all shell scripts in Pods - use generic patterns
-        find ./react-native/ios/Pods -type f -name '*.sh' -exec sed -i '' 's|/Users/.*/\.nvm/versions/node/.*/bin/node|node|g' {} +
-        
-        # Also patch any hardcoded node paths in the main project
-        find ./react-native/ios -type f -name '*.sh' -exec sed -i '' 's|/Users/.*/\.nvm/versions/node/.*/bin/node|node|g' {} +
-        
-        echo "✅ Node.js paths patched in shell scripts"
-        
-    - name: Setup Xcode
-      uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: 'latest-stable'
-        
-    - name: Set NODE_BINARY environment variable
-      run: |
-        echo "🔧 Setting NODE_BINARY environment variable"
-        echo "NODE_BINARY=$(which node)" >> $GITHUB_ENV
-        echo "NODE_BINARY set to: $(which node)"
-        
-    - name: Setup code signing for CD
-      run: |
-        echo "🔐 Setting up code signing for CD deployment"
-        echo "📝 Note: Using temporary signing for CD archive"
-        echo "For production deployments, you'll need to:"
-        echo "1. Add APPLE_DEVELOPER_CERTIFICATE secret"
-        echo "2. Add APPLE_DEVELOPER_CERTIFICATE_PASSWORD secret"
-        echo "3. Add APPLE_TEAM_ID secret"
-        echo "4. Add APPLE_PROVISIONING_PROFILE secret"
-        
-    - name: Build and Archive
-      working-directory: ./react-native/ios
-      run: |
-        echo "🏗️ Building and archiving version ${{ github.event.inputs.version_tag }}"
-        xcodebuild -workspace Guras.xcworkspace \
-                   -scheme Guras \
-                   -configuration Release \
-                   -destination generic/platform=iOS \
-                   -archivePath ./build/Guras.xcarchive \
-                   CODE_SIGN_IDENTITY="" \
-                   CODE_SIGNING_REQUIRED=NO \
-                   CODE_SIGNING_ALLOWED=NO \
-                   NODE_BINARY="$NODE_BINARY" \
-                   clean archive
-                   
-    - name: Export IPA
-      working-directory: ./react-native/ios
-      run: |
-        echo "📦 Exporting IPA for version ${{ github.event.inputs.version_tag }}"
-        xcodebuild -exportArchive \
-                   -archivePath ./build/Guras.xcarchive \
-                   -exportPath ./build/ipa \
-                   -exportOptionsPlist exportOptions.plist
-                   
     - name: Upload to TestFlight
       if: ${{ github.event.inputs.environment == 'testflight' }}
       run: |
         echo "📱 Uploading to TestFlight..."
         echo "Version: ${{ github.event.inputs.version_tag }}"
+        echo "IPA Path: ./react-native/ios/build/ipa/"
         # For now, just create a placeholder - you'll need to set up App Store Connect API
         echo "✅ TestFlight upload would happen here with proper API setup"
+        echo "📦 Using pre-built IPA from build artifacts"
         
     - name: Upload to App Store
       if: ${{ github.event.inputs.environment == 'app-store' }}
       run: |
         echo "🏪 Uploading to App Store..."
         echo "Version: ${{ github.event.inputs.version_tag }}"
+        echo "IPA Path: ./react-native/ios/build/ipa/"
         # For now, just create a placeholder - you'll need to set up App Store Connect API
         echo "✅ App Store upload would happen here with proper API setup"
+        echo "📦 Using pre-built IPA from build artifacts"
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ios-ipa-${{ github.event.inputs.version_tag }}
+        name: ios-deploy-${{ github.event.inputs.version_tag }}
         path: react-native/ios/build/ipa/
         retention-days: 30
         
@@ -155,7 +106,7 @@ jobs:
         echo "📦 Version: ${{ github.event.inputs.version_tag }}"
         echo "🌍 Environment: ${{ github.event.inputs.environment }}"
         echo "📱 IPA: Available in artifacts"
-        echo "📦 Artifact: ios-ipa-${{ github.event.inputs.version_tag }}"
+        echo "📦 Artifact: ios-deploy-${{ github.event.inputs.version_tag }}"
         echo "🎉 ========================================="
         echo ""
         echo "📝 Note: To enable actual App Store uploads, you need to:"
