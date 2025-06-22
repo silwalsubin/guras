@@ -199,17 +199,6 @@ jobs:
                    
         echo "✅ Archive created successfully"
         
-    - name: Export IPA
-      working-directory: ./react-native/ios
-      run: |
-        echo "📦 Exporting IPA for version ${{ steps.version.outputs.version }}"
-        xcodebuild -exportArchive \
-                   -archivePath ./build/Guras.xcarchive \
-                   -exportPath ./build/ipa \
-                   -exportOptionsPlist exportOptions.plist
-                   
-        echo "✅ IPA exported successfully"
-        
     - name: Create and push tag
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: |
@@ -242,7 +231,6 @@ jobs:
           react-native/ios/main.jsbundle
           react-native/app.json
           react-native/ios/build/Guras.xcarchive
-          react-native/ios/build/ipa/
         retention-days: 7
         
     - name: Build Summary
@@ -253,6 +241,5 @@ jobs:
         echo "🏷️ Tag: v${{ steps.version.outputs.version }}"
         echo "📱 Bundle: Available in artifacts"
         echo "📦 Archive: Available in artifacts"
-        echo "📦 IPA: Available in artifacts"
         echo "📦 Artifact: ios-build-v${{ steps.version.outputs.version }}"
         echo "🎉 =========================================" 

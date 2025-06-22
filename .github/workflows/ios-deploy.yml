@@ -63,40 +63,35 @@ jobs:
           exit 1
         fi
         
-        # Check if IPA exists
-        if [ -d "./react-native/ios/build/ipa" ]; then
-          echo "✅ IPA directory found: ./react-native/ios/build/ipa"
-          ls -la ./react-native/ios/build/ipa/
-        else
-          echo "❌ Error: IPA directory not found!"
-          exit 1
-        fi
+        echo "📦 Archive ready for deployment"
         
     - name: Upload to TestFlight
       if: ${{ github.event.inputs.environment == 'testflight' }}
       run: |
         echo "📱 Uploading to TestFlight..."
         echo "Version: ${{ github.event.inputs.version_tag }}"
-        echo "IPA Path: ./react-native/ios/build/ipa/"
+        echo "Archive Path: ./react-native/ios/build/Guras.xcarchive"
         # For now, just create a placeholder - you'll need to set up App Store Connect API
         echo "✅ TestFlight upload would happen here with proper API setup"
-        echo "📦 Using pre-built IPA from build artifacts"
+        echo "📦 Using pre-built archive from build artifacts"
+        echo "📝 Note: For real deployment, you'll need proper code signing certificates"
         
     - name: Upload to App Store
       if: ${{ github.event.inputs.environment == 'app-store' }}
       run: |
         echo "🏪 Uploading to App Store..."
         echo "Version: ${{ github.event.inputs.version_tag }}"
-        echo "IPA Path: ./react-native/ios/build/ipa/"
+        echo "Archive Path: ./react-native/ios/build/Guras.xcarchive"
         # For now, just create a placeholder - you'll need to set up App Store Connect API
         echo "✅ App Store upload would happen here with proper API setup"
-        echo "📦 Using pre-built IPA from build artifacts"
+        echo "📦 Using pre-built archive from build artifacts"
+        echo "📝 Note: For real deployment, you'll need proper code signing certificates"
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ios-deploy-${{ github.event.inputs.version_tag }}
-        path: react-native/ios/build/ipa/
+        path: react-native/ios/build/Guras.xcarchive
         retention-days: 30
         
     - name: Deployment Summary
