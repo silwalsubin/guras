@@ -1,4 +1,4 @@
-package com.gurasapp
+package com.guras
 
 import android.app.Application
 import com.facebook.react.PackageList

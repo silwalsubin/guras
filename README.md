@@ -8,7 +8,7 @@ This repository contains both Infrastructure as Code (IaC) and React Native mobi
 guras/
 ├── iac/                    # Infrastructure as Code
 │   └── (IaC files coming soon)
-├── react-native/           # React Native iOS Application
+├── react-native/           # React Native Cross-Platform Application
 │   ├── App.tsx            # Main application component
 │   ├── ios/               # iOS-specific code
 │   ├── android/           # Android-specific code
@@ -20,13 +20,13 @@ guras/
 
 ## 🚀 React Native App
 
-A React Native iOS application built with TypeScript.
+A React Native cross-platform mobile application built with TypeScript.
 
 ### Features
 
 - React Native 0.80.0
 - TypeScript support
-- iOS development ready
+- iOS and Android development ready
 - Metro bundler for fast development
 - Hot reloading enabled
 
@@ -71,7 +71,7 @@ Before running the React Native project, make sure you have the following instal
 
 5. **Open in Xcode** (Alternative)
    ```bash
-   open ios/GurasApp.xcworkspace
+   open ios/Guras.xcworkspace
    ```
 
 ### Development

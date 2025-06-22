@@ -2292,7 +2292,7 @@
 		46EB2E0001AE20 /* vlog_is_on.h in Headers */ = {isa = PBXBuildFile; fileRef = 46EB2E0000DDF0 /* vlog_is_on.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		46EB2E0001AE70 /* glog-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 46EB2E0001AE60 /* glog-umbrella.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		46EB2E0001AEA0 /* glog-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 46EB2E0001AE90 /* glog-dummy.m */; };
-		46EB2E0001B030 /* Pods-GurasApp-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 46EB2E0001B020 /* Pods-GurasApp-dummy.m */; };
+		46EB2E0001B030 /* Pods-Guras-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 46EB2E0001B020 /* Pods-Guras-dummy.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -8084,6 +8084,7 @@
 		0B78B62C0667993F995391A857DB2CE2 /* React-domnativemodule */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-domnativemodule"; path = "libReact-domnativemodule.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CEF74A24ECE8AEEF7B1E27B305D2DDC /* ReactCodegen */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = ReactCodegen; path = libReactCodegen.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1381503C42FFF460E946860A32A6F981 /* React-RuntimeApple */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-RuntimeApple"; path = "libReact-RuntimeApple.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		151D6DC7B14F731CD6A6FDFF2DDF3049 /* Pods-Guras */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "Pods-Guras"; path = "libPods-Guras.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1936453FF2A7E3A13063C4917C4D5598 /* RCT-Folly */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "RCT-Folly"; path = "libRCT-Folly.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E04881EDF02715BD6AC2C6ED3FBB37E /* React-rendererdebug */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-rendererdebug"; path = "libReact-rendererdebug.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E649614D7644BF68C2F5D4CB3FBF8DC /* React-NativeModulesApple */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-NativeModulesApple"; path = "libReact-NativeModulesApple.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -11889,13 +11890,13 @@
 		46EB2E0001AF00 /* hermes-engine-xcframeworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "hermes-engine-xcframeworks.sh"; sourceTree = "<group>"; };
 		46EB2E0001AF10 /* hermes-engine.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "hermes-engine.debug.xcconfig"; sourceTree = "<group>"; };
 		46EB2E0001AF20 /* hermes-engine.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "hermes-engine.release.xcconfig"; sourceTree = "<group>"; };
-		46EB2E0001AFC0 /* Pods-GurasApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-GurasApp.release.xcconfig"; sourceTree = "<group>"; };
-		46EB2E0001AFD0 /* Pods-GurasApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-GurasApp.debug.xcconfig"; sourceTree = "<group>"; };
-		46EB2E0001AFE0 /* Pods-GurasApp-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-GurasApp-frameworks.sh"; sourceTree = "<group>"; };
-		46EB2E0001AFF0 /* Pods-GurasApp-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-GurasApp-resources.sh"; sourceTree = "<group>"; };
-		46EB2E0001B000 /* Pods-GurasApp-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-GurasApp-acknowledgements.plist"; sourceTree = "<group>"; };
-		46EB2E0001B010 /* Pods-GurasApp-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-GurasApp-acknowledgements.markdown"; sourceTree = "<group>"; };
-		46EB2E0001B020 /* Pods-GurasApp-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-GurasApp-dummy.m"; sourceTree = "<group>"; };
+		46EB2E0001AFC0 /* Pods-Guras.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Guras.release.xcconfig"; sourceTree = "<group>"; };
+		46EB2E0001AFD0 /* Pods-Guras.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Guras.debug.xcconfig"; sourceTree = "<group>"; };
+		46EB2E0001AFE0 /* Pods-Guras-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-Guras-frameworks.sh"; sourceTree = "<group>"; };
+		46EB2E0001AFF0 /* Pods-Guras-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-Guras-resources.sh"; sourceTree = "<group>"; };
+		46EB2E0001B000 /* Pods-Guras-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-Guras-acknowledgements.plist"; sourceTree = "<group>"; };
+		46EB2E0001B010 /* Pods-Guras-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-Guras-acknowledgements.markdown"; sourceTree = "<group>"; };
+		46EB2E0001B020 /* Pods-Guras-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-Guras-dummy.m"; sourceTree = "<group>"; };
 		4F3E9C98444FA55E416B857143C48013 /* React-RuntimeHermes */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-RuntimeHermes"; path = "libReact-RuntimeHermes.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5AA54A19E2135E09B9C8C0767385FD3A /* React-graphics */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-graphics"; path = "libReact-graphics.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		61A80F68AE163B384B7D7A9E76B6046C /* React-FabricImage */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-FabricImage"; path = "libReact-FabricImage.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -11910,7 +11911,6 @@
 		862FCE564BB443BC51C8A9DA1585FC47 /* React-oscompat */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-oscompat"; path = "libReact-oscompat.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8985EE10A70481BB75C24328A843219B /* boost-boost_privacy */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = "boost-boost_privacy"; path = boost_privacy.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		89E826D97CCB875AC8AC1FE400311A0F /* React-FabricComponents */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-FabricComponents"; path = "libReact-FabricComponents.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		8EB3E3847039403AEDA819FC01C2A154 /* Pods-GurasApp */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "Pods-GurasApp"; path = "libPods-GurasApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		971F6C319DDD4BD078954A5EF77B5BA7 /* React-featureflags */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-featureflags"; path = "libReact-featureflags.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A5B49761F8D1EB12585DD45CAA2E489F /* React-logger */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-logger"; path = "libReact-logger.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A67E85E5F06FDA406D3A1B378BDF0C5C /* React-runtimescheduler */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-runtimescheduler"; path = "libReact-runtimescheduler.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -12440,7 +12440,7 @@
 				F4BDA69E3BCB0166D49FB679ABADCA00 /* fmt */,
 				3CA7A9404CCDD6BA22C97F8348CE3209 /* glog */,
 				FFDAD994FE728F76EC459CC05E0CCDFB /* glog-glog_privacy */,
-				8EB3E3847039403AEDA819FC01C2A154 /* Pods-GurasApp */,
+				151D6DC7B14F731CD6A6FDFF2DDF3049 /* Pods-Guras */,
 				1936453FF2A7E3A13063C4917C4D5598 /* RCT-Folly */,
 				BA6198501C8FE4824D863DC9EF32C614 /* RCT-Folly-RCT-Folly_privacy */,
 				33EEBF1D210254B5452CE560F81C9D38 /* RCTDeprecation */,
@@ -12516,7 +12516,7 @@
 		46EB2E00000070 /* Targets Support Files */ = {
 			isa = PBXGroup;
 			children = (
-				46EB2E0001AFB0 /* Pods-GurasApp */,
+				46EB2E0001AFB0 /* Pods-Guras */,
 			);
 			name = "Targets Support Files";
 			sourceTree = "<group>";
@@ -19485,19 +19485,19 @@
 			path = "../Target Support Files/hermes-engine";
 			sourceTree = "<group>";
 		};
-		46EB2E0001AFB0 /* Pods-GurasApp */ = {
+		46EB2E0001AFB0 /* Pods-Guras */ = {
 			isa = PBXGroup;
 			children = (
-				46EB2E0001B010 /* Pods-GurasApp-acknowledgements.markdown */,
-				46EB2E0001B000 /* Pods-GurasApp-acknowledgements.plist */,
-				46EB2E0001B020 /* Pods-GurasApp-dummy.m */,
-				46EB2E0001AFE0 /* Pods-GurasApp-frameworks.sh */,
-				46EB2E0001AFF0 /* Pods-GurasApp-resources.sh */,
-				46EB2E0001AFD0 /* Pods-GurasApp.debug.xcconfig */,
-				46EB2E0001AFC0 /* Pods-GurasApp.release.xcconfig */,
+				46EB2E0001B010 /* Pods-Guras-acknowledgements.markdown */,
+				46EB2E0001B000 /* Pods-Guras-acknowledgements.plist */,
+				46EB2E0001B020 /* Pods-Guras-dummy.m */,
+				46EB2E0001AFE0 /* Pods-Guras-frameworks.sh */,
+				46EB2E0001AFF0 /* Pods-Guras-resources.sh */,
+				46EB2E0001AFD0 /* Pods-Guras.debug.xcconfig */,
+				46EB2E0001AFC0 /* Pods-Guras.release.xcconfig */,
 			);
-			name = "Pods-GurasApp";
-			path = "Target Support Files/Pods-GurasApp";
+			name = "Pods-Guras";
+			path = "Target Support Files/Pods-Guras";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -23140,56 +23140,9 @@
 			productReference = 6771D231F4C8C5976470A369C474B32E /* React-CoreModules */;
 			productType = "com.apple.product-type.library.static";
 		};
-		EC55D52694092A9D0E6A78EB01207EB5 /* RCT-Folly */ = {
+		EA72DA6409258FC4A5A550EDBA554F3A /* Pods-Guras */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 46EB2E0000ECB0 /* Build configuration list for PBXNativeTarget "RCT-Folly" */;
-			buildPhases = (
-				46EB2E0000ECF0 /* Headers */,
-				46EB2E0000ED00 /* Sources */,
-				46EB2E0000ED10 /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				46EB2E0001BA10 /* PBXTargetDependency */,
-				46EB2E0001B9D0 /* PBXTargetDependency */,
-				46EB2E0001B9F0 /* PBXTargetDependency */,
-				46EB2E0001BA50 /* PBXTargetDependency */,
-				46EB2E0001BA70 /* PBXTargetDependency */,
-				46EB2E0001BA30 /* PBXTargetDependency */,
-			);
-			name = "RCT-Folly";
-			productName = "RCT-Folly";
-			productReference = 1936453FF2A7E3A13063C4917C4D5598 /* RCT-Folly */;
-			productType = "com.apple.product-type.library.static";
-		};
-		F1E2583679398CB5F4D2B3272E9B198F /* React-perflogger */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 46EB2E00018B50 /* Build configuration list for PBXNativeTarget "React-perflogger" */;
-			buildPhases = (
-				46EB2E00018B90 /* Headers */,
-				46EB2E00018BA0 /* Sources */,
-				46EB2E00018BB0 /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				46EB2E00020B30 /* PBXTargetDependency */,
-				46EB2E00020B90 /* PBXTargetDependency */,
-				46EB2E00020BB0 /* PBXTargetDependency */,
-				46EB2E00020B10 /* PBXTargetDependency */,
-				46EB2E00020B50 /* PBXTargetDependency */,
-				46EB2E00020B70 /* PBXTargetDependency */,
-				46EB2E00020AF0 /* PBXTargetDependency */,
-			);
-			name = "React-perflogger";
-			productName = "React-perflogger";
-			productReference = 666E72807891C591E025A75410CD2A26 /* React-perflogger */;
-			productType = "com.apple.product-type.library.static";
-		};
-		F54AA26DB112834C4C06BB1DDC428728 /* Pods-GurasApp */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 46EB2E0001AF40 /* Build configuration list for PBXNativeTarget "Pods-GurasApp" */;
+			buildConfigurationList = 46EB2E0001AF40 /* Build configuration list for PBXNativeTarget "Pods-Guras" */;
 			buildPhases = (
 				46EB2E0001AF80 /* Headers */,
 				46EB2E0001AF90 /* Sources */,
@@ -23272,9 +23225,56 @@
 				46EB2E0001B990 /* PBXTargetDependency */,
 				46EB2E0001B9B0 /* PBXTargetDependency */,
 			);
-			name = "Pods-GurasApp";
-			productName = "Pods-GurasApp";
-			productReference = 8EB3E3847039403AEDA819FC01C2A154 /* Pods-GurasApp */;
+			name = "Pods-Guras";
+			productName = "Pods-Guras";
+			productReference = 151D6DC7B14F731CD6A6FDFF2DDF3049 /* Pods-Guras */;
+			productType = "com.apple.product-type.library.static";
+		};
+		EC55D52694092A9D0E6A78EB01207EB5 /* RCT-Folly */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 46EB2E0000ECB0 /* Build configuration list for PBXNativeTarget "RCT-Folly" */;
+			buildPhases = (
+				46EB2E0000ECF0 /* Headers */,
+				46EB2E0000ED00 /* Sources */,
+				46EB2E0000ED10 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				46EB2E0001BA10 /* PBXTargetDependency */,
+				46EB2E0001B9D0 /* PBXTargetDependency */,
+				46EB2E0001B9F0 /* PBXTargetDependency */,
+				46EB2E0001BA50 /* PBXTargetDependency */,
+				46EB2E0001BA70 /* PBXTargetDependency */,
+				46EB2E0001BA30 /* PBXTargetDependency */,
+			);
+			name = "RCT-Folly";
+			productName = "RCT-Folly";
+			productReference = 1936453FF2A7E3A13063C4917C4D5598 /* RCT-Folly */;
+			productType = "com.apple.product-type.library.static";
+		};
+		F1E2583679398CB5F4D2B3272E9B198F /* React-perflogger */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 46EB2E00018B50 /* Build configuration list for PBXNativeTarget "React-perflogger" */;
+			buildPhases = (
+				46EB2E00018B90 /* Headers */,
+				46EB2E00018BA0 /* Sources */,
+				46EB2E00018BB0 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				46EB2E00020B30 /* PBXTargetDependency */,
+				46EB2E00020B90 /* PBXTargetDependency */,
+				46EB2E00020BB0 /* PBXTargetDependency */,
+				46EB2E00020B10 /* PBXTargetDependency */,
+				46EB2E00020B50 /* PBXTargetDependency */,
+				46EB2E00020B70 /* PBXTargetDependency */,
+				46EB2E00020AF0 /* PBXTargetDependency */,
+			);
+			name = "React-perflogger";
+			productName = "React-perflogger";
+			productReference = 666E72807891C591E025A75410CD2A26 /* React-perflogger */;
 			productType = "com.apple.product-type.library.static";
 		};
 		F7D033C4C128EECAA020990641FA985F /* React-jsinspector */ = {
@@ -23367,7 +23367,7 @@
 				D0EFEFB685D97280256C559792236873 /* glog */,
 				9E6B7857CC223C0629E4C37E6386FC96 /* glog-glog_privacy */,
 				985FEA01F314F3C00F0C1E1181E6C4A5 /* hermes-engine */,
-				F54AA26DB112834C4C06BB1DDC428728 /* Pods-GurasApp */,
+				EA72DA6409258FC4A5A550EDBA554F3A /* Pods-Guras */,
 				EC55D52694092A9D0E6A78EB01207EB5 /* RCT-Folly */,
 				331AFAADB024F73370A9DC6FBD7A5A22 /* RCT-Folly-RCT-Folly_privacy */,
 				5211B5AB7B81060AA8E78614DD75D3AB /* RCTDeprecation */,
@@ -24743,7 +24743,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				46EB2E0001B030 /* Pods-GurasApp-dummy.m in Sources */,
+				46EB2E0001B030 /* Pods-Guras-dummy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -34778,7 +34778,7 @@
 		};
 		46EB2E0001AF50 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 46EB2E0001AFC0 /* Pods-GurasApp.release.xcconfig */;
+			baseConfigurationReference = 46EB2E0001AFC0 /* Pods-Guras.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -34802,7 +34802,7 @@
 		};
 		46EB2E0001AF60 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 46EB2E0001AFD0 /* Pods-GurasApp.debug.xcconfig */;
+			baseConfigurationReference = 46EB2E0001AFD0 /* Pods-Guras.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -35537,7 +35537,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		46EB2E0001AF40 /* Build configuration list for PBXNativeTarget "Pods-GurasApp" */ = {
+		46EB2E0001AF40 /* Build configuration list for PBXNativeTarget "Pods-Guras" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				46EB2E0001AF60 /* Debug */,
