@@ -68,10 +68,38 @@ jobs:
         echo "🍎 Installing iOS dependencies for ${{ github.event.inputs.version_tag }}"
         pod install
         
+    - name: Patch Hermes and RN scripts to use correct node path
+      run: |
+        echo "🔧 Patching Node.js paths in shell scripts..."
+        
+        # Find and patch all shell scripts in Pods - use generic patterns
+        find ./react-native/ios/Pods -type f -name '*.sh' -exec sed -i '' 's|/Users/.*/\.nvm/versions/node/.*/bin/node|node|g' {} +
+        
+        # Also patch any hardcoded node paths in the main project
+        find ./react-native/ios -type f -name '*.sh' -exec sed -i '' 's|/Users/.*/\.nvm/versions/node/.*/bin/node|node|g' {} +
+        
+        echo "✅ Node.js paths patched in shell scripts"
+        
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: 'latest-stable'
+        
+    - name: Set NODE_BINARY environment variable
+      run: |
+        echo "🔧 Setting NODE_BINARY environment variable"
+        echo "NODE_BINARY=$(which node)" >> $GITHUB_ENV
+        echo "NODE_BINARY set to: $(which node)"
+        
+    - name: Setup code signing for CD
+      run: |
+        echo "🔐 Setting up code signing for CD deployment"
+        echo "📝 Note: Using temporary signing for CD archive"
+        echo "For production deployments, you'll need to:"
+        echo "1. Add APPLE_DEVELOPER_CERTIFICATE secret"
+        echo "2. Add APPLE_DEVELOPER_CERTIFICATE_PASSWORD secret"
+        echo "3. Add APPLE_TEAM_ID secret"
+        echo "4. Add APPLE_PROVISIONING_PROFILE secret"
         
     - name: Build and Archive
       working-directory: ./react-native/ios
@@ -82,6 +110,10 @@ jobs:
                    -configuration Release \
                    -destination generic/platform=iOS \
                    -archivePath ./build/Guras.xcarchive \
+                   CODE_SIGN_IDENTITY="" \
+                   CODE_SIGNING_REQUIRED=NO \
+                   CODE_SIGNING_ALLOWED=NO \
+                   NODE_BINARY="$NODE_BINARY" \
                    clean archive
                    
     - name: Export IPA
