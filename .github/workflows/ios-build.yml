@@ -40,7 +40,7 @@ jobs:
     - name: Build iOS app
       working-directory: ./react-native
       run: |
-        npx react-native run-ios --configuration Release --simulator="iPhone 14"
+        npx react-native run-ios --simulator="iPhone 14"
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
