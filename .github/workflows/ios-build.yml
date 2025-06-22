@@ -1,4 +1,4 @@
-name: iOS Build Validation
+name: iOS Build
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  validate:
+  build:
     runs-on: macos-latest
     
     steps:
@@ -58,6 +58,6 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ios-validation
+        name: ios-build
         path: react-native/ios/main.jsbundle
         retention-days: 7 
