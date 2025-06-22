@@ -1,0 +1,50 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: react-native/package-lock.json
+        
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1'
+        bundler-cache: true
+        
+    - name: Install dependencies
+      working-directory: ./react-native
+      run: |
+        npm ci
+        
+    - name: Install iOS dependencies
+      working-directory: ./react-native/ios
+      run: |
+        pod install
+        
+    - name: Build iOS app
+      working-directory: ./react-native
+      run: |
+        npx react-native run-ios --configuration Release --simulator="iPhone 14"
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-build
+        path: react-native/ios/build/
+        retention-days: 7 

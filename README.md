@@ -29,6 +29,7 @@ A React Native cross-platform mobile application built with TypeScript.
 - iOS and Android development ready
 - Metro bundler for fast development
 - Hot reloading enabled
+- **CI/CD with GitHub Actions** for automated builds and App Store deployment
 
 ### Prerequisites
 
@@ -79,6 +80,44 @@ Before running the React Native project, make sure you have the following instal
 - **Hot Reloading**: Changes to your code will automatically reload in the simulator
 - **Developer Menu**: Shake the device or press `Cmd+D` in the simulator
 - **Debugging**: Use React Native Debugger or Chrome DevTools
+
+## 🔄 CI/CD Pipeline
+
+This project includes automated CI/CD pipelines using GitHub Actions:
+
+### Build Pipeline
+- **Trigger**: Push to `master` branch or pull requests
+- **Action**: Builds the iOS app and runs tests
+- **Artifacts**: Build artifacts are uploaded for 7 days
+
+### Deployment Pipeline
+- **Trigger**: Push a tag starting with `v` (e.g., `v1.0.0`)
+- **Action**: Builds, archives, and uploads to App Store Connect
+- **Requirements**: App Store Connect API credentials
+
+### Setup for App Store Deployment
+
+1. **Create App Store Connect API Key**:
+   - Go to [App Store Connect](https://appstoreconnect.apple.com)
+   - Navigate to Users and Access → Keys
+   - Create a new API key with App Manager role
+
+2. **Add GitHub Secrets**:
+   - Go to your GitHub repository → Settings → Secrets and variables → Actions
+   - Add the following secrets:
+     - `APP_STORE_CONNECT_API_KEY`: Your API key file content
+     - `APP_STORE_CONNECT_API_KEY_ID`: Your API key ID
+     - `APP_STORE_CONNECT_ISSUER_ID`: Your issuer ID
+
+3. **Update Team ID**:
+   - Edit `react-native/ios/exportOptions.plist`
+   - Replace `YOUR_TEAM_ID` with your actual Apple Developer Team ID
+
+4. **Deploy**:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
 
 ## 🏗️ Infrastructure as Code (IaC)
 

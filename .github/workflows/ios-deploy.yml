@@ -1,0 +1,75 @@
+name: iOS Deploy to App Store
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: react-native/package-lock.json
+        
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1'
+        bundler-cache: true
+        
+    - name: Install dependencies
+      working-directory: ./react-native
+      run: |
+        npm ci
+        
+    - name: Install iOS dependencies
+      working-directory: ./react-native/ios
+      run: |
+        pod install
+        
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 'latest-stable'
+        
+    - name: Build and Archive
+      working-directory: ./react-native/ios
+      run: |
+        xcodebuild -workspace Guras.xcworkspace \
+                   -scheme Guras \
+                   -configuration Release \
+                   -destination generic/platform=iOS \
+                   -archivePath ./build/Guras.xcarchive \
+                   clean archive
+                   
+    - name: Export IPA
+      working-directory: ./react-native/ios
+      run: |
+        xcodebuild -exportArchive \
+                   -archivePath ./build/Guras.xcarchive \
+                   -exportPath ./build/ipa \
+                   -exportOptionsPlist exportOptions.plist
+                   
+    - name: Upload to App Store Connect
+      uses: apple-actions/upload-testflight@v1
+      with:
+        app-path: ./react-native/ios/build/ipa/Guras.ipa
+        api-key: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        api-issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-ipa
+        path: react-native/ios/build/ipa/
+        retention-days: 30 
