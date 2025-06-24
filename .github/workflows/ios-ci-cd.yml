@@ -286,36 +286,37 @@ jobs:
         echo "✅ Code signing configured for TestFlight"
         
     - name: Export IPA for TestFlight
+      working-directory: ./react-native/ios
       run: |
         echo "📦 Exporting IPA for TestFlight deployment"
         
         # Create export options plist
-        echo '<?xml version="1.0" encoding="UTF-8"?>' > react-native/ios/exportOptions.plist
-        echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> react-native/ios/exportOptions.plist
-        echo '<plist version="1.0">' >> react-native/ios/exportOptions.plist
-        echo '<dict>' >> react-native/ios/exportOptions.plist
-        echo '    <key>method</key>' >> react-native/ios/exportOptions.plist
-        echo '    <string>app-store</string>' >> react-native/ios/exportOptions.plist
-        echo '    <key>teamID</key>' >> react-native/ios/exportOptions.plist
-        echo '    <string>${{ secrets.APPLE_TEAM_ID }}</string>' >> react-native/ios/exportOptions.plist
-        echo '    <key>signingStyle</key>' >> react-native/ios/exportOptions.plist
-        echo '    <string>manual</string>' >> react-native/ios/exportOptions.plist
-        echo '    <key>provisioningProfiles</key>' >> react-native/ios/exportOptions.plist
-        echo '    <dict>' >> react-native/ios/exportOptions.plist
-        echo '        <key>${{ secrets.APPLE_BUNDLE_ID }}</key>' >> react-native/ios/exportOptions.plist
-        echo '        <string>${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}</string>' >> react-native/ios/exportOptions.plist
-        echo '    </dict>' >> react-native/ios/exportOptions.plist
-        echo '    <key>signingCertificate</key>' >> react-native/ios/exportOptions.plist
-        echo '    <string>Apple Distribution</string>' >> react-native/ios/exportOptions.plist
-        echo '    <key>uploadBitcode</key>' >> react-native/ios/exportOptions.plist
-        echo '    <false/>' >> react-native/ios/exportOptions.plist
-        echo '    <key>uploadSymbols</key>' >> react-native/ios/exportOptions.plist
-        echo '    <true/>' >> react-native/ios/exportOptions.plist
-        echo '</dict>' >> react-native/ios/exportOptions.plist
-        echo '</plist>' >> react-native/ios/exportOptions.plist
+        echo '<?xml version="1.0" encoding="UTF-8"?>' > exportOptions.plist
+        echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> exportOptions.plist
+        echo '<plist version="1.0">' >> exportOptions.plist
+        echo '<dict>' >> exportOptions.plist
+        echo '    <key>method</key>' >> exportOptions.plist
+        echo '    <string>app-store</string>' >> exportOptions.plist
+        echo '    <key>teamID</key>' >> exportOptions.plist
+        echo '    <string>${{ secrets.APPLE_TEAM_ID }}</string>' >> exportOptions.plist
+        echo '    <key>signingStyle</key>' >> exportOptions.plist
+        echo '    <string>manual</string>' >> exportOptions.plist
+        echo '    <key>provisioningProfiles</key>' >> exportOptions.plist
+        echo '    <dict>' >> exportOptions.plist
+        echo '        <key>${{ secrets.APPLE_BUNDLE_ID }}</key>' >> exportOptions.plist
+        echo '        <string>${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}</string>' >> exportOptions.plist
+        echo '    </dict>' >> exportOptions.plist
+        echo '    <key>signingCertificate</key>' >> exportOptions.plist
+        echo '    <string>Apple Distribution</string>' >> exportOptions.plist
+        echo '    <key>uploadBitcode</key>' >> exportOptions.plist
+        echo '    <false/>' >> exportOptions.plist
+        echo '    <key>uploadSymbols</key>' >> exportOptions.plist
+        echo '    <true/>' >> exportOptions.plist
+        echo '</dict>' >> exportOptions.plist
+        echo '</plist>' >> exportOptions.plist
         
         # Export IPA from archive
-        xcodebuild -exportArchive -archivePath ./artifacts/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist exportOptions.plist
+        xcodebuild -exportArchive -archivePath ../../artifacts/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist exportOptions.plist
         
         echo "✅ IPA exported successfully"
         
