@@ -269,14 +269,19 @@ jobs:
         echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode > /tmp/certificate.p12
         echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > /tmp/profile.mobileprovision
         
+        # Debug: Check if files were created
+        echo "📋 Certificate file size: $(ls -la /tmp/certificate.p12)"
+        echo "📋 Profile file size: $(ls -la /tmp/profile.mobileprovision)"
+        
         # Create keychain and import certificate
         security create-keychain -p "temp" build.keychain
         security default-keychain -s build.keychain
         security unlock-keychain -p "temp" build.keychain
         security set-keychain-settings -t 3600 -u build.keychain
         
-        # Import certificate
-        security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+        # Import certificate with verbose output
+        echo "📋 Importing certificate..."
+        security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign -v
         security set-key-partition-list -S apple-tool:,apple: -s -k "temp" build.keychain
         
         # Install provisioning profile
@@ -287,9 +292,17 @@ jobs:
         echo "📋 Installed provisioning profiles:"
         ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
         
-        # Debug: Show profile details
+        # Debug: Show profile details with better parsing
         echo "📋 Profile details:"
-        security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | grep -A 5 -B 5 "Name\|TeamName\|AppIDName"
+        for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            echo "Profile: $profile"
+            if [ -f "$profile" ]; then
+                echo "Profile content:"
+                security cms -D -i "$profile" | grep -E "(Name|TeamName|AppIDName|TeamIdentifier|UUID)" || echo "Could not read profile"
+            else
+                echo "Profile file not found"
+            fi
+        done
         
         echo "✅ Code signing configured for TestFlight"
         
@@ -315,7 +328,7 @@ jobs:
         echo '        <string>${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}</string>' >> exportOptions.plist
         echo '    </dict>' >> exportOptions.plist
         echo '    <key>signingCertificate</key>' >> exportOptions.plist
-        echo '    <string>iPhone Distribution</string>' >> exportOptions.plist
+        echo '    <string>Apple Distribution</string>' >> exportOptions.plist
         echo '    <key>uploadBitcode</key>' >> exportOptions.plist
         echo '    <false/>' >> exportOptions.plist
         echo '    <key>uploadSymbols</key>' >> exportOptions.plist
