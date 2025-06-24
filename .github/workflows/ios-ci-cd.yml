@@ -315,7 +315,7 @@ jobs:
         echo '        <string>${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}</string>' >> exportOptions.plist
         echo '    </dict>' >> exportOptions.plist
         echo '    <key>signingCertificate</key>' >> exportOptions.plist
-        echo '    <string>Apple Distribution</string>' >> exportOptions.plist
+        echo '    <string>iPhone Distribution</string>' >> exportOptions.plist
         echo '    <key>uploadBitcode</key>' >> exportOptions.plist
         echo '    <false/>' >> exportOptions.plist
         echo '    <key>uploadSymbols</key>' >> exportOptions.plist
@@ -329,6 +329,23 @@ jobs:
         
         # Debug: Show the profile name being used
         echo "📋 Profile name from secret: ${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}"
+        
+        # Debug: Show bundle ID being used
+        echo "📋 Bundle ID from secret: ${{ secrets.APPLE_BUNDLE_ID }}"
+        
+        # Debug: Show team ID being used
+        echo "📋 Team ID from secret: ${{ secrets.APPLE_TEAM_ID }}"
+        
+        # Debug: List available certificates
+        echo "📋 Available certificates:"
+        security find-identity -v -p codesigning
+        
+        # Debug: List installed provisioning profiles with details
+        echo "📋 Installed provisioning profiles:"
+        for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            echo "Profile: $profile"
+            security cms -D -i "$profile" | grep -E "(Name|TeamName|AppIDName|TeamIdentifier)" || echo "Could not read profile"
+        done
         
         # Export IPA from archive
         xcodebuild -exportArchive -archivePath ../../artifacts/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist exportOptions.plist
