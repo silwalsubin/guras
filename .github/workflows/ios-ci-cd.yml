@@ -316,7 +316,7 @@ jobs:
         echo '</plist>' >> exportOptions.plist
         
         # Export IPA from archive
-        xcodebuild -exportArchive -archivePath ./artifacts/react-native/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist exportOptions.plist
+        xcodebuild -exportArchive -archivePath ../../artifacts/react-native/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist exportOptions.plist
         
         echo "✅ IPA exported successfully"
         
