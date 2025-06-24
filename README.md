@@ -171,4 +171,95 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Note**: This repository contains multiple projects. Make sure to navigate to the correct directory when working on specific components. 
+**Note**: This repository contains multiple projects. Make sure to navigate to the correct directory when working on specific components.
+
+# Guras
+
+A React Native iOS app with automated CI/CD pipeline.
+
+## CI/CD Pipeline
+
+The project includes a comprehensive CI/CD pipeline for iOS builds and deployments:
+
+### Workflow Structure
+
+- **Build Job**: Compiles the app, creates archive, and uploads artifacts
+- **TestFlight Job**: Automatically deploys to TestFlight after successful build
+- **App Store Job**: Deploys to App Store with manual approval (requires environment setup)
+
+### TestFlight Deployment Setup
+
+To enable TestFlight deployment, you need to configure the following GitHub secrets:
+
+#### Required Secrets
+
+1. **App Store Connect API Credentials:**
+   - `APP_STORE_CONNECT_API_KEY`: Base64-encoded App Store Connect API key (.p8 file)
+   - `APP_STORE_CONNECT_API_KEY_ID`: Your API key ID
+   - `APP_STORE_CONNECT_ISSUER_ID`: Your issuer ID
+
+2. **Apple Developer Account:**
+   - `APPLE_ID`: Your Apple ID email
+   - `APPLE_APP_SPECIFIC_PASSWORD`: App-specific password for your Apple ID
+   - `APPLE_TEAM_ID`: Your Apple Developer Team ID
+   - `APPLE_BUNDLE_ID`: Your app's bundle identifier (e.g., com.yourcompany.guras)
+
+3. **Code Signing:**
+   - `APPLE_DEVELOPER_CERTIFICATE`: Base64-encoded distribution certificate (.p12 file)
+   - `APPLE_DEVELOPER_CERTIFICATE_PASSWORD`: Password for the certificate
+   - `APPLE_PROVISIONING_PROFILE`: Base64-encoded App Store provisioning profile
+   - `APPLE_PROVISIONING_PROFILE_NAME`: Name of the provisioning profile
+
+#### Setup Instructions
+
+1. **Create App Store Connect API Key:**
+   - Go to [App Store Connect](https://appstoreconnect.apple.com)
+   - Navigate to Users and Access → Keys
+   - Create a new API key with App Manager role
+   - Download the .p8 file and encode it: `base64 -i AuthKey_XXXXXXXXXX.p8`
+
+2. **Get Distribution Certificate:**
+   - Export your distribution certificate from Keychain Access
+   - Encode it: `base64 -i certificate.p12`
+
+3. **Get Provisioning Profile:**
+   - Download your App Store provisioning profile from Apple Developer
+   - Encode it: `base64 -i profile.mobileprovision`
+
+4. **Add Secrets to GitHub:**
+   - Go to your repository Settings → Secrets and variables → Actions
+   - Add each secret with the corresponding value
+
+### App Store Deployment
+
+App Store deployment requires additional setup:
+
+1. **Create Production Environment:**
+   - Go to repository Settings → Environments
+   - Create a new environment named `production`
+   - Enable "Required reviewers" and add yourself/team
+   - Optionally add deployment branch restrictions
+
+2. **Manual Approval:**
+   - App Store deployments require manual approval
+   - You'll see a "Review deployments" button in the Actions tab
+   - Only designated reviewers can approve the deployment
+
+### Workflow Triggers
+
+- **Push to master**: Automatic build and TestFlight deployment
+- **Pull Request**: Build only (no deployment)
+- **Manual trigger**: Build and TestFlight deployment
+
+## Project Structure
+
+```
+guras/
+├── react-native/          # React Native iOS app
+│   ├── ios/              # iOS project files
+│   ├── App.tsx           # Main app component
+│   └── package.json      # Dependencies
+├── iac/                  # Infrastructure as Code
+└── .github/workflows/    # CI/CD workflows
+    └── ios-ci-cd.yml     # Main iOS build and deploy workflow
+``` 
