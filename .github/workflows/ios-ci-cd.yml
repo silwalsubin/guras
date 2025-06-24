@@ -242,6 +242,17 @@ jobs:
         name: ios-build-v${{ needs.build.outputs.version }}
         path: ./artifacts
         
+    - name: Debug - List artifacts contents
+      run: |
+        echo "🔍 Debugging artifacts directory structure:"
+        echo "Current directory: $(pwd)"
+        echo "Artifacts directory contents:"
+        ls -la ./artifacts/
+        echo "Artifacts subdirectories:"
+        find ./artifacts -type d
+        echo "All files in artifacts:"
+        find ./artifacts -type f
+        
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
