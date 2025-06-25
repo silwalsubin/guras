@@ -146,13 +146,22 @@ jobs:
         # Get the latest build number from existing tags
         LATEST_BUILD=$(git tag | grep '^v1\.0\.' | sort -V | tail -n 1 | sed 's/v1\.0\.//' || echo "0")
         
-        # Increment build number
-        NEW_BUILD=$((LATEST_BUILD + 1))
+        # Use timestamp-based build number to ensure uniqueness
+        # This prevents conflicts with App Store Connect's build number tracking
+        TIMESTAMP_BUILD=$(date +%s)
+        
+        # Use the higher of the two numbers to ensure we don't go backwards
+        if [ "$LATEST_BUILD" -gt "$TIMESTAMP_BUILD" ]; then
+          NEW_BUILD=$((LATEST_BUILD + 1))
+        else
+          NEW_BUILD=$TIMESTAMP_BUILD
+        fi
         
         # Generate version: 1.0.BUILD_NUMBER
         VERSION="1.0.${NEW_BUILD}"
         
-        echo "Latest build number: $LATEST_BUILD"
+        echo "Latest build number from git tags: $LATEST_BUILD"
+        echo "Timestamp-based build number: $TIMESTAMP_BUILD"
         echo "New build number: $NEW_BUILD"
         echo "Generated version: $VERSION"
         echo "version=$VERSION" >> $GITHUB_OUTPUT
