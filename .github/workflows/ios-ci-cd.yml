@@ -21,6 +21,112 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
         
+    - name: Early secrets validation
+      run: |
+        echo "🔍 Early validation of required secrets..."
+        echo "📋 This step runs early to catch issues before the build starts"
+        
+        # Check which secrets are set (without revealing values)
+        SECRETS_STATUS=""
+        
+        if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_DEVELOPER_CERTIFICATE is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_DEVELOPER_CERTIFICATE is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_DEVELOPER_CERTIFICATE_PASSWORD is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_DEVELOPER_CERTIFICATE_PASSWORD is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_PROVISIONING_PROFILE is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_PROVISIONING_PROFILE is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_TEAM_ID }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_TEAM_ID is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_TEAM_ID is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_BUNDLE_ID }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_BUNDLE_ID is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_BUNDLE_ID is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_PROVISIONING_PROFILE_NAME is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_PROVISIONING_PROFILE_NAME is NOT set\n"
+        fi
+        
+        echo -e "📋 Secrets Status:\n$SECRETS_STATUS"
+        
+        # Check if we have the minimum required secrets
+        if [ -z "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ] || [ -z "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" ] || [ -z "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
+          echo "❌ Missing required secrets for code signing"
+          echo "📝 To fix this, you need to:"
+          echo "1. Export your iOS Distribution certificate from Keychain Access"
+          echo "2. Base64 encode it: base64 -i certificate.p12 | pbcopy"
+          echo "3. Add it as APPLE_DEVELOPER_CERTIFICATE secret in GitHub"
+          echo "4. Add the certificate password as APPLE_DEVELOPER_CERTIFICATE_PASSWORD"
+          echo "5. Export your App Store provisioning profile"
+          echo "6. Base64 encode it: base64 -i profile.mobileprovision | pbcopy"
+          echo "7. Add it as APPLE_PROVISIONING_PROFILE secret in GitHub"
+          exit 1
+        fi
+        
+        echo "✅ All required secrets are present"
+        
+    - name: Early base64 validation
+      run: |
+        echo "🔍 Early base64 validation of secrets..."
+        
+        # Test certificate secret
+        if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ]; then
+          echo "📋 Certificate secret is set"
+          
+          # Test base64 decode and check if it produces valid output
+          CERT_DECODED=$(echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode 2>/dev/null)
+          if [ $? -eq 0 ] && [ -n "$CERT_DECODED" ]; then
+            echo "✅ Certificate secret base64 decode test: PASSED"
+            echo "📋 Decoded certificate size: $(echo "$CERT_DECODED" | wc -c) bytes"
+          else
+            echo "❌ Certificate secret base64 decode test: FAILED"
+            echo "📋 This suggests the secret might not be properly base64 encoded"
+            exit 1
+          fi
+        else
+          echo "❌ Certificate secret is NOT set"
+          exit 1
+        fi
+        
+        # Test profile secret
+        if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
+          echo "📋 Profile secret is set"
+          
+          # Test base64 decode and check if it produces valid output
+          PROFILE_DECODED=$(echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode 2>/dev/null)
+          if [ $? -eq 0 ] && [ -n "$PROFILE_DECODED" ]; then
+            echo "✅ Profile secret base64 decode test: PASSED"
+            echo "📋 Decoded profile size: $(echo "$PROFILE_DECODED" | wc -c) bytes"
+          else
+            echo "❌ Profile secret base64 decode test: FAILED"
+            echo "📋 This suggests the secret might not be properly base64 encoded"
+            exit 1
+          fi
+        else
+          echo "❌ Profile secret is NOT set"
+          exit 1
+        fi
+        
+        echo "✅ All base64 validation tests passed"
+        
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -348,11 +454,12 @@ jobs:
         # Test certificate secret
         if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ]; then
           echo "📋 Certificate secret is set"
-          echo "📋 Certificate secret length: ${#APPLE_DEVELOPER_CERTIFICATE}"
           
-          # Test base64 decode without saving
-          if echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode > /dev/null 2>&1; then
+          # Test base64 decode and check if it produces valid output
+          CERT_DECODED=$(echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode 2>/dev/null)
+          if [ $? -eq 0 ] && [ -n "$CERT_DECODED" ]; then
             echo "✅ Certificate secret base64 decode test: PASSED"
+            echo "📋 Decoded certificate size: $(echo "$CERT_DECODED" | wc -c) bytes"
           else
             echo "❌ Certificate secret base64 decode test: FAILED"
             echo "📋 This suggests the secret might not be properly base64 encoded"
@@ -364,11 +471,12 @@ jobs:
         # Test profile secret
         if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
           echo "📋 Profile secret is set"
-          echo "📋 Profile secret length: ${#APPLE_PROVISIONING_PROFILE}"
           
-          # Test base64 decode without saving
-          if echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > /dev/null 2>&1; then
+          # Test base64 decode and check if it produces valid output
+          PROFILE_DECODED=$(echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode 2>/dev/null)
+          if [ $? -eq 0 ] && [ -n "$PROFILE_DECODED" ]; then
             echo "✅ Profile secret base64 decode test: PASSED"
+            echo "📋 Decoded profile size: $(echo "$PROFILE_DECODED" | wc -c) bytes"
           else
             echo "❌ Profile secret base64 decode test: FAILED"
             echo "📋 This suggests the secret might not be properly base64 encoded"
@@ -402,11 +510,13 @@ jobs:
         echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode > /tmp/certificate.p12
         if [ ! -f /tmp/certificate.p12 ] || [ ! -s /tmp/certificate.p12 ]; then
           echo "❌ Failed to create certificate file or file is empty"
-          echo "📋 Checking if base64 decode worked..."
-          echo "📋 Original secret length: ${#APPLE_DEVELOPER_CERTIFICATE}"
           echo "📋 Certificate file size: $(ls -la /tmp/certificate.p12 2>/dev/null || echo 'File not found')"
+          echo "📋 Base64 decode exit code: $?"
           exit 1
         fi
+        
+        echo "✅ Certificate file created successfully"
+        echo "📋 Certificate file size: $(ls -la /tmp/certificate.p12)"
         
         # Check if the certificate file is valid
         echo "📋 Validating certificate file..."
@@ -423,8 +533,12 @@ jobs:
         if [ ! -f /tmp/profile.mobileprovision ] || [ ! -s /tmp/profile.mobileprovision ]; then
           echo "❌ Failed to create provisioning profile file or file is empty"
           echo "📋 Profile file size: $(ls -la /tmp/profile.mobileprovision 2>/dev/null || echo 'File not found')"
+          echo "📋 Base64 decode exit code: $?"
           exit 1
         fi
+        
+        echo "✅ Profile file created successfully"
+        echo "📋 Profile file size: $(ls -la /tmp/profile.mobileprovision)"
         
         # Check if the profile file is valid
         echo "📋 Validating provisioning profile file..."
