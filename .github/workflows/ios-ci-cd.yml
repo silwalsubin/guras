@@ -284,6 +284,17 @@ jobs:
         security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
         security set-key-partition-list -S apple-tool:,apple: -s -k "temp" build.keychain
         
+        # Debug: Check certificate import
+        echo "📋 Checking certificate import..."
+        security list-keychains
+        security default-keychain
+        echo "📋 Certificates in build.keychain:"
+        security find-identity -v -p codesigning build.keychain || echo "No certificates found in build.keychain"
+        
+        # Debug: Check certificate details
+        echo "📋 Certificate details:"
+        security find-certificate -a build.keychain | head -10 || echo "No certificates found"
+        
         # Install provisioning profile
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
@@ -311,34 +322,36 @@ jobs:
       run: |
         echo "📦 Exporting IPA for TestFlight deployment"
         
-        # Create export options plist
-        echo '<?xml version="1.0" encoding="UTF-8"?>' > exportOptions.plist
-        echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> exportOptions.plist
-        echo '<plist version="1.0">' >> exportOptions.plist
-        echo '<dict>' >> exportOptions.plist
-        echo '    <key>method</key>' >> exportOptions.plist
-        echo '    <string>app-store</string>' >> exportOptions.plist
-        echo '    <key>teamID</key>' >> exportOptions.plist
-        echo '    <string>${{ secrets.APPLE_TEAM_ID }}</string>' >> exportOptions.plist
-        echo '    <key>signingStyle</key>' >> exportOptions.plist
-        echo '    <string>manual</string>' >> exportOptions.plist
-        echo '    <key>provisioningProfiles</key>' >> exportOptions.plist
-        echo '    <dict>' >> exportOptions.plist
-        echo '        <key>${{ secrets.APPLE_BUNDLE_ID }}</key>' >> exportOptions.plist
-        echo '        <string>${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}</string>' >> exportOptions.plist
-        echo '    </dict>' >> exportOptions.plist
-        echo '    <key>signingCertificate</key>' >> exportOptions.plist
-        echo '    <string>Apple Distribution</string>' >> exportOptions.plist
-        echo '    <key>uploadBitcode</key>' >> exportOptions.plist
-        echo '    <false/>' >> exportOptions.plist
-        echo '    <key>uploadSymbols</key>' >> exportOptions.plist
-        echo '    <true/>' >> exportOptions.plist
-        echo '</dict>' >> exportOptions.plist
-        echo '</plist>' >> exportOptions.plist
+        # Create ExportOptions.plist for TestFlight
+        cat > ExportOptions.plist << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store</string>
+    <key>teamID</key>
+    <string>${{ secrets.APPLE_TEAM_ID }}</string>
+    <key>signingStyle</key>
+    <string>manual</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>${{ secrets.APPLE_BUNDLE_ID }}</key>
+        <string>${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}</string>
+    </dict>
+    <key>signingCertificate</key>
+    <string>iOS Distribution</string>
+    <key>uploadBitcode</key>
+    <false/>
+    <key>uploadSymbols</key>
+    <true/>
+</dict>
+</plist>
+EOF
         
         # Debug: Show exportOptions.plist content
         echo "📋 ExportOptions.plist content:"
-        cat exportOptions.plist
+        cat ExportOptions.plist
         
         # Debug: Show the profile name being used
         echo "📋 Profile name from secret: ${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}"
@@ -361,7 +374,7 @@ jobs:
         done
         
         # Export IPA from archive
-        xcodebuild -exportArchive -archivePath ../../artifacts/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist exportOptions.plist
+        xcodebuild -exportArchive -archivePath ../../artifacts/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist ExportOptions.plist
         
         echo "✅ IPA exported successfully"
         
