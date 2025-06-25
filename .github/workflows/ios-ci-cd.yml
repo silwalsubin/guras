@@ -246,16 +246,56 @@ jobs:
         
     - name: Setup code signing
       run: |
-        echo "🔐 Setting up code signing for version ${{ steps.version.outputs.version }}"
+        echo "🔐 Setting up code signing for App Store deployment..."
         
-        # Create a temporary development team for CI builds
-        # This is a placeholder - in production you'd use real certificates
-        echo "📝 Note: Using temporary signing for CI build"
-        echo "For production builds, you'll need to:"
-        echo "1. Add APPLE_DEVELOPER_CERTIFICATE secret"
-        echo "2. Add APPLE_DEVELOPER_CERTIFICATE_PASSWORD secret"
-        echo "3. Add APPLE_TEAM_ID secret"
-        echo "4. Add APPLE_PROVISIONING_PROFILE secret"
+        # Create keychain
+        security create-keychain -p "" build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "" build.keychain
+        security set-keychain-settings build.keychain
+        
+        # Import certificate
+        echo "📋 Importing distribution certificate..."
+        echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode > /tmp/certificate.p12
+        
+        # Check certificate file
+        if [ ! -s /tmp/certificate.p12 ]; then
+          echo "❌ Certificate file is empty or missing"
+          exit 1
+        fi
+        
+        # Import certificate into keychain
+        security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+        
+        # Install provisioning profile
+        echo "📋 Installing App Store provisioning profile..."
+        echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > /tmp/profile.mobileprovision
+        
+        if [ ! -s /tmp/profile.mobileprovision ]; then
+          echo "❌ Provisioning profile file is empty or missing"
+          exit 1
+        fi
+        
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+        
+        # Get the actual profile name from the installed profile
+        echo "🔍 Detecting installed provisioning profile name..."
+        PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | grep -A1 "<key>Name</key>" | tail -1 | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+        
+        if [ -z "$PROFILE_NAME" ]; then
+          echo "⚠️ Could not detect profile name, using secret value..."
+          PROFILE_NAME="${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}"
+        fi
+        
+        echo "📋 Detected profile name: $PROFILE_NAME"
+        
+        # Verify certificate and profile
+        echo "🔍 Verifying code signing setup..."
+        security find-identity -v -p codesigning build.keychain
+        
+        echo "✅ Code signing setup completed"
         
     - name: Configure project for CI build
       working-directory: ./react-native/ios
@@ -912,6 +952,17 @@ jobs:
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
         
+        # Get the actual profile name from the installed profile
+        echo "🔍 Detecting installed provisioning profile name..."
+        PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | grep -A1 "<key>Name</key>" | tail -1 | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+        
+        if [ -z "$PROFILE_NAME" ]; then
+          echo "⚠️ Could not detect profile name, using secret value..."
+          PROFILE_NAME="${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}"
+        fi
+        
+        echo "📋 Detected profile name: $PROFILE_NAME"
+        
         # Verify certificate and profile
         echo "🔍 Verifying code signing setup..."
         security find-identity -v -p codesigning build.keychain
@@ -943,16 +994,25 @@ jobs:
         
         echo "📋 Using certificate: $CERT_NAME"
         
-        # Detect provisioning profile name
+        # Get the actual provisioning profile name from the installed profile
         echo "🔍 Detecting provisioning profile name..."
-        PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | plutil -extract Entitlements.application-identifier raw - 2>/dev/null | sed 's/.*\.//')
+        PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | grep -A1 "<key>Name</key>" | tail -1 | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
         
         if [ -z "$PROFILE_NAME" ]; then
-          echo "⚠️ Could not detect profile name, using default..."
-          PROFILE_NAME="Github Actions"
+          echo "⚠️ Could not detect profile name, using secret value..."
+          PROFILE_NAME="${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}"
         fi
         
         echo "📋 Using profile: $PROFILE_NAME"
+        
+        # Debug: List all installed profiles
+        echo "📋 All installed provisioning profiles:"
+        for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            if [ -f "$profile" ]; then
+                echo "Profile: $profile"
+                security cms -D -i "$profile" | grep -E "(Name|TeamName|AppIDName|TeamIdentifier)" || echo "Could not read profile"
+            fi
+        done
         
         # Create ExportOptions.plist for App Store
         echo "📋 Creating ExportOptions.plist for App Store..."
