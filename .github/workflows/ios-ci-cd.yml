@@ -674,7 +674,7 @@ jobs:
         echo '    <string>manual</string>' >> ExportOptions.plist
         echo '    <key>provisioningProfiles</key>' >> ExportOptions.plist
         echo '    <dict>' >> ExportOptions.plist
-        echo '        <key>${{ secrets.APPLE_BUNDLE_ID }}</key>' >> ExportOptions.plist
+        echo '        <key>com.cosmos.guras</key>' >> ExportOptions.plist
         echo "        <string>$PROFILE_NAME</string>" >> ExportOptions.plist
         echo '    </dict>' >> ExportOptions.plist
         echo '    <key>signingCertificate</key>' >> ExportOptions.plist
@@ -695,7 +695,7 @@ jobs:
         echo "📋 Detected profile name: $PROFILE_NAME"
         
         # Debug: Show bundle ID being used
-        echo "📋 Bundle ID from secret: ${{ secrets.APPLE_BUNDLE_ID }}"
+        echo "📋 Bundle ID from Xcode project: com.cosmos.guras"
         
         # Debug: Show team ID being used
         echo "📋 Team ID from secret: ${{ secrets.APPLE_TEAM_ID }}"
