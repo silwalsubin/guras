@@ -860,20 +860,190 @@ jobs:
         name: ios-build-v${{ needs.build.outputs.version }}
         path: ./artifacts
         
-    - name: Deploy to App Store
+    - name: Setup code signing
       run: |
-        echo "🏪 Deploying to App Store..."
+        echo "🔐 Setting up code signing for App Store deployment..."
+        
+        # Create keychain
+        security create-keychain -p "" build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "" build.keychain
+        security set-keychain-settings build.keychain
+        
+        # Import certificate
+        echo "📋 Importing distribution certificate..."
+        echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode > /tmp/certificate.p12
+        
+        # Check certificate file
+        if [ ! -s /tmp/certificate.p12 ]; then
+          echo "❌ Certificate file is empty or missing"
+          exit 1
+        fi
+        
+        # Import certificate into keychain
+        security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+        
+        # Install provisioning profile
+        echo "📋 Installing App Store provisioning profile..."
+        echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > /tmp/profile.mobileprovision
+        
+        if [ ! -s /tmp/profile.mobileprovision ]; then
+          echo "❌ Provisioning profile file is empty or missing"
+          exit 1
+        fi
+        
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+        
+        # Verify certificate and profile
+        echo "🔍 Verifying code signing setup..."
+        security find-identity -v -p codesigning build.keychain
+        
+        echo "✅ Code signing setup completed"
+        
+    - name: Export IPA for App Store
+      run: |
+        echo "📦 Exporting IPA for App Store deployment..."
+        
+        # Set up environment
+        export DEVELOPER_DIR="/Applications/Xcode_16.2.app/Contents/Developer"
+        export PATH="$DEVELOPER_DIR/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        
+        # Detect certificate name
+        echo "🔍 Detecting certificate name..."
+        CERT_NAME=$(security find-identity -v -p codesigning build.keychain | grep "Apple Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+        
+        if [ -z "$CERT_NAME" ]; then
+          echo "⚠️ No Apple Distribution certificate found, trying alternative names..."
+          CERT_NAME=$(security find-identity -v -p codesigning build.keychain | grep "Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+        fi
+        
+        if [ -z "$CERT_NAME" ]; then
+          echo "❌ No distribution certificate found"
+          security find-identity -v -p codesigning build.keychain
+          exit 1
+        fi
+        
+        echo "📋 Using certificate: $CERT_NAME"
+        
+        # Detect provisioning profile name
+        echo "🔍 Detecting provisioning profile name..."
+        PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | plutil -extract Entitlements.application-identifier raw - 2>/dev/null | sed 's/.*\.//')
+        
+        if [ -z "$PROFILE_NAME" ]; then
+          echo "⚠️ Could not detect profile name, using default..."
+          PROFILE_NAME="Github Actions"
+        fi
+        
+        echo "📋 Using profile: $PROFILE_NAME"
+        
+        # Create ExportOptions.plist for App Store
+        echo "📋 Creating ExportOptions.plist for App Store..."
+        echo '<?xml version="1.0" encoding="UTF-8"?>' > ExportOptions.plist
+        echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> ExportOptions.plist
+        echo '<plist version="1.0">' >> ExportOptions.plist
+        echo '<dict>' >> ExportOptions.plist
+        echo '    <key>method</key>' >> ExportOptions.plist
+        echo '    <string>app-store</string>' >> ExportOptions.plist
+        echo '    <key>teamID</key>' >> ExportOptions.plist
+        echo "    <string>${{ secrets.APPLE_TEAM_ID }}</string>" >> ExportOptions.plist
+        echo '    <key>signingStyle</key>' >> ExportOptions.plist
+        echo '    <string>manual</string>' >> ExportOptions.plist
+        echo '    <key>provisioningProfiles</key>' >> ExportOptions.plist
+        echo '    <dict>' >> ExportOptions.plist
+        echo '        <key>com.cosmos.guras</key>' >> ExportOptions.plist
+        echo "        <string>$PROFILE_NAME</string>" >> ExportOptions.plist
+        echo '    </dict>' >> ExportOptions.plist
+        echo '    <key>signingCertificate</key>' >> ExportOptions.plist
+        echo "    <string>$CERT_NAME</string>" >> ExportOptions.plist
+        echo '    <key>uploadBitcode</key>' >> ExportOptions.plist
+        echo '    <false/>' >> ExportOptions.plist
+        echo '    <key>uploadSymbols</key>' >> ExportOptions.plist
+        echo '    <true/>' >> ExportOptions.plist
+        echo '</dict>' >> ExportOptions.plist
+        echo '</plist>' >> ExportOptions.plist
+        
+        echo "📋 ExportOptions.plist content:"
+        cat ExportOptions.plist
+        
+        # Find the archive
+        ARCHIVE_PATH="$GITHUB_WORKSPACE/artifacts/ios/build/Guras.xcarchive"
+        if [ ! -d "$ARCHIVE_PATH" ]; then
+          echo "❌ Archive not found at $ARCHIVE_PATH"
+          find "$GITHUB_WORKSPACE/artifacts" -type d -name "*.xcarchive" || echo "No archives found"
+          exit 1
+        fi
+        
+        echo "✅ Archive found at: $ARCHIVE_PATH"
+        
+        # Export IPA
+        echo "📦 Exporting IPA for App Store..."
+        xcodebuild -exportArchive \
+                   -archivePath "$ARCHIVE_PATH" \
+                   -exportPath ./build \
+                   -exportOptionsPlist ExportOptions.plist
+        
+        if [ ! -f "./build/Guras.ipa" ]; then
+          echo "❌ IPA export failed"
+          ls -la ./build/ || echo "Build directory not found"
+          exit 1
+        fi
+        
+        echo "✅ IPA exported successfully: ./build/Guras.ipa"
+        echo "📋 IPA file size: $(ls -la ./build/Guras.ipa)"
+        
+    - name: Upload to App Store Connect
+      run: |
+        echo "🏪 Uploading to App Store Connect for review..."
         echo "Version: ${{ needs.build.outputs.version }}"
-        echo "Archive: Available in artifacts"
-        # For now, just create a placeholder - you'll need to set up App Store Connect API
-        echo "✅ App Store upload would happen here with proper API setup"
-        echo "📦 Using pre-built archive from build artifacts"
-        echo "📝 Note: For real deployment, you'll need proper code signing certificates"
+        echo "IPA Path: ./build/Guras.ipa"
+        
+        # Verify IPA exists
+        if [ ! -f "./build/Guras.ipa" ]; then
+          echo "❌ IPA file not found"
+          exit 1
+        fi
+        
+        echo "✅ IPA file found: $(ls -la ./build/Guras.ipa)"
+        
+        # Verify app exists in App Store Connect
+        echo "🔍 Verifying app exists in App Store Connect..."
+        if ! xcrun altool --list-apps -u "${{ secrets.APPLE_ID }}" -p "${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" 2>/dev/null | grep -q "com.cosmos.guras"; then
+          echo "❌ App 'com.cosmos.guras' not found in App Store Connect"
+          echo "📋 Please ensure the app exists in App Store Connect"
+          exit 1
+        fi
+        
+        echo "✅ App found in App Store Connect"
+        
+        # Upload to App Store Connect
+        echo "📤 Uploading to App Store Connect..."
+        xcrun altool --upload-app \
+                     --type ios \
+                     --file ./build/Guras.ipa \
+                     --username "${{ secrets.APPLE_ID }}" \
+                     --password "${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" \
+                     --verbose
+        
+        if [ $? -eq 0 ]; then
+          echo "✅ App uploaded to App Store Connect successfully"
+          echo "📝 Next steps:"
+          echo "   1. Go to App Store Connect: https://appstoreconnect.apple.com"
+          echo "   2. Navigate to your app"
+          echo "   3. Go to 'TestFlight' tab to see the uploaded build"
+          echo "   4. Submit for App Store review when ready"
+        else
+          echo "❌ Upload failed"
+          exit 1
+        fi
         
     - name: App Store Deployment Summary
       run: |
         echo "🎉 ========================================="
         echo "✅ App Store deployment completed successfully!"
         echo "📦 Version: ${{ needs.build.outputs.version }}"
-        echo "📦 Artifact: ios-build-v${{ needs.build.outputs.version }}"
+        echo "📱 IPA: Uploaded to App Store Connect"
+        echo "📝 Status: Ready for App Store review"
+        echo "🔗 Next: Submit for review in App Store Connect"
         echo "🎉 =========================================" 
