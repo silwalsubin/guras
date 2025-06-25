@@ -756,12 +756,23 @@ jobs:
       run: |
         echo "📱 Uploading to TestFlight..."
         echo "Version: ${{ needs.build.outputs.version }}"
-        echo "IPA Path: ./react-native/ios/build/Guras.ipa"
+        echo "IPA Path: ./build/Guras.ipa"
+        
+        # Check if IPA exists
+        if [ ! -f "./build/Guras.ipa" ]; then
+          echo "❌ IPA file not found at ./build/Guras.ipa"
+          echo "📋 Current directory: $(pwd)"
+          echo "📋 Build directory contents:"
+          ls -la ./build/ || echo "Build directory not found"
+          exit 1
+        fi
+        
+        echo "✅ IPA file found: $(ls -la ./build/Guras.ipa)"
         
         # Upload to App Store Connect using xcrun altool
         xcrun altool --upload-app \
                      --type ios \
-                     --file ./react-native/ios/build/Guras.ipa \
+                     --file ./build/Guras.ipa \
                      --username "${{ secrets.APPLE_ID }}" \
                      --password "${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" \
                      --verbose
