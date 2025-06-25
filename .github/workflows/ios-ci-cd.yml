@@ -752,11 +752,30 @@ jobs:
         echo "✅ IPA exported successfully: ./build/Guras.ipa"
         echo "📋 IPA file size: $(ls -la ./build/Guras.ipa)"
         
+        # Verify the bundle identifier in the IPA
+        echo "🔍 Verifying bundle identifier in IPA..."
+        mkdir -p /tmp/ipa-extract
+        unzip -q ./build/Guras.ipa -d /tmp/ipa-extract
+        if [ -f "/tmp/ipa-extract/Payload/Guras.app/Info.plist" ]; then
+          BUNDLE_ID=$(plutil -extract CFBundleIdentifier raw /tmp/ipa-extract/Payload/Guras.app/Info.plist)
+          echo "📋 Bundle identifier in IPA: $BUNDLE_ID"
+          if [ "$BUNDLE_ID" != "com.cosmos.guras" ]; then
+            echo "❌ Bundle identifier mismatch! Expected: com.cosmos.guras, Found: $BUNDLE_ID"
+            exit 1
+          else
+            echo "✅ Bundle identifier matches expected value"
+          fi
+        else
+          echo "⚠️ Could not extract bundle identifier from IPA"
+        fi
+        rm -rf /tmp/ipa-extract
+        
     - name: Upload to TestFlight
       run: |
         echo "📱 Uploading to TestFlight..."
         echo "Version: ${{ needs.build.outputs.version }}"
         echo "IPA Path: ./build/Guras.ipa"
+        echo "Bundle ID: com.cosmos.guras"
         
         # Check if IPA exists
         if [ ! -f "./build/Guras.ipa" ]; then
@@ -768,6 +787,14 @@ jobs:
         fi
         
         echo "✅ IPA file found: $(ls -la ./build/Guras.ipa)"
+        
+        # Verify app exists in App Store Connect
+        echo "🔍 Verifying app exists in App Store Connect..."
+        echo "📋 Bundle ID: com.cosmos.guras"
+        echo "📋 Apple ID: ${{ secrets.APPLE_ID }}"
+        echo "📋 Note: If this fails, you need to create the app in App Store Connect first"
+        echo "📋 Go to: https://appstoreconnect.apple.com"
+        echo "📋 Create a new iOS app with bundle ID: com.cosmos.guras"
         
         # Upload to App Store Connect using xcrun altool
         xcrun altool --upload-app \
