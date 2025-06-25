@@ -796,6 +796,34 @@ jobs:
         echo "📋 Go to: https://appstoreconnect.apple.com"
         echo "📋 Create a new iOS app with bundle ID: com.cosmos.guras"
         
+        # Test Apple ID authentication and app access
+        echo "🔐 Testing Apple ID authentication..."
+        if ! xcrun altool --list-providers -u "${{ secrets.APPLE_ID }}" -p "${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" > /dev/null 2>&1; then
+          echo "❌ Apple ID authentication failed"
+          echo "📋 Please verify:"
+          echo "   - APPLE_ID secret is correct"
+          echo "   - APPLE_APP_SPECIFIC_PASSWORD secret is correct"
+          echo "   - App-specific password is valid and not expired"
+          exit 1
+        else
+          echo "✅ Apple ID authentication successful"
+        fi
+        
+        # Try to list apps to verify access
+        echo "📱 Testing app access..."
+        if ! xcrun altool --list-apps -u "${{ secrets.APPLE_ID }}" -p "${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" 2>/dev/null | grep -q "com.cosmos.guras"; then
+          echo "⚠️ App 'com.cosmos.guras' not found in your App Store Connect account"
+          echo "📋 This could mean:"
+          echo "   1. The app doesn't exist in App Store Connect"
+          echo "   2. Your Apple ID doesn't have access to this app"
+          echo "   3. The bundle identifier is different"
+          echo "📋 Please create the app in App Store Connect first"
+          echo "📋 Go to: https://appstoreconnect.apple.com"
+          echo "📋 Create a new iOS app with bundle ID: com.cosmos.guras"
+        else
+          echo "✅ App 'com.cosmos.guras' found in App Store Connect"
+        fi
+        
         # Upload to App Store Connect using xcrun altool
         xcrun altool --upload-app \
                      --type ios \
