@@ -846,7 +846,7 @@ jobs:
   deploy-appstore:
     name: Deploy to App Store
     runs-on: macos-latest
-    needs: build
+    needs: [build, deploy-testflight]
     if: success()
     environment: production
     
