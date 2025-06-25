@@ -246,16 +246,17 @@ jobs:
       run: |
         echo "🔍 Debugging artifacts structure..."
         echo "📋 Current directory: $(pwd)"
+        echo "📋 Workspace root: $GITHUB_WORKSPACE"
         echo "📋 Artifacts directory contents:"
-        ls -la ./artifacts/
+        ls -la "$GITHUB_WORKSPACE/artifacts/"
         echo "📋 Looking for xcarchive files:"
-        find ./artifacts -name "*.xcarchive" -type f
+        find "$GITHUB_WORKSPACE/artifacts" -name "*.xcarchive" -type f
         echo "📋 Full artifacts directory structure:"
-        find ./artifacts -type f | head -20
-        echo "📋 Expected archive path: ./artifacts/react-native/ios/build/Guras.xcarchive"
-        if [ -f "./artifacts/react-native/ios/build/Guras.xcarchive" ]; then
+        find "$GITHUB_WORKSPACE/artifacts" -type f | head -20
+        echo "📋 Expected archive path: $GITHUB_WORKSPACE/artifacts/ios/build/Guras.xcarchive"
+        if [ -f "$GITHUB_WORKSPACE/artifacts/ios/build/Guras.xcarchive" ]; then
           echo "✅ Archive found at expected location"
-          ls -la "./artifacts/react-native/ios/build/Guras.xcarchive"
+          ls -la "$GITHUB_WORKSPACE/artifacts/ios/build/Guras.xcarchive"
         else
           echo "❌ Archive not found at expected location"
         fi
@@ -340,6 +341,42 @@ jobs:
         
         echo "✅ All required secrets are present"
         
+    - name: Test base64 secrets
+      run: |
+        echo "🔍 Testing base64 secrets..."
+        
+        # Test certificate secret
+        if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ]; then
+          echo "📋 Certificate secret is set"
+          echo "📋 Certificate secret length: ${#APPLE_DEVELOPER_CERTIFICATE}"
+          
+          # Test base64 decode without saving
+          if echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode > /dev/null 2>&1; then
+            echo "✅ Certificate secret base64 decode test: PASSED"
+          else
+            echo "❌ Certificate secret base64 decode test: FAILED"
+            echo "📋 This suggests the secret might not be properly base64 encoded"
+          fi
+        else
+          echo "❌ Certificate secret is NOT set"
+        fi
+        
+        # Test profile secret
+        if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
+          echo "📋 Profile secret is set"
+          echo "📋 Profile secret length: ${#APPLE_PROVISIONING_PROFILE}"
+          
+          # Test base64 decode without saving
+          if echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > /dev/null 2>&1; then
+            echo "✅ Profile secret base64 decode test: PASSED"
+          else
+            echo "❌ Profile secret base64 decode test: FAILED"
+            echo "📋 This suggests the secret might not be properly base64 encoded"
+          fi
+        else
+          echo "❌ Profile secret is NOT set"
+        fi
+        
     - name: Setup code signing for TestFlight
       run: |
         echo "🔐 Setting up code signing for TestFlight deployment"
@@ -365,19 +402,37 @@ jobs:
         echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode > /tmp/certificate.p12
         if [ ! -f /tmp/certificate.p12 ] || [ ! -s /tmp/certificate.p12 ]; then
           echo "❌ Failed to create certificate file or file is empty"
+          echo "📋 Checking if base64 decode worked..."
+          echo "📋 Original secret length: ${#APPLE_DEVELOPER_CERTIFICATE}"
+          echo "📋 Certificate file size: $(ls -la /tmp/certificate.p12 2>/dev/null || echo 'File not found')"
           exit 1
+        fi
+        
+        # Check if the certificate file is valid
+        echo "📋 Validating certificate file..."
+        file /tmp/certificate.p12
+        if ! file /tmp/certificate.p12 | grep -q "PKCS12"; then
+          echo "⚠️ Certificate file doesn't appear to be a valid PKCS12 file"
+          echo "📋 File type: $(file /tmp/certificate.p12)"
+          echo "📋 First 100 bytes:"
+          head -c 100 /tmp/certificate.p12 | hexdump -C
         fi
         
         echo "📋 Creating provisioning profile file..."
         echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > /tmp/profile.mobileprovision
         if [ ! -f /tmp/profile.mobileprovision ] || [ ! -s /tmp/profile.mobileprovision ]; then
           echo "❌ Failed to create provisioning profile file or file is empty"
+          echo "📋 Profile file size: $(ls -la /tmp/profile.mobileprovision 2>/dev/null || echo 'File not found')"
           exit 1
         fi
         
-        # Debug: Check if files were created
-        echo "📋 Certificate file size: $(ls -la /tmp/certificate.p12)"
-        echo "📋 Profile file size: $(ls -la /tmp/profile.mobileprovision)"
+        # Check if the profile file is valid
+        echo "📋 Validating provisioning profile file..."
+        file /tmp/profile.mobileprovision
+        if ! file /tmp/profile.mobileprovision | grep -q "data"; then
+          echo "⚠️ Profile file doesn't appear to be valid"
+          echo "📋 File type: $(file /tmp/profile.mobileprovision)"
+        fi
         
         # Create keychain and import certificate with better error handling
         echo "🔑 Creating build keychain..."
@@ -453,13 +508,23 @@ jobs:
         echo "✅ Code signing configured for TestFlight"
         
     - name: Export IPA for TestFlight
-      working-directory: ./react-native/ios
       run: |
         echo "📦 Exporting IPA for TestFlight deployment"
         
         # Get the actual certificate name from the keychain
         echo "🔍 Detecting certificate name..."
-        CERT_NAME=$(security find-identity -v -p codesigning build.keychain | grep "iPhone Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "iPhone Distribution")
+        CERT_NAME=$(security find-identity -v -p codesigning build.keychain | grep "iPhone Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "")
+        
+        if [ -z "$CERT_NAME" ]; then
+          echo "⚠️ No iPhone Distribution certificate found, trying alternative names..."
+          CERT_NAME=$(security find-identity -v -p codesigning build.keychain | grep -E "(Distribution|Developer)" | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "")
+        fi
+        
+        if [ -z "$CERT_NAME" ]; then
+          echo "⚠️ No certificates found in build.keychain, trying system keychain..."
+          CERT_NAME=$(security find-identity -v -p codesigning | grep "iPhone Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "iPhone Distribution")
+        fi
+        
         echo "📋 Using certificate: $CERT_NAME"
         
         # Get the actual provisioning profile name
@@ -517,19 +582,20 @@ jobs:
             security cms -D -i "$profile" | grep -E "(Name|TeamName|AppIDName|TeamIdentifier)" || echo "Could not read profile"
         done
         
-        # Check if archive exists
-        if [ ! -f "../../artifacts/react-native/ios/build/Guras.xcarchive" ]; then
-          echo "❌ Archive not found at ../../artifacts/react-native/ios/build/Guras.xcarchive"
+        # Check if archive exists using workspace root path
+        ARCHIVE_PATH="$GITHUB_WORKSPACE/artifacts/ios/build/Guras.xcarchive"
+        if [ ! -f "$ARCHIVE_PATH" ]; then
+          echo "❌ Archive not found at $ARCHIVE_PATH"
           echo "📋 Available files in artifacts:"
-          find ../../artifacts -type f -name "*.xcarchive" || echo "No archives found"
+          find "$GITHUB_WORKSPACE/artifacts" -type f -name "*.xcarchive" || echo "No archives found"
           echo "📋 Artifacts directory structure:"
-          find ../../artifacts -type f | head -20
+          find "$GITHUB_WORKSPACE/artifacts" -type f | head -20
           exit 1
         fi
         
         # Export IPA from archive with error handling
         echo "📦 Exporting IPA..."
-        if ! xcodebuild -exportArchive -archivePath ../../artifacts/react-native/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist ExportOptions.plist; then
+        if ! xcodebuild -exportArchive -archivePath "$ARCHIVE_PATH" -exportPath ./build -exportOptionsPlist ExportOptions.plist; then
           echo "❌ Export failed"
           echo "📋 Checking export logs..."
           if [ -f "./build/ExportOptions.plist" ]; then
