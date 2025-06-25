@@ -261,41 +261,140 @@ jobs:
         
         echo "✅ App Store Connect API configured"
         
+    - name: Troubleshoot secrets setup
+      run: |
+        echo "🔍 Troubleshooting secrets setup..."
+        
+        # Check which secrets are set (without revealing values)
+        SECRETS_STATUS=""
+        
+        if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_DEVELOPER_CERTIFICATE is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_DEVELOPER_CERTIFICATE is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_DEVELOPER_CERTIFICATE_PASSWORD is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_DEVELOPER_CERTIFICATE_PASSWORD is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_PROVISIONING_PROFILE is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_PROVISIONING_PROFILE is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_TEAM_ID }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_TEAM_ID is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_TEAM_ID is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_BUNDLE_ID }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_BUNDLE_ID is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_BUNDLE_ID is NOT set\n"
+        fi
+        
+        if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}" ]; then
+          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_PROVISIONING_PROFILE_NAME is set\n"
+        else
+          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_PROVISIONING_PROFILE_NAME is NOT set\n"
+        fi
+        
+        echo -e "📋 Secrets Status:\n$SECRETS_STATUS"
+        
+        # Check if we have the minimum required secrets
+        if [ -z "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ] || [ -z "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" ] || [ -z "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
+          echo "❌ Missing required secrets for code signing"
+          echo "📝 To fix this, you need to:"
+          echo "1. Export your iOS Distribution certificate from Keychain Access"
+          echo "2. Base64 encode it: base64 -i certificate.p12 | pbcopy"
+          echo "3. Add it as APPLE_DEVELOPER_CERTIFICATE secret in GitHub"
+          echo "4. Add the certificate password as APPLE_DEVELOPER_CERTIFICATE_PASSWORD"
+          echo "5. Export your App Store provisioning profile"
+          echo "6. Base64 encode it: base64 -i profile.mobileprovision | pbcopy"
+          echo "7. Add it as APPLE_PROVISIONING_PROFILE secret in GitHub"
+          exit 1
+        fi
+        
+        echo "✅ All required secrets are present"
+        
     - name: Setup code signing for TestFlight
       run: |
         echo "🔐 Setting up code signing for TestFlight deployment"
         
-        # Create certificate and provisioning profile
+        # Check if secrets are available
+        if [ -z "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ]; then
+          echo "❌ APPLE_DEVELOPER_CERTIFICATE secret is not set"
+          exit 1
+        fi
+        
+        if [ -z "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" ]; then
+          echo "❌ APPLE_DEVELOPER_CERTIFICATE_PASSWORD secret is not set"
+          exit 1
+        fi
+        
+        if [ -z "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
+          echo "❌ APPLE_PROVISIONING_PROFILE secret is not set"
+          exit 1
+        fi
+        
+        # Create certificate and provisioning profile with better error handling
+        echo "📋 Creating certificate file..."
         echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode > /tmp/certificate.p12
+        if [ ! -f /tmp/certificate.p12 ] || [ ! -s /tmp/certificate.p12 ]; then
+          echo "❌ Failed to create certificate file or file is empty"
+          exit 1
+        fi
+        
+        echo "📋 Creating provisioning profile file..."
         echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > /tmp/profile.mobileprovision
+        if [ ! -f /tmp/profile.mobileprovision ] || [ ! -s /tmp/profile.mobileprovision ]; then
+          echo "❌ Failed to create provisioning profile file or file is empty"
+          exit 1
+        fi
         
         # Debug: Check if files were created
         echo "📋 Certificate file size: $(ls -la /tmp/certificate.p12)"
         echo "📋 Profile file size: $(ls -la /tmp/profile.mobileprovision)"
         
-        # Create keychain and import certificate
+        # Create keychain and import certificate with better error handling
+        echo "🔑 Creating build keychain..."
         security create-keychain -p "temp" build.keychain
         security default-keychain -s build.keychain
         security unlock-keychain -p "temp" build.keychain
         security set-keychain-settings -t 3600 -u build.keychain
         
-        # Import certificate with verbose output
+        # Import certificate with verbose output and error checking
         echo "📋 Importing certificate..."
-        security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+        if ! security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign; then
+          echo "❌ Failed to import certificate"
+          echo "📋 Trying to get more details about the certificate..."
+          file /tmp/certificate.p12
+          echo "📋 Certificate file first 100 bytes:"
+          head -c 100 /tmp/certificate.p12 | hexdump -C
+          exit 1
+        fi
+        
+        echo "✅ Certificate imported successfully"
         security set-key-partition-list -S apple-tool:,apple: -s -k "temp" build.keychain
         
-        # Debug: Check certificate import
+        # Debug: Check certificate import with more details
         echo "📋 Checking certificate import..."
         security list-keychains
         security default-keychain
         echo "📋 Certificates in build.keychain:"
         security find-identity -v -p codesigning build.keychain || echo "No certificates found in build.keychain"
         
-        # Debug: Check certificate details
+        # Debug: Check certificate details with better output
         echo "📋 Certificate details:"
         security find-certificate -a build.keychain | head -10 || echo "No certificates found"
         
         # Install provisioning profile
+        echo "📋 Installing provisioning profile..."
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
         
@@ -315,12 +414,40 @@ jobs:
             fi
         done
         
+        # Verify the setup
+        echo "🔍 Verifying code signing setup..."
+        CERT_COUNT=$(security find-identity -v -p codesigning build.keychain | grep -c "valid identities found" || echo "0")
+        PROFILE_COUNT=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | wc -l || echo "0")
+        
+        echo "📋 Found $CERT_COUNT valid certificates"
+        echo "📋 Found $PROFILE_COUNT provisioning profiles"
+        
+        if [ "$CERT_COUNT" -eq 0 ]; then
+          echo "❌ No valid certificates found - code signing setup failed"
+          exit 1
+        fi
+        
+        if [ "$PROFILE_COUNT" -eq 0 ]; then
+          echo "❌ No provisioning profiles found - code signing setup failed"
+          exit 1
+        fi
+        
         echo "✅ Code signing configured for TestFlight"
         
     - name: Export IPA for TestFlight
       working-directory: ./react-native/ios
       run: |
         echo "📦 Exporting IPA for TestFlight deployment"
+        
+        # Get the actual certificate name from the keychain
+        echo "🔍 Detecting certificate name..."
+        CERT_NAME=$(security find-identity -v -p codesigning build.keychain | grep "iPhone Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "iPhone Distribution")
+        echo "📋 Using certificate: $CERT_NAME"
+        
+        # Get the actual provisioning profile name
+        echo "🔍 Detecting provisioning profile name..."
+        PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | grep -A1 "<key>Name</key>" | tail -1 | sed 's/.*<string>\(.*\)<\/string>.*/\1/' || echo "${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}")
+        echo "📋 Using profile: $PROFILE_NAME"
         
         # Create ExportOptions.plist for TestFlight
         echo '<?xml version="1.0" encoding="UTF-8"?>' > ExportOptions.plist
@@ -336,10 +463,10 @@ jobs:
         echo '    <key>provisioningProfiles</key>' >> ExportOptions.plist
         echo '    <dict>' >> ExportOptions.plist
         echo '        <key>${{ secrets.APPLE_BUNDLE_ID }}</key>' >> ExportOptions.plist
-        echo '        <string>${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}</string>' >> ExportOptions.plist
+        echo "        <string>$PROFILE_NAME</string>" >> ExportOptions.plist
         echo '    </dict>' >> ExportOptions.plist
         echo '    <key>signingCertificate</key>' >> ExportOptions.plist
-        echo '    <string>iOS Distribution</string>' >> ExportOptions.plist
+        echo "    <string>$CERT_NAME</string>" >> ExportOptions.plist
         echo '    <key>uploadBitcode</key>' >> ExportOptions.plist
         echo '    <false/>' >> ExportOptions.plist
         echo '    <key>uploadSymbols</key>' >> ExportOptions.plist
@@ -353,6 +480,7 @@ jobs:
         
         # Debug: Show the profile name being used
         echo "📋 Profile name from secret: ${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}"
+        echo "📋 Detected profile name: $PROFILE_NAME"
         
         # Debug: Show bundle ID being used
         echo "📋 Bundle ID from secret: ${{ secrets.APPLE_BUNDLE_ID }}"
@@ -371,10 +499,39 @@ jobs:
             security cms -D -i "$profile" | grep -E "(Name|TeamName|AppIDName|TeamIdentifier)" || echo "Could not read profile"
         done
         
-        # Export IPA from archive
-        xcodebuild -exportArchive -archivePath ../../artifacts/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist ExportOptions.plist
+        # Check if archive exists
+        if [ ! -f "../../artifacts/ios/build/Guras.xcarchive" ]; then
+          echo "❌ Archive not found at ../../artifacts/ios/build/Guras.xcarchive"
+          echo "📋 Available files in artifacts:"
+          find ../../artifacts -type f -name "*.xcarchive" || echo "No archives found"
+          exit 1
+        fi
         
-        echo "✅ IPA exported successfully"
+        # Export IPA from archive with error handling
+        echo "📦 Exporting IPA..."
+        if ! xcodebuild -exportArchive -archivePath ../../artifacts/ios/build/Guras.xcarchive -exportPath ./build -exportOptionsPlist ExportOptions.plist; then
+          echo "❌ Export failed"
+          echo "📋 Checking export logs..."
+          if [ -f "./build/ExportOptions.plist" ]; then
+            echo "📋 ExportOptions.plist was created in build directory"
+          fi
+          if [ -d "./build" ]; then
+            echo "📋 Build directory contents:"
+            ls -la ./build/
+          fi
+          exit 1
+        fi
+        
+        # Verify IPA was created
+        if [ ! -f "./build/Guras.ipa" ]; then
+          echo "❌ IPA file not found after export"
+          echo "📋 Build directory contents:"
+          ls -la ./build/
+          exit 1
+        fi
+        
+        echo "✅ IPA exported successfully: ./build/Guras.ipa"
+        echo "📋 IPA file size: $(ls -la ./build/Guras.ipa)"
         
     - name: Upload to TestFlight
       run: |
