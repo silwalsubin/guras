@@ -584,14 +584,18 @@ jobs:
         
         # Check if archive exists using workspace root path
         ARCHIVE_PATH="$GITHUB_WORKSPACE/artifacts/ios/build/Guras.xcarchive"
-        if [ ! -f "$ARCHIVE_PATH" ]; then
+        if [ ! -d "$ARCHIVE_PATH" ]; then
           echo "❌ Archive not found at $ARCHIVE_PATH"
           echo "📋 Available files in artifacts:"
           find "$GITHUB_WORKSPACE/artifacts" -type f -name "*.xcarchive" || echo "No archives found"
+          echo "📋 Looking for xcarchive directories:"
+          find "$GITHUB_WORKSPACE/artifacts" -type d -name "*.xcarchive" || echo "No archive directories found"
           echo "📋 Artifacts directory structure:"
           find "$GITHUB_WORKSPACE/artifacts" -type f | head -20
           exit 1
         fi
+        
+        echo "✅ Archive found at: $ARCHIVE_PATH"
         
         # Export IPA from archive with error handling
         echo "📦 Exporting IPA..."
