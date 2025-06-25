@@ -557,12 +557,27 @@ jobs:
         
         # Import certificate with verbose output and error checking
         echo "📋 Importing certificate..."
-        if ! security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign; then
+        echo "📋 Certificate file exists: $(ls -la /tmp/certificate.p12)"
+        echo "📋 Certificate file type: $(file /tmp/certificate.p12)"
+        
+        # Try to import with more verbose output
+        IMPORT_OUTPUT=$(security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign 2>&1)
+        IMPORT_EXIT_CODE=$?
+        
+        echo "📋 Import command exit code: $IMPORT_EXIT_CODE"
+        echo "📋 Import command output: $IMPORT_OUTPUT"
+        
+        if [ $IMPORT_EXIT_CODE -ne 0 ]; then
           echo "❌ Failed to import certificate"
           echo "📋 Trying to get more details about the certificate..."
           file /tmp/certificate.p12
           echo "📋 Certificate file first 100 bytes:"
           head -c 100 /tmp/certificate.p12 | hexdump -C
+          echo "📋 Keychain status:"
+          security list-keychains
+          security default-keychain
+          echo "📋 Current certificates in build.keychain:"
+          security find-identity -v -p codesigning build.keychain || echo "No certificates found"
           exit 1
         fi
         
