@@ -146,22 +146,13 @@ jobs:
         # Get the latest build number from existing tags
         LATEST_BUILD=$(git tag | grep '^v1\.0\.' | sort -V | tail -n 1 | sed 's/v1\.0\.//' || echo "0")
         
-        # Use timestamp-based build number to ensure uniqueness
-        # This prevents conflicts with App Store Connect's build number tracking
-        TIMESTAMP_BUILD=$(date +%s)
-        
-        # Use the higher of the two numbers to ensure we don't go backwards
-        if [ "$LATEST_BUILD" -gt "$TIMESTAMP_BUILD" ]; then
-          NEW_BUILD=$((LATEST_BUILD + 1))
-        else
-          NEW_BUILD=$TIMESTAMP_BUILD
-        fi
+        # Increment build number
+        NEW_BUILD=$((LATEST_BUILD + 1))
         
         # Generate version: 1.0.BUILD_NUMBER
         VERSION="1.0.${NEW_BUILD}"
         
         echo "Latest build number from git tags: $LATEST_BUILD"
-        echo "Timestamp-based build number: $TIMESTAMP_BUILD"
         echo "New build number: $NEW_BUILD"
         echo "Generated version: $VERSION"
         echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -986,6 +977,20 @@ jobs:
         export DEVELOPER_DIR="/Applications/Xcode_16.2.app/Contents/Developer"
         export PATH="$DEVELOPER_DIR/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         
+        # Bump version for App Store deployment
+        echo "📱 Bumping version for App Store deployment..."
+        CURRENT_BUILD="${{ needs.build.outputs.build_number }}"
+        APP_STORE_BUILD=$((CURRENT_BUILD + 1))
+        
+        echo "📋 TestFlight build number: $CURRENT_BUILD"
+        echo "📋 App Store build number: $APP_STORE_BUILD"
+        
+        # Update the Xcode project with the new build number
+        sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $APP_STORE_BUILD;/g" artifacts/ios/Guras.xcodeproj/project.pbxproj
+        
+        echo "📋 Updated build number in Xcode project:"
+        grep "CURRENT_PROJECT_VERSION" artifacts/ios/Guras.xcodeproj/project.pbxproj
+        
         # Detect certificate name
         echo "🔍 Detecting certificate name..."
         CERT_NAME=$(security find-identity -v -p codesigning build.keychain | grep "Apple Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
@@ -1077,6 +1082,7 @@ jobs:
         
         echo "✅ IPA exported successfully: ./build/Guras.ipa"
         echo "📋 IPA file size: $(ls -la ./build/Guras.ipa)"
+        echo "📋 App Store build number: $APP_STORE_BUILD"
         
     - name: Upload to App Store Connect
       run: |
