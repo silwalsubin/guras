@@ -281,7 +281,7 @@ jobs:
         
         # Import certificate with verbose output
         echo "📋 Importing certificate..."
-        security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign -v
+        security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
         security set-key-partition-list -S apple-tool:,apple: -s -k "temp" build.keychain
         
         # Install provisioning profile
