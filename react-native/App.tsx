@@ -64,7 +64,7 @@ function App(): React.JSX.Element {
               <Text style={styles.logoText}>🌺</Text>
             </View>
             <Text style={[styles.appName, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-              Guras
+              Guras :)
             </Text>
           </View>
           <Text style={[styles.tagline, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
