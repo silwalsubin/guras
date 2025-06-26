@@ -196,16 +196,22 @@ jobs:
     - name: Update build number in Xcode project
       working-directory: ./react-native/ios
       run: |
+        VERSION="${{ steps.version.outputs.version }}"
         BUILD_NUMBER="${{ steps.version.outputs.build_number }}"
         
-        echo "📱 Updating build number to $BUILD_NUMBER in Xcode project..."
+        echo "📱 Updating version to $VERSION in Xcode project..."
         
-        # Update CURRENT_PROJECT_VERSION in project.pbxproj
-        sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" Guras.xcodeproj/project.pbxproj
+        # Update CURRENT_PROJECT_VERSION to use the full version string (not just build number)
+        # This ensures Apple sees the correct version like "2.0.1" instead of just "1"
+        sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9.]*;/CURRENT_PROJECT_VERSION = $VERSION;/g" Guras.xcodeproj/project.pbxproj
         
-        # Verify the change
-        echo "📋 Updated build number in Xcode project:"
+        # Also update MARKETING_VERSION to match
+        sed -i '' "s/MARKETING_VERSION = [0-9.]*;/MARKETING_VERSION = $VERSION;/g" Guras.xcodeproj/project.pbxproj
+        
+        # Verify the changes
+        echo "📋 Updated version in Xcode project:"
         grep "CURRENT_PROJECT_VERSION" Guras.xcodeproj/project.pbxproj
+        grep "MARKETING_VERSION" Guras.xcodeproj/project.pbxproj
         
     - name: Install dependencies
       working-directory: ./react-native
