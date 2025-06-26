@@ -420,9 +420,9 @@ jobs:
     name: Deploy to TestFlight
     runs-on: macos-latest
     needs: build
-    if: success() && (github.event_name != 'workflow_dispatch' || !github.event.inputs.deploy_to_appstore)
+    if: success() && (github.event_name != 'workflow_dispatch' || github.event.inputs.deploy_to_appstore != 'true')
     
-    steps:
+    steps:        
     - name: Checkout code
       uses: actions/checkout@v4
       
@@ -431,25 +431,6 @@ jobs:
       with:
         name: ios-build-v${{ needs.build.outputs.version }}
         path: ./artifacts
-        
-    - name: Debug artifacts structure
-      run: |
-        echo "🔍 Debugging artifacts structure..."
-        echo "📋 Current directory: $(pwd)"
-        echo "📋 Workspace root: $GITHUB_WORKSPACE"
-        echo "📋 Artifacts directory contents:"
-        ls -la "$GITHUB_WORKSPACE/artifacts/"
-        echo "📋 Looking for xcarchive files:"
-        find "$GITHUB_WORKSPACE/artifacts" -name "*.xcarchive" -type f
-        echo "📋 Full artifacts directory structure:"
-        find "$GITHUB_WORKSPACE/artifacts" -type f | head -20
-        echo "📋 Expected archive path: $GITHUB_WORKSPACE/artifacts/ios/build/Guras.xcarchive"
-        if [ -f "$GITHUB_WORKSPACE/artifacts/ios/build/Guras.xcarchive" ]; then
-          echo "✅ Archive found at expected location"
-          ls -la "$GITHUB_WORKSPACE/artifacts/ios/build/Guras.xcarchive"
-        else
-          echo "❌ Archive not found at expected location"
-        fi
         
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
@@ -469,105 +450,6 @@ jobs:
         echo "APP_STORE_CONNECT_API_KEY_PATH=/tmp/AuthKey.p8" >> $GITHUB_ENV
         
         echo "✅ App Store Connect API configured"
-        
-    - name: Troubleshoot secrets setup
-      run: |
-        echo "🔍 Troubleshooting secrets setup..."
-        
-        # Check which secrets are set (without revealing values)
-        SECRETS_STATUS=""
-        
-        if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ]; then
-          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_DEVELOPER_CERTIFICATE is set\n"
-        else
-          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_DEVELOPER_CERTIFICATE is NOT set\n"
-        fi
-        
-        if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" ]; then
-          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_DEVELOPER_CERTIFICATE_PASSWORD is set\n"
-        else
-          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_DEVELOPER_CERTIFICATE_PASSWORD is NOT set\n"
-        fi
-        
-        if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
-          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_PROVISIONING_PROFILE is set\n"
-        else
-          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_PROVISIONING_PROFILE is NOT set\n"
-        fi
-        
-        if [ -n "${{ secrets.APPLE_TEAM_ID }}" ]; then
-          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_TEAM_ID is set\n"
-        else
-          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_TEAM_ID is NOT set\n"
-        fi
-        
-        if [ -n "${{ secrets.APPLE_BUNDLE_ID }}" ]; then
-          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_BUNDLE_ID is set\n"
-        else
-          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_BUNDLE_ID is NOT set\n"
-        fi
-        
-        if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}" ]; then
-          SECRETS_STATUS="$SECRETS_STATUS✅ APPLE_PROVISIONING_PROFILE_NAME is set\n"
-        else
-          SECRETS_STATUS="$SECRETS_STATUS❌ APPLE_PROVISIONING_PROFILE_NAME is NOT set\n"
-        fi
-        
-        echo -e "📋 Secrets Status:\n$SECRETS_STATUS"
-        
-        # Check if we have the minimum required secrets
-        if [ -z "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ] || [ -z "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" ] || [ -z "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
-          echo "❌ Missing required secrets for code signing"
-          echo "📝 To fix this, you need to:"
-          echo "1. Export your iOS Distribution certificate from Keychain Access"
-          echo "2. Base64 encode it: base64 -i certificate.p12 | pbcopy"
-          echo "3. Add it as APPLE_DEVELOPER_CERTIFICATE secret in GitHub"
-          echo "4. Add the certificate password as APPLE_DEVELOPER_CERTIFICATE_PASSWORD"
-          echo "5. Export your App Store provisioning profile"
-          echo "6. Base64 encode it: base64 -i profile.mobileprovision | pbcopy"
-          echo "7. Add it as APPLE_PROVISIONING_PROFILE secret in GitHub"
-          exit 1
-        fi
-        
-        echo "✅ All required secrets are present"
-        
-    - name: Test base64 secrets
-      run: |
-        echo "🔍 Testing base64 secrets..."
-        
-        # Test certificate secret
-        if [ -n "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" ]; then
-          echo "📋 Certificate secret is set"
-          
-          # Test base64 decode and check if it produces valid output
-          CERT_DECODED=$(echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode 2>/dev/null)
-          if [ $? -eq 0 ] && [ -n "$CERT_DECODED" ]; then
-            echo "✅ Certificate secret base64 decode test: PASSED"
-            echo "📋 Decoded certificate size: $(echo "$CERT_DECODED" | wc -c) bytes"
-          else
-            echo "❌ Certificate secret base64 decode test: FAILED"
-            echo "📋 This suggests the secret might not be properly base64 encoded"
-          fi
-        else
-          echo "❌ Certificate secret is NOT set"
-        fi
-        
-        # Test profile secret
-        if [ -n "${{ secrets.APPLE_PROVISIONING_PROFILE }}" ]; then
-          echo "📋 Profile secret is set"
-          
-          # Test base64 decode and check if it produces valid output
-          PROFILE_DECODED=$(echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode 2>/dev/null)
-          if [ $? -eq 0 ] && [ -n "$PROFILE_DECODED" ]; then
-            echo "✅ Profile secret base64 decode test: PASSED"
-            echo "📋 Decoded profile size: $(echo "$PROFILE_DECODED" | wc -c) bytes"
-          else
-            echo "❌ Profile secret base64 decode test: FAILED"
-            echo "📋 This suggests the secret might not be properly base64 encoded"
-          fi
-        else
-          echo "❌ Profile secret is NOT set"
-        fi
         
     - name: Setup code signing for TestFlight
       run: |
@@ -589,124 +471,43 @@ jobs:
           exit 1
         fi
         
-        # Create certificate and provisioning profile with better error handling
-        echo "📋 Creating certificate file..."
+        # Create certificate and provisioning profile
         echo "${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}" | base64 --decode > /tmp/certificate.p12
         if [ ! -f /tmp/certificate.p12 ] || [ ! -s /tmp/certificate.p12 ]; then
           echo "❌ Failed to create certificate file or file is empty"
-          echo "📋 Certificate file size: $(ls -la /tmp/certificate.p12 2>/dev/null || echo 'File not found')"
-          echo "📋 Base64 decode exit code: $?"
           exit 1
         fi
         
-        echo "✅ Certificate file created successfully"
-        echo "📋 Certificate file size: $(ls -la /tmp/certificate.p12)"
-        
-        # Check if the certificate file is valid
-        echo "📋 Validating certificate file..."
-        file /tmp/certificate.p12
-        if ! file /tmp/certificate.p12 | grep -q "PKCS12"; then
-          echo "⚠️ Certificate file doesn't appear to be a valid PKCS12 file"
-          echo "📋 File type: $(file /tmp/certificate.p12)"
-          echo "📋 First 100 bytes:"
-          head -c 100 /tmp/certificate.p12 | hexdump -C
-        fi
-        
-        echo "📋 Creating provisioning profile file..."
         echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > /tmp/profile.mobileprovision
         if [ ! -f /tmp/profile.mobileprovision ] || [ ! -s /tmp/profile.mobileprovision ]; then
           echo "❌ Failed to create provisioning profile file or file is empty"
-          echo "📋 Profile file size: $(ls -la /tmp/profile.mobileprovision 2>/dev/null || echo 'File not found')"
-          echo "📋 Base64 decode exit code: $?"
           exit 1
         fi
         
-        echo "✅ Profile file created successfully"
-        echo "📋 Profile file size: $(ls -la /tmp/profile.mobileprovision)"
-        
-        # Check if the profile file is valid
-        echo "📋 Validating provisioning profile file..."
-        file /tmp/profile.mobileprovision
-        if ! file /tmp/profile.mobileprovision | grep -q "data"; then
-          echo "⚠️ Profile file doesn't appear to be valid"
-          echo "📋 File type: $(file /tmp/profile.mobileprovision)"
-        fi
-        
-        # Create keychain and import certificate with better error handling
-        echo "🔑 Creating build keychain..."
+        # Create keychain and import certificate
         security create-keychain -p "temp" build.keychain
         security default-keychain -s build.keychain
         security unlock-keychain -p "temp" build.keychain
         security set-keychain-settings -t 3600 -u build.keychain
         
-        # Import certificate with verbose output and error checking
-        echo "📋 Importing certificate..."
-        echo "📋 Certificate file exists: $(ls -la /tmp/certificate.p12)"
-        echo "📋 Certificate file type: $(file /tmp/certificate.p12)"
-        
-        # Try to import with more verbose output
+        # Import certificate
         IMPORT_OUTPUT=$(security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign 2>&1)
         IMPORT_EXIT_CODE=$?
         
-        echo "📋 Import command exit code: $IMPORT_EXIT_CODE"
-        echo "📋 Import command output: $IMPORT_OUTPUT"
-        
         if [ $IMPORT_EXIT_CODE -ne 0 ]; then
           echo "❌ Failed to import certificate"
-          echo "📋 Trying to get more details about the certificate..."
-          file /tmp/certificate.p12
-          echo "📋 Certificate file first 100 bytes:"
-          head -c 100 /tmp/certificate.p12 | hexdump -C
-          echo "📋 Keychain status:"
-          security list-keychains
-          security default-keychain
-          echo "📋 Current certificates in build.keychain:"
-          security find-identity -v -p codesigning build.keychain || echo "No certificates found"
           exit 1
         fi
         
-        echo "✅ Certificate imported successfully"
         security set-key-partition-list -S apple-tool:,apple: -s -k "temp" build.keychain
         
-        # Debug: Check certificate import with more details
-        echo "📋 Checking certificate import..."
-        security list-keychains
-        security default-keychain
-        echo "📋 Certificates in build.keychain:"
-        security find-identity -v -p codesigning build.keychain || echo "No certificates found in build.keychain"
-        
-        # Debug: Check certificate details with better output
-        echo "📋 Certificate details:"
-        security find-certificate -a build.keychain | head -10 || echo "No certificates found"
-        
         # Install provisioning profile
-        echo "📋 Installing provisioning profile..."
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
         
-        # Debug: List installed provisioning profiles
-        echo "📋 Installed provisioning profiles:"
-        ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
-        
-        # Debug: Show profile details with better parsing
-        echo "📋 Profile details:"
-        for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
-            echo "Profile: $profile"
-            if [ -f "$profile" ]; then
-                echo "Profile content:"
-                security cms -D -i "$profile" | grep -E "(Name|TeamName|AppIDName|TeamIdentifier)" || echo "Could not read profile"
-            else
-                echo "Profile file not found"
-            fi
-        done
-        
         # Verify the setup
-        echo "🔍 Verifying code signing setup..."
         CERT_COUNT=$(security find-identity -v -p codesigning build.keychain | grep -c "valid identities found" || echo "0")
         PROFILE_COUNT=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | wc -l || echo "0")
-        
-        echo "📋 Found $CERT_COUNT valid certificates"
-        echo "📋 Found $PROFILE_COUNT provisioning profiles"
         
         if [ "$CERT_COUNT" -eq 0 ]; then
           echo "❌ No valid certificates found - code signing setup failed"
@@ -932,10 +733,10 @@ jobs:
     name: Deploy to App Store
     runs-on: macos-latest
     needs: build
-    if: success() && github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_to_appstore
+    if: success() && github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_to_appstore == 'true'
     environment: production
     
-    steps:
+    steps:        
     - name: Checkout code
       uses: actions/checkout@v4
       
