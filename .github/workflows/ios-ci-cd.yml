@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy_to_appstore:
-        description: 'Deploy to App Store (unchecked = TestFlight only)'
+        description: 'Deploy to App Store'
         required: false
         default: false
         type: boolean
@@ -150,7 +150,7 @@ jobs:
       id: version
       run: |
         # Get the latest build number from existing tags
-        LATEST_BUILD=$(git tag | grep '^v1\.0\.' | sort -V | tail -n 1 | sed 's/v1\.0\.//' || echo "0")
+        LATEST_BUILD=$(git tag | grep '^1\.0\.' | sort -V | tail -n 1 | sed 's/^1\.0\.//' || echo "0")
         
         # Increment build number
         NEW_BUILD=$((LATEST_BUILD + 1))
@@ -353,7 +353,7 @@ jobs:
       run: |
         VERSION="${{ steps.version.outputs.version }}"
         
-        echo "🏷️ Creating tag v$VERSION"
+        echo "🏷️ Creating tag $VERSION"
         
         # Configure git
         git config --local user.email "action@github.com"
@@ -363,14 +363,14 @@ jobs:
         git add react-native/app.json react-native/ios/Guras.xcodeproj/project.pbxproj
         git commit -m "Bump version to $VERSION" || echo "No changes to commit"
         
-        # Create tag
-        git tag "v$VERSION"
+        # Create tag using version number directly
+        git tag "$VERSION"
         
         # Push changes and tag
         git push origin master
-        git push origin "v$VERSION"
+        git push origin "$VERSION"
         
-        echo "✅ Created and pushed tag: v$VERSION"
+        echo "✅ Created and pushed tag: $VERSION"
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -388,7 +388,7 @@ jobs:
         echo "🎉 ========================================="
         echo "✅ Build completed successfully!"
         echo "📦 Version: ${{ steps.version.outputs.version }}"
-        echo "🏷️ Tag: v${{ steps.version.outputs.version }}"
+        echo "🏷️ Tag: ${{ steps.version.outputs.version }}"
         echo "📱 Bundle: Available in artifacts"
         echo "📦 Archive: Available in artifacts"
         echo "📦 Artifact: ios-build-v${{ steps.version.outputs.version }}"
