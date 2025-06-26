@@ -262,4 +262,48 @@ guras/
 ├── iac/                  # Infrastructure as Code
 └── .github/workflows/    # CI/CD workflows
     └── ios-ci-cd.yml     # Main iOS build and deploy workflow
-``` 
+```
+
+## iOS Deployment
+
+This project includes automated iOS deployment to both TestFlight and App Store using GitHub Actions.
+
+### Deployment Options
+
+#### Automatic TestFlight Deployment
+- **Trigger**: Push to `master` branch or pull requests
+- **Destination**: TestFlight only
+- **Build**: Uses timestamp-based versioning to ensure uniqueness
+
+#### Manual App Store Deployment
+- **Trigger**: Manual workflow dispatch
+- **Destination**: App Store (production)
+- **How to use**:
+  1. Go to the "Actions" tab in GitHub
+  2. Select "iOS Build & Deploy" workflow
+  3. Click "Run workflow"
+  4. Check the "Deploy to App Store" checkbox
+  5. Click "Run workflow"
+
+### Workflow Features
+
+- **Same Build**: Both TestFlight and App Store use the same build artifacts
+- **Unique Versions**: Timestamp-based versioning prevents conflicts
+- **Code Signing**: Automated certificate and provisioning profile setup
+- **Validation**: Comprehensive error checking and validation
+
+### Prerequisites
+
+Ensure the following GitHub secrets are configured:
+- `APPLE_DEVELOPER_CERTIFICATE`: Base64-encoded distribution certificate
+- `APPLE_DEVELOPER_CERTIFICATE_PASSWORD`: Certificate password
+- `APPLE_PROVISIONING_PROFILE`: Base64-encoded App Store provisioning profile
+- `APPLE_TEAM_ID`: Apple Developer Team ID
+- `APPLE_BUNDLE_ID`: App bundle identifier
+- `APPLE_PROVISIONING_PROFILE_NAME`: Provisioning profile name
+- `APPLE_ID`: Apple ID for App Store Connect
+- `APPLE_APP_SPECIFIC_PASSWORD`: App-specific password
+
+### Version Format
+
+Versions follow the format: `1.0.{timestamp}` where timestamp is a Unix timestamp, ensuring each build has a unique, incrementing version number. 

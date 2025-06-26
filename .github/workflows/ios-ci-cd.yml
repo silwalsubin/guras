@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+    inputs:
+      deploy_to_appstore:
+        description: 'Deploy to App Store (unchecked = TestFlight only)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -392,7 +398,7 @@ jobs:
     name: Deploy to TestFlight
     runs-on: macos-latest
     needs: build
-    if: success()
+    if: success() && (github.event_name != 'workflow_dispatch' || !github.event.inputs.deploy_to_appstore)
     
     steps:
     - name: Checkout code
@@ -897,13 +903,14 @@ jobs:
         echo "📦 Version: ${{ needs.build.outputs.version }}"
         echo "📱 IPA: Uploaded to TestFlight"
         echo "📝 Note: Check App Store Connect for processing status"
+        echo "📋 Note: Use workflow_dispatch with 'Deploy to App Store' checked for App Store deployment"
         echo "🎉 ========================================="
 
   deploy-appstore:
     name: Deploy to App Store
     runs-on: macos-latest
-    needs: [build, deploy-testflight]
-    if: success()
+    needs: build
+    if: success() && github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_to_appstore
     environment: production
     
     steps:
@@ -977,22 +984,11 @@ jobs:
         export DEVELOPER_DIR="/Applications/Xcode_16.2.app/Contents/Developer"
         export PATH="$DEVELOPER_DIR/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         
-        # Bump version for App Store deployment
-        echo "📱 Bumping version for App Store deployment..."
-        CURRENT_BUILD="${{ needs.build.outputs.build_number }}"
-        APP_STORE_BUILD=$((CURRENT_BUILD + 1))
-        
-        echo "📋 TestFlight build number: $CURRENT_BUILD"
-        echo "📋 App Store build number: $APP_STORE_BUILD"
-        
-        # Update the Xcode project with the new build number
-        sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $APP_STORE_BUILD;/g" artifacts/ios/Guras.xcodeproj/project.pbxproj
-        
-        echo "📋 Updated build number in Xcode project:"
-        grep "CURRENT_PROJECT_VERSION" artifacts/ios/Guras.xcodeproj/project.pbxproj
+        # Use the same build number from the original build
+        BUILD_NUMBER="${{ needs.build.outputs.build_number }}"
+        echo "📋 Using build number: $BUILD_NUMBER"
         
         # Detect certificate name
-        echo "🔍 Detecting certificate name..."
         CERT_NAME=$(security find-identity -v -p codesigning build.keychain | grep "Apple Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
         
         if [ -z "$CERT_NAME" ]; then
@@ -1082,7 +1078,6 @@ jobs:
         
         echo "✅ IPA exported successfully: ./build/Guras.ipa"
         echo "📋 IPA file size: $(ls -la ./build/Guras.ipa)"
-        echo "📋 App Store build number: $APP_STORE_BUILD"
         
     - name: Upload to App Store Connect
       run: |
@@ -1137,4 +1132,5 @@ jobs:
         echo "📱 IPA: Uploaded to App Store Connect"
         echo "📝 Status: Ready for App Store review"
         echo "🔗 Next: Submit for review in App Store Connect"
+        echo "📋 Note: Same build used for both TestFlight and App Store"
         echo "🎉 =========================================" 
