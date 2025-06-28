@@ -1,11 +1,11 @@
 /**
  * Guras React Native App
- * Beautiful Rhododendron-themed aesthetic home page
+ * Meditation and Spirituality App
  *
  * @format
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -23,9 +23,156 @@ const { width, height } = Dimensions.get('window');
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const [activeTab, setActiveTab] = useState('home');
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#0A0A0A' : '#FAFAFA',
+  };
+
+  const renderHomeScreen = () => (
+    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <View style={[styles.logo, { backgroundColor: isDarkMode ? '#0D9488' : '#14B8A6' }]}>
+            <Text style={styles.logoText}>🧘</Text>
+          </View>
+          <Text style={[styles.appName, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+            Guras
+          </Text>
+        </View>
+        <TouchableOpacity style={[styles.profileButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+          <Text style={[styles.profileButtonText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>👤</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Quick Start Card */}
+      <View style={styles.quickStartSection}>
+        <View style={[styles.quickStartCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+          <Text style={[styles.quickStartTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+            Ready to meditate?
+          </Text>
+          <Text style={[styles.quickStartSubtitle, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+            Start your daily practice
+          </Text>
+          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: isDarkMode ? '#0D9488' : '#14B8A6' }]}>
+            <Text style={styles.buttonText}>Begin Session</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Daily Progress */}
+      <View style={styles.progressSection}>
+        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+          Today's Progress
+        </Text>
+        <View style={[styles.progressCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+          <View style={styles.progressRow}>
+            <Text style={[styles.progressLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>Minutes</Text>
+            <Text style={[styles.progressValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>0</Text>
+          </View>
+          <View style={styles.progressRow}>
+            <Text style={[styles.progressLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>Sessions</Text>
+            <Text style={[styles.progressValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>0</Text>
+          </View>
+          <View style={styles.progressRow}>
+            <Text style={[styles.progressLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>Streak</Text>
+            <Text style={[styles.progressValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>0 days</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Quick Actions */}
+      <View style={styles.quickActionsSection}>
+        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+          Quick Actions
+        </Text>
+        <View style={styles.quickActionsGrid}>
+          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+            <Text style={styles.quickActionIcon}>🧘‍♀️</Text>
+            <Text style={[styles.quickActionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>Meditate</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+            <Text style={styles.quickActionIcon}>🕯️</Text>
+            <Text style={[styles.quickActionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>Mindfulness</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+            <Text style={styles.quickActionIcon}>🌙</Text>
+            <Text style={[styles.quickActionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>Sleep</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+            <Text style={styles.quickActionIcon}>📿</Text>
+            <Text style={[styles.quickActionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>Wisdom</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Recent Sessions */}
+      <View style={styles.recentSection}>
+        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+          Recent Sessions
+        </Text>
+        <View style={[styles.recentCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+          <Text style={[styles.recentText, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+            No recent sessions
+          </Text>
+          <Text style={[styles.recentSubtext, { color: isDarkMode ? '#A0AEC0' : '#A0AEC0' }]}>
+            Start your first meditation to see your history here
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
+
+  const renderMeditateScreen = () => (
+    <View style={styles.tabContent}>
+      <Text style={[styles.tabTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+        Meditation Sessions
+      </Text>
+      <Text style={[styles.tabSubtitle, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+        Choose your practice
+      </Text>
+    </View>
+  );
+
+  const renderLearnScreen = () => (
+    <View style={styles.tabContent}>
+      <Text style={[styles.tabTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+        Learn & Grow
+      </Text>
+      <Text style={[styles.tabSubtitle, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+        Explore spiritual wisdom
+      </Text>
+    </View>
+  );
+
+  const renderProfileScreen = () => (
+    <View style={styles.tabContent}>
+      <Text style={[styles.tabTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+        Your Profile
+      </Text>
+      <Text style={[styles.tabSubtitle, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+        Track your journey
+      </Text>
+    </View>
+  );
+
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'home':
+        return renderHomeScreen();
+      case 'meditate':
+        return renderMeditateScreen();
+      case 'learn':
+        return renderLearnScreen();
+      case 'profile':
+        return renderProfileScreen();
+      default:
+        return renderHomeScreen();
+    }
   };
 
   return (
@@ -36,145 +183,73 @@ function App(): React.JSX.Element {
         translucent
       />
       
-      {/* Beautiful gradient background using multiple layers */}
+      {/* Beautiful gradient background */}
       <View style={styles.gradientBackground}>
         <View style={[
           styles.gradientLayer1, 
-          { backgroundColor: isDarkMode ? '#1A1A2E' : '#FFE5E5' }
+          { backgroundColor: isDarkMode ? '#1A1A2E' : '#F0F8FF' }
         ]} />
         <View style={[
           styles.gradientLayer2, 
-          { backgroundColor: isDarkMode ? '#16213E' : '#FFF0F0' }
-        ]} />
-        <View style={[
-          styles.gradientLayer3, 
-          { backgroundColor: isDarkMode ? '#0F3460' : '#F8F9FF' }
+          { backgroundColor: isDarkMode ? '#16213E' : '#E6F3FF' }
         ]} />
       </View>
       
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}>
+      {/* Main Content */}
+      <View style={styles.mainContent}>
+        {renderActiveTab()}
+      </View>
+
+      {/* Bottom Tab Navigation */}
+      <View style={[styles.bottomTab, { backgroundColor: isDarkMode ? 'rgba(26,26,46,0.95)' : 'rgba(255,255,255,0.95)' }]}>
+        <TouchableOpacity 
+          style={styles.tabItem} 
+          onPress={() => setActiveTab('home')}
+        >
+          <Text style={[styles.tabIcon, { color: activeTab === 'home' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
+            🏠
+          </Text>
+          <Text style={[styles.tabLabel, { color: activeTab === 'home' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
+            Home
+          </Text>
+        </TouchableOpacity>
         
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <View style={[styles.logo, { backgroundColor: isDarkMode ? '#FF6B9D' : '#FF8FA3' }]}>
-              <Text style={styles.logoText}>🌺</Text>
-            </View>
-            <Text style={[styles.appName, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-              Guras :)
-            </Text>
-          </View>
-          <Text style={[styles.tagline, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
-            Where beauty blooms
+        <TouchableOpacity 
+          style={styles.tabItem} 
+          onPress={() => setActiveTab('meditate')}
+        >
+          <Text style={[styles.tabIcon, { color: activeTab === 'meditate' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
+            🧘‍♀️
           </Text>
-        </View>
-
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <View style={[styles.heroCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-            <Text style={[styles.heroTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-              Welcome to Guras
-            </Text>
-            <Text style={[styles.heroSubtitle, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
-              Discover the beauty of Rhododendron flowers and create your own digital garden
-            </Text>
-            <TouchableOpacity style={[styles.primaryButton, { backgroundColor: isDarkMode ? '#FF6B9D' : '#FF8FA3' }]}>
-              <Text style={styles.buttonText}>Start Exploring</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Features Grid */}
-        <View style={styles.featuresSection}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-            What's New
+          <Text style={[styles.tabLabel, { color: activeTab === 'meditate' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
+            Meditate
           </Text>
-          
-          <View style={styles.featuresGrid}>
-            <TouchableOpacity style={[styles.featureCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-              <View style={[styles.featureIcon, { backgroundColor: isDarkMode ? '#FF6B9D' : '#FF8FA3' }]}>
-                <Text style={styles.featureIconText}>🌸</Text>
-              </View>
-              <Text style={[styles.featureTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-                Flower Gallery
-              </Text>
-              <Text style={[styles.featureDescription, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
-                Browse beautiful Rhododendron varieties
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.featureCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-              <View style={[styles.featureIcon, { backgroundColor: isDarkMode ? '#FF6B9D' : '#FF8FA3' }]}>
-                <Text style={styles.featureIconText}>📱</Text>
-              </View>
-              <Text style={[styles.featureTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-                Smart Features
-              </Text>
-              <Text style={[styles.featureDescription, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
-                Modern UI with smooth animations
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.featureCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-              <View style={[styles.featureIcon, { backgroundColor: isDarkMode ? '#FF6B9D' : '#FF8FA3' }]}>
-                <Text style={styles.featureIconText}>🎨</Text>
-              </View>
-              <Text style={[styles.featureTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-                Custom Themes
-              </Text>
-              <Text style={[styles.featureDescription, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
-                Personalize your experience
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.featureCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-              <View style={[styles.featureIcon, { backgroundColor: isDarkMode ? '#FF6B9D' : '#FF8FA3' }]}>
-                <Text style={styles.featureIconText}>🌿</Text>
-              </View>
-              <Text style={[styles.featureTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-                Garden Care
-              </Text>
-              <Text style={[styles.featureDescription, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
-                Tips for growing Rhododendrons
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.quickActionsSection}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-            Quick Actions
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.tabItem} 
+          onPress={() => setActiveTab('learn')}
+        >
+          <Text style={[styles.tabIcon, { color: activeTab === 'learn' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
+            📚
           </Text>
-          
-          <View style={styles.quickActionsRow}>
-            <TouchableOpacity style={[styles.quickActionButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-              <Text style={[styles.quickActionText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-                🌺 Gallery
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={[styles.quickActionButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-              <Text style={[styles.quickActionText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-                📖 Guide
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
-            Made with ❤️ and 🌺
+          <Text style={[styles.tabLabel, { color: activeTab === 'learn' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
+            Learn
           </Text>
-          <Text style={[styles.footerSubtext, { color: isDarkMode ? '#A0AEC0' : '#A0AEC0' }]}>
-            Version 2.0.1
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.tabItem} 
+          onPress={() => setActiveTab('profile')}
+        >
+          <Text style={[styles.tabIcon, { color: activeTab === 'profile' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
+            👤
           </Text>
-        </View>
-      </ScrollView>
+          <Text style={[styles.tabLabel, { color: activeTab === 'profile' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
+            Profile
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -195,7 +270,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: height * 0.4,
+    height: height * 0.3,
     opacity: 0.8,
   },
   gradientLayer2: {
@@ -203,160 +278,54 @@ const styles = StyleSheet.create({
     top: height * 0.2,
     left: 0,
     right: 0,
-    height: height * 0.6,
+    height: height * 0.8,
     opacity: 0.6,
   },
-  gradientLayer3: {
-    position: 'absolute',
-    top: height * 0.4,
-    left: 0,
-    right: 0,
-    height: height * 0.6,
-    opacity: 0.4,
+  mainContent: {
+    flex: 1,
+    paddingBottom: 80, // Space for bottom tab
   },
   scrollView: {
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 30,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
   },
   logo: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 4,
+    elevation: 3,
   },
   logoText: {
-    fontSize: 24,
+    fontSize: 20,
   },
   appName: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     letterSpacing: 1,
   },
-  tagline: {
-    fontSize: 16,
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
-  heroSection: {
-    paddingHorizontal: 20,
-    marginBottom: 40,
-  },
-  heroCard: {
+  profileButton: {
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    padding: 30,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  heroSubtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  primaryButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  featuresSection: {
-    paddingHorizontal: 20,
-    marginBottom: 40,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  featuresGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  featureCard: {
-    width: (width - 60) / 2,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  featureIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  featureIconText: {
-    fontSize: 24,
-  },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  featureDescription: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  quickActionsSection: {
-    paddingHorizontal: 20,
-    marginBottom: 40,
-  },
-  quickActionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  quickActionButton: {
-    flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginHorizontal: 8,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -364,21 +333,174 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  quickActionText: {
-    fontSize: 16,
-    fontWeight: '500',
+  profileButtonText: {
+    fontSize: 18,
   },
-  footer: {
-    alignItems: 'center',
-    paddingVertical: 30,
+  quickStartSection: {
     paddingHorizontal: 20,
+    marginBottom: 24,
   },
-  footerText: {
+  quickStartCard: {
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  quickStartTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  quickStartSubtitle: {
+    fontSize: 14,
+    marginBottom: 20,
+  },
+  primaryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  progressSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  progressCard: {
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  progressLabel: {
+    fontSize: 14,
+  },
+  progressValue: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  quickActionsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  quickActionCard: {
+    width: (width - 60) / 2,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  quickActionIcon: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  quickActionTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  recentSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  recentCard: {
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  recentText: {
     fontSize: 16,
     marginBottom: 8,
   },
-  footerSubtext: {
+  recentSubtext: {
     fontSize: 14,
+    textAlign: 'center',
+  },
+  bottomTab: {
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 20,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  tabIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  tabLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  tabContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  tabTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  tabSubtitle: {
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
 
