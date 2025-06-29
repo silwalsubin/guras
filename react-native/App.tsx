@@ -18,12 +18,28 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
+import { getApp } from '@react-native-firebase/app';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import AuthWrapper from './src/components/AuthWrapper';
+import SignOutButton from './src/components/SignOutButton';
+
+// Verify Firebase is imported correctly
+console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
 
 const { width, height } = Dimensions.get('window');
 
-function App(): React.JSX.Element {
+// Mock navigation object for the auth screens
+const mockNavigation = {
+  navigate: (screen: string) => {
+    // This will be handled by the auth wrapper
+    console.log('Navigate to:', screen);
+  },
+};
+
+function MainApp(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   const [activeTab, setActiveTab] = useState('home');
+  const { user } = useAuth();
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#0A0A0A' : '#FAFAFA',
@@ -41,7 +57,10 @@ function App(): React.JSX.Element {
             Guras
           </Text>
         </View>
-        <TouchableOpacity style={[styles.profileButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+        <TouchableOpacity 
+          style={[styles.profileButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}
+          onPress={() => setActiveTab('profile')}
+        >
           <Text style={[styles.profileButtonText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>👤</Text>
         </TouchableOpacity>
       </View>
@@ -150,14 +169,54 @@ function App(): React.JSX.Element {
   );
 
   const renderProfileScreen = () => (
-    <View style={styles.tabContent}>
-      <Text style={[styles.tabTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-        Your Profile
-      </Text>
-      <Text style={[styles.tabSubtitle, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
-        Track your journey
-      </Text>
-    </View>
+    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <View style={[styles.logo, { backgroundColor: isDarkMode ? '#0D9488' : '#14B8A6' }]}>
+            <Text style={styles.logoText}>👤</Text>
+          </View>
+          <Text style={[styles.appName, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+            Profile
+          </Text>
+        </View>
+        <TouchableOpacity 
+          style={[styles.backButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}
+          onPress={() => setActiveTab('home')}
+        >
+          <Text style={[styles.backButtonText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>←</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* User Info */}
+      <View style={styles.profileSection}>
+        <View style={[styles.profileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+          <Text style={[styles.profileTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+            Account Information
+          </Text>
+          <View style={styles.profileInfo}>
+            <Text style={[styles.profileLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>Email:</Text>
+            <Text style={[styles.profileValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+              {user?.email}
+            </Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={[styles.profileLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>User ID:</Text>
+            <Text style={[styles.profileValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+              {user?.uid}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Sign Out Button */}
+      <View style={styles.signOutSection}>
+        <SignOutButton 
+          style={styles.signOutButton}
+          textStyle={styles.signOutButtonText}
+        />
+      </View>
+    </ScrollView>
   );
 
   const renderActiveTab = () => {
@@ -200,57 +259,43 @@ function App(): React.JSX.Element {
         {renderActiveTab()}
       </View>
 
-      {/* Bottom Tab Navigation */}
-      <View style={[styles.bottomTab, { backgroundColor: isDarkMode ? 'rgba(26,26,46,0.95)' : 'rgba(255,255,255,0.95)' }]}>
+      {/* Bottom Navigation */}
+      <View style={[styles.bottomNav, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
         <TouchableOpacity 
-          style={styles.tabItem} 
+          style={[styles.navItem, activeTab === 'home' && styles.activeNavItem]} 
           onPress={() => setActiveTab('home')}
         >
-          <Text style={[styles.tabIcon, { color: activeTab === 'home' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
-            🏠
-          </Text>
-          <Text style={[styles.tabLabel, { color: activeTab === 'home' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
-            Home
-          </Text>
+          <Text style={[styles.navIcon, activeTab === 'home' && styles.activeNavIcon]}>🏠</Text>
+          <Text style={[styles.navLabel, activeTab === 'home' && styles.activeNavLabel]}>Home</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={styles.tabItem} 
+          style={[styles.navItem, activeTab === 'meditate' && styles.activeNavItem]} 
           onPress={() => setActiveTab('meditate')}
         >
-          <Text style={[styles.tabIcon, { color: activeTab === 'meditate' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
-            🧘‍♀️
-          </Text>
-          <Text style={[styles.tabLabel, { color: activeTab === 'meditate' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
-            Meditate
-          </Text>
+          <Text style={[styles.navIcon, activeTab === 'meditate' && styles.activeNavIcon]}>🧘</Text>
+          <Text style={[styles.navLabel, activeTab === 'meditate' && styles.activeNavLabel]}>Meditate</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={styles.tabItem} 
+          style={[styles.navItem, activeTab === 'learn' && styles.activeNavItem]} 
           onPress={() => setActiveTab('learn')}
         >
-          <Text style={[styles.tabIcon, { color: activeTab === 'learn' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
-            📚
-          </Text>
-          <Text style={[styles.tabLabel, { color: activeTab === 'learn' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
-            Learn
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabItem} 
-          onPress={() => setActiveTab('profile')}
-        >
-          <Text style={[styles.tabIcon, { color: activeTab === 'profile' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
-            👤
-          </Text>
-          <Text style={[styles.tabLabel, { color: activeTab === 'profile' ? (isDarkMode ? '#0D9488' : '#14B8A6') : (isDarkMode ? '#CBD5E0' : '#718096') }]}>
-            Profile
-          </Text>
+          <Text style={[styles.navIcon, activeTab === 'learn' && styles.activeNavIcon]}>📚</Text>
+          <Text style={[styles.navLabel, activeTab === 'learn' && styles.activeNavLabel]}>Learn</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+  );
+}
+
+function App(): React.JSX.Element {
+  return (
+    <AuthProvider>
+      <AuthWrapper navigation={mockNavigation}>
+        <MainApp />
+      </AuthWrapper>
+    </AuthProvider>
   );
 }
 
@@ -260,9 +305,9 @@ const styles = StyleSheet.create({
   },
   gradientBackground: {
     position: 'absolute',
+    top: 0,
     left: 0,
     right: 0,
-    top: 0,
     bottom: 0,
   },
   gradientLayer1: {
@@ -270,20 +315,17 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: height * 0.3,
-    opacity: 0.8,
+    height: '50%',
   },
   gradientLayer2: {
     position: 'absolute',
-    top: height * 0.2,
+    bottom: 0,
     left: 0,
     right: 0,
-    height: height * 0.8,
-    opacity: 0.6,
+    height: '50%',
   },
   mainContent: {
     flex: 1,
-    paddingBottom: 80, // Space for bottom tab
   },
   scrollView: {
     flex: 1,
@@ -294,7 +336,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 20,
+    paddingBottom: 16,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -307,11 +349,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   logoText: {
     fontSize: 20,
@@ -319,7 +356,6 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    letterSpacing: 1,
   },
   profileButton: {
     width: 40,
@@ -327,47 +363,49 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   profileButtonText: {
-    fontSize: 18,
+    fontSize: 20,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backButtonText: {
+    fontSize: 20,
   },
   quickStartSection: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   quickStartCard: {
     borderRadius: 16,
     padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
   quickStartTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   quickStartSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     marginBottom: 20,
   },
   primaryButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20,
+    borderRadius: 12,
+    paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
   },
   buttonText: {
     color: '#FFFFFF',
@@ -376,18 +414,21 @@ const styles = StyleSheet.create({
   },
   progressSection: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   progressCard: {
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
@@ -396,18 +437,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    marginBottom: 12,
   },
   progressLabel: {
-    fontSize: 14,
+    fontSize: 16,
   },
   progressValue: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   quickActionsSection: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   quickActionsGrid: {
     flexDirection: 'row',
@@ -416,35 +457,41 @@ const styles = StyleSheet.create({
   },
   quickActionCard: {
     width: (width - 60) / 2,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 16,
+    padding: 20,
     alignItems: 'center',
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   quickActionIcon: {
-    fontSize: 24,
+    fontSize: 32,
     marginBottom: 8,
   },
   quickActionTitle: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     textAlign: 'center',
   },
   recentSection: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   recentCard: {
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 20,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
@@ -457,35 +504,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
-  bottomTab: {
-    flexDirection: 'row',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingBottom: 20,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  tabIcon: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  tabLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
   tabContent: {
     flex: 1,
     justifyContent: 'center',
@@ -493,14 +511,89 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   tabTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 8,
-    textAlign: 'center',
   },
   tabSubtitle: {
     fontSize: 16,
     textAlign: 'center',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  activeNavItem: {
+    // Active state styling
+  },
+  navIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  activeNavIcon: {
+    // Active icon styling
+  },
+  navLabel: {
+    fontSize: 12,
+    color: '#718096',
+  },
+  activeNavLabel: {
+    color: '#14B8A6',
+    fontWeight: '600',
+  },
+  profileSection: {
+    paddingHorizontal: 20,
+    marginBottom: 32,
+  },
+  profileCard: {
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  profileTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  profileInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  profileLabel: {
+    fontSize: 16,
+  },
+  profileValue: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  signOutSection: {
+    paddingHorizontal: 20,
+    marginBottom: 32,
+  },
+  signOutButton: {
+    borderRadius: 12,
+    paddingVertical: 16,
+  },
+  signOutButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
