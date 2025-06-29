@@ -416,6 +416,12 @@ jobs:
         echo "📦 Artifact: ios-build-v${{ steps.version.outputs.version }}"
         echo "🎉 ========================================="
 
+    - name: Set export compliance in Info.plist
+      working-directory: ./react-native/ios
+      run: |
+        /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" Guras/Info.plist || \
+        /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" Guras/Info.plist
+
   deploy-testflight:
     name: Deploy to TestFlight
     runs-on: macos-latest
