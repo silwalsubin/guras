@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "393821350316",
+    "project_id": "guras-39a85",
+    "storage_bucket": "guras-39a85.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:393821350316:android:5d3aba0ba1be92e6173209",
+        "android_client_info": {
+          "package_name": "com.cosmos.guras"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFcUnKXzBIdenE5uns5bAYgDDAUjv9ygY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
