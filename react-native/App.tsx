@@ -22,6 +22,8 @@ import { getApp } from '@react-native-firebase/app';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import AuthWrapper from './src/components/AuthWrapper';
 import SignOutButton from './src/components/SignOutButton';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
@@ -40,6 +42,7 @@ function MainApp(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   const [activeTab, setActiveTab] = useState('home');
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#0A0A0A' : '#FAFAFA',
@@ -260,7 +263,15 @@ function MainApp(): React.JSX.Element {
       </View>
 
       {/* Bottom Navigation */}
-      <View style={[styles.bottomNav, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+      <View
+        style={[
+          styles.bottomNav,
+          {
+            backgroundColor: isDarkMode ? '#1A1A2E' : '#FFFFFF',
+            paddingBottom: insets.bottom || 16,
+          },
+        ]}
+      >
         <TouchableOpacity 
           style={[styles.navItem, activeTab === 'home' && styles.activeNavItem]} 
           onPress={() => setActiveTab('home')}
@@ -291,11 +302,13 @@ function MainApp(): React.JSX.Element {
 
 function App(): React.JSX.Element {
   return (
-    <AuthProvider>
-      <AuthWrapper navigation={mockNavigation}>
-        <MainApp />
-      </AuthWrapper>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AuthWrapper navigation={mockNavigation}>
+          <MainApp />
+        </AuthWrapper>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -520,9 +533,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   bottomNav: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.1)',
   },
