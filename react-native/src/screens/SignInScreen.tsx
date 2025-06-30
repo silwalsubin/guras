@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 interface SignInScreenProps {
   navigation: any;
@@ -108,6 +109,9 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
               )}
             </TouchableOpacity>
           </View>
+
+          {/* Google Sign-In Button */}
+          <GoogleSignInButton />
 
           {/* Footer */}
           <View style={styles.footer}>

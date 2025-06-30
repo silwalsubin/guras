@@ -5,7 +5,7 @@
  * @format
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -24,6 +24,7 @@ import AuthWrapper from './src/components/AuthWrapper';
 import SignOutButton from './src/components/SignOutButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
@@ -301,6 +302,12 @@ function MainApp(): React.JSX.Element {
 }
 
 function App(): React.JSX.Element {
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '393821350316-v39tafbkk5cf6p5visoqaqrd5foe6vmk.apps.googleusercontent.com', // TODO: Replace with your actual Web client ID
+    });
+  }, []);
+
   return (
     <SafeAreaProvider>
       <AuthProvider>

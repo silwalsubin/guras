@@ -11,6 +11,7 @@
 		044126A62E11B327001311B8 /* RNFBApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 044126A52E11B327001311B8 /* RNFBApp.framework */; };
 		044126A82E11B33A001311B8 /* RNFBAuth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 044126A72E11B33A001311B8 /* RNFBAuth.framework */; };
 		044126AA2E11BF3E001311B8 /* main.jsbundle in Resources */ = {isa = PBXBuildFile; fileRef = 044126A92E11BF3E001311B8 /* main.jsbundle */; };
+		044126AC2E1247F7001311B8 /* RNGoogleSignin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 044126AB2E1247F7001311B8 /* RNGoogleSignin.framework */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		4A8DFF820F68474AA5C80128 /* Pods_Guras.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21C01588BC0586F377026D30 /* Pods_Guras.framework */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
@@ -23,6 +24,7 @@
 		044126A52E11B327001311B8 /* RNFBApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RNFBApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		044126A72E11B33A001311B8 /* RNFBAuth.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RNFBAuth.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		044126A92E11BF3E001311B8 /* main.jsbundle */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
+		044126AB2E1247F7001311B8 /* RNGoogleSignin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RNGoogleSignin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* Guras.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Guras.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Guras/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Guras/Info.plist; sourceTree = "<group>"; };
@@ -40,6 +42,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				044126AC2E1247F7001311B8 /* RNGoogleSignin.framework in Frameworks */,
 				4A8DFF820F68474AA5C80128 /* Pods_Guras.framework in Frameworks */,
 				044126A82E11B33A001311B8 /* RNFBAuth.framework in Frameworks */,
 				044126A62E11B327001311B8 /* RNFBApp.framework in Frameworks */,
@@ -64,6 +67,7 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				044126AB2E1247F7001311B8 /* RNGoogleSignin.framework */,
 				044126A72E11B33A001311B8 /* RNFBAuth.framework */,
 				044126A52E11B327001311B8 /* RNFBApp.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
