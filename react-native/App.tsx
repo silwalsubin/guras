@@ -25,6 +25,9 @@ import SignOutButton from './src/components/SignOutButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import Feather from 'react-native-vector-icons/Feather';
+import FontAwesome from 'react-native-vector-icons/FontAwesome5';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
@@ -277,7 +280,11 @@ function MainApp(): React.JSX.Element {
           style={[styles.navItem, activeTab === 'home' && styles.activeNavItem]} 
           onPress={() => setActiveTab('home')}
         >
-          <Text style={[styles.navIcon, activeTab === 'home' && styles.activeNavIcon]}>🏠</Text>
+          <Feather
+            name="home"
+            size={24}
+            color={activeTab === 'home' ? '#14B8A6' : '#A0AEC0'}
+          />
           <Text style={[styles.navLabel, activeTab === 'home' && styles.activeNavLabel]}>Home</Text>
         </TouchableOpacity>
         
@@ -285,7 +292,11 @@ function MainApp(): React.JSX.Element {
           style={[styles.navItem, activeTab === 'meditate' && styles.activeNavItem]} 
           onPress={() => setActiveTab('meditate')}
         >
-          <Text style={[styles.navIcon, activeTab === 'meditate' && styles.activeNavIcon]}>🧘</Text>
+          <Feather
+            name="heart"
+            size={24}
+            color={activeTab === 'meditate' ? '#14B8A6' : '#A0AEC0'}
+          />
           <Text style={[styles.navLabel, activeTab === 'meditate' && styles.activeNavLabel]}>Meditate</Text>
         </TouchableOpacity>
         
@@ -293,7 +304,12 @@ function MainApp(): React.JSX.Element {
           style={[styles.navItem, activeTab === 'learn' && styles.activeNavItem]} 
           onPress={() => setActiveTab('learn')}
         >
-          <Text style={[styles.navIcon, activeTab === 'learn' && styles.activeNavIcon]}>📚</Text>
+          <FontAwesome
+            name="book-open"
+            size={24}
+            solid
+            color={activeTab === 'learn' ? '#14B8A6' : '#A0AEC0'}
+          />
           <Text style={[styles.navLabel, activeTab === 'learn' && styles.activeNavLabel]}>Learn</Text>
         </TouchableOpacity>
       </View>
