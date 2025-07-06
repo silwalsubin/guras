@@ -29,6 +29,8 @@ module "main" {
   db_name             = var.db_name
   db_instance_class   = var.db_instance_class
   db_allocated_storage = var.db_allocated_storage
+  domain_name         = var.domain_name
+  route53_zone_id     = var.route53_zone_id
 }
 
 # Outputs from the main module
