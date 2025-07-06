@@ -2,11 +2,11 @@ name: Build Docker Image
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ master ]
     paths:
       - 'server/**'
   pull_request:
-    branches: [ main, master ]
+    branches: [ master ]
     paths:
       - 'server/**'
   workflow_dispatch:
