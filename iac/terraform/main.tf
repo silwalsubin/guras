@@ -45,6 +45,15 @@ module "ecr" {
   repository_name = "guras-server"
 }
 
+# SSL Certificate
+module "ssl" {
+  source = "./modules/ssl"
+  
+  environment = var.environment
+  domain_name = var.domain_name
+  route53_zone_id = var.route53_zone_id
+}
+
 # Application Load Balancer
 module "alb" {
   source = "./modules/alb"
@@ -53,8 +62,21 @@ module "alb" {
   vpc_id = module.vpc.vpc_id
   public_subnets = module.vpc.public_subnets
   alb_security_group_id = module.vpc.alb_security_group_id
+  certificate_arn = module.ssl.certificate_validation_arn
   
-  depends_on = [module.vpc]
+  depends_on = [module.vpc, module.ssl]
+}
+
+# DNS Records
+module "dns" {
+  source = "./modules/dns"
+  
+  domain_name = var.domain_name
+  route53_zone_id = var.route53_zone_id
+  alb_dns_name = module.alb.alb_dns_name
+  alb_zone_id = module.alb.alb_zone_id
+  
+  depends_on = [module.alb]
 }
 
 # ECS Cluster and Services
