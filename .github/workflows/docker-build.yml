@@ -102,14 +102,7 @@ jobs:
         # Get the ECR repository URL from Terraform outputs
         cd iac/terraform/environments/${{ github.event.inputs.environment || 'staging' }}
         terraform init
-        ECR_REPO_URL=$(terraform output -raw ecr_repository_url 2>/dev/null || echo "")
-        
-        if [ -z "$ECR_REPO_URL" ]; then
-          echo "❌ Could not get ECR repository URL from Terraform outputs"
-          echo "Using default ECR repository pattern..."
-          ECR_REPO_URL="${{ steps.login-ecr.outputs.registry }}/guras-server"
-        fi
-        
+        ECR_REPO_URL=480875380190.dkr.ecr.us-east-1.amazonaws.com/guras-server
         echo "ECR_REPO_URL=$ECR_REPO_URL" >> $GITHUB_OUTPUT
         echo "📦 ECR Repository URL: $ECR_REPO_URL"
 
