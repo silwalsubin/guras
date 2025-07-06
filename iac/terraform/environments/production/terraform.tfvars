@@ -14,7 +14,5 @@ db_name = "guras_production"
 db_instance_class = "db.t3.small"
 db_allocated_storage = 50
 
-# Note: db_username and db_password should be provided via:
-# - Environment variables: TF_VAR_db_username and TF_VAR_db_password
-# - Command line: -var="db_username=xxx" -var="db_password=xxx"
-# - Or use AWS Secrets Manager/Parameter Store 
+# Database credentials are automatically generated and stored in AWS Secrets Manager
+# No manual credential management required 

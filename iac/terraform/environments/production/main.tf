@@ -27,8 +27,7 @@ module "main" {
   ecs_cpu = var.ecs_cpu
   ecs_memory = var.ecs_memory
   db_name = var.db_name
-  db_username = var.db_username
-  db_password = var.db_password
+
   db_instance_class = var.db_instance_class
   db_allocated_storage = var.db_allocated_storage
 }
