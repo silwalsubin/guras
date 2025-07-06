@@ -15,13 +15,13 @@ const ENVIRONMENTS: Record<string, EnvironmentConfig> = {
     LOG_LEVEL: 'debug',
   },
   staging: {
-    API_BASE_URL: 'https://staging-api.yourdomain.com', // Your staging server
+    API_BASE_URL: 'http://staging-guras-alb-1230870366.us-east-1.elb.amazonaws.com', // Your staging server
     ENVIRONMENT: 'staging',
     DEBUG_MODE: true,
     LOG_LEVEL: 'info',
   },
   production: {
-    API_BASE_URL: 'https://api.yourdomain.com', // Your production server
+    API_BASE_URL: 'http://staging-guras-alb-1230870366.us-east-1.elb.amazonaws.com', // Your production server
     ENVIRONMENT: 'production',
     DEBUG_MODE: false,
     LOG_LEVEL: 'warn',
