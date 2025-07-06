@@ -21,4 +21,19 @@ output "identifier" {
 output "arn" {
   description = "RDS instance ARN"
   value       = aws_db_instance.main.arn
+}
+
+output "secrets_manager_secret_arn" {
+  description = "Secrets Manager secret ARN for database credentials"
+  value       = aws_secretsmanager_secret.db_credentials.arn
+}
+
+output "kms_key_arn" {
+  description = "KMS key ARN for secrets encryption"
+  value       = aws_kms_key.secrets.arn
+}
+
+output "secrets_access_policy_arn" {
+  description = "IAM policy ARN for secrets access"
+  value       = aws_iam_policy.secrets_access.arn
 } 
