@@ -141,6 +141,13 @@ jobs:
           echo "DynamoDB table exists, importing into Terraform state..."
           terraform import aws_dynamodb_table.terraform_locks guras-terraform-locks || echo "Import failed or already imported"
         fi
+        
+        # Check if IAM policy exists and import it if it does
+        if aws iam list-policies --scope Local --query 'Policies[?PolicyName==`guras-terraform-state-access`]' --output text | grep -q guras-terraform-state-access; then
+          echo "IAM policy exists, getting ARN and importing into Terraform state..."
+          POLICY_ARN=$(aws iam list-policies --scope Local --query 'Policies[?PolicyName==`guras-terraform-state-access`].Arn' --output text)
+          terraform import aws_iam_policy.terraform_state_access "$POLICY_ARN" || echo "IAM policy import failed or already imported"
+        fi
 
     - name: Terraform Apply
       run: |
