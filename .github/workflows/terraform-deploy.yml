@@ -141,18 +141,27 @@ jobs:
       id: staging-outputs
       run: |
         cd iac/terraform/environments/staging
-        # Check if outputs exist before trying to get them
-        if terraform output alb_dns_name >/dev/null 2>&1; then
-          echo "alb_dns_name=$(terraform output -raw alb_dns_name)" >> $GITHUB_OUTPUT
-        else
-          echo "alb_dns_name=not_available" >> $GITHUB_OUTPUT
-        fi
         
-        if terraform output ecr_repository_url >/dev/null 2>&1; then
-          echo "ecr_repository_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
-        else
-          echo "ecr_repository_url=not_available" >> $GITHUB_OUTPUT
-        fi
+        # Debug: Check terraform state
+        echo "Checking Terraform state..."
+        terraform state list || echo "No state found"
+        
+        # Debug: List all outputs
+        echo "Available outputs:"
+        terraform output || echo "No outputs found"
+        
+        # Try to get outputs with better error handling
+        echo "Attempting to get outputs..."
+        
+        # Get alb_dns_name output
+        ALB_DNS_NAME=$(terraform output -raw alb_dns_name 2>/dev/null || echo "not_available")
+        echo "alb_dns_name=$ALB_DNS_NAME" >> $GITHUB_OUTPUT
+        
+        # Get ecr_repository_url output
+        ECR_REPO_URL=$(terraform output -raw ecr_repository_url 2>/dev/null || echo "not_available")
+        echo "ecr_repository_url=$ECR_REPO_URL" >> $GITHUB_OUTPUT
+        
+        echo "Outputs captured successfully"
       continue-on-error: true
 
   plan-production:
@@ -232,16 +241,25 @@ jobs:
       id: production-outputs
       run: |
         cd iac/terraform/environments/production
-        # Check if outputs exist before trying to get them
-        if terraform output alb_dns_name >/dev/null 2>&1; then
-          echo "alb_dns_name=$(terraform output -raw alb_dns_name)" >> $GITHUB_OUTPUT
-        else
-          echo "alb_dns_name=not_available" >> $GITHUB_OUTPUT
-        fi
         
-        if terraform output ecr_repository_url >/dev/null 2>&1; then
-          echo "ecr_repository_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
-        else
-          echo "ecr_repository_url=not_available" >> $GITHUB_OUTPUT
-        fi
+        # Debug: Check terraform state
+        echo "Checking Terraform state..."
+        terraform state list || echo "No state found"
+        
+        # Debug: List all outputs
+        echo "Available outputs:"
+        terraform output || echo "No outputs found"
+        
+        # Try to get outputs with better error handling
+        echo "Attempting to get outputs..."
+        
+        # Get alb_dns_name output
+        ALB_DNS_NAME=$(terraform output -raw alb_dns_name 2>/dev/null || echo "not_available")
+        echo "alb_dns_name=$ALB_DNS_NAME" >> $GITHUB_OUTPUT
+        
+        # Get ecr_repository_url output
+        ECR_REPO_URL=$(terraform output -raw ecr_repository_url 2>/dev/null || echo "not_available")
+        echo "ecr_repository_url=$ECR_REPO_URL" >> $GITHUB_OUTPUT
+        
+        echo "Outputs captured successfully"
       continue-on-error: true
