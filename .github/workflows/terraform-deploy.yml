@@ -94,8 +94,8 @@ jobs:
     - name: Force Unlock State (if needed)
       run: |
         cd iac/terraform/environments/staging
-        # Try to force unlock any existing locks
-        terraform force-unlock -force || echo "No lock to unlock or unlock failed"
+        terraform force-unlock 88b4ad3f-926c-46c5-1938-dbaa149bc1b2 || echo "No lock to unlock or unlock failed"
+        sleep 5
       continue-on-error: true
 
     - name: Terraform Plan
@@ -142,8 +142,8 @@ jobs:
     - name: Force Unlock State (if needed)
       run: |
         cd iac/terraform/environments/staging
-        # Try to force unlock any existing locks
-        terraform force-unlock -force || echo "No lock to unlock or unlock failed"
+        terraform force-unlock 88b4ad3f-926c-46c5-1938-dbaa149bc1b2 || echo "No lock to unlock or unlock failed"
+        sleep 5
       continue-on-error: true
 
     - name: Terraform Apply
@@ -208,8 +208,8 @@ jobs:
     - name: Force Unlock State (if needed)
       run: |
         cd iac/terraform/environments/production
-        # Try to force unlock any existing locks
-        terraform force-unlock -force || echo "No lock to unlock or unlock failed"
+        terraform force-unlock 88b4ad3f-926c-46c5-1938-dbaa149bc1b2 || echo "No lock to unlock or unlock failed"
+        sleep 5
       continue-on-error: true
 
     - name: Terraform Plan
@@ -256,8 +256,8 @@ jobs:
     - name: Force Unlock State (if needed)
       run: |
         cd iac/terraform/environments/production
-        # Try to force unlock any existing locks
-        terraform force-unlock -force || echo "No lock to unlock or unlock failed"
+        terraform force-unlock 88b4ad3f-926c-46c5-1938-dbaa149bc1b2 || echo "No lock to unlock or unlock failed"
+        sleep 5
       continue-on-error: true
 
     - name: Terraform Apply
