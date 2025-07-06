@@ -92,26 +92,6 @@ jobs:
         terraform show -no-color tfplan > plan.txt
       continue-on-error: true
 
-    - name: Comment Plan
-      uses: actions/github-script@v7
-      if: github.event_name == 'pull_request'
-      env:
-        PLAN: "${{ steps.plan.outputs.stdout }}"
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `#### Terraform Plan 📋
-          \`\`\`\n
-          ${process.env.PLAN || 'No changes. Infrastructure is up-to-date.'}
-          \`\`\`
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event.inputs.action }}\`, Environment: \`staging\`*`;
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
-
     - name: Upload Plan Artifact
       uses: actions/upload-artifact@v4
       with:
@@ -157,26 +137,6 @@ jobs:
         echo "alb_dns_name=$(terraform output -raw alb_dns_name)" >> $GITHUB_OUTPUT
         echo "ecr_repository_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
 
-    - name: Comment Apply Results
-      uses: actions/github-script@v7
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `#### Terraform Apply ✅ Staging
-          **Status:** Successfully applied to staging environment
-          
-          **Outputs:**
-          - ALB DNS: \`${{ steps.staging-outputs.outputs.alb_dns_name }}\`
-          - ECR Repository: \`${{ steps.staging-outputs.outputs.ecr_repository_url }}\`
-          
-          *Pusher: @${{ github.actor }}, Environment: \`staging\`*`;
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
-
   plan-production:
     name: Plan Production Changes
     runs-on: ubuntu-latest
@@ -211,26 +171,6 @@ jobs:
         terraform plan -out=tfplan
         terraform show -no-color tfplan > plan.txt
       continue-on-error: true
-
-    - name: Comment Plan
-      uses: actions/github-script@v7
-      if: github.event_name == 'pull_request'
-      env:
-        PLAN: "${{ steps.plan.outputs.stdout }}"
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `#### Terraform Plan 📋 Production
-          \`\`\`\n
-          ${process.env.PLAN || 'No changes. Infrastructure is up-to-date.'}
-          \`\`\`
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event.inputs.action }}\`, Environment: \`production\`*`;
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
 
     - name: Upload Plan Artifact
       uses: actions/upload-artifact@v4
@@ -276,23 +216,3 @@ jobs:
         cd iac/terraform/environments/production
         echo "alb_dns_name=$(terraform output -raw alb_dns_name)" >> $GITHUB_OUTPUT
         echo "ecr_repository_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
-
-    - name: Comment Apply Results
-      uses: actions/github-script@v7
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `#### Terraform Apply ✅ Production
-          **Status:** Successfully applied to production environment
-          
-          **Outputs:**
-          - ALB DNS: \`${{ steps.production-outputs.outputs.alb_dns_name }}\`
-          - ECR Repository: \`${{ steps.production-outputs.outputs.ecr_repository_url }}\`
-          
-          *Pusher: @${{ github.actor }}, Environment: \`production\`*`;
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          }) 
