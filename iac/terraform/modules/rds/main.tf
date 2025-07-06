@@ -58,7 +58,7 @@ resource "aws_db_subnet_group" "main" {
 
 # RDS Parameter Group
 resource "aws_db_parameter_group" "main" {
-  family = "postgres14"
+  family = "postgres16"
   name   = "${var.environment}-guras-db-params"
 
   parameter {
@@ -81,7 +81,7 @@ resource "aws_db_instance" "main" {
   identifier = "${var.environment}-guras-db"
 
   engine         = "postgres"
-  engine_version = "17.5-R1"
+  engine_version = "16.2"
   instance_class = var.instance_class
 
   allocated_storage     = var.allocated_storage
