@@ -115,6 +115,33 @@ jobs:
         cd iac/terraform/bootstrap
         terraform init
 
+    - name: Check and Import Existing Resources
+      run: |
+        cd iac/terraform/bootstrap
+        
+        # Check if S3 buckets exist and import them if they do
+        if aws s3api head-bucket --bucket guras-terraform-state-staging 2>/dev/null; then
+          echo "Staging bucket exists, importing into Terraform state..."
+          terraform import aws_s3_bucket.staging_state guras-terraform-state-staging || echo "Import failed or already imported"
+          terraform import aws_s3_bucket_versioning.staging_state guras-terraform-state-staging || echo "Versioning import failed or already imported"
+          terraform import aws_s3_bucket_server_side_encryption_configuration.staging_state guras-terraform-state-staging || echo "Encryption import failed or already imported"
+          terraform import aws_s3_bucket_public_access_block.staging_state guras-terraform-state-staging || echo "Public access block import failed or already imported"
+        fi
+        
+        if aws s3api head-bucket --bucket guras-terraform-state-production 2>/dev/null; then
+          echo "Production bucket exists, importing into Terraform state..."
+          terraform import aws_s3_bucket.production_state guras-terraform-state-production || echo "Import failed or already imported"
+          terraform import aws_s3_bucket_versioning.production_state guras-terraform-state-production || echo "Versioning import failed or already imported"
+          terraform import aws_s3_bucket_server_side_encryption_configuration.production_state guras-terraform-state-production || echo "Encryption import failed or already imported"
+          terraform import aws_s3_bucket_public_access_block.production_state guras-terraform-state-production || echo "Public access block import failed or already imported"
+        fi
+        
+        # Check if DynamoDB table exists and import it if it does
+        if aws dynamodb describe-table --table-name guras-terraform-locks 2>/dev/null; then
+          echo "DynamoDB table exists, importing into Terraform state..."
+          terraform import aws_dynamodb_table.terraform_locks guras-terraform-locks || echo "Import failed or already imported"
+        fi
+
     - name: Terraform Apply
       run: |
         cd iac/terraform/bootstrap
