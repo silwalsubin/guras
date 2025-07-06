@@ -58,7 +58,7 @@ resource "aws_ecs_task_definition" "app" {
       secrets = [
         {
           name      = "ConnectionStrings__DefaultConnection"
-          valueFrom = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/${var.environment}/db-connection"
+          valueFrom = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/${var.environment}/db-credentials"
         }
       ]
 
@@ -128,6 +128,33 @@ resource "aws_iam_role" "ecs_execution_role" {
 resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
   role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# IAM Policy for Secrets Manager access
+resource "aws_iam_policy" "ecs_execution_secrets_access" {
+  name        = "${var.environment}-guras-ecs-execution-secrets-access"
+  description = "Policy for ECS execution role to access Secrets Manager"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = [
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/${var.environment}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_execution_secrets_access" {
+  role       = aws_iam_role.ecs_execution_role.name
+  policy_arn = aws_iam_policy.ecs_execution_secrets_access.arn
 }
 
 # IAM Role for ECS Tasks
