@@ -1,0 +1,174 @@
+name: Terraform Bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action to perform'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+      auto_approve:
+        description: 'Auto approve changes (use with caution)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  TF_VERSION: "1.5.0"
+  AWS_REGION: "us-east-1"
+
+jobs:
+  validate:
+    name: Validate Bootstrap Configuration
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Terraform Format Check
+      run: |
+        cd iac/terraform/bootstrap
+        terraform fmt -check -recursive
+
+    - name: Terraform Init
+      run: |
+        cd iac/terraform/bootstrap
+        terraform init
+
+    - name: Terraform Validate
+      run: |
+        cd iac/terraform/bootstrap
+        terraform validate
+
+  plan:
+    name: Plan Bootstrap Changes
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event.inputs.action == 'plan' || github.event.inputs.action == 'apply'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Terraform Init
+      run: |
+        cd iac/terraform/bootstrap
+        terraform init
+
+    - name: Terraform Plan
+      id: plan
+      run: |
+        cd iac/terraform/bootstrap
+        terraform plan -out=tfplan
+        terraform show -no-color tfplan > plan.txt
+      continue-on-error: true
+
+    - name: Comment Plan
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      env:
+        PLAN: "${{ steps.plan.outputs.stdout }}"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `#### Terraform Bootstrap Plan 📋
+          \`\`\`\n
+          ${process.env.PLAN || 'No changes. Bootstrap infrastructure is up-to-date.'}
+          \`\`\`
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event.inputs.action }}\`*`;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    - name: Upload Plan Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: bootstrap-plan
+        path: iac/terraform/bootstrap/plan.txt
+
+  apply:
+    name: Apply Bootstrap Changes
+    runs-on: ubuntu-latest
+    needs: plan
+    if: github.event.inputs.action == 'apply'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Terraform Init
+      run: |
+        cd iac/terraform/bootstrap
+        terraform init
+
+    - name: Terraform Apply
+      run: |
+        cd iac/terraform/bootstrap
+        terraform apply -auto-approve
+
+    - name: Get Bootstrap Outputs
+      id: bootstrap-outputs
+      run: |
+        cd iac/terraform/bootstrap
+        echo "staging_bucket=$(terraform output -raw staging_state_bucket)" >> $GITHUB_OUTPUT
+        echo "production_bucket=$(terraform output -raw production_state_bucket)" >> $GITHUB_OUTPUT
+        echo "dynamodb_table=$(terraform output -raw dynamodb_table)" >> $GITHUB_OUTPUT
+
+    - name: Comment Apply Results
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `#### Terraform Bootstrap Apply ✅
+          **Status:** Successfully created state management infrastructure
+          
+          **Created Resources:**
+          - Staging State Bucket: \`${{ steps.bootstrap-outputs.outputs.staging_bucket }}\`
+          - Production State Bucket: \`${{ steps.bootstrap-outputs.outputs.production_bucket }}\`
+          - DynamoDB Table: \`${{ steps.bootstrap-outputs.outputs.dynamodb_table }}\`
+          
+          **Next Steps:**
+          1. Run the main Terraform Deploy workflow for staging
+          2. Then run it for production
+          
+          *Pusher: @${{ github.actor }}*`;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          }) 
