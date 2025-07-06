@@ -141,8 +141,19 @@ jobs:
       id: staging-outputs
       run: |
         cd iac/terraform/environments/staging
-        echo "alb_dns_name=$(terraform output -raw alb_dns_name)" >> $GITHUB_OUTPUT
-        echo "ecr_repository_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+        # Check if outputs exist before trying to get them
+        if terraform output alb_dns_name >/dev/null 2>&1; then
+          echo "alb_dns_name=$(terraform output -raw alb_dns_name)" >> $GITHUB_OUTPUT
+        else
+          echo "alb_dns_name=not_available" >> $GITHUB_OUTPUT
+        fi
+        
+        if terraform output ecr_repository_url >/dev/null 2>&1; then
+          echo "ecr_repository_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+        else
+          echo "ecr_repository_url=not_available" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
 
   plan-production:
     name: Plan Production Changes
@@ -221,5 +232,16 @@ jobs:
       id: production-outputs
       run: |
         cd iac/terraform/environments/production
-        echo "alb_dns_name=$(terraform output -raw alb_dns_name)" >> $GITHUB_OUTPUT
-        echo "ecr_repository_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+        # Check if outputs exist before trying to get them
+        if terraform output alb_dns_name >/dev/null 2>&1; then
+          echo "alb_dns_name=$(terraform output -raw alb_dns_name)" >> $GITHUB_OUTPUT
+        else
+          echo "alb_dns_name=not_available" >> $GITHUB_OUTPUT
+        fi
+        
+        if terraform output ecr_repository_url >/dev/null 2>&1; then
+          echo "ecr_repository_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+        else
+          echo "ecr_repository_url=not_available" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
