@@ -13,10 +13,7 @@ output "service_name" {
   value       = aws_ecs_service.app.name
 }
 
-output "service_arn" {
-  description = "ECS service ARN"
-  value       = aws_ecs_service.app.arn
-}
+
 
 output "task_definition_arn" {
   description = "ECS task definition ARN"
