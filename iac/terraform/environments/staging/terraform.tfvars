@@ -18,5 +18,5 @@ db_allocated_storage = 20
 # No manual credential management required
 
 # Domain and DNS settings
-domain_name = "staging.guras.com"
-route53_zone_id = "Z09391963KLT06D3CMH65"  # Replace with your actual Route53 hosted zone ID 
+domain_name = "gurasaura.com"
+route53_zone_id = "Z0310972MNRO84YKPIQD"  # Replace with your actual Route53 hosted zone ID 
