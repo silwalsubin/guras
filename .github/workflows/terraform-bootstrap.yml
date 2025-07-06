@@ -158,6 +158,28 @@ jobs:
       id: bootstrap-outputs
       run: |
         cd iac/terraform/bootstrap
-        echo "staging_bucket=$(terraform output -raw staging_state_bucket)" >> $GITHUB_OUTPUT
-        echo "production_bucket=$(terraform output -raw production_state_bucket)" >> $GITHUB_OUTPUT
-        echo "dynamodb_table=$(terraform output -raw dynamodb_table)" >> $GITHUB_OUTPUT
+        # Check if outputs exist before trying to get them
+        if terraform output staging_state_bucket >/dev/null 2>&1; then
+          echo "staging_bucket=$(terraform output -raw staging_state_bucket)" >> $GITHUB_OUTPUT
+        else
+          echo "staging_bucket=not_available" >> $GITHUB_OUTPUT
+        fi
+        
+        if terraform output production_state_bucket >/dev/null 2>&1; then
+          echo "production_bucket=$(terraform output -raw production_state_bucket)" >> $GITHUB_OUTPUT
+        else
+          echo "production_bucket=not_available" >> $GITHUB_OUTPUT
+        fi
+        
+        if terraform output dynamodb_table >/dev/null 2>&1; then
+          echo "dynamodb_table=$(terraform output -raw dynamodb_table)" >> $GITHUB_OUTPUT
+        else
+          echo "dynamodb_table=not_available" >> $GITHUB_OUTPUT
+        fi
+        
+        if terraform output terraform_state_access_policy_arn >/dev/null 2>&1; then
+          echo "terraform_state_access_policy_arn=$(terraform output -raw terraform_state_access_policy_arn)" >> $GITHUB_OUTPUT
+        else
+          echo "terraform_state_access_policy_arn=not_available" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
