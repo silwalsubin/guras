@@ -18,17 +18,16 @@ module "main" {
   source = "../.."
   
   # Pass through all variables
-  environment = var.environment
-  aws_region = var.aws_region
-  vpc_cidr = var.vpc_cidr
-  availability_zones = var.availability_zones
-  app_image_tag = var.app_image_tag
-  ecs_desired_count = var.ecs_desired_count
-  ecs_cpu = var.ecs_cpu
-  ecs_memory = var.ecs_memory
-  db_name = var.db_name
-
-  db_instance_class = var.db_instance_class
+  environment         = var.environment
+  aws_region          = var.aws_region
+  vpc_cidr            = var.vpc_cidr
+  availability_zones  = var.availability_zones
+  app_image_tag       = var.app_image_tag
+  ecs_desired_count   = var.ecs_desired_count
+  ecs_cpu             = var.ecs_cpu
+  ecs_memory          = var.ecs_memory
+  db_name             = var.db_name
+  db_instance_class   = var.db_instance_class
   db_allocated_storage = var.db_allocated_storage
 }
 

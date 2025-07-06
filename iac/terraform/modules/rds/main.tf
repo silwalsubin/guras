@@ -88,7 +88,7 @@ resource "aws_db_instance" "main" {
   max_allocated_storage = var.max_allocated_storage
   storage_type          = "gp2"
   storage_encrypted     = true
-  kms_key_id           = aws_kms_key.secrets.arn
+  kms_key_id            = aws_kms_key.secrets.arn
 
   db_name  = var.db_name
   username = "guras_admin"
