@@ -34,14 +34,13 @@ resource "aws_secretsmanager_secret" "db_credentials" {
   }
 }
 
-# Secret version with initial credentials
+# Secret version with initial credentials (without host endpoint to avoid cycle)
 resource "aws_secretsmanager_secret_version" "db_credentials" {
   secret_id = aws_secretsmanager_secret.db_credentials.id
   secret_string = jsonencode({
     username = "guras_admin"
     password = random_password.db_password.result
     engine   = "postgres"
-    host     = aws_db_instance.main.endpoint
     port     = 5432
     dbname   = var.db_name
   })
@@ -113,6 +112,21 @@ resource "aws_db_instance" "main" {
   }
 
   depends_on = [aws_secretsmanager_secret_version.db_credentials]
+}
+
+# Update secret with RDS endpoint after instance is created
+resource "aws_secretsmanager_secret_version" "db_credentials_with_host" {
+  secret_id = aws_secretsmanager_secret.db_credentials.id
+  secret_string = jsonencode({
+    username = "guras_admin"
+    password = random_password.db_password.result
+    engine   = "postgres"
+    host     = aws_db_instance.main.endpoint
+    port     = 5432
+    dbname   = var.db_name
+  })
+
+  depends_on = [aws_db_instance.main]
 }
 
 # CloudWatch Log Group for RDS
