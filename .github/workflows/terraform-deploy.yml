@@ -132,6 +132,13 @@ jobs:
         cd iac/terraform/environments/staging
         terraform init
 
+    - name: Force Unlock State (if needed)
+      run: |
+        cd iac/terraform/environments/staging
+        # Try to force unlock any existing locks
+        terraform force-unlock -force || echo "No lock to unlock or unlock failed"
+      continue-on-error: true
+
     - name: Terraform Apply
       run: |
         cd iac/terraform/environments/staging
@@ -231,6 +238,13 @@ jobs:
       run: |
         cd iac/terraform/environments/production
         terraform init
+
+    - name: Force Unlock State (if needed)
+      run: |
+        cd iac/terraform/environments/production
+        # Try to force unlock any existing locks
+        terraform force-unlock -force || echo "No lock to unlock or unlock failed"
+      continue-on-error: true
 
     - name: Terraform Apply
       run: |
