@@ -155,7 +155,7 @@ resource "aws_iam_policy" "ecs_execution_secrets_access" {
           "kms:DescribeKey"
         ]
         Resource = [
-          "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.environment}-guras-secrets"
+          var.kms_key_arn
         ]
       }
     ]

@@ -73,8 +73,9 @@ module "ecs" {
   memory = var.ecs_memory
   ecs_tasks_security_group_id = module.vpc.ecs_tasks_security_group_id
   target_group_arn = module.alb.target_group_arn
+  kms_key_arn = module.rds.kms_key_arn
   
-  depends_on = [module.vpc, module.ecr, module.alb]
+  depends_on = [module.vpc, module.ecr, module.alb, module.rds]
 }
 
 # RDS Database

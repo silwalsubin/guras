@@ -55,4 +55,9 @@ variable "ecs_tasks_security_group_id" {
 variable "target_group_arn" {
   description = "Target group ARN for load balancer"
   type        = string
+}
+
+variable "kms_key_arn" {
+  description = "KMS key ARN for decrypting secrets"
+  type        = string
 } 
