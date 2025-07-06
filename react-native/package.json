@@ -4,10 +4,15 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "android:dev": "REACT_NATIVE_ENV=development react-native run-android",
+    "android:staging": "REACT_NATIVE_ENV=staging react-native run-android",
+    "android:prod": "REACT_NATIVE_ENV=production react-native run-android",
+    "ios:dev": "REACT_NATIVE_ENV=development react-native run-ios",
+    "ios:staging": "REACT_NATIVE_ENV=staging react-native run-ios",
+    "ios:prod": "REACT_NATIVE_ENV=production react-native run-ios"
   },
   "dependencies": {
     "@react-native-firebase/app": "^22.2.1",

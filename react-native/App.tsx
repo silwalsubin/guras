@@ -21,13 +21,12 @@ import {
 import { getApp } from '@react-native-firebase/app';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import AuthWrapper from './src/components/AuthWrapper';
-import SignOutButton from './src/components/SignOutButton';
+import ProfileScreen from './src/components/ProfileScreen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome5';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
@@ -176,54 +175,7 @@ function MainApp(): React.JSX.Element {
   );
 
   const renderProfileScreen = () => (
-    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <View style={[styles.logo, { backgroundColor: isDarkMode ? '#0D9488' : '#14B8A6' }]}>
-            <Text style={styles.logoText}>👤</Text>
-          </View>
-          <Text style={[styles.appName, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-            Profile
-          </Text>
-        </View>
-        <TouchableOpacity 
-          style={[styles.backButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}
-          onPress={() => setActiveTab('home')}
-        >
-          <Text style={[styles.backButtonText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>←</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* User Info */}
-      <View style={styles.profileSection}>
-        <View style={[styles.profileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-          <Text style={[styles.profileTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-            Account Information
-          </Text>
-          <View style={styles.profileInfo}>
-            <Text style={[styles.profileLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>Email:</Text>
-            <Text style={[styles.profileValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-              {user?.email}
-            </Text>
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={[styles.profileLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>User ID:</Text>
-            <Text style={[styles.profileValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
-              {user?.uid}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Sign Out Button */}
-      <View style={styles.signOutSection}>
-        <SignOutButton 
-          style={styles.signOutButton}
-          textStyle={styles.signOutButtonText}
-        />
-      </View>
-    </ScrollView>
+    <ProfileScreen onBack={() => setActiveTab('home')} />
   );
 
   const renderActiveTab = () => {
