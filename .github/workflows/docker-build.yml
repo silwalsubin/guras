@@ -110,7 +110,7 @@ jobs:
         images: ${{ steps.ecr-repo.outputs.ECR_REPO_URL }}
         tags: |
           type=raw,value=${{ steps.version.outputs.version }},enable=true
-          type=raw,value=latest,enable={{is_default}}
+          type=raw,value=latest,enable=true
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
