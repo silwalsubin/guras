@@ -4,6 +4,7 @@ using System.Security.Claims;
 
 namespace apis.Controllers;
 
+
 [ApiController]
 [Route("api/[controller]")]
 public class HelloWorldController : ControllerBase
@@ -16,6 +17,7 @@ public class HelloWorldController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public ActionResult<string> Get()
     {
         _logger.LogInformation("HelloWorld endpoint called");

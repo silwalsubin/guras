@@ -22,7 +22,7 @@ const ENVIRONMENTS: Record<string, EnvironmentConfig> = {
     LOG_LEVEL: 'info',
   },
   production: {
-    API_BASE_URL: 'https://production.gurasuniverse.com', // Your production server
+    API_BASE_URL: 'https://staging.gurasuniverse.com', // Your production server
     ENVIRONMENT: 'production',
     DEBUG_MODE: false,
     LOG_LEVEL: 'warn',
