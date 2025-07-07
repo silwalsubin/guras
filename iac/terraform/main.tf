@@ -62,7 +62,7 @@ module "alb" {
   vpc_id = module.vpc.vpc_id
   public_subnets = module.vpc.public_subnets
   alb_security_group_id = module.vpc.alb_security_group_id
-  certificate_arn = module.ssl.certificate_arn
+  certificate_arn = module.ssl.certificate_validation_arn
   
   depends_on = [module.vpc, module.ssl]
 }
