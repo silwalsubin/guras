@@ -18,5 +18,5 @@ db_allocated_storage = 50
 # No manual credential management required
 
 # Domain and DNS settings
-domain_name = "gurasaura.com"
-route53_zone_id = "Z0310972MNRO84YKPIQD"  # Replace with your actual Route53 hosted zone ID 
+domain_name = "gurasuniverse.com"
+route53_zone_id = "Z03420161UX2FR5OUM4K8"  # Replace with your actual Route53 hosted zone ID 
