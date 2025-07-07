@@ -1,6 +1,6 @@
 output "certificate_arn" {
   description = "SSL certificate ARN"
-  value       = aws_acm_certificate.main.arn
+  value       = aws_acm_certificate_validation.main.certificate_arn
 }
 
 output "certificate_validation_arn" {
