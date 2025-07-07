@@ -26,4 +26,14 @@ output "target_group_arn" {
 output "target_group_name" {
   description = "Target group name"
   value       = aws_lb_target_group.app.name
+}
+
+output "certificate_arn_used" {
+  description = "Certificate ARN used by ALB"
+  value       = var.certificate_arn
+}
+
+output "https_listener_arn" {
+  description = "HTTPS listener ARN"
+  value       = aws_lb_listener.https.arn
 } 

@@ -30,7 +30,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Disable HTTPS redirection when running behind ALB (SSL termination)
+// app.UseHttpsRedirection();
 
 // Add authentication and authorization middleware
 app.UseAuthentication();

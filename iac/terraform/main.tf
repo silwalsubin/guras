@@ -64,7 +64,7 @@ module "alb" {
   alb_security_group_id = module.vpc.alb_security_group_id
   certificate_arn = module.ssl.certificate_validation_arn
   
-  depends_on = [module.vpc, module.ssl]
+  depends_on = [module.vpc, module.ssl, module.ssl.aws_acm_certificate_validation.main]
 }
 
 # DNS Records
@@ -130,6 +130,11 @@ output "ecr_repository_url" {
 
 output "alb_dns_name" {
   description = "Application Load Balancer DNS name"
+  value       = module.alb.alb_dns_name
+}
+
+output "current_alb_dns_name" {
+  description = "Current ALB DNS name for debugging"
   value       = module.alb.alb_dns_name
 }
 
