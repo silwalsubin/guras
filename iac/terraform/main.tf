@@ -156,7 +156,12 @@ output "certificate_arn" {
 
 output "certificate_status" {
   description = "Certificate status for debugging"
-  value       = "Certificate ARN: ${module.ssl.certificate_arn}, Validation ARN: ${module.ssl.certificate_validation_arn}"
+  value       = "Certificate ARN: ${module.ssl.certificate_arn}, Validation ARN: ${module.ssl.certificate_validation_arn}, Domain: ${var.domain_name}"
+}
+
+output "alb_debug_info" {
+  description = "ALB debugging information"
+  value       = "ALB DNS: ${module.alb.alb_dns_name}, HTTPS Listener ARN: ${module.alb.https_listener_arn}, Certificate ARN: ${module.ssl.certificate_arn}"
 }
 
 output "main_domain_url" {
