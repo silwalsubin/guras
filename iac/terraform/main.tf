@@ -71,6 +71,7 @@ module "alb" {
 module "dns" {
   source = "./modules/dns"
   
+  environment = var.environment
   domain_name = var.domain_name
   route53_zone_id = var.route53_zone_id
   alb_dns_name = module.alb.alb_dns_name
@@ -141,4 +142,24 @@ output "rds_endpoint" {
   description = "RDS endpoint"
   value       = module.rds.endpoint
   sensitive   = true
+}
+
+output "certificate_arn" {
+  description = "SSL certificate ARN"
+  value       = module.ssl.certificate_arn
+}
+
+output "main_domain_url" {
+  description = "Main domain URL"
+  value       = module.dns.main_domain_url
+}
+
+output "staging_subdomain_url" {
+  description = "Staging subdomain URL"
+  value       = module.dns.staging_subdomain_url
+}
+
+output "production_subdomain_url" {
+  description = "Production subdomain URL"
+  value       = module.dns.production_subdomain_url
 } 

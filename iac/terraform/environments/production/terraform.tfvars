@@ -15,4 +15,8 @@ db_instance_class = "db.t3.small"
 db_allocated_storage = 50
 
 # Database credentials are automatically generated and stored in AWS Secrets Manager
-# No manual credential management required 
+# No manual credential management required
+
+# Domain and DNS settings
+domain_name = "gurasaura.com"
+route53_zone_id = "Z0310972MNRO84YKPIQD"  # Replace with your actual Route53 hosted zone ID 

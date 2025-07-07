@@ -29,6 +29,8 @@ module "main" {
   db_name             = var.db_name
   db_instance_class   = var.db_instance_class
   db_allocated_storage = var.db_allocated_storage
+  domain_name         = var.domain_name
+  route53_zone_id     = var.route53_zone_id
 }
 
 # Outputs from the main module
@@ -56,4 +58,19 @@ output "rds_endpoint" {
   description = "RDS endpoint"
   value       = module.main.rds_endpoint
   sensitive   = true
+}
+
+output "certificate_arn" {
+  description = "SSL certificate ARN"
+  value       = module.main.certificate_arn
+}
+
+output "main_domain_url" {
+  description = "Main domain URL"
+  value       = module.main.main_domain_url
+}
+
+output "production_subdomain_url" {
+  description = "Production subdomain URL"
+  value       = module.main.production_subdomain_url
 } 
