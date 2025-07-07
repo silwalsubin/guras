@@ -21,5 +21,4 @@ variable "alb_security_group_id" {
 variable "certificate_arn" {
   description = "SSL certificate ARN for HTTPS listener"
   type        = string
-  default     = ""
 } 

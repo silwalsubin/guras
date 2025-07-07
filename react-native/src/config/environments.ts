@@ -9,20 +9,20 @@ interface EnvironmentConfig {
 // Environment configurations
 const ENVIRONMENTS: Record<string, EnvironmentConfig> = {
   development: {
-    API_BASE_URL: 'https://staging-guras-alb-1230870366.us-east-1.elb.amazonaws.com', // Your local development server
+    API_BASE_URL: 'https://staging.gurasuniverse.com', // Your local development server
     // API_BASE_URL: 'http://localhost:5053', // Your local development server
     ENVIRONMENT: 'development',
     DEBUG_MODE: true,
     LOG_LEVEL: 'debug',
   },
   staging: {
-    API_BASE_URL: 'http://staging-guras-alb-1230870366.us-east-1.elb.amazonaws.com', // Your staging server
+    API_BASE_URL: 'https://staging.gurasuniverse.com', // Your staging server
     ENVIRONMENT: 'staging',
     DEBUG_MODE: true,
     LOG_LEVEL: 'info',
   },
   production: {
-    API_BASE_URL: 'http://staging-guras-alb-1230870366.us-east-1.elb.amazonaws.com', // Your production server
+    API_BASE_URL: 'https://production.gurasuniverse.com', // Your production server
     ENVIRONMENT: 'production',
     DEBUG_MODE: false,
     LOG_LEVEL: 'warn',
