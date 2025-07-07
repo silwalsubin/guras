@@ -62,7 +62,7 @@ module "alb" {
   vpc_id = module.vpc.vpc_id
   public_subnets = module.vpc.public_subnets
   alb_security_group_id = module.vpc.alb_security_group_id
-  certificate_arn = module.ssl.certificate_validation_arn
+  certificate_arn = module.ssl.certificate_arn
   
   depends_on = [module.vpc, module.ssl]
 }
@@ -152,6 +152,11 @@ output "rds_endpoint" {
 output "certificate_arn" {
   description = "SSL certificate ARN"
   value       = module.ssl.certificate_arn
+}
+
+output "certificate_status" {
+  description = "Certificate status for debugging"
+  value       = "Certificate ARN: ${module.ssl.certificate_arn}, Validation ARN: ${module.ssl.certificate_validation_arn}"
 }
 
 output "main_domain_url" {
