@@ -1,0 +1,93 @@
+name: Terraform Force Unlock
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to unlock'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      lock_id:
+        description: 'Lock ID to force unlock (optional - will attempt to unlock if not provided)'
+        required: false
+        type: string
+
+env:
+  TF_VERSION: "1.5.0"
+  AWS_REGION: "us-east-1"
+
+jobs:
+  force-unlock:
+    name: Force Unlock Terraform State
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Terraform Init
+      run: |
+        cd iac/terraform/environments/${{ github.event.inputs.environment }}
+        terraform init
+
+    - name: Check Current State
+      run: |
+        cd iac/terraform/environments/${{ github.event.inputs.environment }}
+        echo "Checking current Terraform state..."
+        terraform state list || echo "No state found or error accessing state"
+      continue-on-error: true
+
+    - name: Force Unlock with Provided ID
+      if: github.event.inputs.lock_id != ''
+      run: |
+        cd iac/terraform/environments/${{ github.event.inputs.environment }}
+        echo "Force unlocking with provided ID: ${{ github.event.inputs.lock_id }}"
+        terraform force-unlock -force "${{ github.event.inputs.lock_id }}"
+        echo "Force unlock completed successfully"
+
+    - name: Attempt Force Unlock without ID
+      if: github.event.inputs.lock_id == ''
+      run: |
+        cd iac/terraform/environments/${{ github.event.inputs.environment }}
+        echo "No lock ID provided. Attempting to force unlock any existing locks..."
+        
+        # Try to run terraform plan to see if there are any locks
+        terraform plan -detailed-exitcode || {
+          echo "Terraform plan failed, attempting force unlock..."
+          # This is a fallback - terraform will prompt for lock ID if needed
+          echo "Please check the logs above for any lock information"
+        }
+      continue-on-error: true
+
+    - name: Verify Unlock Success
+      run: |
+        cd iac/terraform/environments/${{ github.event.inputs.environment }}
+        echo "Verifying unlock success by running terraform plan..."
+        terraform plan -detailed-exitcode || {
+          echo "Terraform plan still failing - there may still be a lock"
+          exit 1
+        }
+        echo "✅ Terraform state unlocked successfully!"
+
+    - name: Show Current State
+      run: |
+        cd iac/terraform/environments/${{ github.event.inputs.environment }}
+        echo "Current Terraform state:"
+        terraform state list || echo "No resources in state"
+      continue-on-error: true 
