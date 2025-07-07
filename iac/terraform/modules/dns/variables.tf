@@ -16,4 +16,9 @@ variable "alb_dns_name" {
 variable "alb_zone_id" {
   description = "ALB hosted zone ID for the A record"
   type        = string
+}
+
+variable "environment" {
+  description = "Environment name (staging or production)"
+  type        = string
 } 

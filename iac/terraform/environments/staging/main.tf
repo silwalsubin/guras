@@ -58,4 +58,19 @@ output "rds_endpoint" {
   description = "RDS endpoint"
   value       = module.main.rds_endpoint
   sensitive   = true
+}
+
+output "certificate_arn" {
+  description = "SSL certificate ARN"
+  value       = module.main.certificate_arn
+}
+
+output "main_domain_url" {
+  description = "Main domain URL"
+  value       = module.main.main_domain_url
+}
+
+output "staging_subdomain_url" {
+  description = "Staging subdomain URL"
+  value       = module.main.staging_subdomain_url
 } 
