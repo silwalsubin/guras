@@ -8,6 +8,11 @@ resource "aws_lb" "main" {
 
   enable_deletion_protection = var.environment == "production"
 
+  # Force recreation to ensure HTTPS is properly configured
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = {
     Name = "${var.environment}-guras-alb"
   }
