@@ -1,6 +1,6 @@
 # Application Load Balancer
 resource "aws_lb" "main" {
-  name               = "${var.environment}-guras-alb"
+  name               = "${var.environment}-guras-alb-v2"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [var.alb_security_group_id]
@@ -14,7 +14,7 @@ resource "aws_lb" "main" {
   }
 
   tags = {
-    Name = "${var.environment}-guras-alb"
+    Name = "${var.environment}-guras-alb-v2"
   }
 }
 
