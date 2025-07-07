@@ -35,5 +35,5 @@ output "certificate_arn_used" {
 
 output "https_listener_arn" {
   description = "HTTPS listener ARN"
-  value       = aws_lb_listener.https.arn
+  value       = length(aws_lb_listener.https) > 0 ? aws_lb_listener.https[0].arn : null
 } 
