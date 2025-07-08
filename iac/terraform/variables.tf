@@ -77,4 +77,16 @@ variable "domain_name" {
 variable "route53_zone_id" {
   description = "Route53 hosted zone ID for DNS management"
   type        = string
+}
+
+variable "allow_external_rds_access" {
+  description = "Allow external access to RDS (for development)"
+  type        = bool
+  default     = false
+}
+
+variable "external_rds_access_cidrs" {
+  description = "CIDR blocks allowed to access RDS externally"
+  type        = list(string)
+  default     = []
 } 

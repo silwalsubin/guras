@@ -172,6 +172,17 @@ resource "aws_security_group" "rds" {
     security_groups = [aws_security_group.ecs_tasks.id]
   }
 
+  # Allow external access for development
+  dynamic "ingress" {
+    for_each = var.allow_external_rds_access ? [1] : []
+    content {
+      protocol    = "tcp"
+      from_port   = 5432
+      to_port     = 5432
+      cidr_blocks = var.external_rds_access_cidrs
+    }
+  }
+
   tags = {
     Name = "${var.environment}-rds-sg"
   }
