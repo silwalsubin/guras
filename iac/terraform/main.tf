@@ -35,6 +35,8 @@ module "vpc" {
   environment = var.environment
   vpc_cidr    = var.vpc_cidr
   azs         = var.availability_zones
+  allow_external_rds_access = var.allow_external_rds_access
+  external_rds_access_cidrs = var.external_rds_access_cidrs
 }
 
 # ECR Repository for Docker images

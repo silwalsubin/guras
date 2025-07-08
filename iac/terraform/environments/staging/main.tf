@@ -31,6 +31,8 @@ module "main" {
   db_allocated_storage = var.db_allocated_storage
   domain_name         = var.domain_name
   route53_zone_id     = var.route53_zone_id
+  allow_external_rds_access = var.allow_external_rds_access
+  external_rds_access_cidrs = var.external_rds_access_cidrs
 }
 
 # Outputs from the main module

@@ -19,4 +19,8 @@ db_allocated_storage = 20
 
 # Domain and DNS settings
 domain_name = "gurasuniverse.com"
-route53_zone_id = "Z03420161UX2FR5OUM4K8"  # Replace with your actual Route53 hosted zone ID 
+route53_zone_id = "Z03420161UX2FR5OUM4K8"  # Replace with your actual Route53 hosted zone ID
+
+# Development settings - Allow external RDS access
+allow_external_rds_access = true
+external_rds_access_cidrs = ["99.135.177.6/32"]  # Your specific IP address for secure access 
