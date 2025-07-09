@@ -2,37 +2,32 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using apis.Configuration;
+using Dapper;
+using Npgsql;
 
 namespace apis.Controllers;
 
-
 [ApiController]
 [Route("api/[controller]")]
-public class HelloWorldController : ControllerBase
+public class HeartBeatController(ILogger<HeartBeatController> logger, DbConnectionProvider dbConnectionProvider)
+    : ControllerBase
 {
-    private readonly ILogger<HelloWorldController> _logger;
-    private readonly DbConnectionProvider _dbConnectionProvider;
-
-    public HelloWorldController(ILogger<HelloWorldController> logger, DbConnectionProvider dbConnectionProvider)
-    {
-        _logger = logger;
-        _dbConnectionProvider = dbConnectionProvider;
-    }
-
     [HttpGet]
     [AllowAnonymous]
     public ActionResult<string> Get()
     {
-        _logger.LogInformation("HelloWorld endpoint called");
-        return Ok("HelloWorld");
+        logger.LogInformation("Heart Beat endpoint called");
+        return Ok("Heart Beat Successful");
     }
     
-    [HttpGet("connectionstring")]
+    [HttpGet("DbConnection")]
     [AllowAnonymous]
     public async Task<IActionResult> GetConnectionString()
     {
-        var result = await _dbConnectionProvider.GetConnectionStringAsync();
-        return Ok(result);
+        var connectionString = await dbConnectionProvider.GetConnectionStringAsync();
+        await using var connection = new NpgsqlConnection(connectionString);
+        var sqlServerTime = await connection.QuerySingleAsync<DateTime>("SELECT NOW()");
+        return Ok(sqlServerTime);
     }
 
     [Authorize]
@@ -43,7 +38,7 @@ public class HelloWorldController : ControllerBase
         var email = User.FindFirst(ClaimTypes.Email)?.Value;
         var name = User.FindFirst(ClaimTypes.Name)?.Value;
 
-        _logger.LogInformation("Authenticated HelloWorld endpoint called by user {UserId}", userId);
+        logger.LogInformation("Authenticated HelloWorld endpoint called by user {UserId}", userId);
 
         return Ok(new
         {
