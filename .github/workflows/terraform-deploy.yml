@@ -132,6 +132,13 @@ jobs:
         cd iac/terraform/environments/staging
         terraform init
 
+    - name: Fix Terraform State (if needed)
+      run: |
+        cd iac/terraform/environments/staging
+        # Try to remove problematic subnet group from state if it exists
+        terraform state rm module.main.module.rds.aws_db_subnet_group.main || echo "Resource not in state or already removed"
+      continue-on-error: true
+
     - name: Terraform Apply
       run: |
         cd iac/terraform/environments/staging
