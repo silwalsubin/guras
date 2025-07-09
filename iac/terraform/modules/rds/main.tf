@@ -88,9 +88,11 @@ resource "aws_db_parameter_group" "main" {
   }
 }
 
-# RDS Instance
+# RDS Instance for production/private access
 resource "aws_db_instance" "main" {
-  identifier = var.use_public_subnets ? "${var.environment}-guras-db-public" : "${var.environment}-guras-db"
+  count = var.use_public_subnets ? 0 : 1
+  
+  identifier = "${var.environment}-guras-db"
 
   engine         = "postgres"
   engine_version = "13.18"
@@ -107,7 +109,7 @@ resource "aws_db_instance" "main" {
   password = random_password.db_password.result
 
   vpc_security_group_ids = [var.rds_security_group_id]
-  db_subnet_group_name   = local.subnet_group_name
+  db_subnet_group_name   = data.aws_db_subnet_group.existing_private[0].name
   parameter_group_name   = aws_db_parameter_group.main.name
 
   backup_retention_period = var.environment == "production" ? 7 : 1
@@ -125,7 +127,50 @@ resource "aws_db_instance" "main" {
 
   depends_on = [aws_secretsmanager_secret_version.db_credentials]
 
-  # Force recreation when subnet group changes
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# RDS Instance for development/public access
+resource "aws_db_instance" "development" {
+  count = var.use_public_subnets ? 1 : 0
+  
+  identifier = "${var.environment}-guras-db-dev"
+
+  engine         = "postgres"
+  engine_version = "13.18"
+  instance_class = var.instance_class
+
+  allocated_storage     = var.allocated_storage
+  max_allocated_storage = var.max_allocated_storage
+  storage_type          = "gp2"
+  storage_encrypted     = true
+  kms_key_id            = aws_kms_key.secrets.arn
+
+  db_name  = var.db_name
+  username = "guras_admin"
+  password = random_password.db_password.result
+
+  vpc_security_group_ids = [var.rds_security_group_id]
+  db_subnet_group_name   = aws_db_subnet_group.public[0].name
+  parameter_group_name   = aws_db_parameter_group.main.name
+
+  backup_retention_period = var.environment == "production" ? 7 : 1
+  backup_window          = "03:00-04:00"
+  maintenance_window     = "sun:04:00-sun:05:00"
+
+  skip_final_snapshot = var.environment == "staging"
+  final_snapshot_identifier = var.environment == "production" ? "${var.environment}-guras-db-dev-final-snapshot" : null
+
+  deletion_protection = var.environment == "production"
+
+  tags = {
+    Name = "${var.environment}-guras-db-dev"
+  }
+
+  depends_on = [aws_secretsmanager_secret_version.db_credentials]
+
   lifecycle {
     create_before_destroy = true
   }
@@ -138,17 +183,17 @@ resource "aws_secretsmanager_secret_version" "db_credentials_with_host" {
     username = "guras_admin"
     password = random_password.db_password.result
     engine   = "postgres"
-    host     = aws_db_instance.main.endpoint
+    host     = var.use_public_subnets ? aws_db_instance.development[0].endpoint : aws_db_instance.main[0].endpoint
     port     = 5432
     dbname   = var.db_name
   })
 
-  depends_on = [aws_db_instance.main]
+  depends_on = [aws_db_instance.main, aws_db_instance.development]
 }
 
 # CloudWatch Log Group for RDS
 resource "aws_cloudwatch_log_group" "rds" {
-  name              = "/aws/rds/instance/${aws_db_instance.main.identifier}/postgresql"
+  name              = "/aws/rds/instance/${var.use_public_subnets ? aws_db_instance.development[0].identifier : aws_db_instance.main[0].identifier}/postgresql"
   retention_in_days = 7
 
   tags = {
