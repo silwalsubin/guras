@@ -180,6 +180,43 @@ resource "aws_iam_role" "ecs_task_role" {
   })
 }
 
+# IAM Policy for ECS Task Role to access Secrets Manager
+resource "aws_iam_policy" "ecs_task_secrets_access" {
+  name        = "${var.environment}-guras-ecs-task-secrets-access"
+  description = "Policy for ECS task role to access Secrets Manager"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = [
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/db-credentials"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ]
+        Resource = [
+          var.kms_key_arn
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_secrets_access" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.ecs_task_secrets_access.arn
+}
+
 # Data sources
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {} 
