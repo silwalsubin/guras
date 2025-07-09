@@ -62,6 +62,17 @@ locals {
   subnet_group_name = var.use_public_subnets ? data.aws_db_subnet_group.existing_public[0].name : data.aws_db_subnet_group.existing_private[0].name
 }
 
+# Moved blocks to help Terraform understand the resource transitions
+moved {
+  from = aws_db_instance.development[0]
+  to   = aws_db_instance.main
+}
+
+moved {
+  from = aws_db_subnet_group.public[0]
+  to   = data.aws_db_subnet_group.existing_public[0]
+}
+
 # RDS Instance
 resource "aws_db_instance" "main" {
   identifier = "${var.environment}-guras-db"
@@ -104,6 +115,10 @@ resource "aws_db_instance" "main" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes = [
+      # Ignore changes to subnet group during transition
+      db_subnet_group_name
+    ]
   }
 }
 
