@@ -1,26 +1,26 @@
 output "endpoint" {
   description = "RDS endpoint"
-  value       = var.use_public_subnets ? aws_db_instance.development[0].endpoint : aws_db_instance.main[0].endpoint
+  value       = aws_db_instance.main.endpoint
 }
 
 output "port" {
   description = "RDS port"
-  value       = var.use_public_subnets ? aws_db_instance.development[0].port : aws_db_instance.main[0].port
+  value       = aws_db_instance.main.port
 }
 
 output "database_name" {
   description = "RDS database name"
-  value       = var.use_public_subnets ? aws_db_instance.development[0].db_name : aws_db_instance.main[0].db_name
+  value       = aws_db_instance.main.db_name
 }
 
 output "identifier" {
   description = "RDS instance identifier"
-  value       = var.use_public_subnets ? aws_db_instance.development[0].identifier : aws_db_instance.main[0].identifier
+  value       = aws_db_instance.main.identifier
 }
 
 output "arn" {
   description = "RDS instance ARN"
-  value       = var.use_public_subnets ? aws_db_instance.development[0].arn : aws_db_instance.main[0].arn
+  value       = aws_db_instance.main.arn
 }
 
 output "secrets_manager_secret_arn" {
