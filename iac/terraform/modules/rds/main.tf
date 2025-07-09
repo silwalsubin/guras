@@ -46,14 +46,31 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
   })
 }
 
-# RDS Subnet Group
-resource "aws_db_subnet_group" "main" {
+# RDS Subnet Group for private subnets (default)
+resource "aws_db_subnet_group" "private" {
+  count      = var.use_public_subnets ? 0 : 1
   name       = "${var.environment}-guras-db-subnet-group"
-  subnet_ids = var.use_public_subnets ? var.public_subnets : var.private_subnets
+  subnet_ids = var.private_subnets
 
   tags = {
     Name = "${var.environment}-guras-db-subnet-group"
   }
+}
+
+# RDS Subnet Group for public subnets (when external access is enabled)
+resource "aws_db_subnet_group" "public" {
+  count      = var.use_public_subnets ? 1 : 0
+  name       = "${var.environment}-guras-db-public-subnet-group"
+  subnet_ids = var.public_subnets
+
+  tags = {
+    Name = "${var.environment}-guras-db-public-subnet-group"
+  }
+}
+
+# Local value to determine which subnet group to use
+locals {
+  subnet_group_name = var.use_public_subnets ? aws_db_subnet_group.public[0].name : aws_db_subnet_group.private[0].name
 }
 
 # RDS Parameter Group
@@ -95,7 +112,7 @@ resource "aws_db_instance" "main" {
   password = random_password.db_password.result
 
   vpc_security_group_ids = [var.rds_security_group_id]
-  db_subnet_group_name   = aws_db_subnet_group.main.name
+  db_subnet_group_name   = local.subnet_group_name
   parameter_group_name   = aws_db_parameter_group.main.name
 
   backup_retention_period = var.environment == "production" ? 7 : 1
