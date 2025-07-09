@@ -39,4 +39,16 @@ variable "max_allocated_storage" {
 variable "rds_security_group_id" {
   description = "RDS security group ID"
   type        = string
+}
+
+variable "public_subnets" {
+  description = "Public subnet IDs for development access"
+  type        = list(string)
+  default     = []
+}
+
+variable "use_public_subnets" {
+  description = "Use public subnets for RDS (for development access)"
+  type        = bool
+  default     = false
 } 
