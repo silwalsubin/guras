@@ -34,7 +34,7 @@ jobs:
     environment: ${{ github.event.inputs.environment || 'staging' }}
     outputs:
       version: ${{ steps.version.outputs.version }}
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
