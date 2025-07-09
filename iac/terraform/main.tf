@@ -153,11 +153,6 @@ output "rds_endpoint" {
   sensitive   = true
 }
 
-output "rds_debug_info" {
-  description = "RDS debugging information"
-  value       = "Endpoint: ${module.rds.endpoint}, Subnet Group: ${module.rds.subnet_group_name}, Use Public: ${module.rds.use_public_subnets}"
-}
-
 output "certificate_arn" {
   description = "SSL certificate ARN"
   value       = module.ssl.certificate_arn

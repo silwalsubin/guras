@@ -62,11 +62,6 @@ output "rds_endpoint" {
   sensitive   = true
 }
 
-output "rds_debug_info" {
-  description = "RDS debugging information"
-  value       = module.main.rds_debug_info
-}
-
 output "certificate_arn" {
   description = "SSL certificate ARN"
   value       = module.main.certificate_arn
