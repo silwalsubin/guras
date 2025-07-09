@@ -25,7 +25,7 @@ resource "random_password" "db_password" {
 
 # AWS Secrets Manager secret for database credentials
 resource "aws_secretsmanager_secret" "db_credentials" {
-  name        = "guras/${var.environment}/db-credentials"
+  name        = "guras/db-credentials"
   description = "Database credentials for ${var.environment} environment"
   kms_key_id  = aws_kms_key.secrets.arn
 
@@ -38,11 +38,11 @@ resource "aws_secretsmanager_secret" "db_credentials" {
 resource "aws_secretsmanager_secret_version" "db_credentials" {
   secret_id = aws_secretsmanager_secret.db_credentials.id
   secret_string = jsonencode({
-    username = "guras_admin"
-    password = random_password.db_password.result
-    engine   = "postgres"
-    port     = 5432
-    dbname   = var.db_name
+    ServerName = ""
+    Port = 5432
+    UserName = "guras_admin"
+    Password = random_password.db_password.result
+    DatabaseName = var.db_name
   })
 }
 
@@ -137,12 +137,11 @@ resource "aws_db_parameter_group" "main" {
 resource "aws_secretsmanager_secret_version" "db_credentials_with_host" {
   secret_id = aws_secretsmanager_secret.db_credentials.id
   secret_string = jsonencode({
-    username = "guras_admin"
-    password = random_password.db_password.result
-    engine   = "postgres"
-    host     = aws_db_instance.main.endpoint
-    port     = 5432
-    dbname   = var.db_name
+    ServerName = aws_db_instance.main.endpoint
+    Port = 5432
+    UserName = "guras_admin"
+    Password = random_password.db_password.result
+    DatabaseName = var.db_name
   })
 
   depends_on = [aws_db_instance.main]

@@ -1,7 +1,11 @@
 using apis.Authentication;
+using apis.Configuration;
 using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var dbConfiguration = builder.Configuration.GetSection("DbConfiguration");
+builder.Services.Configure<AppSettingsDbConfiguration>(dbConfiguration);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -11,12 +15,11 @@ builder.Services.AddSwaggerGen();
 // Add MVC services for controllers
 builder.Services.AddControllers();
 
-// Add Firebase service
-builder.Services.AddScoped<IFirebaseService, FirebaseService>();
+builder.Services.ConfigureServices();
 
 // Configure authentication
 builder.Services.AddAuthentication("Firebase")
-    .AddScheme<AuthenticationSchemeOptions, FirebaseAuthenticationHandler>("Firebase", options => { });
+    .AddScheme<AuthenticationSchemeOptions, FirebaseAuthenticationHandler>("Firebase", _ => { });
 
 // Configure authorization
 builder.Services.AddAuthorization();
@@ -40,8 +43,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
