@@ -67,7 +67,7 @@ variable "ecs_memory" {
   description = "Memory for ECS task in MiB"
   type        = number
   default     = 512
-}
+} 
 
 variable "domain_name" {
   description = "Domain name for the application"

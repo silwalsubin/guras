@@ -15,7 +15,7 @@ db_instance_class = "db.t3.small"
 db_allocated_storage = 50
 
 # Database credentials are automatically generated and stored in AWS Secrets Manager
-# No manual credential management required
+# No manual credential management required 
 
 # Domain and DNS settings
 domain_name = "gurasuniverse.com"
