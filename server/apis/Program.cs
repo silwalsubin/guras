@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var appSettingsDbConfiguration = builder.Configuration
     .GetSection("DbConfiguration")
-    .Get<AppSettingsDbConfiguration>();
+    .Get<DbConfiguration>();
 
 builder.Services.AddSingleton(appSettingsDbConfiguration!);
 

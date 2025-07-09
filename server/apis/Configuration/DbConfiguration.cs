@@ -8,5 +8,3 @@ public class DbConfiguration
     public string? Password { get; set; }
     public string? DatabaseName { get; set; }
 }
-
-public class AppSettingsDbConfiguration : DbConfiguration {}
