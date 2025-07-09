@@ -46,18 +46,13 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
   })
 }
 
-# RDS Subnet Group for private subnets (default)
-resource "aws_db_subnet_group" "private" {
-  count      = var.use_public_subnets ? 0 : 1
-  name       = "${var.environment}-guras-db-subnet-group"
-  subnet_ids = var.private_subnets
-
-  tags = {
-    Name = "${var.environment}-guras-db-subnet-group"
-  }
+# Data source for existing private subnet group (when not using public subnets)
+data "aws_db_subnet_group" "existing_private" {
+  count = var.use_public_subnets ? 0 : 1
+  name  = "${var.environment}-guras-db-subnet-group"
 }
 
-# RDS Subnet Group for public subnets (when external access is enabled)
+# RDS Subnet Group for public subnets (only created when needed)
 resource "aws_db_subnet_group" "public" {
   count      = var.use_public_subnets ? 1 : 0
   name       = "${var.environment}-guras-db-public-subnet-group"
@@ -70,7 +65,7 @@ resource "aws_db_subnet_group" "public" {
 
 # Local value to determine which subnet group to use
 locals {
-  subnet_group_name = var.use_public_subnets ? aws_db_subnet_group.public[0].name : aws_db_subnet_group.private[0].name
+  subnet_group_name = var.use_public_subnets ? aws_db_subnet_group.public[0].name : data.aws_db_subnet_group.existing_private[0].name
 }
 
 # RDS Parameter Group
