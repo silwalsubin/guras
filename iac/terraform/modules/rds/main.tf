@@ -68,6 +68,12 @@ locals {
   subnet_group_name = var.use_public_subnets ? aws_db_subnet_group.public[0].name : data.aws_db_subnet_group.existing_private[0].name
 }
 
+# Moved block to handle RDS instance state transition
+moved {
+  from = aws_db_instance.main
+  to   = aws_db_instance.main
+}
+
 # RDS Parameter Group
 resource "aws_db_parameter_group" "main" {
   family = "postgres13"
