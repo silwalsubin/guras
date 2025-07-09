@@ -2,11 +2,11 @@ using Npgsql;
 
 namespace apis.Configuration;
 
-public class DbConnectionProvider(AppSettingsDbConfiguration appSettingsDbConfiguration)
+public class DbConnectionProvider(DbConfiguration dbConfigurationFromAppSettings)
 {
     public async Task<string> GetConnectionStringAsync()
     {
-        DbConfiguration dbConfiguration = appSettingsDbConfiguration;
+        DbConfiguration dbConfiguration = dbConfigurationFromAppSettings;
         var isProduction = RunEnvironment.IsProduction();
 
         if (isProduction)
