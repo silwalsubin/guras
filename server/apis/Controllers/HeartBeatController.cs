@@ -13,7 +13,7 @@ public class HeartBeatController(ILogger<HeartBeatController> logger, DbConnecti
 {
     [HttpGet]
     [AllowAnonymous]
-    public ActionResult<string> Get()
+    public ActionResult<string> GetApplicationHeartBeat()
     {
         logger.LogInformation("Heart Beat endpoint called");
         return Ok("Heart Beat Successful");
@@ -21,7 +21,7 @@ public class HeartBeatController(ILogger<HeartBeatController> logger, DbConnecti
     
     [HttpGet("DbConnection")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetConnectionString()
+    public async Task<IActionResult> GetDbConnectionHeartBeat()
     {
         var connectionString = await dbConnectionProvider.GetConnectionStringAsync();
         await using var connection = new NpgsqlConnection(connectionString);
