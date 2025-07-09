@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var dbConfiguration = builder.Configuration.GetSection("DbConfiguration");
-builder.Services.Configure<AppSettingsDbConfiguration>(dbConfiguration);
+var appSettingsDbConfiguration = builder.Configuration
+    .GetSection("DbConfiguration")
+    .Get<AppSettingsDbConfiguration>();
+
+builder.Services.AddSingleton(appSettingsDbConfiguration!);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
