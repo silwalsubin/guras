@@ -36,4 +36,19 @@ output "kms_key_arn" {
 output "secrets_access_policy_arn" {
   description = "IAM policy ARN for secrets access"
   value       = aws_iam_policy.secrets_access.arn
+}
+
+output "subnet_group_name" {
+  description = "Subnet group name being used"
+  value       = var.use_public_subnets ? aws_db_subnet_group.public[0].name : data.aws_db_subnet_group.existing_private[0].name
+}
+
+output "subnet_group_subnets" {
+  description = "Subnet IDs in the subnet group"
+  value       = var.use_public_subnets ? aws_db_subnet_group.public[0].subnet_ids : data.aws_db_subnet_group.existing_private[0].subnet_ids
+}
+
+output "use_public_subnets" {
+  description = "Whether using public subnets"
+  value       = var.use_public_subnets
 } 
