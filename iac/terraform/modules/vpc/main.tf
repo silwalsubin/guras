@@ -183,6 +183,17 @@ resource "aws_security_group" "rds" {
     }
   }
 
+  # Allow access from bastion host
+  dynamic "ingress" {
+    for_each = var.bastion_security_group_id != null ? [1] : []
+    content {
+      protocol        = "tcp"
+      from_port       = 5432
+      to_port         = 5432
+      security_groups = [var.bastion_security_group_id]
+    }
+  }
+
   tags = {
     Name = "${var.environment}-rds-sg"
   }

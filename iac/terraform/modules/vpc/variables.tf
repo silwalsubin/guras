@@ -23,4 +23,10 @@ variable "external_rds_access_cidrs" {
   description = "CIDR blocks allowed to access RDS externally"
   type        = list(string)
   default     = []
+}
+
+variable "bastion_security_group_id" {
+  description = "Bastion host security group ID for RDS access"
+  type        = string
+  default     = null
 } 
