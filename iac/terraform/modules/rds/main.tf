@@ -46,22 +46,9 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
   })
 }
 
-# RDS Subnet Group
-resource "aws_db_subnet_group" "main" {
-  name       = var.use_public_subnets ? "${var.environment}-guras-db-public-subnet-group" : "${var.environment}-guras-db-subnet-group"
-  subnet_ids = var.use_public_subnets ? var.public_subnets : var.private_subnets
-
-  tags = {
-    Name = var.use_public_subnets ? "${var.environment}-guras-db-public-subnet-group" : "${var.environment}-guras-db-subnet-group"
-  }
-
-  lifecycle {
-    ignore_changes = [
-      # Ignore changes to prevent conflicts during transition
-      name,
-      subnet_ids
-    ]
-  }
+# Data source for existing subnet group
+data "aws_db_subnet_group" "existing" {
+  name = var.use_public_subnets ? "${var.environment}-guras-db-public-subnet-group" : "${var.environment}-guras-db-subnet-group"
 }
 
 # Moved block to help Terraform understand the resource transition
@@ -89,7 +76,7 @@ resource "aws_db_instance" "main" {
   password = random_password.db_password.result
 
   vpc_security_group_ids = [var.rds_security_group_id]
-  db_subnet_group_name   = aws_db_subnet_group.main.name
+  db_subnet_group_name   = data.aws_db_subnet_group.existing.name
   parameter_group_name   = aws_db_parameter_group.main.name
 
   # Enable public accessibility for development
