@@ -90,7 +90,7 @@ resource "aws_db_parameter_group" "main" {
 
 # RDS Instance
 resource "aws_db_instance" "main" {
-  identifier = "${var.environment}-guras-db"
+  identifier = var.use_public_subnets ? "${var.environment}-guras-db-public" : "${var.environment}-guras-db"
 
   engine         = "postgres"
   engine_version = "13.18"
@@ -124,6 +124,11 @@ resource "aws_db_instance" "main" {
   }
 
   depends_on = [aws_secretsmanager_secret_version.db_credentials]
+
+  # Force recreation when subnet group changes
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Update secret with RDS endpoint after instance is created
