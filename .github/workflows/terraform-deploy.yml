@@ -132,20 +132,10 @@ jobs:
         cd iac/terraform/environments/staging
         terraform init
 
-    - name: Remove Old Subnet Group from State
-      run: |
-        cd iac/terraform/environments/staging
-        terraform state rm module.main.module.rds.aws_db_subnet_group.public[0] || echo "Subnet group not in state or already removed"
-      continue-on-error: true
-
     - name: Terraform Apply
       run: |
         cd iac/terraform/environments/staging
         terraform apply -auto-approve
-
-
-
-
 
     - name: Get Staging Outputs
       id: staging-outputs
