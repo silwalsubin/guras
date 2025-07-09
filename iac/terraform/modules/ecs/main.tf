@@ -140,7 +140,7 @@ resource "aws_iam_policy" "ecs_execution_secrets_access" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = [
-          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/db-credentials"
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/db-credentials-*"
         ]
       },
       {
@@ -195,7 +195,7 @@ resource "aws_iam_policy" "ecs_task_secrets_access" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = [
-          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/db-credentials"
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/db-credentials-*"
         ]
       },
       {
