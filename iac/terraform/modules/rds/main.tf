@@ -51,10 +51,15 @@ data "aws_db_subnet_group" "existing" {
   name = var.use_public_subnets ? "${var.environment}-guras-db-public-subnet-group" : "${var.environment}-guras-db-subnet-group"
 }
 
-# Moved block to help Terraform understand the resource transition
+# Moved blocks to help Terraform understand the resource transitions
 moved {
   from = aws_db_instance.development[0]
   to   = aws_db_instance.main
+}
+
+moved {
+  from = aws_db_subnet_group.public[0]
+  to   = data.aws_db_subnet_group.existing
 }
 
 # RDS Instance
