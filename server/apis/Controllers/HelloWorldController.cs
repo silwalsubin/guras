@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using apis.Configuration;
 
 namespace apis.Controllers;
 
@@ -10,10 +11,12 @@ namespace apis.Controllers;
 public class HelloWorldController : ControllerBase
 {
     private readonly ILogger<HelloWorldController> _logger;
+    private readonly DbConnectionProvider _dbConnectionProvider;
 
-    public HelloWorldController(ILogger<HelloWorldController> logger)
+    public HelloWorldController(ILogger<HelloWorldController> logger, DbConnectionProvider dbConnectionProvider)
     {
         _logger = logger;
+        _dbConnectionProvider = dbConnectionProvider;
     }
 
     [HttpGet]
@@ -22,6 +25,14 @@ public class HelloWorldController : ControllerBase
     {
         _logger.LogInformation("HelloWorld endpoint called");
         return Ok("HelloWorld");
+    }
+    
+    [HttpGet("connectionstring")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetConnectionString()
+    {
+        var result = await _dbConnectionProvider.GetConnectionStringAsync();
+        return Ok(result);
     }
 
     [Authorize]

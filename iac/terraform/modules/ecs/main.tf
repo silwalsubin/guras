@@ -55,12 +55,7 @@ resource "aws_ecs_task_definition" "app" {
         }
       ]
 
-      secrets = [
-        {
-          name      = "ConnectionStrings__DefaultConnection"
-          valueFrom = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/${var.environment}/db-credentials"
-        }
-      ]
+
 
       logConfiguration = {
         logDriver = "awslogs"
@@ -145,7 +140,7 @@ resource "aws_iam_policy" "ecs_execution_secrets_access" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = [
-          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/${var.environment}/*"
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/db-credentials"
         ]
       },
       {
