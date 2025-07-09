@@ -48,11 +48,11 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
 
 # RDS Subnet Group
 resource "aws_db_subnet_group" "main" {
-  name       = "${var.environment}-guras-db-subnet-group"
+  name       = var.use_public_subnets ? "${var.environment}-guras-db-public-subnet-group" : "${var.environment}-guras-db-subnet-group"
   subnet_ids = var.use_public_subnets ? var.public_subnets : var.private_subnets
 
   tags = {
-    Name = "${var.environment}-guras-db-subnet-group"
+    Name = var.use_public_subnets ? "${var.environment}-guras-db-public-subnet-group" : "${var.environment}-guras-db-subnet-group"
   }
 }
 
