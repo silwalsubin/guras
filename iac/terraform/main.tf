@@ -110,11 +110,9 @@ module "rds" {
   environment = var.environment
   vpc_id = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
-  public_subnets = module.vpc.public_subnets
   db_name = var.db_name
   instance_class = var.db_instance_class
   allocated_storage = var.db_allocated_storage
-  use_public_subnets = var.allow_external_rds_access
   
   rds_security_group_id = module.vpc.rds_security_group_id
   
