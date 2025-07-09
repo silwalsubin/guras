@@ -156,6 +156,9 @@ resource "aws_db_instance" "development" {
   db_subnet_group_name   = aws_db_subnet_group.public[0].name
   parameter_group_name   = aws_db_parameter_group.main.name
 
+  # Enable public accessibility
+  publicly_accessible = true
+
   backup_retention_period = var.environment == "production" ? 7 : 1
   backup_window          = "03:00-04:00"
   maintenance_window     = "sun:04:00-sun:05:00"
