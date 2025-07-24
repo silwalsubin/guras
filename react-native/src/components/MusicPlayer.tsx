@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import TrackPlayer from 'react-native-track-player';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { COLORS, getThemeColors, getBrandColors } from '../config/colors';
-import { useMusicPlayer } from '../contexts/MusicPlayerContext';
+import { COLORS, getThemeColors, getBrandColors } from '@/config/colors';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import meditationBuddha from '../../assets/meditation_buddha.mp3';
 
 // Helper function to format time in MM:SS format
