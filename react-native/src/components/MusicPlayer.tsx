@@ -3,6 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import TrackPlayer, { State, useProgress } from 'react-native-track-player';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { COLORS, getThemeColors, getBrandColors } from '../config/colors';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../store';
+import { setIsPlaying, setProgress, setSliderPosition } from '../store/musicPlayerSlice';
+import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 
 // Helper function to format time in MM:SS format
 const formatTime = (seconds: number): string => {
@@ -22,9 +26,7 @@ const TRACK = {
 let isPlayerInitialized = false;
 
 const MusicPlayer: React.FC = () => {
-  const progress = useProgress();
-  const [isSetup, setIsSetup] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const { isSetup, isPlaying, play, pause, togglePlayback, progress } = useMusicPlayer();
   const [hoverPosition, setHoverPosition] = useState<number | null>(null); // Track hover position
   const [sliderPosition, setSliderPosition] = useState(0); // Track slider position
   const [isUserInteracting, setIsUserInteracting] = useState(false); // Track if user is interacting
@@ -151,75 +153,6 @@ const MusicPlayer: React.FC = () => {
       color: themeColors.textPrimary,
     },
   });
-
-  useEffect(() => {
-    async function setup() {
-      try {
-        // Only setup if not already initialized
-        try {
-          await TrackPlayer.setupPlayer();
-        } catch (error: any) {
-          if (
-            error.message &&
-            error.message.includes('already been initialized')
-          ) {
-            // Ignore this error
-          } else {
-            throw error;
-          }
-        }
-        // Always reset and add track
-        await TrackPlayer.reset();
-        await TrackPlayer.add([TRACK]);
-        setIsSetup(true);
-      } catch (error) {
-        console.error('TrackPlayer setup error:', error);
-        // If setup fails, try to reset and continue
-        try {
-          await TrackPlayer.reset();
-          await TrackPlayer.add([TRACK]);
-          setIsSetup(true);
-        } catch (resetError: any) {
-          console.error('TrackPlayer reset error:', resetError);
-        }
-      }
-    }
-    setup();
-    
-    // Remove the cleanup function that was causing issues
-    return () => {
-      // Don't do anything on cleanup to avoid reset errors
-    };
-  }, []);
-
-  const togglePlayback = async () => {
-    if (!isSetup) return;
-    
-    try {
-      const currentState = await TrackPlayer.getState();
-      
-      if (currentState === State.Playing) {
-        await TrackPlayer.pause();
-        setIsPlaying(false);
-      } else {
-        // If paused or stopped, start playing
-        await TrackPlayer.play();
-        setIsPlaying(true);
-      }
-    } catch (error) {
-      console.error('Playback toggle error:', error);
-      // If there's an error, try to reset and play
-      try {
-        await TrackPlayer.reset();
-        await TrackPlayer.add([TRACK]);
-        await TrackPlayer.play();
-        setIsPlaying(true);
-      } catch (resetError) {
-        console.error('Reset error:', resetError);
-        setIsPlaying(false);
-      }
-    }
-  };
 
   // Calculate progress percentage safely
   const progressPercentage = progress.duration > 0 ? (progress.position / progress.duration) : 0;
