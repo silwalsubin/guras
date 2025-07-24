@@ -9,9 +9,9 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY } from '../config/fonts';
-import { COLORS } from '../config/colors';
+import { useAuth } from '@/contexts/AuthContext';
+import { TYPOGRAPHY } from '@/config/fonts';
+import { COLORS } from '@/config/colors';
 
 interface SignOutButtonProps {
   style?: StyleProp<ViewStyle>;

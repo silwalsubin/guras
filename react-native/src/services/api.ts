@@ -1,6 +1,6 @@
 import { getAuth } from '@react-native-firebase/auth';
-import { UserProfile } from '../types/user';
-import { API_CONFIG } from '../config/api';
+import { UserProfile } from '@/types/user';
+import { API_CONFIG } from '@/config/api';
 
 interface ApiResponse<T> {
   data?: T;

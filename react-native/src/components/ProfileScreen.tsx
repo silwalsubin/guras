@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import { useColorScheme } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import { useAuth } from '../contexts/AuthContext';
-import { apiService } from '../services/api';
-import { UserProfile } from '../types/user';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiService } from '@/services/api';
+import { UserProfile } from '@/types/user';
 import SignOutButton from './SignOutButton';
-import { TYPOGRAPHY } from '../config/fonts';
-import { getThemeColors, getBrandColors } from '../config/colors';
+import { TYPOGRAPHY } from '@/config/fonts';
+import { getThemeColors, getBrandColors } from '@/config/colors';
 
 interface ProfileScreenProps {
   onBack: () => void;

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import SignInScreen from '../screens/SignInScreen';
-import SignUpScreen from '../screens/SignUpScreen';
-import { TYPOGRAPHY } from '../config/fonts';
-import { COLORS } from '../config/colors';
+import { useAuth } from '@/contexts/AuthContext';
+import SignInScreen from '@/screens/SignInScreen';
+import SignUpScreen from '@/screens/SignUpScreen';
+import { TYPOGRAPHY } from '@/config/fonts';
+import { COLORS } from '@/config/colors';
 
 interface AuthWrapperProps {
   children: React.ReactNode;

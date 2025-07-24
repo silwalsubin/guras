@@ -2,8 +2,8 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { getAuth, GoogleAuthProvider, signInWithCredential } from '@react-native-firebase/auth';
-import { TYPOGRAPHY } from '../config/fonts';
-import { COLORS } from '../config/colors';
+import { TYPOGRAPHY } from '@/config/fonts';
+import { COLORS } from '@/config/colors';
 
 const GoogleSignInButton: React.FC = () => {
   const [loading, setLoading] = React.useState(false);

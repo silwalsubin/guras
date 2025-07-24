@@ -11,10 +11,10 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import GoogleSignInButton from '../components/GoogleSignInButton';
-import { TYPOGRAPHY } from '../config/fonts';
-import { COLORS } from '../config/colors';
+import { useAuth } from '@/contexts/AuthContext';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
+import { TYPOGRAPHY } from '@/config/fonts';
+import { COLORS } from '@/config/colors';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 interface SignInScreenProps {
