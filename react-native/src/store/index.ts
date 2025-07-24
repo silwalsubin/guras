@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import navigationReducer from './navigationSlice';
+import musicPlayerReducer from './musicPlayerSlice';
 
 const store = configureStore({
   reducer: {
     navigation: navigationReducer,
+    musicPlayer: musicPlayerReducer,
   },
 });
 
