@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import { TYPOGRAPHY } from '../config/fonts';
+import { COLORS } from '../config/colors';
 
 interface SignInScreenProps {
   navigation: any;
@@ -71,7 +72,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your email"
-                placeholderTextColor="#A0AEC0"
+                placeholderTextColor={COLORS.GRAY_400}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -85,7 +86,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
-                placeholderTextColor="#A0AEC0"
+                placeholderTextColor={COLORS.GRAY_400}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -104,7 +105,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={COLORS.WHITE} />
               ) : (
                 <Text style={styles.signInButtonText}>Sign In</Text>
               )}
@@ -130,7 +131,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: COLORS.BACKGROUND_LIGHT,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -150,12 +151,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.H2,
-    color: '#2D3748',
+    color: COLORS.TEXT_PRIMARY_LIGHT,
     marginBottom: 8,
   },
   subtitle: {
     ...TYPOGRAPHY.BODY,
-    color: '#718096',
+    color: COLORS.TEXT_SECONDARY_LIGHT,
     textAlign: 'center',
   },
   form: {
@@ -166,33 +167,33 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY.LABEL,
-    color: '#2D3748',
+    color: COLORS.TEXT_PRIMARY_LIGHT,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.WHITE,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     ...TYPOGRAPHY.BODY,
-    color: '#2D3748',
+    color: COLORS.TEXT_PRIMARY_LIGHT,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: COLORS.GRAY_200,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: '#14B8A6',
+    color: COLORS.PRIMARY,
     ...TYPOGRAPHY.BUTTON_SMALL,
   },
   signInButton: {
-    backgroundColor: '#14B8A6',
+    backgroundColor: COLORS.PRIMARY,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: '#14B8A6',
+    shadowColor: COLORS.PRIMARY,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   signInButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.WHITE,
     ...TYPOGRAPHY.BUTTON_LARGE,
   },
   footer: {
@@ -214,11 +215,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: '#718096',
+    color: COLORS.TEXT_SECONDARY_LIGHT,
     ...TYPOGRAPHY.BODY,
   },
   signUpLink: {
-    color: '#14B8A6',
+    color: COLORS.PRIMARY,
     ...TYPOGRAPHY.BUTTON,
   },
 });

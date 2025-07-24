@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { TYPOGRAPHY } from '../config/fonts';
+import { COLORS } from '../config/colors';
 
 interface SignUpScreenProps {
   navigation: any;
@@ -90,7 +91,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your email"
-                placeholderTextColor="#A0AEC0"
+                placeholderTextColor={COLORS.GRAY_400}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -104,7 +105,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Create a password"
-                placeholderTextColor="#A0AEC0"
+                placeholderTextColor={COLORS.GRAY_400}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -119,7 +120,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Confirm your password"
-                placeholderTextColor="#A0AEC0"
+                placeholderTextColor={COLORS.GRAY_400}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
@@ -134,7 +135,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={COLORS.WHITE} />
               ) : (
                 <Text style={styles.signUpButtonText}>Create Account</Text>
               )}
@@ -157,7 +158,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: COLORS.BACKGROUND_LIGHT,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -177,12 +178,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.H2,
-    color: '#2D3748',
+    color: COLORS.TEXT_PRIMARY_LIGHT,
     marginBottom: 8,
   },
   subtitle: {
     ...TYPOGRAPHY.BODY,
-    color: '#718096',
+    color: COLORS.TEXT_SECONDARY_LIGHT,
     textAlign: 'center',
   },
   form: {
@@ -193,32 +194,32 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY.LABEL,
-    color: '#2D3748',
+    color: COLORS.TEXT_PRIMARY_LIGHT,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.WHITE,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     ...TYPOGRAPHY.BODY,
-    color: '#2D3748',
+    color: COLORS.TEXT_PRIMARY_LIGHT,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: COLORS.GRAY_200,
   },
   hint: {
     ...TYPOGRAPHY.CAPTION,
-    color: '#A0AEC0',
+    color: COLORS.GRAY_400,
     marginTop: 4,
     marginLeft: 4,
   },
   signUpButton: {
-    backgroundColor: '#14B8A6',
+    backgroundColor: COLORS.PRIMARY,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#14B8A6',
+    shadowColor: COLORS.PRIMARY,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   signUpButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.WHITE,
     ...TYPOGRAPHY.BUTTON_LARGE,
   },
   footer: {
@@ -240,11 +241,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: '#718096',
+    color: COLORS.TEXT_SECONDARY_LIGHT,
     ...TYPOGRAPHY.BODY,
   },
   signInLink: {
-    color: '#14B8A6',
+    color: COLORS.PRIMARY,
     ...TYPOGRAPHY.BUTTON,
   },
 });

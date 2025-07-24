@@ -3,6 +3,7 @@ import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert } from 're
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { getAuth, GoogleAuthProvider, signInWithCredential } from '@react-native-firebase/auth';
 import { TYPOGRAPHY } from '../config/fonts';
+import { COLORS } from '../config/colors';
 
 const GoogleSignInButton: React.FC = () => {
   const [loading, setLoading] = React.useState(false);
@@ -26,7 +27,7 @@ const GoogleSignInButton: React.FC = () => {
   return (
     <TouchableOpacity style={styles.button} onPress={signInWithGoogle} disabled={loading}>
       {loading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color={COLORS.WHITE} />
       ) : (
         <Text style={styles.buttonText}>Sign in with Google</Text>
       )}
@@ -36,7 +37,7 @@ const GoogleSignInButton: React.FC = () => {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#4285F4',
+    backgroundColor: '#4285F4', // Google brand color - keeping this specific
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: COLORS.WHITE,
     ...TYPOGRAPHY.BUTTON,
   },
 });

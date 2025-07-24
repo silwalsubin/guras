@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { TYPOGRAPHY } from '../config/fonts';
+import { COLORS } from '../config/colors';
 
 interface FontLoaderProps {
   children: React.ReactNode;
@@ -18,11 +19,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F0F8FF',
+    backgroundColor: COLORS.BACKGROUND_LIGHT,
   },
   loadingText: {
     marginTop: 16,
-    color: '#718096',
+    color: COLORS.TEXT_SECONDARY_LIGHT,
   },
 });
 

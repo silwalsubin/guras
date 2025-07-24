@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import { TYPOGRAPHY } from '../config/fonts';
+import { COLORS } from '../config/colors';
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -28,7 +29,7 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children, navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#14B8A6" />
+        <ActivityIndicator size="large" color={COLORS.PRIMARY} />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
@@ -56,12 +57,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F0F8FF',
+    backgroundColor: COLORS.BACKGROUND_LIGHT,
   },
   loadingText: {
     marginTop: 16,
     ...TYPOGRAPHY.BODY,
-    color: '#718096',
+    color: COLORS.TEXT_SECONDARY_LIGHT,
   },
   authContainer: {
     flex: 1,
