@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
+  Vibration,
 } from 'react-native';
 import { getApp } from '@react-native-firebase/app';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
@@ -27,6 +28,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome5';
+import FontLoader from './src/components/FontLoader';
+import { TYPOGRAPHY } from './src/config/fonts';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
@@ -201,15 +204,20 @@ function MainApp(): React.JSX.Element {
         translucent
       />
       
-      {/* Beautiful gradient background */}
-      <View style={styles.gradientBackground}>
+      {/* Beautiful blended gradient background */}
+      <View style={[
+        styles.gradientBackground,
+        {
+          backgroundColor: isDarkMode ? '#1A1A2E' : '#F0F8FF',
+        }
+      ]}>
         <View style={[
-          styles.gradientLayer1, 
-          { backgroundColor: isDarkMode ? '#1A1A2E' : '#F0F8FF' }
-        ]} />
-        <View style={[
-          styles.gradientLayer2, 
-          { backgroundColor: isDarkMode ? '#16213E' : '#E6F3FF' }
+          styles.gradientOverlay,
+          {
+            backgroundColor: isDarkMode 
+              ? 'rgba(22, 33, 62, 0.7)' 
+              : 'rgba(230, 243, 255, 0.8)',
+          }
         ]} />
       </View>
       
@@ -230,31 +238,44 @@ function MainApp(): React.JSX.Element {
       >
         <TouchableOpacity 
           style={[styles.navItem, activeTab === 'home' && styles.activeNavItem]} 
-          onPress={() => setActiveTab('home')}
+          onPress={() => {
+            if (activeTab !== 'home') {
+              Vibration.vibrate(10); // Light vibration
+              setActiveTab('home');
+            }
+          }}
         >
           <Feather
             name="home"
             size={24}
             color={activeTab === 'home' ? '#14B8A6' : '#A0AEC0'}
           />
-          <Text style={[styles.navLabel, activeTab === 'home' && styles.activeNavLabel]}>Home</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.navItem, activeTab === 'meditate' && styles.activeNavItem]} 
-          onPress={() => setActiveTab('meditate')}
+          onPress={() => {
+            if (activeTab !== 'meditate') {
+              Vibration.vibrate(10); // Light vibration
+              setActiveTab('meditate');
+            }
+          }}
         >
           <Feather
             name="heart"
             size={24}
             color={activeTab === 'meditate' ? '#14B8A6' : '#A0AEC0'}
           />
-          <Text style={[styles.navLabel, activeTab === 'meditate' && styles.activeNavLabel]}>Meditate</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.navItem, activeTab === 'learn' && styles.activeNavItem]} 
-          onPress={() => setActiveTab('learn')}
+          onPress={() => {
+            if (activeTab !== 'learn') {
+              Vibration.vibrate(10); // Light vibration
+              setActiveTab('learn');
+            }
+          }}
         >
           <FontAwesome
             name="book-open"
@@ -262,7 +283,6 @@ function MainApp(): React.JSX.Element {
             solid
             color={activeTab === 'learn' ? '#14B8A6' : '#A0AEC0'}
           />
-          <Text style={[styles.navLabel, activeTab === 'learn' && styles.activeNavLabel]}>Learn</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -278,11 +298,13 @@ function App(): React.JSX.Element {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <AuthWrapper navigation={mockNavigation}>
-          <MainApp />
-        </AuthWrapper>
-      </AuthProvider>
+      <FontLoader>
+        <AuthProvider>
+          <AuthWrapper navigation={mockNavigation}>
+            <MainApp />
+          </AuthWrapper>
+        </AuthProvider>
+      </FontLoader>
     </SafeAreaProvider>
   );
 }
@@ -298,19 +320,12 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  gradientLayer1: {
+  gradientOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: '50%',
-  },
-  gradientLayer2: {
-    position: 'absolute',
     bottom: 0,
-    left: 0,
-    right: 0,
-    height: '50%',
   },
   mainContent: {
     flex: 1,
@@ -342,8 +357,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   appName: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.H4,
   },
   profileButton: {
     width: 40,
@@ -382,12 +396,11 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   quickStartTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.H4,
     marginBottom: 8,
   },
   quickStartSubtitle: {
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
     marginBottom: 20,
   },
   primaryButton: {
@@ -397,16 +410,14 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    ...TYPOGRAPHY.BUTTON,
   },
   progressSection: {
     paddingHorizontal: 20,
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.H5,
     marginBottom: 16,
   },
   progressCard: {
@@ -428,10 +439,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   progressLabel: {
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
   },
   progressValue: {
-    fontSize: 18,
+    ...TYPOGRAPHY.BODY_LARGE,
     fontWeight: 'bold',
   },
   quickActionsSection: {
@@ -463,8 +474,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   quickActionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    ...TYPOGRAPHY.BUTTON_SMALL,
     textAlign: 'center',
   },
   recentSection: {
@@ -485,11 +495,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   recentText: {
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
     marginBottom: 8,
   },
   recentSubtext: {
-    fontSize: 14,
+    ...TYPOGRAPHY.BODY_SMALL,
     textAlign: 'center',
   },
   tabContent: {
@@ -499,12 +509,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   tabTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.H4,
     marginBottom: 8,
   },
   tabSubtitle: {
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
     textAlign: 'center',
   },
   bottomNav: {
@@ -520,7 +529,8 @@ const styles = StyleSheet.create({
   navItem: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
+    justifyContent: 'center',
+    paddingVertical: 16,
   },
   activeNavItem: {
     // Active state styling
@@ -533,7 +543,7 @@ const styles = StyleSheet.create({
     // Active icon styling
   },
   navLabel: {
-    fontSize: 12,
+    ...TYPOGRAPHY.CAPTION,
     color: '#718096',
   },
   activeNavLabel: {

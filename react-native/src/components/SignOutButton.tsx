@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { TYPOGRAPHY } from '../config/fonts';
 
 interface SignOutButtonProps {
   style?: any;
@@ -71,8 +72,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    ...TYPOGRAPHY.BUTTON,
   },
 });
 

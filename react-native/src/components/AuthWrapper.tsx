@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
+import { TYPOGRAPHY } from '../config/fonts';
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
     color: '#718096',
   },
   authContainer: {
