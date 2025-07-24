@@ -31,6 +31,10 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome5';
 import FontLoader from './src/components/FontLoader';
 import { TYPOGRAPHY } from './src/config/fonts';
 import { getThemeColors, getBrandColors, COLORS } from './src/config/colors';
+import FooterMenuItem from './src/components/FooterMenuItem';
+import { Provider, useSelector, useDispatch } from 'react-redux';
+import store, { RootState } from './src/store';
+import { setActiveTab, TAB_KEYS, TabKey } from './src/store/navigationSlice';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
@@ -47,7 +51,6 @@ const mockNavigation = {
 
 function MainApp(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
-  const [activeTab, setActiveTab] = useState('home');
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   
@@ -57,6 +60,9 @@ function MainApp(): React.JSX.Element {
   const backgroundStyle = {
     backgroundColor: themeColors.background,
   };
+
+  const activeTab = useSelector((state: RootState) => state.navigation.activeTab);
+  const dispatch = useDispatch();
 
   const renderHomeScreen = () => (
     <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -72,7 +78,7 @@ function MainApp(): React.JSX.Element {
         </View>
         <TouchableOpacity 
           style={[styles.profileButton, { backgroundColor: themeColors.border }]}
-          onPress={() => setActiveTab('profile')}
+          onPress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))}
         >
           <Text style={[styles.profileButtonText, { color: themeColors.textPrimary }]}>👤</Text>
         </TouchableOpacity>
@@ -182,18 +188,18 @@ function MainApp(): React.JSX.Element {
   );
 
   const renderProfileScreen = () => (
-    <ProfileScreen onBack={() => setActiveTab('home')} />
+    <ProfileScreen onBack={() => dispatch(setActiveTab(TAB_KEYS.HOME))} />
   );
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case 'home':
+      case TAB_KEYS.HOME:
         return renderHomeScreen();
-      case 'meditate':
+      case TAB_KEYS.MEDITATE:
         return renderMeditateScreen();
-      case 'learn':
+      case TAB_KEYS.LEARN:
         return renderLearnScreen();
-      case 'profile':
+      case TAB_KEYS.PROFILE:
         return renderProfileScreen();
       default:
         return renderHomeScreen();
@@ -239,54 +245,22 @@ function MainApp(): React.JSX.Element {
           },
         ]}
       >
-        <TouchableOpacity 
-          style={[styles.navItem, activeTab === 'home' && styles.activeNavItem]} 
-          onPress={() => {
-            if (activeTab !== 'home') {
-              Vibration.vibrate(1); // Super light vibration
-              setActiveTab('home');
-            }
-          }}
-        >
-          <Feather
-            name="home"
-            size={24}
-            color={activeTab === 'home' ? themeColors.navActive : themeColors.navInactive}
-          />
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.navItem, activeTab === 'meditate' && styles.activeNavItem]} 
-          onPress={() => {
-            if (activeTab !== 'meditate') {
-              Vibration.vibrate(1); // Super light vibration
-              setActiveTab('meditate');
-            }
-          }}
-        >
-          <Feather
-            name="heart"
-            size={24}
-            color={activeTab === 'meditate' ? themeColors.navActive : themeColors.navInactive}
-          />
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.navItem, activeTab === 'learn' && styles.activeNavItem]} 
-          onPress={() => {
-            if (activeTab !== 'learn') {
-              Vibration.vibrate(1); // Super light vibration
-              setActiveTab('learn');
-            }
-          }}
-        >
-          <FontAwesome
-            name="book-open"
-            size={24}
-            solid
-            color={activeTab === 'learn' ? themeColors.navActive : themeColors.navInactive}
-          />
-        </TouchableOpacity>
+        <FooterMenuItem
+          tabKey={TAB_KEYS.HOME}
+          iconName="home"
+          iconType="feather"
+        />
+        <FooterMenuItem
+          tabKey={TAB_KEYS.MEDITATE}
+          iconName="heart"
+          iconType="feather"
+        />
+        <FooterMenuItem
+          tabKey={TAB_KEYS.LEARN}
+          iconName="book-open"
+          iconType="fontawesome"
+          solid
+        />
       </View>
     </SafeAreaView>
   );
@@ -300,15 +274,17 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <FontLoader>
-        <AuthProvider>
-          <AuthWrapper navigation={mockNavigation}>
-            <MainApp />
-          </AuthWrapper>
-        </AuthProvider>
-      </FontLoader>
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <FontLoader>
+          <AuthProvider>
+            <AuthWrapper navigation={mockNavigation}>
+              <MainApp />
+            </AuthWrapper>
+          </AuthProvider>
+        </FontLoader>
+      </SafeAreaProvider>
+    </Provider>
   );
 }
 
@@ -528,15 +504,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.1)', // This will be updated dynamically
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-  },
-  activeNavItem: {
-    // Active state styling
   },
   navIcon: {
     fontSize: 24,
