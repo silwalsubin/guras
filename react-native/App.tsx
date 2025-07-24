@@ -168,8 +168,6 @@ function MainApp(): React.JSX.Element {
 
   const renderMeditateScreen = () => (
     <View style={styles.tabContent}>
-      <Text style={[styles.tabTitle, { color: themeColors.textPrimary }]}>Meditation Sessions</Text>
-      <Text style={[styles.tabSubtitle, { color: themeColors.textSecondary }]}>Choose your practice</Text>
       <MusicPlayer />
     </View>
   );
