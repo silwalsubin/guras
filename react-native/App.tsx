@@ -243,7 +243,7 @@ function MainApp(): React.JSX.Element {
           style={[styles.navItem, activeTab === 'home' && styles.activeNavItem]} 
           onPress={() => {
             if (activeTab !== 'home') {
-              Vibration.vibrate(2); // Reduced vibration by 80% (from 10ms to 2ms)
+              Vibration.vibrate(1); // Super light vibration
               setActiveTab('home');
             }
           }}
@@ -259,7 +259,7 @@ function MainApp(): React.JSX.Element {
           style={[styles.navItem, activeTab === 'meditate' && styles.activeNavItem]} 
           onPress={() => {
             if (activeTab !== 'meditate') {
-              Vibration.vibrate(2); // Reduced vibration by 80% (from 10ms to 2ms)
+              Vibration.vibrate(1); // Super light vibration
               setActiveTab('meditate');
             }
           }}
@@ -275,7 +275,7 @@ function MainApp(): React.JSX.Element {
           style={[styles.navItem, activeTab === 'learn' && styles.activeNavItem]} 
           onPress={() => {
             if (activeTab !== 'learn') {
-              Vibration.vibrate(2); // Reduced vibration by 80% (from 10ms to 2ms)
+              Vibration.vibrate(1); // Super light vibration
               setActiveTab('learn');
             }
           }}
