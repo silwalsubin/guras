@@ -240,8 +240,9 @@ function MainApp(): React.JSX.Element {
         />
         <FooterMenuItem
           tabKey={TAB_KEYS.MEDITATE}
-          iconName="heart"
-          iconType="feather"
+          iconName="compact-disc"
+          iconType="fontawesome"
+          solid
         />
         <FooterMenuItem
           tabKey={TAB_KEYS.LEARN}
