@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 
 // Color palette for the meditation app
 export const COLORS = {
@@ -121,13 +120,13 @@ export const colorUtils = {
   },
   
   // Lighten color
-  lighten: (color: string, amount: number) => {
+  lighten: (color: string) => {
     // Simple lighten implementation
     return color; // Placeholder - implement if needed
   },
   
   // Darken color
-  darken: (color: string, amount: number) => {
+  darken: (color: string) => {
     // Simple darken implementation
     return color; // Placeholder - implement if needed
   },

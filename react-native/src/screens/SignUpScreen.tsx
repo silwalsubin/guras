@@ -14,57 +14,45 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { TYPOGRAPHY } from '../config/fonts';
 import { COLORS } from '../config/colors';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 interface SignUpScreenProps {
-  navigation: any;
+  navigation: NativeStackNavigationProp<Record<string, object | undefined>>;
 }
 
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
 
-  const validateForm = () => {
+  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (text: string) => {
+    setter(text);
+  };
+
+  const handleSignUp = async (): Promise<void> => {
     if (!email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
-      return false;
-    }
-
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
-      return false;
+      return;
     }
 
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
-      return false;
+      return;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSignUp = async () => {
-    if (!validateForm()) return;
 
     setLoading(true);
     try {
       await signUp(email, password);
-      Alert.alert('Success', 'Account created successfully!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('SignIn'),
-        },
-      ]);
-    } catch (error: any) {
-      Alert.alert('Sign Up Error', error.message);
+      Alert.alert('Success', 'Account created successfully!');
+      navigation.navigate('SignIn');
+    } catch (error: unknown) {
+      let message = 'Unknown error';
+      if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+        message = (error as { message: string }).message;
+      }
+      Alert.alert('Sign Up Error', message);
     } finally {
       setLoading(false);
     }
@@ -93,7 +81,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
                 placeholder="Enter your email"
                 placeholderTextColor={COLORS.GRAY_400}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={handleInputChange(setEmail)}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -107,7 +95,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
                 placeholder="Create a password"
                 placeholderTextColor={COLORS.GRAY_400}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={handleInputChange(setPassword)}
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -122,7 +110,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
                 placeholder="Confirm your password"
                 placeholderTextColor={COLORS.GRAY_400}
                 value={confirmPassword}
-                onChangeText={setConfirmPassword}
+                onChangeText={handleInputChange(setConfirmPassword)}
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}

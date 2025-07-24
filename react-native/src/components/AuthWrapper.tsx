@@ -8,16 +8,15 @@ import { COLORS } from '../config/colors';
 
 interface AuthWrapperProps {
   children: React.ReactNode;
-  navigation: any;
 }
 
-const AuthWrapper: React.FC<AuthWrapperProps> = ({ children, navigation }) => {
+const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const { user, loading } = useAuth();
   const [authScreen, setAuthScreen] = useState<'signIn' | 'signUp'>('signIn');
 
   // Create a navigation object for auth screens
   const authNavigation = {
-    navigate: (screen: string) => {
+    navigate: (screen: 'SignUp' | 'SignIn') => {
       if (screen === 'SignUp') {
         setAuthScreen('signUp');
       } else if (screen === 'SignIn') {

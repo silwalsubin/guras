@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import TrackPlayer, { State, useProgress } from 'react-native-track-player';
+import meditationBuddha from '../../assets/meditation_buddha.mp3';
 
 const TRACK = {
   id: 'meditation_buddha',
-  url: require('../../assets/meditation_buddha.mp3'),
+  url: meditationBuddha,
   title: 'Om Mane Padme Hum',
   artist: 'Guras',
 };
@@ -35,8 +36,12 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     async function setup() {
       try {
         await TrackPlayer.setupPlayer();
-      } catch (error: any) {
-        if (!error.message?.includes('already been initialized')) throw error;
+      } catch (error: unknown) {
+        let message = '';
+        if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+          message = (error as { message: string }).message;
+        }
+        if (!message.includes('already been initialized')) throw error;
       }
       const queue = await TrackPlayer.getQueue();
       if (queue.length === 0) {
