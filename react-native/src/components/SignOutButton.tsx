@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { TYPOGRAPHY } from '../config/fonts';
+import { COLORS } from '../config/colors';
 
 interface SignOutButtonProps {
   style?: any;
@@ -52,7 +53,7 @@ const SignOutButton: React.FC<SignOutButtonProps> = ({ style, textStyle }) => {
       disabled={loading}
     >
       {loading ? (
-        <ActivityIndicator color="#FFFFFF" size="small" />
+        <ActivityIndicator color={COLORS.WHITE} size="small" />
       ) : (
         <Text style={[styles.buttonText, textStyle]}>Sign Out</Text>
       )}
@@ -62,7 +63,7 @@ const SignOutButton: React.FC<SignOutButtonProps> = ({ style, textStyle }) => {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#E53E3E',
+    backgroundColor: COLORS.ERROR,
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: COLORS.WHITE,
     ...TYPOGRAPHY.BUTTON,
   },
 });

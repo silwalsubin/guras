@@ -30,6 +30,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome5';
 import FontLoader from './src/components/FontLoader';
 import { TYPOGRAPHY } from './src/config/fonts';
+import { getThemeColors, getBrandColors, COLORS } from './src/config/colors';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
@@ -49,9 +50,12 @@ function MainApp(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState('home');
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+  
+  const themeColors = getThemeColors(isDarkMode);
+  const brandColors = getBrandColors();
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#0A0A0A' : '#FAFAFA',
+    backgroundColor: themeColors.background,
   };
 
   const renderHomeScreen = () => (
@@ -59,95 +63,95 @@ function MainApp(): React.JSX.Element {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <View style={[styles.logo, { backgroundColor: isDarkMode ? '#0D9488' : '#14B8A6' }]}>
+          <View style={[styles.logo, { backgroundColor: brandColors.primary }]}>
             <Text style={styles.logoText}>🧘</Text>
           </View>
-          <Text style={[styles.appName, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+          <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
             Guras
           </Text>
         </View>
         <TouchableOpacity 
-          style={[styles.profileButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}
+          style={[styles.profileButton, { backgroundColor: themeColors.border }]}
           onPress={() => setActiveTab('profile')}
         >
-          <Text style={[styles.profileButtonText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>👤</Text>
+          <Text style={[styles.profileButtonText, { color: themeColors.textPrimary }]}>👤</Text>
         </TouchableOpacity>
       </View>
 
       {/* Quick Start Card */}
       <View style={styles.quickStartSection}>
-        <View style={[styles.quickStartCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-          <Text style={[styles.quickStartTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+        <View style={[styles.quickStartCard, { backgroundColor: themeColors.card }]}>
+          <Text style={[styles.quickStartTitle, { color: themeColors.textPrimary }]}>
             Ready to meditate?
           </Text>
-          <Text style={[styles.quickStartSubtitle, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+          <Text style={[styles.quickStartSubtitle, { color: themeColors.textSecondary }]}>
             Start your daily practice
           </Text>
-          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: isDarkMode ? '#0D9488' : '#14B8A6' }]}>
-            <Text style={styles.buttonText}>Begin Session</Text>
+          <TouchableOpacity style={[styles.primaryButton, { backgroundColor: brandColors.primary }]}>
+            <Text style={[styles.buttonText, { color: COLORS.WHITE }]}>Begin Session</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Daily Progress */}
       <View style={styles.progressSection}>
-        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
           Today's Progress
         </Text>
-        <View style={[styles.progressCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+        <View style={[styles.progressCard, { backgroundColor: themeColors.card }]}>
           <View style={styles.progressRow}>
-            <Text style={[styles.progressLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>Minutes</Text>
-            <Text style={[styles.progressValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>0</Text>
+            <Text style={[styles.progressLabel, { color: themeColors.textSecondary }]}>Minutes</Text>
+            <Text style={[styles.progressValue, { color: themeColors.textPrimary }]}>0</Text>
           </View>
           <View style={styles.progressRow}>
-            <Text style={[styles.progressLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>Sessions</Text>
-            <Text style={[styles.progressValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>0</Text>
+            <Text style={[styles.progressLabel, { color: themeColors.textSecondary }]}>Sessions</Text>
+            <Text style={[styles.progressValue, { color: themeColors.textPrimary }]}>0</Text>
           </View>
           <View style={styles.progressRow}>
-            <Text style={[styles.progressLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>Streak</Text>
-            <Text style={[styles.progressValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>0 days</Text>
+            <Text style={[styles.progressLabel, { color: themeColors.textSecondary }]}>Streak</Text>
+            <Text style={[styles.progressValue, { color: themeColors.textPrimary }]}>0 days</Text>
           </View>
         </View>
       </View>
 
       {/* Quick Actions */}
       <View style={styles.quickActionsSection}>
-        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
           Quick Actions
         </Text>
         <View style={styles.quickActionsGrid}>
-          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: themeColors.card }]}>
             <Text style={styles.quickActionIcon}>🧘‍♀️</Text>
-            <Text style={[styles.quickActionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>Meditate</Text>
+            <Text style={[styles.quickActionTitle, { color: themeColors.textPrimary }]}>Meditate</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: themeColors.card }]}>
             <Text style={styles.quickActionIcon}>🕯️</Text>
-            <Text style={[styles.quickActionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>Mindfulness</Text>
+            <Text style={[styles.quickActionTitle, { color: themeColors.textPrimary }]}>Mindfulness</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: themeColors.card }]}>
             <Text style={styles.quickActionIcon}>🌙</Text>
-            <Text style={[styles.quickActionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>Sleep</Text>
+            <Text style={[styles.quickActionTitle, { color: themeColors.textPrimary }]}>Sleep</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
+          <TouchableOpacity style={[styles.quickActionCard, { backgroundColor: themeColors.card }]}>
             <Text style={styles.quickActionIcon}>📿</Text>
-            <Text style={[styles.quickActionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>Wisdom</Text>
+            <Text style={[styles.quickActionTitle, { color: themeColors.textPrimary }]}>Wisdom</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Recent Sessions */}
       <View style={styles.recentSection}>
-        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
           Recent Sessions
         </Text>
-        <View style={[styles.recentCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-          <Text style={[styles.recentText, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+        <View style={[styles.recentCard, { backgroundColor: themeColors.card }]}>
+          <Text style={[styles.recentText, { color: themeColors.textSecondary }]}>
             No recent sessions
           </Text>
-          <Text style={[styles.recentSubtext, { color: isDarkMode ? '#A0AEC0' : '#A0AEC0' }]}>
+          <Text style={[styles.recentSubtext, { color: themeColors.textSecondary }]}>
             Start your first meditation to see your history here
           </Text>
         </View>
@@ -157,10 +161,10 @@ function MainApp(): React.JSX.Element {
 
   const renderMeditateScreen = () => (
     <View style={styles.tabContent}>
-      <Text style={[styles.tabTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+      <Text style={[styles.tabTitle, { color: themeColors.textPrimary }]}>
         Meditation Sessions
       </Text>
-      <Text style={[styles.tabSubtitle, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+      <Text style={[styles.tabSubtitle, { color: themeColors.textSecondary }]}>
         Choose your practice
       </Text>
     </View>
@@ -168,10 +172,10 @@ function MainApp(): React.JSX.Element {
 
   const renderLearnScreen = () => (
     <View style={styles.tabContent}>
-      <Text style={[styles.tabTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+      <Text style={[styles.tabTitle, { color: themeColors.textPrimary }]}>
         Learn & Grow
       </Text>
-      <Text style={[styles.tabSubtitle, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+      <Text style={[styles.tabSubtitle, { color: themeColors.textSecondary }]}>
         Explore spiritual wisdom
       </Text>
     </View>
@@ -208,15 +212,13 @@ function MainApp(): React.JSX.Element {
       <View style={[
         styles.gradientBackground,
         {
-          backgroundColor: isDarkMode ? '#1A1A2E' : '#F0F8FF',
+          backgroundColor: themeColors.background,
         }
       ]}>
         <View style={[
           styles.gradientOverlay,
           {
-            backgroundColor: isDarkMode 
-              ? 'rgba(22, 33, 62, 0.7)' 
-              : 'rgba(230, 243, 255, 0.8)',
+            backgroundColor: themeColors.overlay,
           }
         ]} />
       </View>
@@ -231,7 +233,8 @@ function MainApp(): React.JSX.Element {
         style={[
           styles.bottomNav,
           {
-            backgroundColor: isDarkMode ? '#1A1A2E' : '#FFFFFF',
+            backgroundColor: themeColors.card,
+            borderTopColor: themeColors.border,
             paddingBottom: insets.bottom || 16,
           },
         ]}
@@ -248,7 +251,7 @@ function MainApp(): React.JSX.Element {
           <Feather
             name="home"
             size={24}
-            color={activeTab === 'home' ? '#14B8A6' : '#A0AEC0'}
+            color={activeTab === 'home' ? themeColors.navActive : themeColors.navInactive}
           />
         </TouchableOpacity>
         
@@ -264,7 +267,7 @@ function MainApp(): React.JSX.Element {
           <Feather
             name="heart"
             size={24}
-            color={activeTab === 'meditate' ? '#14B8A6' : '#A0AEC0'}
+            color={activeTab === 'meditate' ? themeColors.navActive : themeColors.navInactive}
           />
         </TouchableOpacity>
         
@@ -281,7 +284,7 @@ function MainApp(): React.JSX.Element {
             name="book-open"
             size={24}
             solid
-            color={activeTab === 'learn' ? '#14B8A6' : '#A0AEC0'}
+            color={activeTab === 'learn' ? themeColors.navActive : themeColors.navInactive}
           />
         </TouchableOpacity>
       </View>
@@ -409,7 +412,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // This will be updated dynamically
     ...TYPOGRAPHY.BUTTON,
   },
   progressSection: {
@@ -524,7 +527,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 20,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
+    borderTopColor: 'rgba(0,0,0,0.1)', // This will be updated dynamically
   },
   navItem: {
     flex: 1,

@@ -16,6 +16,7 @@ import { apiService } from '../services/api';
 import { UserProfile } from '../types/user';
 import SignOutButton from './SignOutButton';
 import { TYPOGRAPHY } from '../config/fonts';
+import { getThemeColors, getBrandColors } from '../config/colors';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -27,6 +28,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const themeColors = getThemeColors(isDarkMode);
+  const brandColors = getBrandColors();
 
   useEffect(() => {
     fetchProfile();
@@ -61,10 +65,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
     
     return (
       <View style={styles.profileInfo}>
-        <Text style={[styles.profileLabel, { color: isDarkMode ? '#CBD5E0' : '#718096' }]}>
+        <Text style={[styles.profileLabel, { color: themeColors.textSecondary }]}>
           {label}:
         </Text>
-        <Text style={[styles.profileValue, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+        <Text style={[styles.profileValue, { color: themeColors.textPrimary }]}>
           {displayValue}
         </Text>
       </View>
@@ -76,24 +80,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <View style={[styles.logo, { backgroundColor: isDarkMode ? '#0D9488' : '#14B8A6' }]}>
+            <View style={[styles.logo, { backgroundColor: brandColors.primary }]}>
               <Text style={styles.logoText}>👤</Text>
             </View>
-            <Text style={[styles.appName, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+            <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
               Profile
             </Text>
           </View>
           <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}
+            style={[styles.backButton, { backgroundColor: themeColors.border }]}
             onPress={onBack}
           >
-            <Text style={[styles.backButtonText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>←</Text>
+            <Text style={[styles.backButtonText, { color: themeColors.textPrimary }]}>←</Text>
           </TouchableOpacity>
         </View>
         
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#14B8A6" />
-          <Text style={[styles.loadingText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+          <ActivityIndicator size="large" color={brandColors.primary} />
+          <Text style={[styles.loadingText, { color: themeColors.textPrimary }]}>
             Loading profile...
           </Text>
         </View>
@@ -106,18 +110,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <View style={[styles.logo, { backgroundColor: isDarkMode ? '#0D9488' : '#14B8A6' }]}>
+          <View style={[styles.logo, { backgroundColor: brandColors.primary }]}>
             <Text style={styles.logoText}>👤</Text>
           </View>
-          <Text style={[styles.appName, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+          <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
             Profile
           </Text>
         </View>
         <TouchableOpacity 
-          style={[styles.backButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}
+          style={[styles.backButton, { backgroundColor: themeColors.border }]}
           onPress={onBack}
         >
-          <Text style={[styles.backButtonText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>←</Text>
+          <Text style={[styles.backButtonText, { color: themeColors.textPrimary }]}>←</Text>
         </TouchableOpacity>
       </View>
 
@@ -126,7 +130,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
         <View style={styles.profilePictureSection}>
           <Image 
             source={{ uri: profile.photoUrl }} 
-            style={styles.profilePicture}
+            style={[styles.profilePicture, { borderColor: brandColors.primary }]}
             resizeMode="cover"
           />
         </View>
@@ -134,8 +138,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
 
       {/* User Info */}
       <View style={styles.profileSection}>
-        <View style={[styles.profileCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}>
-          <Text style={[styles.profileTitle, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+        <View style={[styles.profileCard, { 
+          backgroundColor: themeColors.card,
+          shadowColor: themeColors.textSecondary,
+        }]}>
+          <Text style={[styles.profileTitle, { color: themeColors.textPrimary }]}>
             Account Information
           </Text>
           
@@ -158,11 +165,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
       {/* Refresh Button */}
       <View style={styles.refreshSection}>
         <TouchableOpacity 
-          style={[styles.refreshButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)' }]}
+          style={[styles.refreshButton, { backgroundColor: themeColors.card }]}
           onPress={fetchProfile}
         >
-          <Feather name="refresh-cw" size={20} color={isDarkMode ? '#FFFFFF' : '#2D3748'} />
-          <Text style={[styles.refreshButtonText, { color: isDarkMode ? '#FFFFFF' : '#2D3748' }]}>
+          <Feather name="refresh-cw" size={20} color={themeColors.textPrimary} />
+          <Text style={[styles.refreshButtonText, { color: themeColors.textPrimary }]}>
             Refresh Profile
           </Text>
         </TouchableOpacity>
@@ -238,7 +245,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: '#14B8A6',
+    borderColor: '#14B8A6', // This will be updated dynamically
   },
   profileSection: {
     paddingHorizontal: 20,
@@ -247,7 +254,7 @@ const styles = StyleSheet.create({
   profileCard: {
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: '#000', // This will be updated dynamically
     shadowOffset: {
       width: 0,
       height: 2,
