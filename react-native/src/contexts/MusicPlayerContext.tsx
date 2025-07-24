@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import TrackPlayer, { State, useProgress } from 'react-native-track-player';
+import TrackPlayer, { State, useProgress, Capability } from 'react-native-track-player';
 import meditationBuddha from '../../assets/meditation_buddha.mp3';
 
 const TRACK = {
@@ -36,6 +36,16 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     async function setup() {
       try {
         await TrackPlayer.setupPlayer();
+        await TrackPlayer.updateOptions({
+          capabilities: [
+            Capability.Play,
+            Capability.Pause,
+          ],
+          compactCapabilities: [
+            Capability.Play,
+            Capability.Pause,
+          ],
+        });
       } catch (error: unknown) {
         let message = '';
         if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
