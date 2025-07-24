@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import TrackPlayer from 'react-native-track-player';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Slider from '@react-native-community/slider';
 import { COLORS, getThemeColors, getBrandColors } from '@/config/colors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import meditationBuddha from '../../assets/meditation_buddha.mp3';
@@ -20,12 +21,17 @@ const TRACK = {
   artist: 'Guras',
 };
 
+const SLIDER_WIDTH = 320;
+const SLIDER_HEIGHT = 40;
+const THUMB_SIZE = 16; // Static size for the custom thumb
+const TRACK_OFFSET = 8; // Offset to align thumb with slider track
+
 const MusicPlayer: React.FC = () => {
   const { isSetup, isPlaying, togglePlayback, progress } = useMusicPlayer();
-  const [hoverPosition, setHoverPosition] = useState<number | null>(null); // Track hover position
-  const [sliderPosition, setSliderPosition] = useState(0); // Track slider position
-  const [isUserInteracting, setIsUserInteracting] = useState(false); // Track if user is interacting
-  
+  const [sliderValue, setSliderValue] = useState(0);
+  const [pendingSeek, setPendingSeek] = useState<number | null>(null);
+  const [isSliding, setIsSliding] = useState(false);
+
   const themeColors = getThemeColors(false); // Assuming light mode
   const brandColors = getBrandColors();
   const shadowColor = COLORS.SHADOW;
@@ -88,6 +94,12 @@ const MusicPlayer: React.FC = () => {
       bottom: 0,
       zIndex: 999,
     },
+    slider: {
+      width: SLIDER_WIDTH,
+      height: SLIDER_HEIGHT,
+      marginTop: 8,
+      marginBottom: 8,
+    },
     sliderHandle: {
       position: 'absolute',
       top: -4,
@@ -146,22 +158,43 @@ const MusicPlayer: React.FC = () => {
       fontWeight: '600',
       color: themeColors.textPrimary,
     },
+    customThumb: {
+      position: 'absolute',
+      zIndex: 10,
+      backgroundColor: brandColors.primary,
+      width: THUMB_SIZE,
+      height: THUMB_SIZE,
+      borderRadius: THUMB_SIZE / 2,
+      top: (SLIDER_HEIGHT - THUMB_SIZE) / 2,
+      shadowColor: shadowColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 4,
+    },
   });
 
-  // Calculate progress percentage safely
-  const progressPercentage = progress.duration > 0 ? (progress.position / progress.duration) : 0;
-
-  // Show a small progress even when track hasn't loaded
-  const displayProgress = progress.duration > 0 ? progressPercentage * 100 : 0; // Use actual progress percentage
-
-  // Update slider position when track progresses naturally (only when not user interacting)
+  // After seeking, keep showing pendingSeek until player catches up
   useEffect(() => {
-    if (progress.duration > 0 && !isUserInteracting) {
-      setSliderPosition(progressPercentage * 100);
+    if (
+      pendingSeek !== null &&
+      Math.abs(progress.position - pendingSeek) < 0.5 // threshold in seconds
+    ) {
+      setPendingSeek(null);
     }
-  }, [progress.position, progress.duration, isUserInteracting]);
+  }, [progress.position, pendingSeek]);
 
-    return (
+  // Update slider value from progress only when not sliding and not pending seek
+  useEffect(() => {
+    if (progress.duration > 0 && !isSliding && pendingSeek === null) {
+      setSliderValue(progress.position);
+    }
+  }, [progress.position, progress.duration, isSliding, pendingSeek]);
+
+  const effectiveWidth = SLIDER_WIDTH - 2 * TRACK_OFFSET;
+  const thumbPosition = TRACK_OFFSET + ((pendingSeek !== null ? pendingSeek : isSliding ? sliderValue : sliderValue) / (progress.duration || 1)) * effectiveWidth;
+
+  return (
     <View style={styles.container}>
       <Text style={[styles.title, { color: themeColors.textPrimary }]}>{TRACK.title}</Text>
       <View style={styles.spacer} />
@@ -170,66 +203,88 @@ const MusicPlayer: React.FC = () => {
       </TouchableOpacity>
       <View style={styles.progressContainer}>
         <View style={styles.timeRow}>
-          <Text style={[styles.timeText, { color: themeColors.textSecondary }]}>
+          <Text style={[styles.timeText, { color: themeColors.textSecondary }]}> 
             {formatTime(progress.position)}
           </Text>
-          <Text style={[styles.timeText, { color: themeColors.textSecondary }]}>
-            {formatTime(Math.max(0, progress.duration - progress.position))}
+          <Text style={[styles.timeText, { color: themeColors.textSecondary }]}> 
+            {formatTime(progress.duration)}
           </Text>
         </View>
-        <View style={styles.progressBarWrapper}>
-          <View style={styles.progressBarBackground}>
-            <View 
-              style={[
-                styles.progressBarFill, 
-                { 
-                  backgroundColor: brandColors.primary,
-                  width: (displayProgress / 100) * 320, // Use actual progress for fill
-                }
-              ]} 
-            />
-          </View>
-          <View 
-            style={[
-              styles.sliderHandle, 
-              { 
-                left: Math.max(0, Math.min(304, (sliderPosition / 100) * 320)) - 8, // Center the handle properly
-                backgroundColor: brandColors.primary,
-              }
-            ]} 
-          />
-          <TouchableOpacity 
-            style={styles.progressBarTouchable}
-            onPress={(event) => {
-              const { locationX } = event.nativeEvent;
-              const estimatedWidth = 320;
-              const progressPercentage = Math.max(0, Math.min(1, locationX / estimatedWidth));
-              const newPosition = progressPercentage * progress.duration;
+        <View style={{ width: SLIDER_WIDTH, height: SLIDER_HEIGHT, position: 'relative', justifyContent: 'center' }}>
+          <Slider
+            style={{ width: SLIDER_WIDTH, height: SLIDER_HEIGHT, position: 'absolute', left: 0, top: 0 }}
+            minimumValue={0}
+            maximumValue={progress.duration}
+            value={isSliding ? sliderValue : (pendingSeek !== null ? pendingSeek : sliderValue)}
+            minimumTrackTintColor={brandColors.primary}
+            maximumTrackTintColor={themeColors.textSecondary}
+            thumbTintColor="transparent" // Hide default thumb
+            onSlidingStart={() => setIsSliding(true)}
+            onSlidingComplete={async (value) => {
+              setPendingSeek(value);
               if (isSetup && progress.duration > 0) {
-                TrackPlayer.seekTo(newPosition);
+                await TrackPlayer.seekTo(value);
               }
-              setSliderPosition(progressPercentage * 100); // Use exact percentage for slider position
-              setHoverPosition(null);
-              setIsUserInteracting(false); // Stop user interaction
+              setIsSliding(false);
             }}
-            onPressIn={(event) => {
-              const { locationX } = event.nativeEvent;
-              const estimatedWidth = 320;
-              const progressPercentage = Math.max(0, Math.min(1, locationX / estimatedWidth));
-              setHoverPosition(progressPercentage * progress.duration);
-              setSliderPosition(progressPercentage * 100); // Use exact percentage for slider position
-              setIsUserInteracting(true); // Start user interaction
-            }}
-            onPressOut={() => {
-              setHoverPosition(null);
-              setIsUserInteracting(false); // Stop user interaction
-            }}
+            onValueChange={(value) => setSliderValue(value)}
+            disabled={!isSetup || progress.duration === 0}
           />
-          {hoverPosition !== null && (
-            <View style={[styles.timeTooltip, { backgroundColor: themeColors.card }]}>
-              <Text style={[styles.timeTooltipText, { color: themeColors.textPrimary }]}>
-                {formatTime(hoverPosition)}
-              </Text>
+          {/* Static custom thumb overlay */}
+          <View
+            pointerEvents="none"
+            style={[
+              styles.customThumb,
+              {
+                left: Math.max(
+                  TRACK_OFFSET,
+                  Math.min(
+                    SLIDER_WIDTH - THUMB_SIZE - TRACK_OFFSET,
+                    thumbPosition - (THUMB_SIZE / 2)
+                  )
+                ),
+              },
+            ]}
+          />
+          {/* Floating time label above thumb while sliding */}
+          {isSliding && (
+            <View
+              style={{
+                position: 'absolute',
+                left: Math.max(
+                  TRACK_OFFSET,
+                  Math.min(
+                    SLIDER_WIDTH - THUMB_SIZE - TRACK_OFFSET,
+                    thumbPosition - (THUMB_SIZE / 2)
+                  )
+                ),
+                top: -32, // 32px above the slider
+                width: 72,
+                alignItems: 'center',
+                zIndex: 20,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: themeColors.card,
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  shadowColor: shadowColor,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+              >
+                <Text
+                  style={{ color: themeColors.textPrimary, fontWeight: '600', fontSize: 12, textAlign: 'center' }}
+                  numberOfLines={1}
+                  ellipsizeMode="clip"
+                >
+                  {formatTime(sliderValue)}
+                </Text>
+              </View>
             </View>
           )}
         </View>

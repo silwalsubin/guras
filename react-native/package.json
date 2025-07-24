@@ -16,6 +16,7 @@
     "lint:fix": "eslint --fix src App.tsx --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@react-native-community/slider": "^4.5.7",
     "@react-native-firebase/app": "^22.2.1",
     "@react-native-firebase/auth": "^22.2.1",
     "@react-native-google-signin/google-signin": "^15.0.0",
