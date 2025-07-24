@@ -15,6 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { UserProfile } from '../types/user';
 import SignOutButton from './SignOutButton';
+import { TYPOGRAPHY } from '../config/fonts';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -206,8 +207,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   appName: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.H4,
   },
   backButton: {
     width: 40,
@@ -217,8 +217,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.H6,
   },
   loadingContainer: {
     flex: 1,
@@ -228,7 +227,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
   },
   profilePictureSection: {
     alignItems: 'center',
@@ -258,8 +257,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   profileTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.H5,
     marginBottom: 16,
   },
   profileInfo: {
@@ -269,10 +267,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   profileLabel: {
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
   },
   profileValue: {
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY_SMALL,
     fontWeight: '500',
     flex: 1,
     textAlign: 'right',
@@ -291,8 +289,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   refreshButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...TYPOGRAPHY.BUTTON,
     marginLeft: 8,
   },
   signOutSection: {
@@ -304,8 +301,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   signOutButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...TYPOGRAPHY.BUTTON,
   },
 });
 

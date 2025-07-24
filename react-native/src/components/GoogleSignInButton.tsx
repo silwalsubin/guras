@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { getAuth, GoogleAuthProvider, signInWithCredential } from '@react-native-firebase/auth';
+import { TYPOGRAPHY } from '../config/fonts';
 
 const GoogleSignInButton: React.FC = () => {
   const [loading, setLoading] = React.useState(false);
@@ -45,8 +46,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    ...TYPOGRAPHY.BUTTON,
   },
 });
 

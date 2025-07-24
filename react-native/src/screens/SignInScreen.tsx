@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import { TYPOGRAPHY } from '../config/fonts';
 
 interface SignInScreenProps {
   navigation: any;
@@ -148,13 +149,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.H2,
     color: '#2D3748',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
     color: '#718096',
     textAlign: 'center',
   },
@@ -165,8 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...TYPOGRAPHY.LABEL,
     color: '#2D3748',
     marginBottom: 8,
   },
@@ -175,7 +174,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
     color: '#2D3748',
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -186,8 +185,7 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     color: '#14B8A6',
-    fontSize: 14,
-    fontWeight: '500',
+    ...TYPOGRAPHY.BUTTON_SMALL,
   },
   signInButton: {
     backgroundColor: '#14B8A6',
@@ -208,8 +206,7 @@ const styles = StyleSheet.create({
   },
   signInButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
+    ...TYPOGRAPHY.BUTTON_LARGE,
   },
   footer: {
     flexDirection: 'row',
@@ -218,12 +215,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: '#718096',
-    fontSize: 16,
+    ...TYPOGRAPHY.BODY,
   },
   signUpLink: {
     color: '#14B8A6',
-    fontSize: 16,
-    fontWeight: '600',
+    ...TYPOGRAPHY.BUTTON,
   },
 });
 
