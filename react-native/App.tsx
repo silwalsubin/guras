@@ -36,6 +36,7 @@ import { Provider, useSelector, useDispatch } from 'react-redux';
 import store, { RootState } from './src/store';
 import { setActiveTab, TAB_KEYS, TabKey } from './src/store/navigationSlice';
 import MusicPlayer from './src/components/MusicPlayer';
+import { MusicPlayerProvider } from './src/contexts/MusicPlayerContext';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
@@ -227,7 +228,9 @@ function MainApp(): React.JSX.Element {
       
       {/* Main Content */}
       <View style={styles.mainContent}>
-        {renderActiveTab()}
+        <MusicPlayerProvider>
+          {renderActiveTab()}
+        </MusicPlayerProvider>
       </View>
 
       {/* Bottom Navigation */}
