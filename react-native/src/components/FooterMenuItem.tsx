@@ -30,7 +30,7 @@ const FooterMenuItem: React.FC<FooterMenuItemProps> = ({
 
   const handlePress = () => {
     if (!isActive) {
-      Vibration.vibrate(0.1); // Feather light vibration
+      // Vibration.vibrate(0.1); // Feather light vibration
       dispatch(setActiveTab(tabKey));
     }
   };
