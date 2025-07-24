@@ -35,6 +35,7 @@ import FooterMenuItem from './src/components/FooterMenuItem';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import store, { RootState } from './src/store';
 import { setActiveTab, TAB_KEYS, TabKey } from './src/store/navigationSlice';
+import MusicPlayer from './src/components/MusicPlayer';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
@@ -167,12 +168,9 @@ function MainApp(): React.JSX.Element {
 
   const renderMeditateScreen = () => (
     <View style={styles.tabContent}>
-      <Text style={[styles.tabTitle, { color: themeColors.textPrimary }]}>
-        Meditation Sessions
-      </Text>
-      <Text style={[styles.tabSubtitle, { color: themeColors.textSecondary }]}>
-        Choose your practice
-      </Text>
+      <Text style={[styles.tabTitle, { color: themeColors.textPrimary }]}>Meditation Sessions</Text>
+      <Text style={[styles.tabSubtitle, { color: themeColors.textSecondary }]}>Choose your practice</Text>
+      <MusicPlayer />
     </View>
   );
 
