@@ -15,9 +15,10 @@ import { useAuth } from '../contexts/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import { TYPOGRAPHY } from '../config/fonts';
 import { COLORS } from '../config/colors';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 interface SignInScreenProps {
-  navigation: any;
+  navigation: NativeStackNavigationProp<Record<string, object | undefined>>;
 }
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
@@ -26,7 +27,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
 
-  const handleSignIn = async () => {
+  const handleSignIn = async (): Promise<void> => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -35,8 +36,12 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
     setLoading(true);
     try {
       await signIn(email, password);
-    } catch (error: any) {
-      Alert.alert('Sign In Error', error.message);
+    } catch (error: unknown) {
+      let message = 'Unknown error';
+      if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+        message = (error as { message: string }).message;
+      }
+      Alert.alert('Sign In Error', message);
     } finally {
       setLoading(false);
     }
@@ -117,7 +122,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
+            <Text style={styles.footerText}>Don&apos;t have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
               <Text style={styles.signUpLink}>Sign Up</Text>
             </TouchableOpacity>

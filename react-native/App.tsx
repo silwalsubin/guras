@@ -5,7 +5,7 @@
  * @format
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -16,32 +16,28 @@ import {
   View,
   TouchableOpacity,
   Dimensions,
-  Image,
-  Vibration,
 } from 'react-native';
 import { getApp } from '@react-native-firebase/app';
-import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { AuthProvider } from './src/contexts/AuthContext';
 import AuthWrapper from './src/components/AuthWrapper';
 import ProfileScreen from './src/components/ProfileScreen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import Feather from 'react-native-vector-icons/Feather';
-import FontAwesome from 'react-native-vector-icons/FontAwesome5';
 import FontLoader from './src/components/FontLoader';
 import { TYPOGRAPHY } from './src/config/fonts';
 import { getThemeColors, getBrandColors, COLORS } from './src/config/colors';
 import FooterMenuItem from './src/components/FooterMenuItem';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import store, { RootState } from './src/store';
-import { setActiveTab, TAB_KEYS, TabKey } from './src/store/navigationSlice';
+import { setActiveTab, TAB_KEYS } from './src/store/navigationSlice';
 import MusicPlayer from './src/components/MusicPlayer';
 import { MusicPlayerProvider } from './src/contexts/MusicPlayerContext';
 
 // Verify Firebase is imported correctly
 console.log('Firebase App Name:', getApp().name); // should print "[DEFAULT]"
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 // Mock navigation object for the auth screens
 const mockNavigation = {
@@ -53,7 +49,6 @@ const mockNavigation = {
 
 function MainApp(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
-  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   
   const themeColors = getThemeColors(isDarkMode);
@@ -92,9 +87,7 @@ function MainApp(): React.JSX.Element {
           <Text style={[styles.quickStartTitle, { color: themeColors.textPrimary }]}>
             Ready to meditate?
           </Text>
-          <Text style={[styles.quickStartSubtitle, { color: themeColors.textSecondary }]}>
-            Start your daily practice
-          </Text>
+          <Text style={[styles.quickStartSubtitle, { color: themeColors.textSecondary }]}>Start your daily practice</Text>
           <TouchableOpacity style={[styles.primaryButton, { backgroundColor: brandColors.primary }]}>
             <Text style={[styles.buttonText, { color: COLORS.WHITE }]}>Begin Session</Text>
           </TouchableOpacity>
@@ -159,9 +152,7 @@ function MainApp(): React.JSX.Element {
           <Text style={[styles.recentText, { color: themeColors.textSecondary }]}>
             No recent sessions
           </Text>
-          <Text style={[styles.recentSubtext, { color: themeColors.textSecondary }]}>
-            Start your first meditation to see your history here
-          </Text>
+          <Text style={[styles.recentSubtext, { color: themeColors.textSecondary }]}>Start your first meditation to see your history here</Text>
         </View>
       </View>
     </ScrollView>
@@ -178,9 +169,7 @@ function MainApp(): React.JSX.Element {
       <Text style={[styles.tabTitle, { color: themeColors.textPrimary }]}>
         Learn & Grow
       </Text>
-      <Text style={[styles.tabSubtitle, { color: themeColors.textSecondary }]}>
-        Explore spiritual wisdom
-      </Text>
+      <Text style={[styles.tabSubtitle, { color: themeColors.textSecondary }]}>Explore spiritual wisdom</Text>
     </View>
   );
 

@@ -1,12 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import TrackPlayer, { State, useProgress } from 'react-native-track-player';
+import TrackPlayer from 'react-native-track-player';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { COLORS, getThemeColors, getBrandColors } from '../config/colors';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
-import { setIsPlaying, setProgress, setSliderPosition } from '../store/musicPlayerSlice';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
+import meditationBuddha from '../../assets/meditation_buddha.mp3';
 
 // Helper function to format time in MM:SS format
 const formatTime = (seconds: number): string => {
@@ -17,16 +15,13 @@ const formatTime = (seconds: number): string => {
 
 const TRACK = {
   id: 'meditation_buddha',
-  url: require('../../assets/meditation_buddha.mp3'),
+  url: meditationBuddha,
   title: 'Om Mane Padme Hum',
   artist: 'Guras',
 };
 
-// Global flag to track if player is initialized
-let isPlayerInitialized = false;
-
 const MusicPlayer: React.FC = () => {
-  const { isSetup, isPlaying, play, pause, togglePlayback, progress } = useMusicPlayer();
+  const { isSetup, isPlaying, togglePlayback, progress } = useMusicPlayer();
   const [hoverPosition, setHoverPosition] = useState<number | null>(null); // Track hover position
   const [sliderPosition, setSliderPosition] = useState(0); // Track slider position
   const [isUserInteracting, setIsUserInteracting] = useState(false); // Track if user is interacting
@@ -34,7 +29,6 @@ const MusicPlayer: React.FC = () => {
   const themeColors = getThemeColors(false); // Assuming light mode
   const brandColors = getBrandColors();
   const shadowColor = COLORS.SHADOW;
-
   const styles = StyleSheet.create({
     container: {
       alignItems: 'center',

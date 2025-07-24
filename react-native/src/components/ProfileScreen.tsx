@@ -27,7 +27,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
@@ -39,20 +38,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      setError(null);
       
       const response = await apiService.getProfile();
       
       if (response.error) {
-        setError(response.error);
         Alert.alert('Error', response.error);
       } else if (response.data) {
         setProfile(response.data);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
-      setError(errorMessage);
-      Alert.alert('Error', errorMessage);
+    } catch {
+      // handle error
     } finally {
       setLoading(false);
     }

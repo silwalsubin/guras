@@ -5,19 +5,22 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  StyleProp,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { TYPOGRAPHY } from '../config/fonts';
 import { COLORS } from '../config/colors';
 
 interface SignOutButtonProps {
-  style?: any;
-  textStyle?: any;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 }
 
 const SignOutButton: React.FC<SignOutButtonProps> = ({ style, textStyle }) => {
   const { signOut } = useAuth();
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState<boolean>(false);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -35,7 +38,7 @@ const SignOutButton: React.FC<SignOutButtonProps> = ({ style, textStyle }) => {
             setLoading(true);
             try {
               await signOut();
-            } catch (error: any) {
+            } catch {
               Alert.alert('Error', 'Failed to sign out. Please try again.');
             } finally {
               setLoading(false);

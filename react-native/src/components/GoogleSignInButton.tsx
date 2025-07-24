@@ -17,8 +17,12 @@ const GoogleSignInButton: React.FC = () => {
       const googleCredential = GoogleAuthProvider.credential(idToken);
       const auth = getAuth();
       await signInWithCredential(auth, googleCredential);
-    } catch (error: any) {
-      Alert.alert('Google Sign-In Error', error.message || 'Something went wrong.');
+    } catch (error: unknown) {
+      let message = 'Something went wrong.';
+      if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+        message = (error as { message: string }).message;
+      }
+      Alert.alert('Google Sign-In Error', message);
     } finally {
       setLoading(false);
     }

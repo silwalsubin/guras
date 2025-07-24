@@ -43,8 +43,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const auth = getAuth();
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      let message = 'Unknown error';
+      if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+        message = (error as { message: string }).message;
+      }
+      throw new Error(message);
     }
   };
 
@@ -52,8 +56,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const auth = getAuth();
       await createUserWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      let message = 'Unknown error';
+      if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+        message = (error as { message: string }).message;
+      }
+      throw new Error(message);
     }
   };
 
@@ -61,8 +69,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const auth = getAuth();
       await firebaseSignOut(auth);
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      let message = 'Unknown error';
+      if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+        message = (error as { message: string }).message;
+      }
+      throw new Error(message);
     }
   };
 
@@ -70,8 +82,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const auth = getAuth();
       await sendPasswordResetEmail(auth, email);
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      let message = 'Unknown error';
+      if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+        message = (error as { message: string }).message;
+      }
+      throw new Error(message);
     }
   };
 

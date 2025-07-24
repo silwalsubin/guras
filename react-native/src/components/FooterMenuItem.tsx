@@ -2,7 +2,6 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome5';
-import { Vibration } from 'react-native';
 import { getThemeColors } from '../config/colors';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
