@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import TrackPlayer, { State, useProgress, Capability } from 'react-native-track-player';
+import TrackPlayer, { State, useProgress, Capability, Event } from 'react-native-track-player';
 import meditationBuddha from '../../assets/meditation_buddha.mp3';
 
 const TRACK = {
@@ -61,17 +61,27 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (isMounted) setIsSetup(true);
     }
     setup();
-    return () => { isMounted = false; };
+
+    // Listen for playback state changes
+    const onPlaybackState = TrackPlayer.addEventListener(Event.PlaybackState, (data) => {
+      if (data.state === State.Playing) {
+        setIsPlaying(true);
+      } else {
+        setIsPlaying(false);
+      }
+    });
+    return () => {
+      isMounted = false;
+      onPlaybackState.remove();
+    };
   }, []);
 
   const play = useCallback(async () => {
     await TrackPlayer.play();
-    setIsPlaying(true);
   }, []);
 
   const pause = useCallback(async () => {
     await TrackPlayer.pause();
-    setIsPlaying(false);
   }, []);
 
   const togglePlayback = useCallback(async () => {
@@ -82,8 +92,6 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       await play();
     }
   }, [play, pause]);
-
-  // Optionally, listen to TrackPlayer events to update isPlaying
 
   return (
     <MusicPlayerContext.Provider value={{ isSetup, isPlaying, play, pause, togglePlayback, progress }}>
