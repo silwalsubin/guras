@@ -181,7 +181,7 @@ function MainApp(): React.JSX.Element {
     switch (activeTab) {
       case TAB_KEYS.HOME:
         return renderHomeScreen();
-      case TAB_KEYS.MEDITATE:
+      case TAB_KEYS.AUDIO:
         return renderMeditateScreen();
       case TAB_KEYS.LEARN:
         return renderLearnScreen();
@@ -239,7 +239,7 @@ function MainApp(): React.JSX.Element {
           iconType="feather"
         />
         <FooterMenuItem
-          tabKey={TAB_KEYS.MEDITATE}
+          tabKey={TAB_KEYS.AUDIO}
           iconName="compact-disc"
           iconType="fontawesome"
           solid

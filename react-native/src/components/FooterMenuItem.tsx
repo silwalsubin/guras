@@ -6,9 +6,10 @@ import { getThemeColors } from '@/config/colors';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setActiveTab } from '@/store/navigationSlice';
+import type { TabKey } from '@/store/navigationSlice';
 
 interface FooterMenuItemProps {
-  tabKey: 'home' | 'meditate' | 'learn';
+  tabKey: TabKey;
   iconName: string;
   iconType: 'feather' | 'fontawesome';
   solid?: boolean;
