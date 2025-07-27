@@ -104,7 +104,7 @@ public class S3Service : IS3Service
             };
 
             var response = await _s3Client.ListObjectsV2Async(request);
-            var fileNames = response.S3Objects.Select(obj => obj.Key).ToList();
+            var fileNames = response.S3Objects?.Select(obj => obj.Key).ToList() ?? new List<string>();
             
             _logger.LogInformation("Listed {Count} files with prefix: {Prefix}", fileNames.Count, prefix);
             
