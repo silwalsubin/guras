@@ -236,7 +236,7 @@ resource "aws_iam_policy" "ecs_task_s3_access" {
           "s3:GetObjectAcl"
         ]
         Resource = [
-          "arn:aws:s3:::${var.environment}-audio-files/*"
+          "arn:aws:s3:::${var.environment}-guras-audio-files/*"
         ]
       },
       {
@@ -247,7 +247,7 @@ resource "aws_iam_policy" "ecs_task_s3_access" {
           "s3:ListBucketVersions"
         ]
         Resource = [
-          "arn:aws:s3:::${var.environment}-audio-files"
+          "arn:aws:s3:::${var.environment}-guras-audio-files"
         ]
       }
     ]

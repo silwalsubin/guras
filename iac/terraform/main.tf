@@ -126,7 +126,7 @@ module "audio_files_bucket" {
   source = "./modules/s3_bucket"
   
   environment   = var.environment
-  bucket_name   = "audio-files"
+  bucket_name   = "guras-audio-files"
   force_destroy = var.environment != "production" ? true : false
 }
 

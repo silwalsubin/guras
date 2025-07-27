@@ -16,7 +16,7 @@ public class S3Service : IS3Service
         
         // Get bucket name from environment or configuration
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.ToLower() ?? "development";
-        _bucketName = $"{environment}-audio-files";
+        _bucketName = $"{environment}-guras-audio-files";
         
         _logger.LogInformation("S3Service initialized with bucket: {BucketName}", _bucketName);
     }
