@@ -44,6 +44,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
     id     = "${var.bucket_name}_lifecycle"
     status = "Enabled"
 
+    filter {
+      prefix = ""
+    }
+
     noncurrent_version_expiration {
       noncurrent_days = 30
     }
