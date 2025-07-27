@@ -217,6 +217,48 @@ resource "aws_iam_role_policy_attachment" "ecs_task_secrets_access" {
   policy_arn = aws_iam_policy.ecs_task_secrets_access.arn
 }
 
+# IAM Policy for ECS Task Role to access S3 audio files bucket
+resource "aws_iam_policy" "ecs_task_s3_access" {
+  name        = "${var.environment}-guras-ecs-task-s3-access"
+  description = "Policy for ECS task role to access S3 audio files bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:GetObjectVersion",
+          "s3:PutObjectAcl",
+          "s3:GetObjectAcl"
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.environment}-audio-files/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:ListBucketVersions"
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.environment}-audio-files"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_s3_access" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.ecs_task_s3_access.arn
+}
+
 # Data sources
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {} 
