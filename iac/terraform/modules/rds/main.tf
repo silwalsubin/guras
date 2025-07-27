@@ -67,7 +67,7 @@ resource "aws_db_instance" "main" {
   identifier = "${var.environment}-guras-db"
 
   engine         = "postgres"
-  engine_version = "13.18"
+  engine_version = "13.20"
   instance_class = var.instance_class
 
   allocated_storage     = var.allocated_storage
