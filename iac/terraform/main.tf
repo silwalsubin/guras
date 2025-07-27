@@ -121,6 +121,15 @@ module "rds" {
   depends_on = [module.vpc]
 }
 
+# S3 Bucket for Audio Files
+module "audio_files_bucket" {
+  source = "./modules/s3_bucket"
+  
+  environment   = var.environment
+  bucket_name   = "audio-files"
+  force_destroy = var.environment != "production" ? true : false
+}
+
 # Outputs
 output "vpc_id" {
   description = "VPC ID"
@@ -181,4 +190,14 @@ output "staging_subdomain_url" {
 output "production_subdomain_url" {
   description = "Production subdomain URL"
   value       = module.dns.production_subdomain_url
+}
+
+output "audio_files_bucket_name" {
+  description = "S3 bucket name for audio files"
+  value       = module.audio_files_bucket.bucket_name
+}
+
+output "audio_files_bucket_arn" {
+  description = "S3 bucket ARN for audio files"
+  value       = module.audio_files_bucket.bucket_arn
 } 
