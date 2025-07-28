@@ -1,7 +1,6 @@
 // Layout Components
 export { default as AppHeader } from './layout/AppHeader';
 export { default as SectionHeader } from './layout/SectionHeader';
-export { default as BottomNavigation } from './layout/BottomNavigation';
 
 // Card Components  
 export { default as BaseCard } from './cards/BaseCard';

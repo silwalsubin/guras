@@ -21,7 +21,6 @@ const FooterMenuItem: React.FC<FooterMenuItemProps> = ({
   iconType,
   solid = false,
 }) => {
-  // You may want to pass isDarkMode as a prop for full theme support
   const themeColors = getThemeColors(false);
   const activeTab = useSelector((state: RootState) => state.navigation.activeTab);
   const dispatch = useDispatch();
@@ -30,7 +29,6 @@ const FooterMenuItem: React.FC<FooterMenuItemProps> = ({
 
   const handlePress = () => {
     if (!isActive) {
-      // Vibration.vibrate(0.1); // Feather light vibration
       dispatch(setActiveTab(tabKey));
     }
   };

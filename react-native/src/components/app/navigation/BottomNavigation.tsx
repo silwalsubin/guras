@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getThemeColors } from '@/config/colors';
 import { TAB_KEYS } from '@/store/navigationSlice';
 import { RootState } from '@/store';
-import FooterMenuItem from '@/components/FooterMenuItem';
+import FooterMenuItem from './components/FooterMenuItem';
 
 const BottomNavigation: React.FC = () => {
   const insets = useSafeAreaInsets();

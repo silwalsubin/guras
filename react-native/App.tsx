@@ -8,20 +8,20 @@ import {
 } from 'react-native';
 import { AuthProvider } from './src/contexts/AuthContext';
 import AuthWrapper from './src/components/AuthWrapper';
-import ProfileScreen from './src/components/ProfileScreen';
+import ProfileScreen from './src/screens/profile';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import FontLoader from './src/components/FontLoader';
+import FontLoader from './src/components/app/FontLoader';
 import { getThemeColors } from './src/config/colors';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import store, { RootState } from './src/store';
-import { setActiveTab, TAB_KEYS } from './src/store/navigationSlice';
+import { TAB_KEYS } from './src/store/navigationSlice';
 import { setDarkMode } from './src/store/themeSlice';
-import MusicPlayer from './src/components/MusicPlayer';
 import { MusicPlayerProvider } from './src/contexts/MusicPlayerContext';
 import HomeScreen from './src/screens/HomeScreen';
 import LearnScreen from './src/screens/LearnScreen';
-import { BottomNavigation } from './src/components/shared';
+import MusicPlayerScreen from './src/screens/music-player';
+import BottomNavigation from './src/components/app/navigation/BottomNavigation';
 
 function MainApp(): React.JSX.Element {
   const systemColorScheme = useColorScheme();
@@ -35,60 +35,28 @@ function MainApp(): React.JSX.Element {
 
   const themeColors = getThemeColors(isDarkMode);
 
-  const backgroundStyle = {
-    backgroundColor: themeColors.background,
-  };
-
-  const renderHomeScreen = () => <HomeScreen />;
-
-  const renderMeditateScreen = () => (
-    <View style={styles.tabContent}>
-      <MusicPlayer />
-    </View>
-  );
-
-  const renderLearnScreen = () => <LearnScreen />;
-
-  const renderProfileScreen = () => (
-    <ProfileScreen onBack={() => dispatch(setActiveTab(TAB_KEYS.HOME))} />
-  );
-
   const renderActiveTab = () => {
     switch (activeTab) {
       case TAB_KEYS.HOME:
-        return renderHomeScreen();
+        return <HomeScreen />;
       case TAB_KEYS.AUDIO:
-        return renderMeditateScreen();
+        return <MusicPlayerScreen />;
       case TAB_KEYS.LEARN:
-        return renderLearnScreen();
+        return <LearnScreen />;
       case TAB_KEYS.PROFILE:
-        return renderProfileScreen();
+        return <ProfileScreen />;
       default:
-        return renderHomeScreen();
+        return <HomeScreen />;
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, backgroundStyle]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor="transparent"
         translucent
       />
-      
-      <View style={[
-        styles.gradientBackground,
-        {
-          backgroundColor: themeColors.background,
-        }
-      ]}>
-        <View style={[
-          styles.gradientOverlay,
-          {
-            backgroundColor: themeColors.overlay,
-          }
-        ]} />
-      </View>
       <View style={styles.mainContent}>
         <MusicPlayerProvider>
           {renderActiveTab()}
@@ -126,28 +94,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  gradientBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  gradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
   mainContent: {
     flex: 1,
-  },
-  tabContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
   },
 });
 
