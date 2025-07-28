@@ -1,24 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, FlatList, Alert } from 'react-native';
 import TrackPlayer from 'react-native-track-player';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Slider from '@react-native-community/slider';
 import { COLORS, getThemeColors, getBrandColors } from '@/config/colors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import meditationBuddha from '../../assets/meditation_buddha.mp3';
+import { apiService, AudioFile } from '@/services/api';
 
 // Helper function to format time in MM:SS format
 const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
-const TRACK = {
-  id: 'meditation_buddha',
-  url: meditationBuddha,
-  title: 'Om Mane Padme Hum',
-  artist: 'Guras',
 };
 
 const SLIDER_WIDTH = 320;
@@ -31,6 +24,15 @@ const MusicPlayer: React.FC = () => {
   const [sliderValue, setSliderValue] = useState(0);
   const [pendingSeek, setPendingSeek] = useState<number | null>(null);
   const [isSliding, setIsSliding] = useState(false);
+  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [currentTrack, setCurrentTrack] = useState<{
+    id: string;
+    url: string;
+    title: string;
+    artist: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const themeColors = getThemeColors(false); // Assuming light mode
   const brandColors = getBrandColors();
@@ -45,15 +47,22 @@ const MusicPlayer: React.FC = () => {
     title: {
       fontSize: 18,
       fontWeight: '600',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    trackPosition: {
+      fontSize: 14,
       marginBottom: 12,
+      textAlign: 'center',
     },
     spacer: {
-      flex: 1.5,
+      flex: 2,
     },
     progressContainer: {
       alignItems: 'center',
       width: '90%',
-      marginBottom: 40, // More space from bottom
+      marginBottom: 0, // More space from bottom
+      marginTop: 20, // Add some space above progress bar
     },
     timeRow: {
       flexDirection: 'row',
@@ -118,8 +127,14 @@ const MusicPlayer: React.FC = () => {
       elevation: 4,
       zIndex: 1000,
     },
+    controlsContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 32,
+      marginTop: 20,
+    },
     playPauseButton: {
-      marginTop: 8,
       padding: 12,
       borderRadius: 24,
       shadowColor: shadowColor,
@@ -130,6 +145,10 @@ const MusicPlayer: React.FC = () => {
       shadowOpacity: 0.25,
       shadowRadius: 4,
       elevation: 4,
+    },
+    navButton: {
+      padding: 8,
+      borderRadius: 16,
     },
     progressBarWrapper: {
       width: '100%',
@@ -184,6 +203,84 @@ const MusicPlayer: React.FC = () => {
     }
   }, [progress.position, pendingSeek]);
 
+  // Load audio files from API
+  const loadAudioFiles = async () => {
+    setLoading(true);
+    try {
+      const response = await apiService.getAudioFiles();
+      if (response.data) {
+        setAudioFiles(response.data.files);
+        // Auto-load first track when files are loaded (but don't auto-play)
+        if (response.data.files.length > 0) {
+          await loadTrack(response.data.files[0], 0);
+        }
+      } else if (response.error) {
+        console.error('Failed to load audio files:', response.error);
+        Alert.alert('Error', 'Failed to load audio files from server');
+      }
+    } catch (error) {
+      console.error('Error loading audio files:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load audio files on component mount
+  useEffect(() => {
+    loadAudioFiles();
+  }, []);
+
+  // Load track into player
+  const loadTrack = async (audioFile: AudioFile, index: number) => {
+    try {
+      // Create track object for TrackPlayer
+      const track = {
+        id: audioFile.fileName,
+        url: audioFile.downloadUrl,
+        title: audioFile.fileName.replace(/\.[^/.]+$/, ""), // Remove file extension
+        artist: 'Guras',
+      };
+
+      setCurrentTrack(track);
+      setCurrentTrackIndex(index);
+
+      // Stop current playback and load new track
+      await TrackPlayer.reset();
+      await TrackPlayer.add(track);
+    } catch (error) {
+      console.error('Error loading audio file:', error);
+      Alert.alert('Error', 'Failed to load audio file');
+    }
+  };
+
+  // Navigate to next track
+  const nextTrack = async () => {
+    if (audioFiles.length === 0) return;
+    
+    const wasPlaying = isPlaying;
+    const nextIndex = (currentTrackIndex + 1) % audioFiles.length;
+    await loadTrack(audioFiles[nextIndex], nextIndex);
+    
+    // If previous track was playing, start playing the new track
+    if (wasPlaying) {
+      await TrackPlayer.play();
+    }
+  };
+
+  // Navigate to previous track
+  const previousTrack = async () => {
+    if (audioFiles.length === 0) return;
+    
+    const wasPlaying = isPlaying;
+    const prevIndex = currentTrackIndex === 0 ? audioFiles.length - 1 : currentTrackIndex - 1;
+    await loadTrack(audioFiles[prevIndex], prevIndex);
+    
+    // If previous track was playing, start playing the new track
+    if (wasPlaying) {
+      await TrackPlayer.play();
+    }
+  };
+
   // Update slider value from progress only when not sliding and not pending seek
   useEffect(() => {
     if (progress.duration > 0 && !isSliding && pendingSeek === null) {
@@ -194,13 +291,54 @@ const MusicPlayer: React.FC = () => {
   const effectiveWidth = SLIDER_WIDTH - 2 * TRACK_OFFSET;
   const thumbPosition = TRACK_OFFSET + ((pendingSeek !== null ? pendingSeek : isSliding ? sliderValue : sliderValue) / (progress.duration || 1)) * effectiveWidth;
 
+    // Get current track info for display
+  const getCurrentTrackInfo = () => {
+    if (!currentTrack || audioFiles.length === 0) {
+      return { title: 'No tracks available', position: '0 / 0' };
+    }
+    return {
+      title: currentTrack.title,
+      position: `${currentTrackIndex + 1} / ${audioFiles.length}`
+    };
+  };
+
+  const trackInfo = getCurrentTrackInfo();
+
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: themeColors.textPrimary }]}>{TRACK.title}</Text>
+      <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+        {trackInfo.title}
+      </Text>
+      
+      {/* Track Position */}
+      <Text style={[styles.trackPosition, { color: themeColors.textSecondary }]}>
+        {trackInfo.position}
+      </Text>
+
       <View style={styles.spacer} />
-      <TouchableOpacity style={styles.playPauseButton} onPress={togglePlayback}>
-        <FontAwesome name={isPlaying ? 'pause' : 'play'} size={32} color={brandColors.primary} />
-      </TouchableOpacity>
+      
+      {/* Playback Controls */}
+      <View style={styles.controlsContainer}>
+        <TouchableOpacity 
+          style={[styles.navButton, { opacity: audioFiles.length <= 1 ? 0.3 : 1 }]} 
+          onPress={previousTrack}
+          disabled={audioFiles.length <= 1}
+        >
+          <FontAwesome name="step-backward" size={24} color={brandColors.primary} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.playPauseButton} onPress={togglePlayback}>
+          <FontAwesome name={isPlaying ? 'pause' : 'play'} size={32} color={brandColors.primary} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.navButton, { opacity: audioFiles.length <= 1 ? 0.3 : 1 }]} 
+          onPress={nextTrack}
+          disabled={audioFiles.length <= 1}
+        >
+          <FontAwesome name="step-forward" size={24} color={brandColors.primary} />
+        </TouchableOpacity>
+      </View>
       <View style={styles.progressContainer}>
         <View style={styles.timeRow}>
           <Text style={[styles.timeText, { color: themeColors.textSecondary }]}> 

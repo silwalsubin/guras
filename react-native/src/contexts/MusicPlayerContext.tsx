@@ -1,13 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import TrackPlayer, { State, useProgress, Capability, Event } from 'react-native-track-player';
-import meditationBuddha from '../../assets/meditation_buddha.mp3';
-
-const TRACK = {
-  id: 'meditation_buddha',
-  url: meditationBuddha,
-  title: 'Om Mane Padme Hum',
-  artist: 'Guras',
-};
 
 interface MusicPlayerContextType {
   isSetup: boolean;
@@ -53,11 +45,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
         if (!message.includes('already been initialized')) throw error;
       }
-      const queue = await TrackPlayer.getQueue();
-      if (queue.length === 0) {
-        await TrackPlayer.reset();
-        await TrackPlayer.add([TRACK]);
-      }
+      // Initialize with empty queue - tracks will be added dynamically from API
+      await TrackPlayer.reset();
       if (isMounted) setIsSetup(true);
     }
     setup();
