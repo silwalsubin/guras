@@ -15,9 +15,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiService } from '@/services/api';
 import { UserProfile } from '@/types/user';
 import SignOutButton from './components/SignOutButton';
+import NotificationSettings from './components/NotificationSettings';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
+import { toggleDarkMode } from '@/store/themeSlice';
 import { RootState } from '@/store';
 
 const ProfileScreen: React.FC = () => {
@@ -154,6 +156,24 @@ const ProfileScreen: React.FC = () => {
             </>
           )}
         </View>
+      </View>
+
+      {/* Notification Settings */}
+      <View style={styles.profileSection}>
+        <NotificationSettings />
+      </View>
+
+      {/* Theme Toggle Button (Temporary for testing) */}
+      <View style={styles.refreshSection}>
+        <TouchableOpacity 
+          style={[styles.refreshButton, { backgroundColor: brandColors.primary }]}
+          onPress={() => dispatch(toggleDarkMode())}
+        >
+          <Feather name={isDarkMode ? "sun" : "moon"} size={20} color={themeColors.card} />
+          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
+            {isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Refresh Button */}

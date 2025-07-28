@@ -13,6 +13,7 @@ import {
   ProgressCard,
   QuickActionCard,
   RecentSessionsCard,
+  DailyQuoteCard,
   ProgressData,
 } from '@/components/shared';
 
@@ -44,6 +45,11 @@ const HomeScreen: React.FC = () => {
       <AppHeader 
         onProfilePress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))} 
       />
+
+      {/* Daily Quote */}
+      <View style={styles.quoteSection}>
+        <DailyQuoteCard />
+      </View>
 
       {/* Quick Start Card */}
       <View style={styles.quickStartSection}>
@@ -99,6 +105,10 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
+  },
+  quoteSection: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   quickStartSection: {
     paddingHorizontal: 20,

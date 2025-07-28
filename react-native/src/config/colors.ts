@@ -37,7 +37,7 @@ export const COLORS = {
   BACKGROUND_LIGHT: '#F0F8FF',
   BACKGROUND_LIGHT_SECONDARY: '#E6F3FF',
   BACKGROUND_DARK: '#1A1A2E',
-  BACKGROUND_DARK_SECONDARY: '#16213E',
+  BACKGROUND_DARK_SECONDARY: '#252540',
   
   // Text colors
   TEXT_PRIMARY_LIGHT: '#2D3748',
@@ -55,11 +55,11 @@ export const COLORS = {
   
   // Navigation colors
   NAV_ACTIVE: '#14B8A6',
-  NAV_INACTIVE: '#A0AEC0',
+  NAV_INACTIVE: '#718096',
   
   // Card colors
   CARD_LIGHT: '#FFFFFF',
-  CARD_DARK: '#1A1A2E',
+  CARD_DARK: '#2A2A3E',
   
   // Shadow colors
   SHADOW: '#000000',
@@ -86,7 +86,7 @@ export const getThemeColors = (isDarkMode: boolean) => ({
   
   // Navigation colors
   navActive: COLORS.NAV_ACTIVE,
-  navInactive: COLORS.NAV_INACTIVE,
+  navInactive: isDarkMode ? COLORS.TEXT_SECONDARY_DARK : COLORS.NAV_INACTIVE,
 });
 
 // Semantic color getters
