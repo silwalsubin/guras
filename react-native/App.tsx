@@ -22,6 +22,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import LearnScreen from './src/screens/LearnScreen';
 import MusicPlayerScreen from './src/screens/music-player';
 import BottomNavigation from './src/components/app/navigation/BottomNavigation';
+import notificationService from './src/services/notificationService';
 
 function MainApp(): React.JSX.Element {
   const systemColorScheme = useColorScheme();
@@ -32,6 +33,20 @@ function MainApp(): React.JSX.Element {
   useEffect(() => {
     dispatch(setDarkMode(systemColorScheme === 'dark'));
   }, [systemColorScheme, dispatch]);
+
+  // Initialize notification service
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        await notificationService.initialize();
+        console.log('Notification service initialized');
+      } catch (error) {
+        console.error('Failed to initialize notification service:', error);
+      }
+    };
+
+    initializeNotifications();
+  }, []);
 
   const themeColors = getThemeColors(isDarkMode);
 
