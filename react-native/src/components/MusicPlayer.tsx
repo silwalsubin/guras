@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, FlatList, Alert } from 'react-native';
-import TrackPlayer from 'react-native-track-player';
+import TrackPlayer, { State } from 'react-native-track-player';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Slider from '@react-native-community/slider';
 import { COLORS, getThemeColors, getBrandColors } from '@/config/colors';
@@ -210,9 +210,19 @@ const MusicPlayer: React.FC = () => {
       const response = await apiService.getAudioFiles();
       if (response.data) {
         setAudioFiles(response.data.files);
-        // Auto-load first track when files are loaded (but don't auto-play)
+        // Only auto-load first track if TrackPlayer doesn't have any tracks
         if (response.data.files.length > 0) {
-          await loadTrack(response.data.files[0], 0);
+          try {
+            const queue = await TrackPlayer.getQueue();
+            const playerState = await TrackPlayer.getState();
+            // Only load if no tracks in queue and not playing
+            if (queue.length === 0 && playerState !== State.Playing) {
+              await loadTrack(response.data.files[0], 0);
+            }
+          } catch (error) {
+            // If TrackPlayer isn't ready, just load the first track
+            await loadTrack(response.data.files[0], 0);
+          }
         }
       } else if (response.error) {
         console.error('Failed to load audio files:', response.error);
