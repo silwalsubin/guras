@@ -9,21 +9,20 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { useColorScheme } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiService } from '@/services/api';
 import { UserProfile } from '@/types/user';
-import SignOutButton from './SignOutButton';
+import SignOutButton from './components/SignOutButton';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { getThemeColors, getBrandColors } from '@/config/colors';
+import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
+import { RootState } from '@/store';
 
-interface ProfileScreenProps {
-  onBack: () => void;
-}
-
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
-  const isDarkMode = useColorScheme() === 'dark';
+const ProfileScreen: React.FC = () => {
+  const dispatch = useDispatch();
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +83,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
           </View>
           <TouchableOpacity 
             style={[styles.backButton, { backgroundColor: themeColors.border }]}
-            onPress={onBack}
+            onPress={() => dispatch(setActiveTab(TAB_KEYS.HOME))}
           >
             <Text style={[styles.backButtonText, { color: themeColors.textPrimary }]}>←</Text>
           </TouchableOpacity>
@@ -114,7 +113,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
         </View>
         <TouchableOpacity 
           style={[styles.backButton, { backgroundColor: themeColors.border }]}
-          onPress={onBack}
+          onPress={() => dispatch(setActiveTab(TAB_KEYS.HOME))}
         >
           <Text style={[styles.backButtonText, { color: themeColors.textPrimary }]}>←</Text>
         </TouchableOpacity>

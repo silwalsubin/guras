@@ -210,9 +210,39 @@ const MusicPlayer: React.FC = () => {
       const response = await apiService.getAudioFiles();
       if (response.data) {
         setAudioFiles(response.data.files);
-        // Auto-load first track if we have files and no current track
+        
+        // Only auto-load first track if TrackPlayer has no tracks loaded
         if (response.data.files.length > 0 && !currentTrack) {
-          await loadTrack(response.data.files[0], 0);
+          try {
+            const queue = await TrackPlayer.getQueue();
+            const playerState = await TrackPlayer.getState();
+            
+            // Only load track if no tracks in queue and not playing
+            if (queue.length === 0 && playerState !== State.Playing && playerState !== State.Paused) {
+              await loadTrack(response.data.files[0], 0);
+            } else if (queue.length > 0) {
+              // If TrackPlayer has tracks, sync component state with current track
+              const currentTrackIndex = await TrackPlayer.getCurrentTrack();
+              if (currentTrackIndex !== null && currentTrackIndex >= 0) {
+                const currentTrackInfo = await TrackPlayer.getTrack(currentTrackIndex);
+                if (currentTrackInfo) {
+                  const trackIndex = response.data.files.findIndex(file => file.fileName === currentTrackInfo.id);
+                  if (trackIndex !== -1) {
+                    setCurrentTrack({
+                      id: currentTrackInfo.id || '',
+                      url: currentTrackInfo.url || '',
+                      title: currentTrackInfo.title || '',
+                      artist: currentTrackInfo.artist || '',
+                    });
+                    setCurrentTrackIndex(trackIndex);
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            // If TrackPlayer methods fail, fall back to loading first track
+            await loadTrack(response.data.files[0], 0);
+          }
         }
       } else if (response.error) {
         console.error('Failed to load audio files:', response.error);
