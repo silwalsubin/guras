@@ -2,6 +2,25 @@ import { getAuth } from '@react-native-firebase/auth';
 import { UserProfile } from '@/types/user';
 import { API_CONFIG } from '@/config/api';
 
+// Audio file types
+export interface AudioFile {
+  fileName: string;
+  downloadUrl: string;
+  expiresAt: string;
+}
+
+export interface AudioFilesResponse {
+  files: AudioFile[];
+  totalCount: number;
+  expirationMinutes: number;
+}
+
+export interface UploadUrlResponse {
+  uploadUrl: string;
+  fileName: string;
+  expiresAt: string;
+}
+
 interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -57,6 +76,51 @@ class ApiService {
 
   async getProfile(): Promise<ApiResponse<UserProfile>> {
     return this.makeRequest<UserProfile>(API_CONFIG.ENDPOINTS.PROFILE);
+  }
+
+  // Audio file management methods
+  async getAudioFiles(expirationMinutes: number = 60): Promise<ApiResponse<AudioFilesResponse>> {
+    return this.makeRequest<AudioFilesResponse>(
+      `/api/audio/audio-files?expirationMinutes=${expirationMinutes}`
+    );
+  }
+
+  async getUploadUrl(fileName: string, expirationMinutes: number = 15): Promise<ApiResponse<UploadUrlResponse>> {
+    return this.makeRequest<UploadUrlResponse>('/api/audio/upload-url', {
+      method: 'POST',
+      body: JSON.stringify({
+        fileName,
+        expirationMinutes
+      })
+    });
+  }
+
+  async deleteAudioFile(fileName: string): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest<{ message: string }>(`/api/audio/${encodeURIComponent(fileName)}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async checkFileExists(fileName: string): Promise<ApiResponse<{ exists: boolean }>> {
+    return this.makeRequest<{ exists: boolean }>(`/api/audio/${encodeURIComponent(fileName)}/exists`);
+  }
+
+  // Upload file directly to S3 using pre-signed URL
+  async uploadFileToS3(uploadUrl: string, file: any, contentType: string): Promise<boolean> {
+    try {
+      const response = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': contentType,
+        },
+        body: file,
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error('Error uploading file to S3:', error);
+      return false;
+    }
   }
 }
 
