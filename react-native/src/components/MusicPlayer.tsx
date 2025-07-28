@@ -210,19 +210,9 @@ const MusicPlayer: React.FC = () => {
       const response = await apiService.getAudioFiles();
       if (response.data) {
         setAudioFiles(response.data.files);
-        // Only auto-load first track if TrackPlayer doesn't have any tracks
-        if (response.data.files.length > 0) {
-          try {
-            const queue = await TrackPlayer.getQueue();
-            const playerState = await TrackPlayer.getState();
-            // Only load if no tracks in queue and not playing
-            if (queue.length === 0 && playerState !== State.Playing) {
-              await loadTrack(response.data.files[0], 0);
-            }
-          } catch (error) {
-            // If TrackPlayer isn't ready, just load the first track
-            await loadTrack(response.data.files[0], 0);
-          }
+        // Auto-load first track if we have files and no current track
+        if (response.data.files.length > 0 && !currentTrack) {
+          await loadTrack(response.data.files[0], 0);
         }
       } else if (response.error) {
         console.error('Failed to load audio files:', response.error);
