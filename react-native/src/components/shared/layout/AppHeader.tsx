@@ -9,7 +9,7 @@ interface AppHeaderProps {
   onProfilePress: () => void;
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({ onProfilePress }) => {
+const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
@@ -21,7 +21,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onProfilePress }) => {
           <Text style={styles.logoText}>🧘</Text>
         </View>
         <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
-          Guras
+          guras
         </Text>
       </View>
       <TouchableOpacity 

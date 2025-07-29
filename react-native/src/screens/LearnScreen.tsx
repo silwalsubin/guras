@@ -17,7 +17,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
 import { RootState } from '@/store';
 
-const LearnScreen: React.FC = () => {
+const LearnScreen = () => {
   const dispatch = useDispatch();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mainTitle: {
-    ...TYPOGRAPHY.H2,
+    ...TYPOGRAPHY.H4,
     marginBottom: 8,
     textAlign: 'center',
   },
