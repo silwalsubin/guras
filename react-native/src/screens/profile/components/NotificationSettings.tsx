@@ -139,7 +139,7 @@ const NotificationSettings: React.FC = () => {
       {preferences.enabled && (
         <View style={[styles.settingRow, { borderBottomColor: themeColors.border }]}>
           <View style={styles.settingContent}>
-            <Text style={[styles.settingTitle, { color: themeColors.text }]}>Quiet Hours</Text>
+            <Text style={[styles.settingTitle, { color: themeColors.textPrimary }]}>Quiet Hours</Text>
             <Text style={[styles.settingDescription, { color: themeColors.textSecondary }]}>
               No updates between {preferences.quietHours.start} - {preferences.quietHours.end}
             </Text>
@@ -150,7 +150,7 @@ const NotificationSettings: React.FC = () => {
       {/* Test Button */}
       {preferences.enabled && (
         <TouchableOpacity
-          style={[styles.testButton, { backgroundColor: themeColors.primary }]}
+          style={[styles.testButton, { backgroundColor: brandColors.primary }]}
           onPress={sendTestNotification}
         >
           <Text style={[styles.testButtonText, { color: themeColors.background }]}>
@@ -161,7 +161,7 @@ const NotificationSettings: React.FC = () => {
 
       {/* System Info */}
       <View style={styles.systemInfo}>
-        <Text style={[styles.systemTitle, { color: themeColors.text }]}>System Info</Text>
+        <Text style={[styles.systemTitle, { color: themeColors.textPrimary }]}>System Info</Text>
         <Text style={[styles.systemDescription, { color: themeColors.textSecondary }]}>
           This is a simplified version that updates quotes automatically based on your selected frequency. 
           The quotes will refresh in the background and update on your Home screen.
@@ -176,7 +176,7 @@ const NotificationSettings: React.FC = () => {
         
         <View style={styles.statusRow}>
           <Text style={[styles.statusLabel, { color: themeColors.textSecondary }]}>Updates:</Text>
-          <Text style={[styles.statusValue, { color: themeColors.text }]}>
+          <Text style={[styles.statusValue, { color: themeColors.textPrimary }]}>
             {preferences.frequency === 'hourly' ? 'Every hour' : 
              preferences.frequency === 'twice-daily' ? 'Twice per day' : 'Once per day'}
           </Text>
