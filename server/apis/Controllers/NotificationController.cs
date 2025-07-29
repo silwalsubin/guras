@@ -87,7 +87,7 @@ namespace apis.Controllers
                         Notification = new AndroidNotification()
                         {
                             Sound = "default",
-                            Priority = NotificationPriority.High,
+                            Priority = NotificationPriority.HIGH,
                             ChannelId = "daily-quotes"
                         }
                     },
@@ -144,7 +144,7 @@ namespace apis.Controllers
                         Notification = new AndroidNotification()
                         {
                             Sound = "default",
-                            Priority = NotificationPriority.High,
+                            Priority = NotificationPriority.HIGH,
                             ChannelId = "daily-quotes"
                         }
                     },
