@@ -1,5 +1,6 @@
 using apis.Authentication;
 using apis.Configuration;
+using apis.Services;
 using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,9 @@ builder.Services.AddAuthentication("Firebase")
 
 // Configure authorization
 builder.Services.AddAuthorization();
+
+// Add background services
+builder.Services.AddHostedService<NotificationSchedulerService>();
 
 var app = builder.Build();
 

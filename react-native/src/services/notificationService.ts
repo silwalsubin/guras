@@ -1,5 +1,6 @@
 import { Alert, Platform, PermissionsAndroid } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
+import { API_CONFIG } from '@/config/api';
 import quotesService, { Quote, NotificationPreferences } from './quotesService';
 
 // In-memory storage for notifications - no AsyncStorage dependency
@@ -33,7 +34,8 @@ const safeNotificationGetItem = async (key: string): Promise<string | null> => {
 const NOTIFICATION_STORAGE_KEYS = {
   NOTIFICATION_PERMISSION: 'notification_permission',
   LAST_NOTIFICATION_TIME: 'last_notification_time',
-  NOTIFICATION_SCHEDULE: 'notification_schedule'
+  NOTIFICATION_SCHEDULE: 'notification_schedule',
+  FCM_TOKEN: 'fcm_token'
 };
 
 export interface NotificationData {
@@ -46,12 +48,160 @@ class NotificationService {
   private static instance: NotificationService;
   private backgroundTaskId: NodeJS.Timeout | null = null;
   private initialized = false;
+  private fcmToken: string | null = null;
 
   static getInstance(): NotificationService {
     if (!NotificationService.instance) {
       NotificationService.instance = new NotificationService();
     }
     return NotificationService.instance;
+  }
+
+  // Initialize Firebase Cloud Messaging
+  private async initializeFCM(): Promise<void> {
+    try {
+      console.log('🔥 Initializing Firebase Cloud Messaging...');
+
+      // Check if Firebase messaging is available
+      if (!messaging) {
+        throw new Error('Firebase messaging module not available');
+      }
+
+      // Register the app with FCM
+      await messaging().registerDeviceForRemoteMessages();
+
+      // Get the FCM token
+      const token = await messaging().getToken();
+      if (token) {
+        this.fcmToken = token;
+        await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
+        console.log('📱 FCM Token obtained:', token.substring(0, 20) + '...');
+
+        // Send token to server for user registration
+        await this.registerTokenWithServer(token);
+      } else {
+        console.warn('⚠️ No FCM token received');
+      }
+
+      // Listen for token refresh
+      const unsubscribeTokenRefresh = messaging().onTokenRefresh((token) => {
+        this.fcmToken = token;
+        safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
+        console.log('🔄 FCM Token refreshed:', token.substring(0, 20) + '...');
+        this.registerTokenWithServer(token);
+      });
+
+      // Handle foreground messages
+      const unsubscribeForeground = messaging().onMessage(async (remoteMessage) => {
+        console.log('📬 FCM message received in foreground:', remoteMessage);
+        this.handleForegroundMessage(remoteMessage);
+      });
+
+      // Handle background messages
+      messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+        console.log('📬 FCM message received in background:', remoteMessage);
+        return Promise.resolve();
+      });
+
+      console.log('✅ FCM initialized successfully');
+    } catch (error) {
+      console.warn('⚠️ FCM initialization failed:', error);
+      console.log('📱 Continuing with local notification features only');
+      // Continue without FCM - local features still work
+    }
+  }
+
+  // Register FCM token with server
+  private async registerTokenWithServer(token: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/register-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          platform: Platform.OS,
+          userId: 'anonymous-user', // TODO: Get from auth context when user is signed in
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ FCM token registered with server');
+      } else {
+        console.warn('⚠️ Failed to register FCM token with server');
+      }
+    } catch (error) {
+      console.warn('⚠️ Error registering FCM token with server:', error);
+    }
+  }
+
+  // Handle foreground FCM messages
+  private handleForegroundMessage(remoteMessage: any): void {
+    try {
+      const { notification, data } = remoteMessage;
+      
+      if (notification) {
+        // Show in-app notification or alert
+        Alert.alert(
+          notification.title || '🧘 Daily Wisdom',
+          notification.body || 'New quote available',
+          [
+            { text: 'Dismiss', style: 'cancel' },
+            { text: 'View', onPress: () => this.handleNotificationTap(data) }
+          ]
+        );
+      }
+
+      // Update quote if it's a quote notification
+      if (data && data.type === 'daily_quote' && data.quote) {
+        try {
+          const quote = JSON.parse(data.quote);
+          quotesService.setCurrentQuote(quote);
+        } catch (parseError) {
+          console.warn('⚠️ Error parsing quote from FCM data:', parseError);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error handling foreground message:', error);
+    }
+  }
+
+  // Handle notification tap
+  private handleNotificationTap(data: any): void {
+    console.log('👆 Notification tapped:', data);
+    // Navigate to specific screen or update app state based on notification data
+  }
+
+  // Send FCM notification via server
+  private async sendFCMNotification(notificationData: {
+    title: string;
+    body: string;
+    data: { [key: string]: string };
+  }): Promise<void> {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...notificationData,
+          token: this.fcmToken,
+          platform: Platform.OS,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('📤 FCM notification sent successfully:', result);
+    } catch (error) {
+      console.error('❌ Failed to send FCM notification via server:', error);
+      throw error;
+    }
   }
 
   // Initialize notification service
@@ -61,7 +211,8 @@ class NotificationService {
     try {
       console.log('🔔 Initializing push notifications...');
       
-      console.log('📱 Push notifications configured (using Firebase messaging)');
+      // Initialize FCM
+      await this.initializeFCM();
       
       // Request permissions
       const hasPermission = await this.requestPermission();
@@ -298,16 +449,24 @@ class NotificationService {
       console.log(`🔔 Sending push notification: ${title} - ${body.substring(0, 50)}...`);
       
             try {
-        // Log notification details (local notifications work in background)
-        console.log(`🔔 Sending ${Platform.OS === 'ios' ? 'iOS' : 'Android'} notification:`);
-        console.log(`📝 Title: ${title}`);
-        console.log(`📝 Body: ${body.substring(0, 100)}...`);
+        console.log(`🔔 Sending FCM notification: ${title}`);
         
-        // For now, just update the quote in the app
-        // Real notifications would be handled by the system scheduler
-        console.log(`📱 ${Platform.OS === 'ios' ? 'iOS' : 'Android'} notification would be sent!`);
+        // Send notification via server API
+        await this.sendFCMNotification({
+          title,
+          body,
+          data: {
+            quote: JSON.stringify(quote),
+            type: type,
+            timestamp: Date.now().toString()
+          }
+        });
+        
+        console.log('✅ FCM notification sent via server');
       } catch (notificationError) {
-        console.error('Error preparing notification:', notificationError);
+        console.error('❌ Error sending FCM notification:', notificationError);
+        // Fallback: still update the quote in the app
+        console.log('📝 Quote updated in app despite notification error');
       }
       
       // Always update the current quote in the app
