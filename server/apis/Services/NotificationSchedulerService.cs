@@ -106,7 +106,7 @@ namespace apis.Services
                         Notification = new AndroidNotification()
                         {
                             Sound = "default",
-                            Priority = NotificationPriority.High,
+                            Priority = NotificationPriority.HIGH,
                             ChannelId = "daily-quotes"
                         }
                     },
