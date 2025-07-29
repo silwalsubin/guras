@@ -7,7 +7,7 @@ import { TAB_KEYS } from '@/store/navigationSlice';
 import { RootState } from '@/store';
 import FooterMenuItem from './components/FooterMenuItem';
 
-const BottomNavigation: React.FC = () => {
+const BottomNavigation = () => {
   const insets = useSafeAreaInsets();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
@@ -17,7 +17,9 @@ const BottomNavigation: React.FC = () => {
       style={[
         styles.bottomNav,
         {
-          backgroundColor: themeColors.card,
+          backgroundColor: isDarkMode 
+            ? 'rgba(20, 20, 20, 0.98)' // Very blurry dark glass effect
+            : 'rgba(250, 250, 250, 0.98)', // Very blurry light glass effect
           borderTopColor: themeColors.border,
           paddingBottom: insets.bottom || 16,
         },
@@ -54,6 +56,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.1)', // Will be overridden by theme
+    // Glass effect properties
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -6,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 16, // Android shadow
   },
 });
 

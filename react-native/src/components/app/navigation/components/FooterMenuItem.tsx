@@ -15,13 +15,14 @@ interface FooterMenuItemProps {
   solid?: boolean;
 }
 
-const FooterMenuItem: React.FC<FooterMenuItemProps> = ({
+const FooterMenuItem = ({
   tabKey,
   iconName,
   iconType,
   solid = false,
-}) => {
-  const themeColors = getThemeColors(false);
+}: FooterMenuItemProps) => {
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  const themeColors = getThemeColors(isDarkMode);
   const activeTab = useSelector((state: RootState) => state.navigation.activeTab);
   const dispatch = useDispatch();
 
@@ -37,7 +38,10 @@ const FooterMenuItem: React.FC<FooterMenuItemProps> = ({
 
   return (
     <TouchableOpacity
-      style={[styles.navItem, isActive && styles.activeNavItem]}
+      style={[
+        styles.navItem, 
+        isActive && styles.activeNavItem
+      ]}
       onPress={handlePress}
     >
       {iconType === 'feather' ? (
@@ -57,7 +61,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   activeNavItem: {
-    // Add active styles if needed
+    // No additional styling to prevent layout shifts
   },
 });
 
