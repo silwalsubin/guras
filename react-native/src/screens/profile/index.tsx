@@ -32,6 +32,11 @@ const ProfileScreen: React.FC = () => {
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
 
+  // Check if user has a profile picture (from Firebase user or API profile)
+  const hasProfilePicture = (user?.photoURL && user.photoURL.length > 0) || 
+                          (profile?.photoUrl && profile.photoUrl.length > 0);
+  const profilePictureUrl = user?.photoURL || profile?.photoUrl;
+
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -77,7 +82,15 @@ const ProfileScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <View style={[styles.logo, { backgroundColor: brandColors.primary }]}>
-              <Text style={styles.logoText}>👤</Text>
+              {hasProfilePicture ? (
+                <Image 
+                  source={{ uri: profilePictureUrl }} 
+                  style={styles.logoImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={styles.logoText}>👤</Text>
+              )}
             </View>
             <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
               Profile
@@ -107,7 +120,15 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <View style={[styles.logo, { backgroundColor: brandColors.primary }]}>
-            <Text style={styles.logoText}>👤</Text>
+            {hasProfilePicture ? (
+              <Image 
+                source={{ uri: profilePictureUrl }} 
+                style={styles.logoImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={styles.logoText}>👤</Text>
+            )}
           </View>
           <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
             Profile
@@ -226,6 +247,11 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: 20,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
   },
   appName: {
     ...TYPOGRAPHY.H4,

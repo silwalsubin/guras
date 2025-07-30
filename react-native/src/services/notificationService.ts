@@ -67,20 +67,34 @@ class NotificationService {
         throw new Error('Firebase messaging module not available');
       }
 
+      // Check current permission status
+      const currentPermission = await messaging().hasPermission();
+      console.log('🔍 Current FCM permission status:', currentPermission);
+
       // Register the app with FCM
-      await messaging().registerDeviceForRemoteMessages();
+      try {
+        await messaging().registerDeviceForRemoteMessages();
+        console.log('✅ Successfully registered device for remote messages');
+      } catch (registerError) {
+        console.warn('⚠️ Failed to register device for remote messages:', registerError);
+        // Continue anyway - might already be registered
+      }
 
       // Get the FCM token
-      const token = await messaging().getToken();
-      if (token) {
-        this.fcmToken = token;
-        await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
-        console.log('📱 FCM Token obtained:', token.substring(0, 20) + '...');
+      try {
+        const token = await messaging().getToken();
+        if (token) {
+          this.fcmToken = token;
+          await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
+          console.log('📱 FCM Token obtained:', token.substring(0, 20) + '...');
 
-        // Send token to server for user registration
-        await this.registerTokenWithServer(token);
-      } else {
-        console.warn('⚠️ No FCM token received');
+          // Send token to server for user registration
+          await this.registerTokenWithServer(token);
+        } else {
+          console.warn('⚠️ No FCM token received');
+        }
+      } catch (tokenError) {
+        console.warn('⚠️ Failed to get FCM token:', tokenError);
       }
 
       // Listen for token refresh
@@ -240,20 +254,42 @@ class NotificationService {
         console.log('📱 Requesting iOS notification permissions...');
         
         try {
+          // First, check if we can register for remote notifications
+          const canRegister = await messaging().hasPermission();
+          console.log('🔍 Current iOS permission status:', canRegister);
+          
+          // Request permission with all options
           const authStatus = await messaging().requestPermission({
             alert: true,
             badge: true,
             sound: true,
+            announcement: false,
+            carPlay: false,
+            criticalAlert: false,
+            provisional: false,
           });
+          
+          console.log('📱 iOS permission request result:', authStatus);
           
           const granted = authStatus === messaging.AuthorizationStatus.AUTHORIZED || 
                          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+          
           await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.NOTIFICATION_PERMISSION, JSON.stringify(granted));
+          
+          if (granted) {
+            // Register for remote notifications
+            try {
+              await messaging().registerDeviceForRemoteMessages();
+              console.log('✅ Successfully registered for remote notifications');
+            } catch (registerError) {
+              console.warn('⚠️ Failed to register for remote notifications:', registerError);
+            }
+          }
           
           console.log('✅ iOS notification permission result:', granted, authStatus);
           return granted;
         } catch (firebaseError) {
-          console.warn('⚠️ Firebase messaging not available, falling back to basic permissions');
+          console.warn('⚠️ Firebase messaging not available, falling back to basic permissions:', firebaseError);
           // Fallback: assume permission granted for now
           await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.NOTIFICATION_PERMISSION, JSON.stringify(true));
           return true;
@@ -590,6 +626,59 @@ class NotificationService {
       console.log('✅ All notifications would be cancelled');
     } catch (error) {
       console.error('Error logging notification cancellation:', error);
+    }
+  }
+
+  // Debug function to check notification status
+  async debugNotificationStatus(): Promise<void> {
+    try {
+      console.log('🔍 === NOTIFICATION DEBUG INFO ===');
+      
+      // Check FCM availability
+      console.log('📱 Firebase messaging available:', !!messaging);
+      
+      // Check permission status
+      const hasPermission = await this.hasPermission();
+      console.log('🔔 Has permission:', hasPermission);
+      
+      // Check FCM token
+      console.log('🔑 FCM token exists:', !!this.fcmToken);
+      if (this.fcmToken) {
+        console.log('🔑 FCM token preview:', this.fcmToken.substring(0, 20) + '...');
+      }
+      
+      // Check stored token
+      const storedToken = await safeNotificationGetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN);
+      console.log('💾 Stored FCM token exists:', !!storedToken);
+      
+      // Check notification preferences
+      const preferences = await quotesService.getNotificationPreferences();
+      console.log('⚙️ Notification preferences:', preferences);
+      
+      // Check last notification time
+      const lastNotification = await safeNotificationGetItem(NOTIFICATION_STORAGE_KEYS.LAST_NOTIFICATION_TIME);
+      console.log('⏰ Last notification time:', lastNotification);
+      
+      // Check if scheduler is running
+      console.log('🔄 Scheduler running:', !!this.backgroundTaskId);
+      
+      console.log('🔍 === END DEBUG INFO ===');
+      
+      // Show alert with debug info
+      Alert.alert(
+        '🔍 Notification Debug Info',
+        `Permission: ${hasPermission ? '✅ Granted' : '❌ Denied'}\n` +
+        `FCM Token: ${this.fcmToken ? '✅ Available' : '❌ Missing'}\n` +
+        `Preferences: ${preferences.enabled ? '✅ Enabled' : '❌ Disabled'}\n` +
+        `Scheduler: ${this.backgroundTaskId ? '✅ Running' : '❌ Stopped'}\n\n` +
+        `If notifications aren't working:\n` +
+        `1. Check Settings → Notifications → Guras\n` +
+        `2. Ensure "Allow Notifications" is ON\n` +
+        `3. Try the "Test Quote Update" button`,
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('Error in debug function:', error);
     }
   }
 

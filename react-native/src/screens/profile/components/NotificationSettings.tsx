@@ -149,14 +149,25 @@ const NotificationSettings: React.FC = () => {
 
       {/* Test Button */}
       {preferences.enabled && (
-        <TouchableOpacity
-          style={[styles.testButton, { backgroundColor: brandColors.primary }]}
-          onPress={sendTestNotification}
-        >
-          <Text style={[styles.testButtonText, { color: themeColors.background }]}>
-            Test Quote Update
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.testButton, { backgroundColor: brandColors.primary }]}
+            onPress={sendTestNotification}
+          >
+            <Text style={[styles.testButtonText, { color: themeColors.background }]}>
+              Test Quote Update
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.debugButton, { backgroundColor: themeColors.border }]}
+            onPress={() => notificationService.debugNotificationStatus()}
+          >
+            <Text style={[styles.debugButtonText, { color: themeColors.textPrimary }]}>
+              Debug Notifications
+            </Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {/* System Info */}
@@ -243,6 +254,21 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   testButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  debugButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  debugButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },

@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useSelector } from 'react-redux';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { RootState } from '@/store';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppHeaderProps {
   onProfilePress: () => void;
@@ -13,6 +14,10 @@ const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
+  const { user } = useAuth();
+
+  // Check if user has a profile picture
+  const hasProfilePicture = user?.photoURL && user.photoURL.length > 0;
 
   return (
     <View style={styles.header}>
@@ -28,7 +33,15 @@ const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
         style={[styles.profileButton, { backgroundColor: themeColors.border }]}
         onPress={onProfilePress}
       >
-        <Text style={[styles.profileButtonText, { color: themeColors.textPrimary }]}>👤</Text>
+        {hasProfilePicture ? (
+          <Image 
+            source={{ uri: user.photoURL }} 
+            style={styles.profileImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <Text style={[styles.profileButtonText, { color: themeColors.textPrimary }]}>👤</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -67,9 +80,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   profileButtonText: {
     fontSize: 20,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
 });
 
