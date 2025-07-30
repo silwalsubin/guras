@@ -30,6 +30,8 @@
 - Resolve merge conflicts before proceeding with commits
 - Use GitHub Actions for all deployment tasks (never run deployment scripts locally)
 - For React Native, prefer iOS simulator over physical device for testing
+- **ONLY use npm commands, never use yarn**
+- **NEVER run iOS as background, always open a new terminal**
 
 ## Platform-Specific Considerations
 - Write cross-platform code when possible
@@ -90,4 +92,11 @@
 - Provide detailed explanations with step-by-step approaches
 - Mark TODO items as completed immediately after finishing tasks
 - Show code citations with proper line number format: ```startLine:endLine:filepath
-- Always follow up on linter errors and fix them properly 
+- Always follow up on linter errors and fix them properly
+
+## Problem-Solving Approach
+- **NEVER implement fallbacks before asking for permissions or solving the real problem**
+- Always identify and fix the root cause first
+- Ask for proper permissions before implementing workarounds
+- Solve the real problem rather than masking it with fallbacks
+- When debugging, show real errors instead of hiding them with fallback mechanisms 
