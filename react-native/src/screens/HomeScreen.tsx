@@ -98,6 +98,9 @@ const HomeScreen: React.FC = () => {
         <SectionHeader title="Recent Sessions" />
         <RecentSessionsCard />
       </View>
+
+      {/* Bottom padding to prevent content from being hidden by footer */}
+      <View style={styles.bottomPadding} />
     </ScrollView>
   );
 };
@@ -130,6 +133,10 @@ const styles = StyleSheet.create({
   recentSection: {
     paddingHorizontal: 20,
     marginBottom: 32,
+  },
+  // Add bottom padding to account for the footer
+  bottomPadding: {
+    height: 100, // Account for bottom navigation + safe area
   },
 });
 
