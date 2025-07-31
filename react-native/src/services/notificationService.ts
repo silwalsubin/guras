@@ -842,12 +842,12 @@ class NotificationService {
         `Preferences: ${preferences.enabled ? '✅ Enabled' : '❌ Disabled'}\n` +
         `Scheduler: ${this.backgroundTaskId ? '✅ Running' : '❌ Stopped'}\n\n` +
         `${isIOSSimulator ? '⚠️ FCM does not work on iOS Simulator!\n\n' : ''}` +
-        `${Platform.OS === 'ios' && !isIOSSimulator ? '🔐 CERTIFICATE ISSUE DETECTED!\n\n' : ''}` +
+        `${Platform.OS === 'ios' && !isIOSSimulator && !this.fcmToken ? '🔐 FCM Token Missing - Check Firebase Console\n\n' : ''}` +
         `If notifications aren't working:\n` +
         `1. Check Settings → Notifications → Guras\n` +
         `2. Ensure "Allow Notifications" is ON\n` +
         `3. Use a real device or TestFlight for FCM testing\n` +
-        `${Platform.OS === 'ios' && !isIOSSimulator ? '4. Fix certificate trust in Keychain Access' : ''}`,
+        `${Platform.OS === 'ios' && !isIOSSimulator && !this.fcmToken ? '4. Verify Firebase Console APNs setup' : ''}`,
         [{ text: 'OK' }]
       );
     } catch (error) {
@@ -897,6 +897,7 @@ class NotificationService {
       try {
         const app = require('@react-native-firebase/app').app();
         console.log('✅ Firebase app initialized:', app.name);
+        console.log('✅ Firebase app options:', app.options);
       } catch (firebaseError) {
         console.error('❌ Firebase app not initialized:', firebaseError);
         Alert.alert('❌ Firebase Error', 'Firebase app is not properly initialized');
@@ -949,30 +950,38 @@ class NotificationService {
           console.error('❌ FCM token generation failed:', tokenError);
           console.error('🔴 Token error details:', JSON.stringify(tokenError, null, 2));
           
-          // Check if it's a network issue
-          if (tokenError?.message && tokenError.message.includes('network')) {
-            Alert.alert(
-              '❌ Network Error',
-              'Failed to generate FCM token due to network issues. Please check your internet connection.',
-              [{ text: 'OK' }]
-            );
-          } else if (tokenError?.message && tokenError.message.includes('permission')) {
-            Alert.alert(
-              '❌ Permission Error',
-              'Failed to generate FCM token due to permission issues. Please check notification permissions.',
-              [{ text: 'OK' }]
-            );
-          } else {
-            Alert.alert(
-              '❌ FCM Token Failed',
-              'Failed to generate FCM token. This could be due to:\n\n' +
-              '1. Firebase configuration issues\n' +
-              '2. APNs certificate problems\n' +
-              '3. Network connectivity issues\n\n' +
-              'Error: ' + (tokenError?.message || 'Unknown error'),
-              [{ text: 'OK' }]
-            );
+          // More detailed error analysis
+          let errorMessage = 'Unknown error';
+          let errorType = 'Unknown';
+          
+          if (tokenError?.message) {
+            errorMessage = tokenError.message;
+            if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+              errorType = 'Network';
+            } else if (errorMessage.includes('permission')) {
+              errorType = 'Permission';
+            } else if (errorMessage.includes('certificate') || errorMessage.includes('APNs')) {
+              errorType = 'Certificate';
+            } else if (errorMessage.includes('configuration') || errorMessage.includes('Firebase')) {
+              errorType = 'Configuration';
+            }
           }
+          
+          console.log(`🔍 Error type: ${errorType}`);
+          console.log(`🔍 Error message: ${errorMessage}`);
+          
+          Alert.alert(
+            `❌ FCM Token Failed (${errorType})`,
+            `Failed to generate FCM token.\n\n` +
+            `Error: ${errorMessage}\n\n` +
+            `Possible solutions:\n` +
+            `${errorType === 'Network' ? '• Check internet connection\n' : ''}` +
+            `${errorType === 'Permission' ? '• Check notification permissions\n' : ''}` +
+            `${errorType === 'Certificate' ? '• Verify Firebase console APNs setup\n' : ''}` +
+            `${errorType === 'Configuration' ? '• Check Firebase configuration files\n' : ''}` +
+            `• Ensure you\'re using TestFlight, not simulator`,
+            [{ text: 'OK' }]
+          );
         }
         
         console.log('🧪 === END FCM TOKEN TEST ===');
