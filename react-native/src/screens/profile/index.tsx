@@ -21,6 +21,7 @@ import { getThemeColors, getBrandColors } from '@/config/colors';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
 import { toggleDarkMode } from '@/store/themeSlice';
 import { RootState } from '@/store';
+import notificationService from '@/services/notificationService';
 
 const ProfileScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -197,7 +198,7 @@ const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Refresh Button */}
+      {/* Debug Buttons */}
       <View style={styles.refreshSection}>
         <TouchableOpacity 
           style={[styles.refreshButton, { backgroundColor: themeColors.card }]}
@@ -206,6 +207,32 @@ const ProfileScreen: React.FC = () => {
           <Feather name="refresh-cw" size={20} color={themeColors.textPrimary} />
           <Text style={[styles.refreshButtonText, { color: themeColors.textPrimary }]}>
             Refresh Profile
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* FCM Test Button */}
+      <View style={styles.refreshSection}>
+        <TouchableOpacity 
+          style={[styles.refreshButton, { backgroundColor: brandColors.secondary }]}
+          onPress={() => notificationService.testFCMTokenGeneration()}
+        >
+          <Feather name="wifi" size={20} color={themeColors.card} />
+          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
+            Test FCM Token
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Debug Notifications Button */}
+      <View style={styles.refreshSection}>
+        <TouchableOpacity 
+          style={[styles.refreshButton, { backgroundColor: brandColors.accent }]}
+          onPress={() => notificationService.debugNotificationStatus()}
+        >
+          <Feather name="info" size={20} color={themeColors.card} />
+          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
+            Debug Notifications
           </Text>
         </TouchableOpacity>
       </View>

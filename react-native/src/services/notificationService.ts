@@ -93,6 +93,20 @@ class NotificationService {
         console.log('✅ Successfully registered device for remote messages');
       } catch (registerError) {
         console.warn('⚠️ Failed to register device for remote messages:', registerError);
+        // This could indicate a certificate trust issue
+        if (Platform.OS === 'ios') {
+          console.error('🔴 POSSIBLE CERTIFICATE ISSUE: Check Keychain Access for "Apple Push Services: com.cosmos.guras"');
+          console.error('🔴 Make sure the certificate is trusted (set to "Always Trust")');
+        }
+        // Continue anyway - might already be registered
+      }
+
+      // Register the app with FCM
+      try {
+        await messaging().registerDeviceForRemoteMessages();
+        console.log('✅ Successfully registered device for remote messages');
+      } catch (registerError) {
+        console.warn('⚠️ Failed to register device for remote messages:', registerError);
         // Continue anyway - might already be registered
       }
 
@@ -767,6 +781,14 @@ class NotificationService {
       // Check if scheduler is running
       console.log('🔄 Scheduler running:', !!this.backgroundTaskId);
       
+      // Certificate trust check for iOS
+      if (Platform.OS === 'ios' && !isIOSSimulator) {
+        console.log('🔐 CERTIFICATE CHECK:');
+        console.log('🔐 Check Keychain Access for "Apple Push Services: com.cosmos.guras"');
+        console.log('🔐 Certificate should be set to "Always Trust"');
+        console.log('🔐 If certificate shows "not trusted", FCM will fail');
+      }
+      
       console.log('🔍 === END DEBUG INFO ===');
       
       // Show alert with debug info
@@ -779,14 +801,99 @@ class NotificationService {
         `Preferences: ${preferences.enabled ? '✅ Enabled' : '❌ Disabled'}\n` +
         `Scheduler: ${this.backgroundTaskId ? '✅ Running' : '❌ Stopped'}\n\n` +
         `${isIOSSimulator ? '⚠️ FCM does not work on iOS Simulator!\n\n' : ''}` +
+        `${Platform.OS === 'ios' && !isIOSSimulator ? '🔐 CERTIFICATE ISSUE DETECTED!\n\n' : ''}` +
         `If notifications aren't working:\n` +
         `1. Check Settings → Notifications → Guras\n` +
         `2. Ensure "Allow Notifications" is ON\n` +
-        `3. Use a real device or TestFlight for FCM testing`,
+        `3. Use a real device or TestFlight for FCM testing\n` +
+        `${Platform.OS === 'ios' && !isIOSSimulator ? '4. Fix certificate trust in Keychain Access' : ''}`,
         [{ text: 'OK' }]
       );
     } catch (error) {
       console.error('Error in debug function:', error);
+    }
+  }
+
+  // Test FCM token generation specifically for TestFlight debugging
+  async testFCMTokenGeneration(): Promise<void> {
+    try {
+      console.log('🧪 === FCM TOKEN GENERATION TEST ===');
+      
+      if (Platform.OS === 'ios') {
+        try {
+          const DeviceInfo = require('react-native-device-info');
+          const isIOSSimulator = await DeviceInfo.isSimulator();
+          if (isIOSSimulator) {
+            Alert.alert('📱 iOS Simulator', 'FCM tokens cannot be generated on iOS Simulator. Use a real device or TestFlight.');
+            return;
+          }
+        } catch (error) {
+          console.log('Could not check simulator status:', error);
+        }
+      }
+
+      console.log('🔑 Attempting to get FCM token...');
+      
+      // Check if messaging is available
+      if (!messaging) {
+        Alert.alert('❌ Error', 'Firebase messaging is not available');
+        return;
+      }
+
+      // Check permission first
+      const hasPermission = await messaging().hasPermission();
+      console.log('🔔 Permission status:', hasPermission);
+      
+      if (hasPermission !== messaging.AuthorizationStatus.AUTHORIZED && 
+          hasPermission !== messaging.AuthorizationStatus.PROVISIONAL) {
+        Alert.alert('❌ Permission Denied', 'Notification permission is required for FCM tokens');
+        return;
+      }
+
+      // Try to register for remote messages
+      try {
+        await messaging().registerDeviceForRemoteMessages();
+        console.log('✅ Successfully registered for remote messages');
+      } catch (registerError) {
+        console.warn('⚠️ Failed to register for remote messages:', registerError);
+        Alert.alert('⚠️ Registration Failed', 'Failed to register for remote notifications. This might be a certificate issue.');
+        return;
+      }
+
+      // Try to get FCM token
+      try {
+        const token = await messaging().getToken();
+        if (token) {
+          this.fcmToken = token;
+          await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
+          console.log('✅ FCM Token generated successfully!');
+          console.log('🔑 Token preview:', token.substring(0, 30) + '...');
+          
+          Alert.alert(
+            '✅ FCM Token Generated!',
+            `Token: ${token.substring(0, 30)}...\n\nThis means FCM is working correctly in your TestFlight build.`,
+            [{ text: 'OK' }]
+          );
+        } else {
+          throw new Error('No token received');
+        }
+      } catch (tokenError) {
+        console.error('❌ FCM token generation failed:', tokenError);
+        Alert.alert(
+          '❌ FCM Token Failed',
+          'Failed to generate FCM token. This could be due to:\n\n' +
+          '1. Certificate trust issues\n' +
+          '2. Firebase configuration problems\n' +
+          '3. Network connectivity issues\n\n' +
+          'Check the console for detailed error messages.',
+          [{ text: 'OK' }]
+        );
+      }
+      
+      console.log('🧪 === END FCM TOKEN TEST ===');
+    } catch (error) {
+      console.error('Error in FCM token test:', error);
+      Alert.alert('❌ Test Error', 'An error occurred during the FCM token test');
     }
   }
 
