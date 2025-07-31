@@ -217,6 +217,31 @@ jobs:
         grep "CURRENT_PROJECT_VERSION" Guras.xcodeproj/project.pbxproj
         grep "MARKETING_VERSION" Guras.xcodeproj/project.pbxproj
         
+    - name: Configure entitlements for deployment target
+      working-directory: ./react-native/ios
+      run: |
+        echo "🔧 Configuring entitlements for deployment target..."
+        
+        # Determine deployment target based on workflow input
+        if [ "${{ github.event.inputs.deploy_to_appstore }}" == "true" ]; then
+          APS_ENVIRONMENT="production"
+          echo "📱 App Store deployment detected - using production entitlements"
+        else
+          APS_ENVIRONMENT="development"
+          echo "📱 TestFlight deployment detected - using development entitlements"
+        fi
+        
+        echo "🔧 Setting aps-environment to: $APS_ENVIRONMENT"
+        
+        # Update the entitlements file
+        /usr/libexec/PlistBuddy -c "Set :aps-environment $APS_ENVIRONMENT" Guras/Guras.entitlements
+        
+        # Verify the change
+        echo "📋 Updated entitlements:"
+        cat Guras/Guras.entitlements
+        
+        echo "✅ Entitlements configured for $APS_ENVIRONMENT deployment"
+        
     - name: Install dependencies
       working-directory: ./react-native
       run: |
@@ -386,7 +411,7 @@ jobs:
         git config --local user.name "GitHub Action"
         
         # Add and commit version changes
-        git add react-native/app.json react-native/ios/Guras.xcodeproj/project.pbxproj
+        git add react-native/app.json react-native/ios/Guras.xcodeproj/project.pbxproj react-native/ios/Guras/Guras.entitlements
         git commit -m "Bump version to $VERSION" || echo "No changes to commit"
         
         # Create tag using version number directly
@@ -406,6 +431,7 @@ jobs:
           react-native/ios/main.jsbundle
           react-native/app.json
           react-native/ios/Guras.xcodeproj/project.pbxproj
+          react-native/ios/Guras/Guras.entitlements
           react-native/ios/build/Guras.xcarchive
         retention-days: 7
         
@@ -441,6 +467,18 @@ jobs:
       with:
         name: ios-build-v${{ needs.build.outputs.version }}
         path: ./artifacts
+        
+    - name: Restore entitlements file
+      run: |
+        echo "📋 Restoring entitlements file from artifacts..."
+        if [ -f "./artifacts/react-native/ios/Guras/Guras.entitlements" ]; then
+          cp "./artifacts/react-native/ios/Guras/Guras.entitlements" "./react-native/ios/Guras/Guras.entitlements"
+          echo "✅ Entitlements file restored"
+          echo "📋 Entitlements content:"
+          cat "./react-native/ios/Guras/Guras.entitlements"
+        else
+          echo "⚠️ Entitlements file not found in artifacts, using default"
+        fi
         
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
@@ -755,6 +793,18 @@ jobs:
       with:
         name: ios-build-v${{ needs.build.outputs.version }}
         path: ./artifacts
+        
+    - name: Restore entitlements file
+      run: |
+        echo "📋 Restoring entitlements file from artifacts..."
+        if [ -f "./artifacts/react-native/ios/Guras/Guras.entitlements" ]; then
+          cp "./artifacts/react-native/ios/Guras/Guras.entitlements" "./react-native/ios/Guras/Guras.entitlements"
+          echo "✅ Entitlements file restored"
+          echo "📋 Entitlements content:"
+          cat "./react-native/ios/Guras/Guras.entitlements"
+        else
+          echo "⚠️ Entitlements file not found in artifacts, using default"
+        fi
         
     - name: Setup code signing
       run: |
