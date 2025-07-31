@@ -16,7 +16,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     // Initialize Firebase
-    FirebaseApp.configure()
+    do {
+      FirebaseApp.configure()
+      print("✅ Firebase configured successfully")
+    } catch {
+      print("❌ Firebase configuration failed: \(error)")
+    }
 
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
