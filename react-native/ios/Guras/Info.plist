@@ -89,5 +89,7 @@
 	<string>alert</string>
 	<key>NSUserNotificationUsageDescription</key>
 	<string>Guras would like to send you daily wisdom notifications to help you stay mindful and inspired throughout your day.</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 </dict>
 </plist>
