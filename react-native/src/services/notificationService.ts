@@ -72,11 +72,15 @@ class NotificationService {
       if (Platform.OS === 'ios') {
         try {
           const DeviceInfo = require('react-native-device-info');
-          const isIOSSimulator = await DeviceInfo.isSimulator();
-          if (isIOSSimulator) {
-            console.log('📱 iOS Simulator detected - FCM will not work');
-            console.log('ℹ️ FCM requires a real device or TestFlight for push notifications');
-            return;
+          if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
+            const isIOSSimulator = await DeviceInfo.isSimulator();
+            if (isIOSSimulator) {
+              console.log('📱 iOS Simulator detected - FCM will not work');
+              console.log('ℹ️ FCM requires a real device or TestFlight for push notifications');
+              return;
+            }
+          } else {
+            console.log('⚠️ DeviceInfo.isSimulator not available, continuing...');
           }
         } catch (error) {
           console.log('Could not check simulator status:', error);
@@ -618,23 +622,54 @@ class NotificationService {
       
       // Check if we're on iOS Simulator
       if (Platform.OS === 'ios') {
-        const DeviceInfo = require('react-native-device-info');
-        const isIOSSimulator = await DeviceInfo.isSimulator();
-        
-        if (isIOSSimulator) {
-          console.log('📱 iOS Simulator detected - using local notification');
-          Alert.alert(
-            '📱 iOS Simulator Notice',
-            'FCM does not work on iOS Simulator. This is a local notification test.\n\nTo test real push notifications, use a physical device or TestFlight.',
-            [{ text: 'OK' }]
-          );
-          return;
+        try {
+          const DeviceInfo = require('react-native-device-info');
+          console.log('📱 DeviceInfo loaded:', !!DeviceInfo);
+          
+          if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
+            const isIOSSimulator = await DeviceInfo.isSimulator();
+            console.log('📱 iOS Simulator:', isIOSSimulator);
+            
+            if (isIOSSimulator) {
+              console.log('📱 iOS Simulator detected - using local notification');
+              Alert.alert(
+                '📱 iOS Simulator Notice',
+                'FCM does not work on iOS Simulator. This is a local notification test.\n\nTo test real push notifications, use a physical device or TestFlight.',
+                [{ text: 'OK' }]
+              );
+              return;
+            }
+          } else {
+            console.log('⚠️ DeviceInfo.isSimulator not available, continuing...');
+          }
+        } catch (error) {
+          console.log('Could not check simulator status:', error);
         }
       }
 
-      // For real devices, use FCM
+      // Check if we have FCM token for real devices
       if (!this.fcmToken) {
-        throw new Error('FCM token is required for push notifications. Check Firebase setup.');
+        console.log('⚠️ No FCM token available');
+        
+        // Show appropriate message based on platform
+        if (Platform.OS === 'ios') {
+          Alert.alert(
+            '⚠️ FCM Token Missing',
+            'FCM token is not available. This could be because:\n\n' +
+            '1. You\'re running on iOS Simulator (FCM doesn\'t work here)\n' +
+            '2. Firebase is not properly configured\n' +
+            '3. Notification permissions are not granted\n\n' +
+            'Try on a real device or TestFlight for FCM testing.',
+            [{ text: 'OK' }]
+          );
+        } else {
+          Alert.alert(
+            '⚠️ FCM Token Missing',
+            'FCM token is not available. Check Firebase configuration and permissions.',
+            [{ text: 'OK' }]
+          );
+        }
+        return;
       }
 
       const testQuote: Quote = {
@@ -646,11 +681,11 @@ class NotificationService {
 
       await this.sendQuoteNotification(testQuote, 'daily_quote');
       console.log('✅ Test notification sent successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending test notification:', error);
       Alert.alert(
         '⚠️ Test Error',
-        'There was an issue sending the notification. Check console for details.',
+        'There was an issue sending the notification: ' + (error?.message || 'Unknown error'),
         [{ text: 'OK' }]
       );
     }
@@ -744,7 +779,11 @@ class NotificationService {
       if (Platform.OS === 'ios') {
         try {
           const DeviceInfo = require('react-native-device-info');
-          isIOSSimulator = await DeviceInfo.isSimulator();
+          if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
+            isIOSSimulator = await DeviceInfo.isSimulator();
+          } else {
+            console.log('⚠️ DeviceInfo.isSimulator not available');
+          }
         } catch (error) {
           console.log('Could not check simulator status:', error);
         }
@@ -819,13 +858,25 @@ class NotificationService {
     try {
       console.log('🧪 === FCM TOKEN GENERATION TEST ===');
       
+      // Check platform
+      console.log('📱 Platform:', Platform.OS);
+      
       if (Platform.OS === 'ios') {
         try {
           const DeviceInfo = require('react-native-device-info');
-          const isIOSSimulator = await DeviceInfo.isSimulator();
-          if (isIOSSimulator) {
-            Alert.alert('📱 iOS Simulator', 'FCM tokens cannot be generated on iOS Simulator. Use a real device or TestFlight.');
-            return;
+          console.log('📱 DeviceInfo loaded:', !!DeviceInfo);
+          
+          if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
+            const isIOSSimulator = await DeviceInfo.isSimulator();
+            console.log('📱 iOS Simulator:', isIOSSimulator);
+            
+            if (isIOSSimulator) {
+              Alert.alert('📱 iOS Simulator', 'FCM tokens cannot be generated on iOS Simulator. Use a real device or TestFlight.');
+              return;
+            }
+          } else {
+            console.log('⚠️ DeviceInfo.isSimulator not available, continuing...');
+            console.log('📱 DeviceInfo methods:', Object.keys(DeviceInfo || {}));
           }
         } catch (error) {
           console.log('Could not check simulator status:', error);
@@ -837,6 +888,16 @@ class NotificationService {
       // Check if messaging is available
       if (!messaging) {
         Alert.alert('❌ Error', 'Firebase messaging is not available');
+        return;
+      }
+
+      // Check Firebase app initialization
+      try {
+        const app = require('@react-native-firebase/app').app();
+        console.log('✅ Firebase app initialized:', app.name);
+      } catch (firebaseError) {
+        console.error('❌ Firebase app not initialized:', firebaseError);
+        Alert.alert('❌ Firebase Error', 'Firebase app is not properly initialized');
         return;
       }
 
@@ -856,18 +917,23 @@ class NotificationService {
         console.log('✅ Successfully registered for remote messages');
       } catch (registerError) {
         console.warn('⚠️ Failed to register for remote messages:', registerError);
+        console.error('🔴 Registration error details:', JSON.stringify(registerError, null, 2));
         Alert.alert('⚠️ Registration Failed', 'Failed to register for remote notifications. This might be a certificate issue.');
         return;
       }
 
-      // Try to get FCM token
+      // Try to get FCM token with detailed error handling
       try {
+        console.log('🔑 Requesting FCM token...');
         const token = await messaging().getToken();
-        if (token) {
+        console.log('🔑 Raw token response:', token);
+        
+        if (token && token.length > 0) {
           this.fcmToken = token;
           await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
           console.log('✅ FCM Token generated successfully!');
           console.log('🔑 Token preview:', token.substring(0, 30) + '...');
+          console.log('🔑 Token length:', token.length);
           
           Alert.alert(
             '✅ FCM Token Generated!',
@@ -875,32 +941,88 @@ class NotificationService {
             [{ text: 'OK' }]
           );
         } else {
-          throw new Error('No token received');
+          throw new Error('No token received or token is empty');
         }
-      } catch (tokenError) {
-        console.error('❌ FCM token generation failed:', tokenError);
-        Alert.alert(
-          '❌ FCM Token Failed',
-          'Failed to generate FCM token. This could be due to:\n\n' +
-          '1. Certificate trust issues\n' +
-          '2. Firebase configuration problems\n' +
-          '3. Network connectivity issues\n\n' +
-          'Check the console for detailed error messages.',
-          [{ text: 'OK' }]
-        );
+              } catch (tokenError: any) {
+          console.error('❌ FCM token generation failed:', tokenError);
+          console.error('🔴 Token error details:', JSON.stringify(tokenError, null, 2));
+          
+          // Check if it's a network issue
+          if (tokenError?.message && tokenError.message.includes('network')) {
+            Alert.alert(
+              '❌ Network Error',
+              'Failed to generate FCM token due to network issues. Please check your internet connection.',
+              [{ text: 'OK' }]
+            );
+          } else if (tokenError?.message && tokenError.message.includes('permission')) {
+            Alert.alert(
+              '❌ Permission Error',
+              'Failed to generate FCM token due to permission issues. Please check notification permissions.',
+              [{ text: 'OK' }]
+            );
+          } else {
+            Alert.alert(
+              '❌ FCM Token Failed',
+              'Failed to generate FCM token. This could be due to:\n\n' +
+              '1. Firebase configuration issues\n' +
+              '2. APNs certificate problems\n' +
+              '3. Network connectivity issues\n\n' +
+              'Error: ' + (tokenError?.message || 'Unknown error'),
+              [{ text: 'OK' }]
+            );
+          }
+        }
+        
+        console.log('🧪 === END FCM TOKEN TEST ===');
+      } catch (error: any) {
+        console.error('Error in FCM token test:', error);
+        Alert.alert('❌ Test Error', 'An error occurred during the FCM token test: ' + (error?.message || 'Unknown error'));
       }
-      
-      console.log('🧪 === END FCM TOKEN TEST ===');
-    } catch (error) {
-      console.error('Error in FCM token test:', error);
-      Alert.alert('❌ Test Error', 'An error occurred during the FCM token test');
-    }
   }
 
   // Cleanup
   destroy(): void {
     this.stopQuoteScheduler();
     console.log('✅ Notification service destroyed');
+  }
+
+  // Simple test to check basic Firebase connectivity
+  async testBasicFirebaseConnection(): Promise<void> {
+    try {
+      console.log('🔍 === BASIC FIREBASE CONNECTION TEST ===');
+      
+      // Check if Firebase app is available
+      if (!messaging) {
+        Alert.alert('❌ Error', 'Firebase messaging module not available');
+        return;
+      }
+
+      // Try to access Firebase app
+      try {
+        const app = require('@react-native-firebase/app').app();
+        console.log('✅ Firebase app available:', app.name);
+      } catch (firebaseError) {
+        console.error('❌ Firebase app error:', firebaseError);
+        Alert.alert('❌ Firebase Error', 'Firebase app is not properly initialized');
+        return;
+      }
+
+      // Check if we can access messaging
+      try {
+        const messagingInstance = messaging();
+        console.log('✅ Firebase messaging available');
+      } catch (messagingError) {
+        console.error('❌ Firebase messaging error:', messagingError);
+        Alert.alert('❌ Messaging Error', 'Firebase messaging is not available');
+        return;
+      }
+
+      Alert.alert('✅ Basic Test', 'Firebase is properly connected and messaging is available');
+      console.log('🔍 === END BASIC TEST ===');
+    } catch (error: any) {
+      console.error('Error in basic Firebase test:', error);
+      Alert.alert('❌ Test Error', 'Basic Firebase test failed: ' + (error?.message || 'Unknown error'));
+    }
   }
 }
 

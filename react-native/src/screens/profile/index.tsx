@@ -237,6 +237,19 @@ const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Basic Firebase Test Button */}
+      <View style={styles.refreshSection}>
+        <TouchableOpacity 
+          style={[styles.refreshButton, { backgroundColor: '#FF6B6B' }]}
+          onPress={() => notificationService.testBasicFirebaseConnection()}
+        >
+          <Feather name="zap" size={20} color={themeColors.card} />
+          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
+            Test Firebase Connection
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Sign Out Button */}
       <View style={styles.signOutSection}>
         <SignOutButton 
