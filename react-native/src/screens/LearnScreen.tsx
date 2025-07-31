@@ -130,6 +130,9 @@ const LearnScreen = () => {
           </View>
         </BaseCard>
       </View>
+
+      {/* Bottom padding to prevent content from being hidden by footer */}
+      <View style={styles.bottomPadding} />
     </ScrollView>
   );
 };
@@ -217,6 +220,10 @@ const styles = StyleSheet.create({
   progressValue: {
     ...TYPOGRAPHY.BODY_LARGE,
     fontWeight: 'bold',
+  },
+  // Add bottom padding to account for the footer
+  bottomPadding: {
+    height: 100, // Account for bottom navigation + safe area
   },
 });
 
