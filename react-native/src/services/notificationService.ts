@@ -68,14 +68,7 @@ class NotificationService {
         return;
       }
 
-      // Test basic Firebase connection
-      try {
-        await this.testBasicFirebaseConnection();
-        console.log('✅ Basic Firebase connection test passed');
-      } catch (error) {
-        console.error('❌ Basic Firebase connection test failed:', error);
-        return;
-      }
+      // Firebase connection check - removed debugging test to prevent initialization errors
 
       // Check if we're on iOS Simulator
       if (Platform.OS === 'ios') {
