@@ -166,7 +166,7 @@ const STORAGE_KEYS = {
 
 export interface NotificationPreferences {
   enabled: boolean;
-  frequency: 'hourly' | 'daily' | 'twice-daily';
+  frequency: '5min' | 'hourly' | 'daily' | 'twice-daily';
   quietHours: {
     start: string; // HH:MM format
     end: string;   // HH:MM format
@@ -323,7 +323,7 @@ class QuotesService {
       // Default preferences
       const defaultPrefs: NotificationPreferences = {
         enabled: true,
-        frequency: 'hourly',
+        frequency: '5min',
         quietHours: {
           start: '22:00',
           end: '08:00'
@@ -336,7 +336,7 @@ class QuotesService {
       console.error('Error getting notification preferences:', error);
       return {
         enabled: true,
-        frequency: 'hourly',
+        frequency: '5min',
         quietHours: { start: '22:00', end: '08:00' }
       };
     }

@@ -40,7 +40,7 @@ const NOTIFICATION_STORAGE_KEYS = {
 
 export interface NotificationData {
   quote: Quote;
-  type: 'daily_quote' | 'hourly_quote';
+  type: 'daily_quote' | 'hourly_quote' | '5min_quote';
   timestamp: number;
 }
 
@@ -93,27 +93,39 @@ class NotificationService {
       const currentPermission = await messaging().hasPermission();
       console.log('🔍 Current FCM permission status:', currentPermission);
 
-      // Register the app with FCM
+      // Register the app with FCM - this is critical for APNs token
+      let registrationSuccessful = false;
       try {
+        console.log('📱 Registering device for remote messages...');
         await messaging().registerDeviceForRemoteMessages();
         console.log('✅ Successfully registered device for remote messages');
+        registrationSuccessful = true;
       } catch (registerError) {
-        console.warn('⚠️ Failed to register device for remote messages:', registerError);
-        // This could indicate a certificate trust issue
-        if (Platform.OS === 'ios') {
-          console.error('🔴 POSSIBLE CERTIFICATE ISSUE: Check Keychain Access for "Apple Push Services: com.cosmos.guras"');
-          console.error('🔴 Make sure the certificate is trusted (set to "Always Trust")');
+        console.error('❌ Failed to register device for remote messages:', registerError);
+        console.error('🔴 Registration error details:', JSON.stringify(registerError, null, 2));
+        
+        // Check if it's already registered
+        try {
+          const isRegistered = await messaging().isDeviceRegisteredForRemoteMessages;
+          console.log('📱 Device already registered for remote messages:', isRegistered);
+          if (isRegistered) {
+            registrationSuccessful = true;
+          }
+        } catch (checkError) {
+          console.warn('⚠️ Could not check registration status:', checkError);
         }
-        // Continue anyway - might already be registered
+        
+        if (!registrationSuccessful) {
+          console.error('🔴 CRITICAL: Device registration failed - APNs token not available');
+          console.error('🔴 This will prevent FCM token generation');
+          return; // Don't continue if registration failed
+        }
       }
 
-      // Register the app with FCM
-      try {
-        await messaging().registerDeviceForRemoteMessages();
-        console.log('✅ Successfully registered device for remote messages');
-      } catch (registerError) {
-        console.warn('⚠️ Failed to register device for remote messages:', registerError);
-        // Continue anyway - might already be registered
+      // Wait a moment for APNs token to be properly set
+      if (registrationSuccessful) {
+        console.log('⏳ Waiting for APNs token to be set...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
       // Get the FCM token - retry multiple times if needed
@@ -140,6 +152,18 @@ class NotificationService {
           }
         } catch (tokenError) {
           console.warn(`⚠️ Attempt ${attempts}: Failed to get FCM token:`, tokenError);
+          
+          // Check for specific APNs token error
+          if (tokenError && typeof tokenError === 'object' && 'message' in tokenError && 
+              typeof tokenError.message === 'string' && tokenError.message.includes('APNs token')) {
+            console.error('🔴 APNs token not available - device registration may have failed');
+            console.error('🔴 This usually means the device registration failed earlier');
+            if (attempts === maxAttempts) {
+              console.log('❌ FCM token generation failed due to missing APNs token');
+              return;
+            }
+          }
+          
           if (attempts === maxAttempts) {
             console.log('ℹ️ FCM token not available - this is normal on iOS Simulator');
             console.log('ℹ️ Use a real device or TestFlight for push notifications');
@@ -149,6 +173,9 @@ class NotificationService {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
+
+      // Note: APNS token listener might not be available in this Firebase version
+      console.log('📱 APNS token will be handled automatically by Firebase');
 
       // Listen for token refresh
       const unsubscribeTokenRefresh = messaging().onTokenRefresh((token) => {
@@ -522,7 +549,9 @@ class NotificationService {
       const quote = await quotesService.updateQuoteIfNeeded();
       
       // Send the notification
-      await this.sendQuoteNotification(quote, preferences.frequency === 'daily' ? 'daily_quote' : 'hourly_quote');
+      const notificationType = preferences.frequency === 'daily' ? 'daily_quote' : 
+                              preferences.frequency === '5min' ? '5min_quote' : 'hourly_quote';
+      await this.sendQuoteNotification(quote, notificationType);
       
       // Update last notification time
       await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.LAST_NOTIFICATION_TIME, new Date().toISOString());
@@ -548,6 +577,10 @@ class NotificationService {
       const timeDiff = now.getTime() - lastTime.getTime();
       
       switch (preferences.frequency) {
+        case '5min':
+          const fiveMinPassed = timeDiff >= 5 * 60 * 1000; // 5 minutes
+          if (fiveMinPassed) console.log('⚡ 5-minute notification due');
+          return fiveMinPassed;
         case 'hourly':
           const hoursPassed = timeDiff >= 60 * 60 * 1000; // 1 hour
           if (hoursPassed) console.log('⏰ Hourly notification due');
@@ -570,9 +603,10 @@ class NotificationService {
   }
 
   // Send push notification for both iOS and Android
-  async sendQuoteNotification(quote: Quote, type: 'daily_quote' | 'hourly_quote'): Promise<void> {
+  async sendQuoteNotification(quote: Quote, type: 'daily_quote' | 'hourly_quote' | '5min_quote'): Promise<void> {
     try {
-      const title = type === 'daily_quote' ? '🧘 Daily Wisdom' : '✨ Hourly Inspiration';
+      const title = type === 'daily_quote' ? '🧘 Daily Wisdom' : 
+                   type === '5min_quote' ? '⚡ Quick Inspiration' : '✨ Hourly Inspiration';
       const body = `"${quote.text}" - ${quote.author}`;
 
       console.log(`🔔 Sending push notification: ${title} - ${body.substring(0, 50)}...`);
@@ -694,9 +728,10 @@ class NotificationService {
   }
 
   // Schedule a notification for a specific time
-  async scheduleNotification(quote: Quote, date: Date, type: 'daily_quote' | 'hourly_quote'): Promise<void> {
+  async scheduleNotification(quote: Quote, date: Date, type: 'daily_quote' | 'hourly_quote' | '5min_quote'): Promise<void> {
     try {
-      const title = type === 'daily_quote' ? '🧘 Daily Wisdom' : '✨ Hourly Inspiration';
+      const title = type === 'daily_quote' ? '🧘 Daily Wisdom' : 
+                   type === '5min_quote' ? '⚡ Quick Inspiration' : '✨ Hourly Inspiration';
       const body = `"${quote.text}" - ${quote.author}`;
 
       try {
@@ -893,20 +928,34 @@ class NotificationService {
         return;
       }
 
-      // Check Firebase app initialization
-      try {
-        const app = require('@react-native-firebase/app').app();
-        console.log('✅ Firebase app initialized:', app.name);
-        console.log('✅ Firebase app options:', app.options);
-      } catch (firebaseError) {
-        console.error('❌ Firebase app not initialized:', firebaseError);
-        Alert.alert('❌ Firebase Error', 'Firebase app is not properly initialized');
-        return;
-      }
+      console.log('✅ Firebase messaging module is available');
+      console.log('🔧 Testing basic messaging functionality...');
 
-      // Check permission first
-      const hasPermission = await messaging().hasPermission();
-      console.log('🔔 Permission status:', hasPermission);
+      // Skip Firebase app check - go directly to messaging
+      console.log('🔧 Skipping Firebase app check, testing messaging directly...');
+
+      // Try to access messaging directly - this should trigger Firebase initialization
+      let hasPermission;
+      try {
+        console.log('🔧 Testing Firebase messaging access...');
+        hasPermission = await messaging().hasPermission();
+        console.log('🔔 Permission status:', hasPermission);
+      } catch (messagingError) {
+        console.error('❌ Firebase messaging not available:', messagingError);
+        console.error('🔴 Messaging error details:', JSON.stringify(messagingError, null, 2));
+        
+        // Try alternative approach
+        try {
+          console.log('🔧 Trying alternative Firebase messaging approach...');
+          const messagingInstance = messaging();
+          hasPermission = await messagingInstance.hasPermission();
+          console.log('✅ Alternative approach worked, permission status:', hasPermission);
+        } catch (altError) {
+          console.error('❌ Alternative approach also failed:', altError);
+          Alert.alert('❌ Firebase Error', 'Firebase messaging is not available. Please restart the app.');
+          return;
+        }
+      }
       
       if (hasPermission !== messaging.AuthorizationStatus.AUTHORIZED && 
           hasPermission !== messaging.AuthorizationStatus.PROVISIONAL) {
@@ -914,10 +963,42 @@ class NotificationService {
         return;
       }
 
-      // Try to register for remote messages
+      // Register for remote messages and wait for APNS token
       try {
+        console.log('📱 Registering for remote messages...');
         await messaging().registerDeviceForRemoteMessages();
         console.log('✅ Successfully registered for remote messages');
+        
+        // Wait for APNS token to be available
+        console.log('⏳ Waiting for APNS token to be set...');
+        let apnsTokenAvailable = false;
+        let attempts = 0;
+        const maxAttempts = 10; // Wait up to 10 seconds
+        
+        while (!apnsTokenAvailable && attempts < maxAttempts) {
+          attempts++;
+          console.log(`🔍 Attempt ${attempts}/${maxAttempts}: Checking for APNS token...`);
+          
+          try {
+            // Try to get APNS token - this will fail if not available, but that's expected
+            const apnsToken = await messaging().getAPNSToken();
+            if (apnsToken) {
+              console.log('✅ APNS token is available');
+              apnsTokenAvailable = true;
+              break;
+            }
+          } catch (apnsError) {
+            console.log(`⏳ APNS token not ready yet (attempt ${attempts})`);
+          }
+          
+          // Wait 1 second before next attempt
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        if (!apnsTokenAvailable) {
+          console.warn('⚠️ APNS token not available after waiting, but continuing anyway...');
+        }
+        
       } catch (registerError) {
         console.warn('⚠️ Failed to register for remote messages:', registerError);
         console.error('🔴 Registration error details:', JSON.stringify(registerError, null, 2));
