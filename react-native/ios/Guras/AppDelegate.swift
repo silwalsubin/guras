@@ -3,6 +3,7 @@ import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
 import Firebase
+import FirebaseMessaging
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -39,6 +40,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     )
 
     return true
+  }
+  
+  // MARK: - Push Notification Methods
+  
+  func application(
+    _ application: UIApplication,
+    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+  ) {
+    print("📱 APNS Device Token received: \(deviceToken.map { String(format: "%02.2hhx", $0) }.joined())")
+    
+    // Set the APNS token for Firebase
+    Messaging.messaging().apnsToken = deviceToken
+    print("✅ APNS token set for Firebase")
+  }
+  
+  func application(
+    _ application: UIApplication,
+    didFailToRegisterForRemoteNotificationsWithError error: Error
+  ) {
+    print("❌ Failed to register for remote notifications: \(error)")
+  }
+  
+  func application(
+    _ application: UIApplication,
+    didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+    fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+  ) {
+    print("📨 Received remote notification: \(userInfo)")
+    completionHandler(.newData)
   }
 }
 
