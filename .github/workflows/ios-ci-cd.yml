@@ -217,31 +217,6 @@ jobs:
         grep "CURRENT_PROJECT_VERSION" Guras.xcodeproj/project.pbxproj
         grep "MARKETING_VERSION" Guras.xcodeproj/project.pbxproj
         
-    - name: Configure entitlements for deployment target
-      working-directory: ./react-native/ios
-      run: |
-        echo "🔧 Configuring entitlements for deployment target..."
-        
-        # Determine deployment target based on workflow input
-        if [ "${{ github.event.inputs.deploy_to_appstore }}" == "true" ]; then
-          APS_ENVIRONMENT="production"
-          echo "📱 App Store deployment detected - using production entitlements"
-        else
-          APS_ENVIRONMENT="production"
-          echo "📱 TestFlight deployment detected - using production entitlements"
-        fi
-        
-        echo "🔧 Setting aps-environment to: $APS_ENVIRONMENT"
-        
-        # Update the entitlements file
-        /usr/libexec/PlistBuddy -c "Set :aps-environment $APS_ENVIRONMENT" Guras/Guras.entitlements
-        
-        # Verify the change
-        echo "📋 Updated entitlements:"
-        cat Guras/Guras.entitlements
-        
-        echo "✅ Entitlements configured for $APS_ENVIRONMENT deployment"
-        
     - name: Install dependencies
       working-directory: ./react-native
       run: |
@@ -479,6 +454,31 @@ jobs:
         else
           echo "⚠️ Entitlements file not found in artifacts, using default"
         fi
+        
+    - name: Configure entitlements for deployment target
+      working-directory: ./react-native/ios
+      run: |
+        echo "🔧 Configuring entitlements for deployment target..."
+        
+        # Determine deployment target based on workflow input
+        if [ "${{ github.event.inputs.deploy_to_appstore }}" == "true" ]; then
+          APS_ENVIRONMENT="production"
+          echo "📱 App Store deployment detected - using production entitlements"
+        else
+          APS_ENVIRONMENT="production"
+          echo "📱 TestFlight deployment detected - using production entitlements"
+        fi
+        
+        echo "🔧 Setting aps-environment to: $APS_ENVIRONMENT"
+        
+        # Update the entitlements file
+        /usr/libexec/PlistBuddy -c "Set :aps-environment $APS_ENVIRONMENT" Guras/Guras.entitlements
+        
+        # Verify the change
+        echo "📋 Updated entitlements:"
+        cat Guras/Guras.entitlements
+        
+        echo "✅ Entitlements configured for $APS_ENVIRONMENT deployment"
         
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
