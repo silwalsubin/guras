@@ -230,6 +230,14 @@ const ProfileScreen: React.FC = () => {
           style={[styles.refreshButton, { backgroundColor: '#FF6B35' }]}
           onPress={async () => {
             try {
+              console.log('🔍 Button pressed - calling forceGenerateFCMToken');
+              console.log('🔍 notificationService:', typeof notificationService);
+              console.log('🔍 forceGenerateFCMToken method:', typeof notificationService.forceGenerateFCMToken);
+
+              if (typeof notificationService.forceGenerateFCMToken !== 'function') {
+                throw new Error('forceGenerateFCMToken is not a function on notificationService');
+              }
+
               const token = await notificationService.forceGenerateFCMToken();
               if (token) {
                 Alert.alert(
@@ -237,11 +245,18 @@ const ProfileScreen: React.FC = () => {
                   `FCM Token generated successfully!\n\nToken: ${token.substring(0, 30)}...`,
                   [{ text: 'OK' }]
                 );
+              } else {
+                Alert.alert(
+                  '⚠️ Warning',
+                  'Token generation completed but returned null',
+                  [{ text: 'OK' }]
+                );
               }
             } catch (error) {
+              console.error('🔴 Button press error:', error);
               Alert.alert(
                 '❌ Error',
-                `Failed to generate FCM token: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                `Failed to generate FCM token: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
                 [{ text: 'OK' }]
               );
             }
@@ -257,7 +272,7 @@ const ProfileScreen: React.FC = () => {
       {/* Debug Notifications Button */}
       <View style={styles.refreshSection}>
         <TouchableOpacity
-          style={[styles.refreshButton, { backgroundColor: brandColors.accent }]}
+          style={[styles.refreshButton, { backgroundColor: brandColors.primaryDark }]}
           onPress={() => notificationService.debugNotificationStatus()}
         >
           <Feather name="info" size={20} color={themeColors.card} />
@@ -267,18 +282,7 @@ const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Complete Notification Test Button */}
-      <View style={styles.refreshSection}>
-        <TouchableOpacity
-          style={[styles.refreshButton, { backgroundColor: '#28A745' }]}
-          onPress={() => notificationService.runCompleteNotificationTest()}
-        >
-          <Feather name="check-circle" size={20} color={themeColors.card} />
-          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
-            🧪 Complete Test
-          </Text>
-        </TouchableOpacity>
-      </View>
+
 
       {/* Basic Firebase Test Button */}
       <View style={styles.refreshSection}>
