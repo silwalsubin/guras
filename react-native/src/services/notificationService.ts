@@ -162,6 +162,7 @@ class NotificationService {
         console.log(`🔑 Attempt ${attempts}/${maxAttempts}: Requesting FCM token...`);
         
         try {
+          await messaging().registerDeviceForRemoteMessages();
           token = await messaging().getToken();
           if (token) {
             this.fcmToken = token;
@@ -351,6 +352,7 @@ class NotificationService {
       if (!this.fcmToken) {
         console.warn('⚠️ No FCM token available, trying to get one...');
         try {
+          await messaging().registerDeviceForRemoteMessages();
           const token = await messaging().getToken();
           if (token) {
             this.fcmToken = token;
@@ -696,6 +698,7 @@ class NotificationService {
       if (!this.fcmToken) {
         console.log('🔑 No FCM token available, forcing token generation...');
         try {
+          await messaging().registerDeviceForRemoteMessages();
           const token = await messaging().getToken();
           if (token) {
             this.fcmToken = token;
@@ -1106,6 +1109,7 @@ class NotificationService {
       // Try to get FCM token with detailed error handling
       try {
         console.log('🔑 Requesting FCM token...');
+        await messaging().registerDeviceForRemoteMessages();
         const token = await messaging().getToken();
         console.log('🔑 Raw token response:', token);
         
@@ -1189,9 +1193,8 @@ class NotificationService {
       // Try to access Firebase app properly
       try {
         const firebaseApp = require('@react-native-firebase/app').default;
-        const app = firebaseApp();
-        console.log('✅ Firebase app available:', app.name);
-        console.log('✅ Firebase app options:', app.options);
+        console.log('✅ Firebase app available:', firebaseApp.name);
+        console.log('✅ Firebase app options:', firebaseApp.options);
       } catch (firebaseError) {
         console.error('❌ Firebase app error:', firebaseError);
         Alert.alert('❌ Firebase Error', 'Firebase app is not properly initialized');
