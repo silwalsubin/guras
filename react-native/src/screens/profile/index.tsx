@@ -228,38 +228,54 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.refreshSection}>
         <TouchableOpacity
           style={[styles.refreshButton, { backgroundColor: '#FF6B35' }]}
-          onPress={async () => {
-            try {
-              console.log('🔍 Button pressed - calling forceGenerateFCMToken');
-              console.log('🔍 notificationService:', typeof notificationService);
-              console.log('🔍 forceGenerateFCMToken method:', typeof notificationService.forceGenerateFCMToken);
+          onPress={() => {
+            // Show immediate feedback
+            Alert.alert(
+              '🔍 Debug',
+              'Button pressed! Starting FCM token generation...',
+              [
+                {
+                  text: 'Continue',
+                  onPress: async () => {
+                    try {
+                      // Check if method exists
+                      if (typeof notificationService.forceGenerateFCMToken !== 'function') {
+                        Alert.alert(
+                          '❌ Error',
+                          'forceGenerateFCMToken method is not available',
+                          [{ text: 'OK' }]
+                        );
+                        return;
+                      }
 
-              if (typeof notificationService.forceGenerateFCMToken !== 'function') {
-                throw new Error('forceGenerateFCMToken is not a function on notificationService');
-              }
+                      // Call the method
+                      const token = await notificationService.forceGenerateFCMToken();
 
-              const token = await notificationService.forceGenerateFCMToken();
-              if (token) {
-                Alert.alert(
-                  '✅ Success!',
-                  `FCM Token generated successfully!\n\nToken: ${token.substring(0, 30)}...`,
-                  [{ text: 'OK' }]
-                );
-              } else {
-                Alert.alert(
-                  '⚠️ Warning',
-                  'Token generation completed but returned null',
-                  [{ text: 'OK' }]
-                );
-              }
-            } catch (error) {
-              console.error('🔴 Button press error:', error);
-              Alert.alert(
-                '❌ Error',
-                `Failed to generate FCM token: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
-                [{ text: 'OK' }]
-              );
-            }
+                      if (token) {
+                        Alert.alert(
+                          '✅ Success!',
+                          `FCM Token generated successfully!\n\nToken: ${token.substring(0, 30)}...`,
+                          [{ text: 'OK' }]
+                        );
+                      } else {
+                        Alert.alert(
+                          '⚠️ Warning',
+                          'Token generation completed but returned null',
+                          [{ text: 'OK' }]
+                        );
+                      }
+                    } catch (error) {
+                      Alert.alert(
+                        '❌ Error',
+                        `Failed to generate FCM token: ${error instanceof Error ? error.message : String(error)}`,
+                        [{ text: 'OK' }]
+                      );
+                    }
+                  }
+                },
+                { text: 'Cancel' }
+              ]
+            );
           }}
         >
           <Feather name="zap" size={20} color={themeColors.card} />
