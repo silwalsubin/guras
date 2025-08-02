@@ -103,7 +103,14 @@ class NotificationService {
       } catch (registerError) {
         console.error('❌ Failed to register device for remote messages:', registerError);
         console.error('🔴 Registration error details:', JSON.stringify(registerError, null, 2));
-        
+
+        // Show alert for TestFlight debugging
+        Alert.alert(
+          '❌ Registration Failed',
+          `Failed to register device for remote messages:\n\n${registerError?.message || 'Unknown error'}\n\nDetails: ${JSON.stringify(registerError, null, 2)}`,
+          [{ text: 'OK' }]
+        );
+
         // Check if it's already registered
         try {
           const isRegistered = await messaging().isDeviceRegisteredForRemoteMessages;
@@ -114,10 +121,17 @@ class NotificationService {
         } catch (checkError) {
           console.warn('⚠️ Could not check registration status:', checkError);
         }
-        
+
         if (!registrationSuccessful) {
           console.error('🔴 CRITICAL: Device registration failed - APNs token not available');
           console.error('🔴 This will prevent FCM token generation');
+
+          // Show critical error alert
+          Alert.alert(
+            '🔴 CRITICAL ERROR',
+            'Device registration failed - APNs token not available. This will prevent FCM token generation.',
+            [{ text: 'OK' }]
+          );
           return; // Don't continue if registration failed
         }
       }
@@ -150,23 +164,50 @@ class NotificationService {
           } else {
             console.warn(`⚠️ Attempt ${attempts}: No FCM token received`);
           }
-        } catch (tokenError) {
+        } catch (tokenError: any) {
           console.warn(`⚠️ Attempt ${attempts}: Failed to get FCM token:`, tokenError);
-          
+
+          // Show alert for TestFlight debugging
+          Alert.alert(
+            `⚠️ FCM Token Attempt ${attempts} Failed`,
+            `Failed to get FCM token:\n\n${tokenError?.message || 'Unknown error'}\n\nError details: ${JSON.stringify(tokenError, null, 2)}`,
+            [{ text: 'OK' }]
+          );
+
           // Check for specific APNs token error
-          if (tokenError && typeof tokenError === 'object' && 'message' in tokenError && 
+          if (tokenError && typeof tokenError === 'object' && 'message' in tokenError &&
               typeof tokenError.message === 'string' && tokenError.message.includes('APNs token')) {
             console.error('🔴 APNs token not available - device registration may have failed');
             console.error('🔴 This usually means the device registration failed earlier');
+
+            // Show specific APNs error alert
+            Alert.alert(
+              '🔴 APNs Token Error',
+              'APNs token not available - device registration may have failed. This usually means the device registration failed earlier.',
+              [{ text: 'OK' }]
+            );
+
             if (attempts === maxAttempts) {
               console.log('❌ FCM token generation failed due to missing APNs token');
+              Alert.alert(
+                '❌ FCM Token Failed',
+                'FCM token generation failed due to missing APNs token after all attempts.',
+                [{ text: 'OK' }]
+              );
               return;
             }
           }
-          
+
           if (attempts === maxAttempts) {
             console.log('ℹ️ FCM token not available - this is normal on iOS Simulator');
             console.log('ℹ️ Use a real device or TestFlight for push notifications');
+
+            // Show final failure alert
+            Alert.alert(
+              'ℹ️ FCM Token Unavailable',
+              'FCM token not available after all attempts. This is normal on iOS Simulator. Use a real device or TestFlight for push notifications.',
+              [{ text: 'OK' }]
+            );
             return;
           }
           // Wait a bit before retrying
@@ -198,9 +239,16 @@ class NotificationService {
       });
 
       console.log('✅ FCM initialized successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ FCM initialization failed:', error);
       console.log('ℹ️ This is expected on iOS Simulator - use a real device for FCM testing');
+
+      // Show alert for TestFlight debugging
+      Alert.alert(
+        '❌ FCM Initialization Failed',
+        `FCM initialization failed:\n\n${error?.message || 'Unknown error'}\n\nThis is expected on iOS Simulator - use a real device for FCM testing.\n\nError details: ${JSON.stringify(error, null, 2)}`,
+        [{ text: 'OK' }]
+      );
     }
   }
 
@@ -232,9 +280,16 @@ class NotificationService {
         console.warn('⚠️ Failed to register FCM token with server. Status:', response.status);
         console.warn('⚠️ Error response:', errorText);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.warn('⚠️ Error registering FCM token with server:', error);
       console.warn('⚠️ Server URL:', API_CONFIG.BASE_URL);
+
+      // Show alert for TestFlight debugging
+      Alert.alert(
+        '⚠️ Server Registration Error',
+        `Error registering FCM token with server:\n\n${error?.message || 'Unknown error'}\n\nServer URL: ${API_CONFIG.BASE_URL}\n\nError details: ${JSON.stringify(error, null, 2)}`,
+        [{ text: 'OK' }]
+      );
     }
   }
 
@@ -330,10 +385,18 @@ class NotificationService {
 
       const result = await response.json();
       console.log('✅ FCM notification sent successfully via server:', result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to send FCM notification via server:', error);
       console.error('❌ Server URL:', API_CONFIG.BASE_URL);
       console.error('❌ FCM Token:', this.fcmToken ? 'Available' : 'Missing');
+
+      // Show alert for TestFlight debugging
+      Alert.alert(
+        '❌ FCM Send Failed',
+        `Failed to send FCM notification via server:\n\n${error?.message || 'Unknown error'}\n\nServer URL: ${API_CONFIG.BASE_URL}\nFCM Token: ${this.fcmToken ? 'Available' : 'Missing'}\n\nError details: ${JSON.stringify(error, null, 2)}`,
+        [{ text: 'OK' }]
+      );
+
       throw error;
     }
   }
@@ -361,8 +424,16 @@ class NotificationService {
 
       this.initialized = true;
       console.log('✅ Push notifications initialized!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error initializing notification service:', error);
+
+      // Show alert for TestFlight debugging
+      Alert.alert(
+        '❌ Notification Service Init Failed',
+        `Error initializing notification service:\n\n${error?.message || 'Unknown error'}\n\nContinuing with limited functionality.\n\nError details: ${JSON.stringify(error, null, 2)}`,
+        [{ text: 'OK' }]
+      );
+
       this.initialized = true; // Continue with limited functionality
     }
   }
@@ -622,8 +693,16 @@ class NotificationService {
           } else {
             throw new Error('Failed to get FCM token - check Firebase configuration');
           }
-        } catch (tokenError) {
+        } catch (tokenError: any) {
           console.error('❌ FCM token generation failed:', tokenError);
+
+          // Show alert for TestFlight debugging
+          Alert.alert(
+            '❌ FCM Token Generation Failed',
+            `FCM token generation failed:\n\n${tokenError?.message || 'Unknown error'}\n\nFCM token is required for push notifications. Check Firebase setup.\n\nError details: ${JSON.stringify(tokenError, null, 2)}`,
+            [{ text: 'OK' }]
+          );
+
           throw new Error('FCM token is required for push notifications. Check Firebase setup.');
         }
       }
@@ -645,8 +724,16 @@ class NotificationService {
       
       // Always update the current quote in the app
       await quotesService.setCurrentQuote(quote);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending quote notification:', error);
+
+      // Show alert for TestFlight debugging
+      Alert.alert(
+        '❌ Quote Notification Failed',
+        `Error sending quote notification:\n\n${error?.message || 'Unknown error'}\n\nError details: ${JSON.stringify(error, null, 2)}`,
+        [{ text: 'OK' }]
+      );
+
       throw error; // Re-throw to show the real error
     }
   }
