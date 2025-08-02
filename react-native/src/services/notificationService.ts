@@ -1116,6 +1116,172 @@ class NotificationService {
       Alert.alert('❌ Test Error', 'Basic Firebase test failed: ' + (error?.message || 'Unknown error'));
     }
   }
+
+  // Comprehensive end-to-end push notification test
+  async runCompleteNotificationTest(): Promise<void> {
+    try {
+      console.log('🧪 === COMPLETE PUSH NOTIFICATION TEST ===');
+
+      // Step 1: Check platform and device
+      console.log('📱 Step 1: Platform and Device Check');
+      console.log('   Platform:', Platform.OS);
+
+      if (Platform.OS === 'ios') {
+        try {
+          const DeviceInfo = require('react-native-device-info');
+          if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
+            const isSimulator = await DeviceInfo.isSimulator();
+            console.log('   iOS Simulator:', isSimulator);
+
+            if (isSimulator) {
+              Alert.alert(
+                '📱 iOS Simulator Detected',
+                'Push notifications cannot be tested on iOS Simulator. Please use a real device or TestFlight build.',
+                [{ text: 'OK' }]
+              );
+              return;
+            }
+          }
+        } catch (error) {
+          console.log('   Could not check simulator status:', error);
+        }
+      }
+
+      // Step 2: Check Firebase initialization
+      console.log('📱 Step 2: Firebase Initialization Check');
+      try {
+        const messagingInstance = messaging();
+        console.log('   ✅ Firebase messaging available');
+      } catch (error) {
+        console.error('   ❌ Firebase messaging not available:', error);
+        Alert.alert('❌ Firebase Error', 'Firebase messaging is not properly initialized.');
+        return;
+      }
+
+      // Step 3: Check and request permissions
+      console.log('📱 Step 3: Permission Check');
+      const hasPermission = await messaging().hasPermission();
+      console.log('   Current permission status:', hasPermission);
+
+      if (hasPermission !== messaging.AuthorizationStatus.AUTHORIZED &&
+          hasPermission !== messaging.AuthorizationStatus.PROVISIONAL) {
+        console.log('   Requesting permissions...');
+        const authStatus = await messaging().requestPermission({
+          alert: true,
+          badge: true,
+          sound: true,
+        });
+
+        if (authStatus !== messaging.AuthorizationStatus.AUTHORIZED &&
+            authStatus !== messaging.AuthorizationStatus.PROVISIONAL) {
+          Alert.alert('❌ Permission Denied', 'Notification permissions are required for push notifications.');
+          return;
+        }
+        console.log('   ✅ Permissions granted');
+      } else {
+        console.log('   ✅ Permissions already granted');
+      }
+
+      // Step 4: Register device for remote messages
+      console.log('📱 Step 4: Device Registration');
+      try {
+        await messaging().registerDeviceForRemoteMessages();
+        console.log('   ✅ Device registered for remote messages');
+      } catch (error) {
+        console.error('   ❌ Device registration failed:', error);
+        Alert.alert('❌ Registration Error', 'Failed to register device for remote messages.');
+        return;
+      }
+
+      // Step 5: Generate FCM token
+      console.log('📱 Step 5: FCM Token Generation');
+      try {
+        const token = await this.forceGenerateFCMToken();
+        if (!token) {
+          throw new Error('Token generation returned null');
+        }
+        console.log('   ✅ FCM token generated successfully');
+        console.log('   Token length:', token.length);
+      } catch (error) {
+        console.error('   ❌ FCM token generation failed:', error);
+        Alert.alert('❌ Token Error', `Failed to generate FCM token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return;
+      }
+
+      // Step 6: Test server communication
+      console.log('📱 Step 6: Server Communication Test');
+      try {
+        console.log('   Testing server endpoint:', API_CONFIG.BASE_URL);
+        const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/register-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: this.fcmToken,
+            platform: Platform.OS,
+            userId: 'test-user',
+          }),
+        });
+
+        if (response.ok) {
+          console.log('   ✅ Server communication successful');
+        } else {
+          console.error('   ❌ Server responded with status:', response.status);
+          const errorText = await response.text();
+          console.error('   Error response:', errorText);
+          throw new Error(`Server error: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('   ❌ Server communication failed:', error);
+        Alert.alert('❌ Server Error', `Failed to communicate with server: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return;
+      }
+
+      // Step 7: Send test notification
+      console.log('📱 Step 7: Test Notification');
+      try {
+        const testQuote: Quote = {
+          id: 999,
+          text: 'End-to-end test notification successful! 🎉',
+          author: 'Guras Test',
+          category: 'test'
+        };
+
+        await this.sendQuoteNotification(testQuote, 'daily_quote');
+        console.log('   ✅ Test notification sent successfully');
+
+        Alert.alert(
+          '🎉 Test Complete!',
+          'All push notification components are working correctly!\n\n' +
+          '✅ Platform: Compatible\n' +
+          '✅ Firebase: Initialized\n' +
+          '✅ Permissions: Granted\n' +
+          '✅ Device: Registered\n' +
+          '✅ FCM Token: Generated\n' +
+          '✅ Server: Connected\n' +
+          '✅ Notification: Sent\n\n' +
+          'You should receive a test notification shortly.',
+          [{ text: 'Excellent!' }]
+        );
+
+      } catch (error) {
+        console.error('   ❌ Test notification failed:', error);
+        Alert.alert('❌ Notification Error', `Failed to send test notification: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return;
+      }
+
+      console.log('🎉 === COMPLETE TEST FINISHED SUCCESSFULLY ===');
+
+    } catch (error) {
+      console.error('❌ Complete notification test failed:', error);
+      Alert.alert(
+        '❌ Test Failed',
+        `The complete notification test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  }
 }
 
-export default NotificationService.getInstance(); 
+export default NotificationService.getInstance();

@@ -213,7 +213,7 @@ const ProfileScreen: React.FC = () => {
 
       {/* FCM Test Button */}
       <View style={styles.refreshSection}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.refreshButton, { backgroundColor: brandColors.secondary }]}
           onPress={() => notificationService.testFCMTokenGeneration()}
         >
@@ -224,15 +224,58 @@ const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Force FCM Token Generation Button */}
+      <View style={styles.refreshSection}>
+        <TouchableOpacity
+          style={[styles.refreshButton, { backgroundColor: '#FF6B35' }]}
+          onPress={async () => {
+            try {
+              const token = await notificationService.forceGenerateFCMToken();
+              if (token) {
+                Alert.alert(
+                  '✅ Success!',
+                  `FCM Token generated successfully!\n\nToken: ${token.substring(0, 30)}...`,
+                  [{ text: 'OK' }]
+                );
+              }
+            } catch (error) {
+              Alert.alert(
+                '❌ Error',
+                `Failed to generate FCM token: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                [{ text: 'OK' }]
+              );
+            }
+          }}
+        >
+          <Feather name="zap" size={20} color={themeColors.card} />
+          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
+            🔑 Force FCM Token
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Debug Notifications Button */}
       <View style={styles.refreshSection}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.refreshButton, { backgroundColor: brandColors.accent }]}
           onPress={() => notificationService.debugNotificationStatus()}
         >
           <Feather name="info" size={20} color={themeColors.card} />
           <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
             Debug Notifications
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Complete Notification Test Button */}
+      <View style={styles.refreshSection}>
+        <TouchableOpacity
+          style={[styles.refreshButton, { backgroundColor: '#28A745' }]}
+          onPress={() => notificationService.runCompleteNotificationTest()}
+        >
+          <Feather name="check-circle" size={20} color={themeColors.card} />
+          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
+            🧪 Complete Test
           </Text>
         </TouchableOpacity>
       </View>
