@@ -95,45 +95,55 @@ class NotificationService {
 
       // Register the app with FCM - this is critical for APNs token
       let registrationSuccessful = false;
+
+      // First check if already registered
       try {
-        console.log('📱 Registering device for remote messages...');
-        await messaging().registerDeviceForRemoteMessages();
-        console.log('✅ Successfully registered device for remote messages');
-        registrationSuccessful = true;
-      } catch (registerError) {
-        console.error('❌ Failed to register device for remote messages:', registerError);
-        console.error('🔴 Registration error details:', JSON.stringify(registerError, null, 2));
-
-        // Show alert for TestFlight debugging
-        Alert.alert(
-          '❌ Registration Failed',
-          `Failed to register device for remote messages:\n\n${registerError?.message || 'Unknown error'}\n\nDetails: ${JSON.stringify(registerError, null, 2)}`,
-          [{ text: 'OK' }]
-        );
-
-        // Check if it's already registered
-        try {
-          const isRegistered = await messaging().isDeviceRegisteredForRemoteMessages;
-          console.log('📱 Device already registered for remote messages:', isRegistered);
-          if (isRegistered) {
-            registrationSuccessful = true;
-          }
-        } catch (checkError) {
-          console.warn('⚠️ Could not check registration status:', checkError);
+        const isAlreadyRegistered = messaging().isDeviceRegisteredForRemoteMessages;
+        console.log('📱 Device already registered check:', isAlreadyRegistered);
+        if (isAlreadyRegistered) {
+          console.log('✅ Device is already registered for remote messages');
+          registrationSuccessful = true;
         }
+      } catch (checkError) {
+        console.log('⚠️ Could not check existing registration status:', checkError);
+      }
 
-        if (!registrationSuccessful) {
-          console.error('🔴 CRITICAL: Device registration failed - APNs token not available');
-          console.error('🔴 This will prevent FCM token generation');
+      // If not already registered, try to register
+      if (!registrationSuccessful) {
+        try {
+          console.log('📱 Registering device for remote messages...');
+          await messaging().registerDeviceForRemoteMessages();
+          console.log('✅ Successfully registered device for remote messages');
+          registrationSuccessful = true;
+        } catch (registerError: any) {
+          console.error('❌ Failed to register device for remote messages:', registerError);
+          console.error('🔴 Registration error details:', JSON.stringify(registerError, null, 2));
 
-          // Show critical error alert
+          // Show alert for TestFlight debugging
           Alert.alert(
-            '🔴 CRITICAL ERROR',
-            'Device registration failed - APNs token not available. This will prevent FCM token generation.',
+            '❌ Registration Failed',
+            `Failed to register device for remote messages:\n\n${registerError?.message || 'Unknown error'}\n\nThis is required for FCM tokens. Without registration, FCM tokens cannot be generated.\n\nDetails: ${JSON.stringify(registerError, null, 2)}`,
             [{ text: 'OK' }]
           );
-          return; // Don't continue if registration failed
+
+          // Don't continue if registration failed
+          console.error('� CRITICAL: Device registration failed - stopping FCM initialization');
+          return;
         }
+      }
+
+      // Verify registration was successful
+      if (!registrationSuccessful) {
+        console.error('🔴 CRITICAL: Device registration failed - APNs token not available');
+        console.error('🔴 This will prevent FCM token generation');
+
+        // Show critical error alert
+        Alert.alert(
+          '🔴 CRITICAL ERROR',
+          'Device registration failed - APNs token not available. This will prevent FCM token generation. FCM tokens require successful device registration.',
+          [{ text: 'OK' }]
+        );
+        return; // Don't continue if registration failed
       }
 
       // Wait a moment for APNs token to be properly set
