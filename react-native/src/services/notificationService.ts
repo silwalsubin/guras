@@ -106,7 +106,7 @@ class NotificationService {
         
         // Check if it's already registered
         try {
-          const isRegistered = messaging().isDeviceRegisteredForRemoteMessages;
+          const isRegistered = await messaging().isDeviceRegisteredForRemoteMessages;
           console.log('📱 Device already registered for remote messages:', isRegistered);
           if (isRegistered) {
             registrationSuccessful = true;
@@ -727,113 +727,6 @@ class NotificationService {
     }
   }
 
-  // Force FCM token generation with comprehensive debugging
-  async forceGenerateFCMToken(): Promise<string | null> {
-    try {
-      console.log('🔑 Force generating FCM token...');
-      console.log('🔍 Method called successfully');
-
-      // Step 1: Check if Firebase is available
-      console.log('🔍 Checking Firebase messaging availability...');
-      console.log('🔍 messaging function:', typeof messaging);
-
-      if (typeof messaging !== 'function') {
-        throw new Error('Firebase messaging is not available - messaging is not a function');
-      }
-
-      try {
-        const messagingInstance = messaging();
-        console.log('✅ Firebase messaging instance available');
-        console.log('🔍 messaging instance type:', typeof messagingInstance);
-      } catch (firebaseError) {
-        console.error('❌ Firebase messaging not available:', firebaseError);
-        throw new Error(`Firebase messaging is not properly initialized: ${firebaseError}`);
-      }
-
-      // Step 2: Check permissions
-      const hasPermission = await messaging().hasPermission();
-      console.log('🔍 Current permission status:', hasPermission);
-
-      if (hasPermission !== messaging.AuthorizationStatus.AUTHORIZED &&
-          hasPermission !== messaging.AuthorizationStatus.PROVISIONAL) {
-        console.log('📱 Requesting notification permissions...');
-        const authStatus = await messaging().requestPermission({
-          alert: true,
-          badge: true,
-          sound: true,
-        });
-
-        if (authStatus !== messaging.AuthorizationStatus.AUTHORIZED &&
-            authStatus !== messaging.AuthorizationStatus.PROVISIONAL) {
-          throw new Error('Notification permission denied');
-        }
-      }
-
-      // Step 3: Register for remote notifications
-      console.log('📱 Registering device for remote messages...');
-      try {
-        await messaging().registerDeviceForRemoteMessages();
-        console.log('✅ Device registered for remote messages');
-      } catch (registerError) {
-        console.error('❌ Failed to register device:', registerError);
-
-        // Check if already registered
-        const isRegistered = messaging().isDeviceRegisteredForRemoteMessages;
-        console.log('📱 Device registration status:', isRegistered);
-
-        if (!isRegistered) {
-          throw new Error('Failed to register device for remote messages');
-        }
-      }
-
-      // Step 4: Wait for APNs token to be set
-      console.log('⏳ Waiting for APNs token...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Step 5: Try to get FCM token multiple times
-      let token = null;
-      const maxAttempts = 5;
-
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        console.log(`🔑 Attempt ${attempt}/${maxAttempts}: Getting FCM token...`);
-
-        try {
-          token = await messaging().getToken();
-
-          if (token && token.length > 0) {
-            console.log('✅ FCM token generated successfully!');
-            console.log('🔑 Token length:', token.length);
-            console.log('🔑 Token preview:', token.substring(0, 50) + '...');
-
-            // Store the token
-            this.fcmToken = token;
-            await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
-
-            // Register with server
-            await this.registerTokenWithServer(token);
-
-            return token;
-          } else {
-            console.warn(`⚠️ Attempt ${attempt}: Empty or null token received`);
-          }
-        } catch (tokenError) {
-          console.error(`❌ Attempt ${attempt} failed:`, tokenError);
-        }
-
-        if (attempt < maxAttempts) {
-          console.log(`⏳ Waiting 2 seconds before retry...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-      }
-
-      throw new Error('Failed to generate FCM token after multiple attempts');
-
-    } catch (error) {
-      console.error('❌ Force FCM token generation failed:', error);
-      throw error;
-    }
-  }
-
   // Schedule a notification for a specific time
   async scheduleNotification(quote: Quote, date: Date, type: 'daily_quote' | 'hourly_quote' | '5min_quote'): Promise<void> {
     try {
@@ -1189,17 +1082,19 @@ class NotificationService {
   async testBasicFirebaseConnection(): Promise<void> {
     try {
       console.log('🔍 === BASIC FIREBASE CONNECTION TEST ===');
-      
-      // Check if Firebase app is available
+
+      // Check if Firebase messaging module is available
       if (!messaging) {
         Alert.alert('❌ Error', 'Firebase messaging module not available');
         return;
       }
 
-      // Try to access Firebase app
+      // Try to access Firebase app properly
       try {
-        const app = require('@react-native-firebase/app').app();
+        const firebaseApp = require('@react-native-firebase/app').default;
+        const app = firebaseApp();
         console.log('✅ Firebase app available:', app.name);
+        console.log('✅ Firebase app options:', app.options);
       } catch (firebaseError) {
         console.error('❌ Firebase app error:', firebaseError);
         Alert.alert('❌ Firebase Error', 'Firebase app is not properly initialized');
@@ -1210,13 +1105,17 @@ class NotificationService {
       try {
         const messagingInstance = messaging();
         console.log('✅ Firebase messaging available');
+
+        // Try to check permission status as a basic test
+        const permissionStatus = await messagingInstance.hasPermission();
+        console.log('✅ Firebase messaging permission check successful:', permissionStatus);
       } catch (messagingError) {
         console.error('❌ Firebase messaging error:', messagingError);
         Alert.alert('❌ Messaging Error', 'Firebase messaging is not available');
         return;
       }
 
-      Alert.alert('✅ Basic Test', 'Firebase is properly connected and messaging is available');
+      Alert.alert('✅ Firebase Working!', 'Firebase is properly connected and messaging is available');
       console.log('🔍 === END BASIC TEST ===');
     } catch (error: any) {
       console.error('Error in basic Firebase test:', error);
