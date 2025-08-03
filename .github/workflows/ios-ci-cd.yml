@@ -303,25 +303,29 @@ jobs:
         # Install provisioning profile
         echo "📋 Installing App Store provisioning profile..."
         echo "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > /tmp/profile.mobileprovision
-        
+
         if [ ! -s /tmp/profile.mobileprovision ]; then
           echo "❌ Provisioning profile file is empty or missing"
           exit 1
         fi
-        
-        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-        cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-        
-        # Get the actual profile name from the installed profile
-        echo "🔍 Detecting installed provisioning profile name..."
-        PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | grep -A1 "<key>Name</key>" | tail -1 | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-        
-        if [ -z "$PROFILE_NAME" ]; then
-          echo "⚠️ Could not detect profile name, using secret value..."
-          PROFILE_NAME="${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}"
+
+        # Extract UUID from provisioning profile
+        PROFILE_UUID=$(security cms -D -i /tmp/profile.mobileprovision | grep -A1 "<key>UUID</key>" | tail -1 | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+
+        if [ -z "$PROFILE_UUID" ]; then
+          echo "❌ Could not extract UUID from provisioning profile"
+          exit 1
         fi
-        
-        echo "📋 Detected profile name: $PROFILE_NAME"
+
+        echo "📋 Provisioning profile UUID: $PROFILE_UUID"
+
+        # Install with proper UUID-based filename
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$PROFILE_UUID.mobileprovision
+
+        # Get the profile name for verification
+        PROFILE_NAME=$(security cms -D -i /tmp/profile.mobileprovision | grep -A1 "<key>Name</key>" | tail -1 | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+        echo "📋 Provisioning profile name: $PROFILE_NAME"
         
         # Verify certificate and profile
         echo "🔍 Verifying code signing setup..."
