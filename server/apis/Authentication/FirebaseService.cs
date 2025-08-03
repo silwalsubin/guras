@@ -28,6 +28,28 @@ public class FirebaseService : IFirebaseService
                     if (File.Exists(serviceAccountPath))
                     {
                         Console.WriteLine($"🔍 File size: {new FileInfo(serviceAccountPath).Length} bytes");
+                        
+                        // Read and parse the service account file to get project info
+                        try
+                        {
+                            var serviceAccountJson = File.ReadAllText(serviceAccountPath);
+                            var serviceAccountData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(serviceAccountJson);
+                            
+                            if (serviceAccountData != null && serviceAccountData.ContainsKey("project_id"))
+                            {
+                                Console.WriteLine($"🔍 Firebase Project ID: {serviceAccountData["project_id"]}");
+                            }
+                            
+                            if (serviceAccountData != null && serviceAccountData.ContainsKey("client_email"))
+                            {
+                                Console.WriteLine($"🔍 Service Account Email: {serviceAccountData["client_email"]}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"⚠️ Could not parse service account file: {ex.Message}");
+                        }
+                        
                         FirebaseApp.Create(new AppOptions
                         {
                             Credential = GoogleCredential.FromFile(serviceAccountPath)
