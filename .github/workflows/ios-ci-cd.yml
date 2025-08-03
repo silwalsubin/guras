@@ -373,7 +373,41 @@ jobs:
                    clean archive
                    
         echo "✅ Archive created successfully"
-        
+
+    - name: Verify entitlements in archive
+      working-directory: ./react-native/ios
+      run: |
+        echo "🔍 Checking entitlements in the built archive..."
+
+        # Find the app in the archive
+        APP_PATH="./build/Guras.xcarchive/Products/Applications/Guras.app"
+
+        if [ -d "$APP_PATH" ]; then
+          echo "📱 Found app at: $APP_PATH"
+
+          # Check the entitlements
+          echo "🔍 Extracting entitlements from signed app:"
+          codesign -d --entitlements :- "$APP_PATH" 2>/dev/null || echo "⚠️ Could not extract entitlements (app might not be signed yet)"
+
+          # Also check if the entitlements file exists in the app bundle
+          if [ -f "$APP_PATH/Guras.entitlements" ]; then
+            echo "📋 Entitlements file found in app bundle:"
+            cat "$APP_PATH/Guras.entitlements"
+          else
+            echo "⚠️ No entitlements file found in app bundle"
+          fi
+
+          # Check the Info.plist for any relevant settings
+          echo "📋 Checking Info.plist for relevant settings:"
+          /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$APP_PATH/Info.plist" 2>/dev/null || echo "No UIBackgroundModes found"
+          /usr/libexec/PlistBuddy -c "Print :FirebaseAppDelegateProxyEnabled" "$APP_PATH/Info.plist" 2>/dev/null || echo "No FirebaseAppDelegateProxyEnabled found"
+
+        else
+          echo "❌ App not found at expected path: $APP_PATH"
+          echo "📁 Contents of build directory:"
+          ls -la ./build/ || echo "Build directory not found"
+        fi
+
     - name: Create and push tag
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: |
