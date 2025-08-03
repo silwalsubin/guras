@@ -339,7 +339,7 @@
 				CODE_SIGN_ENTITLEMENTS = Guras/Guras.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 2.0.65;
+				CURRENT_PROJECT_VERSION = 2.0.66;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = BN6WSF9259;
 				ENABLE_BITCODE = NO;
@@ -349,7 +349,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.65;
+				MARKETING_VERSION = 2.0.66;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -375,7 +375,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: Subin Silwal (BN6WSF9259)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 2.0.65;
+				CURRENT_PROJECT_VERSION = 2.0.66;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = BN6WSF9259;
 				INFOPLIST_FILE = Guras/Info.plist;
@@ -384,7 +384,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.65;
+				MARKETING_VERSION = 2.0.66;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
