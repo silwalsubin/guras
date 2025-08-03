@@ -269,7 +269,28 @@ class NotificationService {
       // Handle background messages
       messaging().setBackgroundMessageHandler(async (remoteMessage) => {
         console.log('📬 FCM message received in background:', remoteMessage);
-        return Promise.resolve();
+        
+        try {
+          const { notification, data } = remoteMessage;
+          
+          // Process background notification data
+          if (data && data.type === 'daily_quote' && data.quote) {
+            try {
+              const quote = JSON.parse(data.quote);
+              // Store the quote for when app becomes active
+              await quotesService.setCurrentQuote(quote);
+              console.log('✅ Quote updated from background message');
+            } catch (parseError) {
+              console.warn('⚠️ Error parsing quote from background FCM data:', parseError);
+            }
+          }
+          
+          // Return resolved promise to indicate successful processing
+          return Promise.resolve();
+        } catch (error) {
+          console.error('❌ Error handling background message:', error);
+          return Promise.resolve(); // Always resolve to prevent retries
+        }
       });
 
       console.log('✅ FCM initialized successfully');
@@ -280,7 +301,7 @@ class NotificationService {
       // Show alert for TestFlight debugging
       Alert.alert(
         '❌ FCM Initialization Failed',
-        `FCM initialization failed:\n\n${error?.message || 'Unknown error'}\n\nThis is expected on iOS Simulator - use a real device for FCM testing.\n\nError details: ${JSON.stringify(error, null, 2)}`,
+        `FCM initialization failed:\n\n${error?.message || 'Unknown error'}\n\nThis is expected on iOS Simulator - use a real device for FCM testing.\n\nError details: ${error?.toString() || 'Unknown error'}`,
         [{ text: 'OK' }]
       );
     }
@@ -327,7 +348,7 @@ class NotificationService {
       // Show alert for TestFlight debugging
       Alert.alert(
         '⚠️ Server Registration Error',
-        `Error registering FCM token with server:\n\n${error?.message || 'Unknown error'}\n\nServer URL: ${API_CONFIG.BASE_URL}\n\nError details: ${JSON.stringify(error, null, 2)}`,
+        `Error registering FCM token with server:\n\n${error?.message || 'Unknown error'}\n\nServer URL: ${API_CONFIG.BASE_URL}\n\nError details: ${error?.toString() || 'Unknown error'}`,
         [{ text: 'OK' }]
       );
     }
@@ -338,23 +359,17 @@ class NotificationService {
     try {
       const { notification, data } = remoteMessage;
       
-      if (notification) {
-        // Show in-app notification or alert
-        Alert.alert(
-          notification.title || '🧘 Daily Wisdom',
-          notification.body || 'New quote available',
-          [
-            { text: 'Dismiss', style: 'cancel' },
-            { text: 'View', onPress: () => this.handleNotificationTap(data) }
-          ]
-        );
-      }
-
+      console.log('📬 Foreground message received:', { notification, data });
+      
+      // Don't show alerts for foreground messages - let system handle notifications
+      // The system will automatically show the notification banner when app is active
+      
       // Update quote if it's a quote notification
       if (data && data.type === 'daily_quote' && data.quote) {
         try {
           const quote = JSON.parse(data.quote);
           quotesService.setCurrentQuote(quote);
+          console.log('✅ Quote updated from foreground message');
         } catch (parseError) {
           console.warn('⚠️ Error parsing quote from FCM data:', parseError);
         }
@@ -367,7 +382,17 @@ class NotificationService {
   // Handle notification tap
   private handleNotificationTap(data: any): void {
     console.log('👆 Notification tapped:', data);
-    // Navigate to specific screen or update app state based on notification data
+    
+    // Handle navigation or app state updates based on notification data
+    if (data && data.type === 'daily_quote' && data.quote) {
+      try {
+        const quote = JSON.parse(data.quote);
+        quotesService.setCurrentQuote(quote);
+        console.log('✅ Quote updated from notification tap');
+      } catch (parseError) {
+        console.warn('⚠️ Error parsing quote from notification tap:', parseError);
+      }
+    }
   }
 
   // Send FCM notification via server
@@ -448,7 +473,7 @@ class NotificationService {
       // Show alert for TestFlight debugging
       Alert.alert(
         '❌ FCM Send Failed',
-        `Failed to send FCM notification via server:\n\n${error?.message || 'Unknown error'}\n\nServer URL: ${API_CONFIG.BASE_URL}\nFCM Token: ${this.fcmToken ? 'Available' : 'Missing'}\n\nError details: ${JSON.stringify(error, null, 2)}`,
+        `Failed to send FCM notification via server:\n\n${error?.message || 'Unknown error'}\n\nServer URL: ${API_CONFIG.BASE_URL}\nFCM Token: ${this.fcmToken ? 'Available' : 'Missing'}\n\nError details: ${error?.toString() || 'Unknown error'}`,
         [{ text: 'OK' }]
       );
 
@@ -1190,6 +1215,55 @@ class NotificationService {
         console.error('Error in FCM token test:', error);
         Alert.alert('❌ Test Error', 'An error occurred during the FCM token test: ' + (error?.message || 'Unknown error'));
       }
+  }
+
+  // Test background notification functionality
+  async testBackgroundNotification(): Promise<void> {
+    try {
+      console.log('🧪 === BACKGROUND NOTIFICATION TEST ===');
+      
+      // Check if we're on iOS Simulator
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - background notifications not available');
+        Alert.alert('📱 iOS Simulator', 'Background notifications cannot be tested on iOS Simulator. Use a real device or TestFlight.');
+        return;
+      }
+
+      console.log('📤 Sending test background notification...');
+      
+      // Create a test quote
+      const testQuote: Quote = {
+        id: 999,
+        text: "This is a test background notification",
+        author: "Test Author",
+        category: "test"
+      };
+
+      // Send notification that should appear in background
+      await this.sendQuoteNotification(testQuote, 'daily_quote');
+      
+      console.log('✅ Test background notification sent');
+      console.log('📱 Check your device notification center');
+      console.log('📱 The notification should appear even when app is in background');
+      
+      Alert.alert(
+        '✅ Test Sent',
+        'Background notification test sent!\n\n' +
+        '1. Put the app in background (press home button)\n' +
+        '2. Wait for the notification to appear\n' +
+        '3. Tap the notification to open the app\n\n' +
+        'If you don\'t see the notification, check:\n' +
+        '• Settings → Notifications → Guras\n' +
+        '• Ensure "Allow Notifications" is ON\n' +
+        '• Check "Show in Notification Center"',
+        [{ text: 'OK' }]
+      );
+      
+      console.log('🧪 === END BACKGROUND NOTIFICATION TEST ===');
+    } catch (error: any) {
+      console.error('❌ Background notification test failed:', error);
+      Alert.alert('❌ Test Failed', 'Background notification test failed: ' + (error?.message || 'Unknown error'));
+    }
   }
 
   // Cleanup
