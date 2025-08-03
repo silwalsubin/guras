@@ -337,6 +337,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Guras/Guras.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution: Subin Silwal (BN6WSF9259)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 2.0.67;
@@ -357,7 +358,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cosmos.guras;
 				PRODUCT_NAME = Guras;
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = GurasDistribution;
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = GurasDistribution;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -392,7 +393,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cosmos.guras;
 				PRODUCT_NAME = Guras;
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = GurasDistribution;
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = GurasDistribution;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
