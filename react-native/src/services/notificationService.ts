@@ -318,6 +318,21 @@ class NotificationService {
 
       console.log('📤 Registering FCM token with server:', API_CONFIG.BASE_URL);
       
+      // Get current user ID from auth context
+      let userId = 'anonymous-user';
+      try {
+        const { getAuth } = require('@react-native-firebase/auth');
+        const auth = getAuth();
+        if (auth.currentUser) {
+          userId = auth.currentUser.uid;
+          console.log('👤 Using authenticated user ID:', userId);
+        } else {
+          console.log('👤 No authenticated user, using anonymous ID');
+        }
+      } catch (authError) {
+        console.warn('⚠️ Could not get user ID from auth context:', authError?.toString() || 'Unknown error');
+      }
+      
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/register-token`, {
         method: 'POST',
         headers: {
@@ -326,7 +341,7 @@ class NotificationService {
         body: JSON.stringify({
           token,
           platform: Platform.OS,
-          userId: 'anonymous-user', // TODO: Get from auth context when user is signed in
+          userId: userId,
         }),
       });
 
