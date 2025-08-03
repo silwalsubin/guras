@@ -13,7 +13,6 @@ namespace apis.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly ILogger<NotificationController> _logger;
-        private static bool _firebaseInitialized = false;
         
         // In-memory storage for FCM tokens (for testing - replace with database in production)
         private static readonly List<string> _registeredTokens = new();
@@ -22,7 +21,6 @@ namespace apis.Controllers
         public NotificationController(ILogger<NotificationController> logger)
         {
             _logger = logger;
-            InitializeFirebase();
         }
 
         // Static method to get registered tokens (for scheduler access)
@@ -31,27 +29,6 @@ namespace apis.Controllers
             lock (_lock)
             {
                 return new List<string>(_registeredTokens);
-            }
-        }
-
-        private void InitializeFirebase()
-        {
-            if (!_firebaseInitialized)
-            {
-                try
-                {
-                    // Initialize Firebase Admin SDK
-                    FirebaseApp.Create(new AppOptions()
-                    {
-                        Credential = GoogleCredential.GetApplicationDefault(),
-                    });
-                    _firebaseInitialized = true;
-                    _logger.LogInformation("Firebase Admin SDK initialized successfully");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to initialize Firebase Admin SDK");
-                }
             }
         }
 
