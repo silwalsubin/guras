@@ -49,12 +49,45 @@ class NotificationService {
   private backgroundTaskId: NodeJS.Timeout | null = null;
   private initialized = false;
   private fcmToken: string | null = null;
+  private isSimulator: boolean = false;
 
   static getInstance(): NotificationService {
     if (!NotificationService.instance) {
       NotificationService.instance = new NotificationService();
     }
     return NotificationService.instance;
+  }
+
+  // Check if running on iOS Simulator
+  private async checkIfSimulator(): Promise<boolean> {
+    if (Platform.OS !== 'ios') {
+      return false;
+    }
+
+    try {
+      const DeviceInfo = require('react-native-device-info');
+      if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
+        const isIOSSimulator = await DeviceInfo.isSimulator();
+        console.log('📱 iOS Simulator check:', isIOSSimulator);
+        return isIOSSimulator;
+      }
+    } catch (error) {
+      console.log('Could not check simulator status:', error);
+    }
+
+    // Fallback check for simulator
+    try {
+      const { Platform: RNPlatform } = require('react-native');
+      if (RNPlatform.OS === 'ios' && __DEV__) {
+        // Additional check for development mode
+        console.log('📱 Development mode detected on iOS');
+        return true; // Assume simulator in dev mode
+      }
+    } catch (error) {
+      console.log('Could not perform fallback simulator check:', error);
+    }
+
+    return false;
   }
 
   // Initialize Firebase Cloud Messaging
@@ -71,22 +104,12 @@ class NotificationService {
       // Firebase connection check - removed debugging test to prevent initialization errors
 
       // Check if we're on iOS Simulator
-      if (Platform.OS === 'ios') {
-        try {
-          const DeviceInfo = require('react-native-device-info');
-          if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
-            const isIOSSimulator = await DeviceInfo.isSimulator();
-            if (isIOSSimulator) {
-              console.log('📱 iOS Simulator detected - FCM will not work');
-              console.log('ℹ️ FCM requires a real device or TestFlight for push notifications');
-              return;
-            }
-          } else {
-            console.log('⚠️ DeviceInfo.isSimulator not available, continuing...');
-          }
-        } catch (error) {
-          console.log('Could not check simulator status:', error);
-        }
+      this.isSimulator = await this.checkIfSimulator();
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - FCM will not work');
+        console.log('ℹ️ FCM requires a real device or TestFlight for push notifications');
+        console.log('ℹ️ Notifications will be simulated locally');
+        return;
       }
 
       // Check current permission status
@@ -266,6 +289,12 @@ class NotificationService {
   // Register FCM token with server
   private async registerTokenWithServer(token: string): Promise<void> {
     try {
+      // Check if we're on iOS Simulator
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - skipping FCM token registration');
+        return;
+      }
+
       console.log('📤 Registering FCM token with server:', API_CONFIG.BASE_URL);
       
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/register-token`, {
@@ -348,6 +377,20 @@ class NotificationService {
     data: { [key: string]: string };
   }): Promise<void> {
     try {
+      // Check if we're on iOS Simulator
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - simulating FCM notification locally');
+        console.log('📱 Notification would be:', notificationData.title, '-', notificationData.body);
+        
+        // Show a local alert instead of sending FCM
+        Alert.alert(
+          '📱 Simulator Notification',
+          `${notificationData.title}\n\n${notificationData.body}\n\n(Simulated - FCM not available on simulator)`,
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
       // Check if we have a valid FCM token
       if (!this.fcmToken) {
         console.warn('⚠️ No FCM token available, trying to get one...');
@@ -611,6 +654,12 @@ class NotificationService {
       
       if (!preferences.enabled) return;
 
+      // Check if we're on iOS Simulator
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - skipping FCM notification');
+        return;
+      }
+
       // Check permission first
       const hasPermission = await this.hasPermission();
       if (!hasPermission) {
@@ -694,6 +743,22 @@ class NotificationService {
 
       console.log(`🔔 Sending push notification: ${title} - ${body.substring(0, 50)}...`);
       
+      // Check if we're on iOS Simulator
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - simulating quote notification locally');
+        
+        // Show a local alert instead of sending FCM
+        Alert.alert(
+          '📱 Simulator Quote Notification',
+          `${title}\n\n${body}\n\n(Simulated - FCM not available on simulator)`,
+          [{ text: 'OK' }]
+        );
+        
+        // Always update the current quote in the app
+        await quotesService.setCurrentQuote(quote);
+        return;
+      }
+      
       // Force FCM token generation if not available
       if (!this.fcmToken) {
         console.log('🔑 No FCM token available, forcing token generation...');
@@ -757,30 +822,14 @@ class NotificationService {
       console.log('🧪 Sending test notification...');
       
       // Check if we're on iOS Simulator
-      if (Platform.OS === 'ios') {
-        try {
-          const DeviceInfo = require('react-native-device-info');
-          console.log('📱 DeviceInfo loaded:', !!DeviceInfo);
-          
-          if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
-            const isIOSSimulator = await DeviceInfo.isSimulator();
-            console.log('📱 iOS Simulator:', isIOSSimulator);
-            
-            if (isIOSSimulator) {
-              console.log('📱 iOS Simulator detected - using local notification');
-              Alert.alert(
-                '📱 iOS Simulator Notice',
-                'FCM does not work on iOS Simulator. This is a local notification test.\n\nTo test real push notifications, use a physical device or TestFlight.',
-                [{ text: 'OK' }]
-              );
-              return;
-            }
-          } else {
-            console.log('⚠️ DeviceInfo.isSimulator not available, continuing...');
-          }
-        } catch (error) {
-          console.log('Could not check simulator status:', error);
-        }
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - using local notification');
+        Alert.alert(
+          '📱 iOS Simulator Notice',
+          'FCM does not work on iOS Simulator. This is a local notification test.\n\nTo test real push notifications, use a physical device or TestFlight.',
+          [{ text: 'OK' }]
+        );
+        return;
       }
 
       // Check if we have FCM token for real devices
@@ -911,23 +960,8 @@ class NotificationService {
     try {
       console.log('🔍 === NOTIFICATION DEBUG INFO ===');
       
-      // Check if we're on iOS Simulator
-      let isIOSSimulator = false;
-      if (Platform.OS === 'ios') {
-        try {
-          const DeviceInfo = require('react-native-device-info');
-          if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
-            isIOSSimulator = await DeviceInfo.isSimulator();
-          } else {
-            console.log('⚠️ DeviceInfo.isSimulator not available');
-          }
-        } catch (error) {
-          console.log('Could not check simulator status:', error);
-        }
-      }
-      
       console.log('📱 Platform:', Platform.OS);
-      console.log('📱 iOS Simulator:', isIOSSimulator);
+      console.log('📱 iOS Simulator:', this.isSimulator);
       
       // Check FCM availability
       console.log('📱 Firebase messaging available:', !!messaging);
@@ -958,7 +992,7 @@ class NotificationService {
       console.log('🔄 Scheduler running:', !!this.backgroundTaskId);
       
       // Certificate trust check for iOS
-      if (Platform.OS === 'ios' && !isIOSSimulator) {
+      if (Platform.OS === 'ios' && !this.isSimulator) {
         console.log('🔐 CERTIFICATE CHECK:');
         console.log('🔐 Check Keychain Access for "Apple Push Services: com.cosmos.guras"');
         console.log('🔐 Certificate should be set to "Always Trust"');
@@ -971,18 +1005,18 @@ class NotificationService {
       Alert.alert(
         '🔍 Notification Debug Info',
         `Platform: ${Platform.OS}\n` +
-        `iOS Simulator: ${isIOSSimulator ? '✅ Yes' : '❌ No'}\n` +
+        `iOS Simulator: ${this.isSimulator ? '✅ Yes' : '❌ No'}\n` +
         `Permission: ${hasPermission ? '✅ Granted' : '❌ Denied'}\n` +
         `FCM Token: ${this.fcmToken ? '✅ Available' : '❌ Missing'}\n` +
         `Preferences: ${preferences.enabled ? '✅ Enabled' : '❌ Disabled'}\n` +
         `Scheduler: ${this.backgroundTaskId ? '✅ Running' : '❌ Stopped'}\n\n` +
-        `${isIOSSimulator ? '⚠️ FCM does not work on iOS Simulator!\n\n' : ''}` +
-        `${Platform.OS === 'ios' && !isIOSSimulator && !this.fcmToken ? '🔐 FCM Token Missing - Check Firebase Console\n\n' : ''}` +
+        `${this.isSimulator ? '⚠️ FCM does not work on iOS Simulator!\n\n' : ''}` +
+        `${Platform.OS === 'ios' && !this.isSimulator && !this.fcmToken ? '🔐 FCM Token Missing - Check Firebase Console\n\n' : ''}` +
         `If notifications aren't working:\n` +
         `1. Check Settings → Notifications → Guras\n` +
         `2. Ensure "Allow Notifications" is ON\n` +
         `3. Use a real device or TestFlight for FCM testing\n` +
-        `${Platform.OS === 'ios' && !isIOSSimulator && !this.fcmToken ? '4. Verify Firebase Console APNs setup' : ''}`,
+        `${Platform.OS === 'ios' && !this.isSimulator && !this.fcmToken ? '4. Verify Firebase Console APNs setup' : ''}`,
         [{ text: 'OK' }]
       );
     } catch (error) {
@@ -998,26 +1032,11 @@ class NotificationService {
       // Check platform
       console.log('📱 Platform:', Platform.OS);
       
-      if (Platform.OS === 'ios') {
-        try {
-          const DeviceInfo = require('react-native-device-info');
-          console.log('📱 DeviceInfo loaded:', !!DeviceInfo);
-          
-          if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
-            const isIOSSimulator = await DeviceInfo.isSimulator();
-            console.log('📱 iOS Simulator:', isIOSSimulator);
-            
-            if (isIOSSimulator) {
-              Alert.alert('📱 iOS Simulator', 'FCM tokens cannot be generated on iOS Simulator. Use a real device or TestFlight.');
-              return;
-            }
-          } else {
-            console.log('⚠️ DeviceInfo.isSimulator not available, continuing...');
-            console.log('📱 DeviceInfo methods:', Object.keys(DeviceInfo || {}));
-          }
-        } catch (error) {
-          console.log('Could not check simulator status:', error);
-        }
+      // Check if we're on iOS Simulator
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - FCM tokens cannot be generated');
+        Alert.alert('📱 iOS Simulator', 'FCM tokens cannot be generated on iOS Simulator. Use a real device or TestFlight.');
+        return;
       }
 
       console.log('🔑 Attempting to get FCM token...');
@@ -1183,6 +1202,13 @@ class NotificationService {
   async testBasicFirebaseConnection(): Promise<void> {
     try {
       console.log('🔍 === BASIC FIREBASE CONNECTION TEST ===');
+
+      // Check if we're on iOS Simulator
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - Firebase connection test not applicable');
+        Alert.alert('📱 iOS Simulator', 'Firebase connection test is not applicable on iOS Simulator. Use a real device or TestFlight for Firebase testing.');
+        return;
+      }
 
       // Check if Firebase messaging module is available
       if (!messaging) {
