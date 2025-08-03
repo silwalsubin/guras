@@ -69,16 +69,23 @@ namespace apis.Services
 
         private async Task<List<string>> GetActiveUserTokens()
         {
-            // TODO: Replace with actual database query
-            // This should query your database to get FCM tokens for users who:
-            // 1. Have notifications enabled
-            // 2. Are due for a notification based on their frequency
-            // 3. Are not in quiet hours
-            
-            _logger.LogDebug("Getting active user tokens from database");
-            
-            // Placeholder - return empty list for now
-            return new List<string>();
+            try
+            {
+                // For now, get tokens from the NotificationController's in-memory storage
+                // In production, this would query the database
+                _logger.LogDebug("Getting active user tokens from memory storage");
+                
+                // Access the static tokens from NotificationController
+                var tokens = apis.Controllers.NotificationController.GetStoredTokens();
+                _logger.LogInformation($"Found {tokens.Count} registered tokens");
+                
+                return tokens;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting active user tokens");
+                return new List<string>();
+            }
         }
 
         private async Task SendQuoteNotificationToUsers(List<string> userTokens, QuoteData quote)

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using FirebaseAdmin;
@@ -13,11 +14,24 @@ namespace apis.Controllers
     {
         private readonly ILogger<NotificationController> _logger;
         private static bool _firebaseInitialized = false;
+        
+        // In-memory storage for FCM tokens (for testing - replace with database in production)
+        private static readonly List<string> _registeredTokens = new();
+        private static readonly object _lock = new();
 
         public NotificationController(ILogger<NotificationController> logger)
         {
             _logger = logger;
             InitializeFirebase();
+        }
+
+        // Static method to get registered tokens (for scheduler access)
+        public static List<string> GetStoredTokens()
+        {
+            lock (_lock)
+            {
+                return new List<string>(_registeredTokens);
+            }
         }
 
         private void InitializeFirebase()
@@ -42,15 +56,22 @@ namespace apis.Controllers
         }
 
         [HttpPost("register-token")]
+        [AllowAnonymous]
         public async Task<IActionResult> RegisterToken([FromBody] RegisterTokenRequest request)
         {
             try
             {
                 _logger.LogInformation($"Registering FCM token for user {request.UserId} on {request.Platform}");
                 
-                // TODO: Store token in database with user association
-                // For now, just log it
-                _logger.LogInformation($"FCM Token: {request.Token?[..20]}...");
+                // Store token in memory (for testing - replace with database in production)
+                lock (_lock)
+                {
+                    if (!_registeredTokens.Contains(request.Token))
+                    {
+                        _registeredTokens.Add(request.Token);
+                        _logger.LogInformation($"FCM Token stored: {request.Token?[..20]}... (Total tokens: {_registeredTokens.Count})");
+                    }
+                }
                 
                 return Ok(new { success = true, message = "Token registered successfully" });
             }
@@ -110,6 +131,65 @@ namespace apis.Controllers
             {
                 _logger.LogError(ex, "Error sending FCM notification");
                 return StatusCode(500, new { success = false, message = "Failed to send notification" });
+            }
+        }
+
+        [HttpGet("registered-tokens")]
+        [AllowAnonymous]
+        public IActionResult GetRegisteredTokens()
+        {
+            try
+            {
+                lock (_lock)
+                {
+                    return Ok(new { 
+                        success = true, 
+                        tokenCount = _registeredTokens.Count,
+                        tokens = _registeredTokens.Select(t => t[..20] + "...").ToList()
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting registered tokens");
+                return StatusCode(500, new { success = false, message = "Failed to get tokens" });
+            }
+        }
+
+        [HttpPost("test-notification")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SendTestNotification()
+        {
+            try
+            {
+                lock (_lock)
+                {
+                    if (!_registeredTokens.Any())
+                    {
+                        return BadRequest(new { success = false, message = "No registered tokens found" });
+                    }
+
+                    var testQuote = new QuoteData
+                    {
+                        Text = "This is a test notification from the server!",
+                        Author = "Test System",
+                        Category = "test"
+                    };
+
+                    var request = new SendQuoteNotificationRequest
+                    {
+                        UserTokens = _registeredTokens,
+                        Quote = testQuote
+                    };
+
+                    // Send the notification
+                    return SendQuoteNotification(request).Result;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending test notification");
+                return StatusCode(500, new { success = false, message = "Failed to send test notification" });
             }
         }
 
