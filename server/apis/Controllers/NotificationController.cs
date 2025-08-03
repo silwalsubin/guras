@@ -193,6 +193,33 @@ namespace apis.Controllers
             }
         }
 
+        [HttpGet("firebase-status")]
+        [AllowAnonymous]
+        public IActionResult GetFirebaseStatus()
+        {
+            try
+            {
+                var firebaseApp = FirebaseApp.DefaultInstance;
+                var isInitialized = firebaseApp != null;
+                
+                return Ok(new { 
+                    success = true, 
+                    firebaseInitialized = isInitialized,
+                    registeredTokensCount = _registeredTokens.Count,
+                    message = isInitialized ? "Firebase is properly configured" : "Firebase is not configured"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { 
+                    success = false, 
+                    firebaseInitialized = false,
+                    registeredTokensCount = _registeredTokens.Count,
+                    message = $"Firebase error: {ex.Message}"
+                });
+            }
+        }
+
         [HttpPost("send-quote")]
         public async Task<IActionResult> SendQuoteNotification([FromBody] SendQuoteNotificationRequest request)
         {
@@ -204,6 +231,8 @@ namespace apis.Controllers
                 {
                     return BadRequest(new { success = false, message = "No user tokens provided" });
                 }
+
+
 
                 var messages = request.UserTokens.Select(token => new Message()
                 {

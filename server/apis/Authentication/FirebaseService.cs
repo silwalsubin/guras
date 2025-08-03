@@ -13,26 +13,53 @@ public class FirebaseService : IFirebaseService
         // Initialize Firebase Admin SDK if not already initialized
         if (FirebaseApp.DefaultInstance == null)
         {
-            // For development, you can use a service account key file
-            // In production, you should use environment variables or secure configuration
             var serviceAccountPath = configuration["Firebase:ServiceAccountPath"];
             
-            if (!string.IsNullOrEmpty(serviceAccountPath) && File.Exists(serviceAccountPath))
+            try
             {
-                FirebaseApp.Create(new AppOptions
+                if (!string.IsNullOrEmpty(serviceAccountPath) && File.Exists(serviceAccountPath))
                 {
-                    Credential = GoogleCredential.FromFile(serviceAccountPath)
-                });
+                    FirebaseApp.Create(new AppOptions
+                    {
+                        Credential = GoogleCredential.FromFile(serviceAccountPath)
+                    });
+                    Console.WriteLine($"✅ Firebase Admin SDK initialized successfully from {serviceAccountPath}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Firebase service account file not found at: {serviceAccountPath}");
+                    Console.WriteLine("📋 Current directory: " + Directory.GetCurrentDirectory());
+                    Console.WriteLine("📋 Available files in current directory:");
+                    foreach (var file in Directory.GetFiles("."))
+                    {
+                        Console.WriteLine($"   - {file}");
+                    }
+                    
+                    // For development/testing, try default credentials
+                    try
+                    {
+                        FirebaseApp.Create(new AppOptions
+                        {
+                            Credential = GoogleCredential.GetApplicationDefault()
+                        });
+                        Console.WriteLine("✅ Firebase Admin SDK initialized with default credentials");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"❌ Failed to initialize Firebase with default credentials: {ex.Message}");
+                        Console.WriteLine("⚠️ Firebase authentication and notifications will not work");
+                    }
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // For development/testing, you can use default credentials
-                // Make sure to set GOOGLE_APPLICATION_CREDENTIALS environment variable
-                FirebaseApp.Create(new AppOptions
-                {
-                    Credential = GoogleCredential.GetApplicationDefault()
-                });
+                Console.WriteLine($"❌ Failed to initialize Firebase Admin SDK: {ex.Message}");
+                Console.WriteLine("⚠️ Firebase authentication and notifications will not work");
             }
+        }
+        else
+        {
+            Console.WriteLine("✅ Firebase Admin SDK already initialized");
         }
 
         _firebaseAuth = FirebaseAuth.DefaultInstance;
