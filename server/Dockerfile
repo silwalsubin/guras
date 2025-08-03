@@ -29,6 +29,9 @@ RUN apt-get update && apt-get install -y \
 # Copy the published application
 COPY --from=build /app/publish .
 
+# Copy the Firebase service account file to the runtime container
+COPY --from=build /src/apis/guras-firebase-adminsdk.json ./apis/
+
 # Expose port 80
 EXPOSE 80
 
