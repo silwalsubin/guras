@@ -14,8 +14,9 @@ namespace apis.Controllers
     {
         private readonly ILogger<NotificationController> _logger;
         
-        // In-memory storage for FCM tokens (for testing - replace with database in production)
-        private static readonly List<string> _registeredTokens = new();
+        // In-memory storage for FCM tokens with user associations (for testing - replace with database in production)
+        private static readonly Dictionary<string, List<string>> _userTokens = new(); // userId -> List<token>
+        private static readonly Dictionary<string, string> _tokenUsers = new(); // token -> userId
         private static readonly object _lock = new();
 
         public NotificationController(ILogger<NotificationController> logger)
@@ -28,7 +29,7 @@ namespace apis.Controllers
         {
             lock (_lock)
             {
-                return new List<string>(_registeredTokens);
+                return _tokenUsers.Keys.ToList();
             }
         }
 
@@ -40,14 +41,33 @@ namespace apis.Controllers
             {
                 _logger.LogInformation($"Registering FCM token for user {request.UserId} on {request.Platform}");
                 
-                // Store token in memory (for testing - replace with database in production)
+                // Store token with user association in memory (for testing - replace with database in production)
                 lock (_lock)
                 {
-                    if (!_registeredTokens.Contains(request.Token))
+                    // Remove token from previous user if it exists
+                    if (_tokenUsers.ContainsKey(request.Token))
                     {
-                        _registeredTokens.Add(request.Token);
-                        _logger.LogInformation($"FCM Token stored: {request.Token?[..20]}... (Total tokens: {_registeredTokens.Count})");
+                        var previousUserId = _tokenUsers[request.Token];
+                        if (_userTokens.ContainsKey(previousUserId))
+                        {
+                            _userTokens[previousUserId].Remove(request.Token);
+                            if (_userTokens[previousUserId].Count == 0)
+                            {
+                                _userTokens.Remove(previousUserId);
+                            }
+                        }
+                        _logger.LogInformation($"Token reassigned from user {previousUserId} to user {request.UserId}");
                     }
+
+                    // Add token to new user
+                    if (!_userTokens.ContainsKey(request.UserId))
+                    {
+                        _userTokens[request.UserId] = new List<string>();
+                    }
+                    _userTokens[request.UserId].Add(request.Token);
+                    _tokenUsers[request.Token] = request.UserId;
+                    
+                    _logger.LogInformation($"FCM Token stored for user {request.UserId}: {request.Token?[..20]}... (Total users: {_userTokens.Count}, Total tokens: {_tokenUsers.Count})");
                 }
                 
                 return Ok(new { success = true, message = "Token registered successfully" });
@@ -121,8 +141,10 @@ namespace apis.Controllers
                 {
                     return Ok(new { 
                         success = true, 
-                        tokenCount = _registeredTokens.Count,
-                        tokens = _registeredTokens.Select(t => t[..20] + "...").ToList()
+                        userTokens = _userTokens,
+                        tokenUsers = _tokenUsers,
+                        totalUsers = _userTokens.Count,
+                        totalTokens = _tokenUsers.Count
                     });
                 }
             }
@@ -141,7 +163,7 @@ namespace apis.Controllers
             {
                 lock (_lock)
                 {
-                    if (!_registeredTokens.Any())
+                    if (!_tokenUsers.Any())
                     {
                         return BadRequest(new { success = false, message = "No registered tokens found" });
                     }
@@ -155,7 +177,7 @@ namespace apis.Controllers
 
                     var request = new SendQuoteNotificationRequest
                     {
-                        UserTokens = _registeredTokens,
+                        UserTokens = _tokenUsers.Keys.ToList(),
                         Quote = testQuote
                     };
 
@@ -182,7 +204,7 @@ namespace apis.Controllers
                 return Ok(new { 
                     success = true, 
                     firebaseInitialized = isInitialized,
-                    registeredTokensCount = _registeredTokens.Count,
+                    registeredTokensCount = _tokenUsers.Count,
                     message = isInitialized ? "Firebase is properly configured" : "Firebase is not configured"
                 });
             }
@@ -191,7 +213,7 @@ namespace apis.Controllers
                 return Ok(new { 
                     success = false, 
                     firebaseInitialized = false,
-                    registeredTokensCount = _registeredTokens.Count,
+                    registeredTokensCount = _tokenUsers.Count,
                     message = $"Firebase error: {ex.Message}"
                 });
             }
