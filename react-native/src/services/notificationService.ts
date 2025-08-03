@@ -633,12 +633,13 @@ class NotificationService {
     }
   }
 
-  // Start the quote scheduler
+  // Start quote scheduler - now uses server-side scheduling instead of client-side intervals
   async startQuoteScheduler(): Promise<void> {
     try {
       // Clear existing scheduler
       if (this.backgroundTaskId) {
         clearInterval(this.backgroundTaskId);
+        this.backgroundTaskId = null;
       }
 
       // Get notification preferences
@@ -649,15 +650,25 @@ class NotificationService {
         return;
       }
 
-      // Set up interval based on frequency (checking every 5 minutes for precision)
-      this.backgroundTaskId = setInterval(async () => {
-        await this.checkAndSendQuoteNotification();
-      }, 5 * 60 * 1000); // Check every 5 minutes
+      // Check if we're on iOS Simulator
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - server scheduling not available');
+        return;
+      }
 
-      console.log('✅ Push notification scheduler started (checking every 5 minutes)');
+      // Check permission first
+      const hasPermission = await this.hasPermission();
+      if (!hasPermission) {
+        console.log('⚠️ No notification permission - cannot schedule');
+        return;
+      }
+
+      console.log('✅ Notification scheduler started - using server-side scheduling');
+      console.log('📱 Background notifications will be handled by server');
+      console.log('📱 Check notification center for scheduled notifications');
       
-      // Also check immediately
-      await this.checkAndSendQuoteNotification();
+      // Send initial notification for testing
+      await this.sendImmediateTestNotification();
     } catch (error) {
       console.error('Error starting quote scheduler:', error);
     }
@@ -860,44 +871,39 @@ class NotificationService {
       // Check if we have FCM token for real devices
       if (!this.fcmToken) {
         console.log('⚠️ No FCM token available');
-        
-        // Show appropriate message based on platform
-        if (Platform.OS === 'ios') {
-          Alert.alert(
-            '⚠️ FCM Token Missing',
-            'FCM token is not available. This could be because:\n\n' +
-            '1. You\'re running on iOS Simulator (FCM doesn\'t work here)\n' +
-            '2. Firebase is not properly configured\n' +
-            '3. Notification permissions are not granted\n\n' +
-            'Try on a real device or TestFlight for FCM testing.',
-            [{ text: 'OK' }]
-          );
-        } else {
-          Alert.alert(
-            '⚠️ FCM Token Missing',
-            'FCM token is not available. Check Firebase configuration and permissions.',
-            [{ text: 'OK' }]
-          );
-        }
+        Alert.alert(
+          '⚠️ No FCM Token',
+          'FCM token not available. This is required for push notifications.\n\nPlease restart the app and try again.',
+          [{ text: 'OK' }]
+        );
         return;
       }
 
+      // Create a test quote
       const testQuote: Quote = {
-        id: 999,
-        text: 'This is a test notification from Guras! 🌟',
-        author: 'Test',
-        category: 'test'
+        id: 888,
+        text: "This is a manual test notification from the app",
+        author: "Manual Test",
+        category: "test"
       };
 
+      // Send the notification
       await this.sendQuoteNotification(testQuote, 'daily_quote');
-      console.log('✅ Test notification sent successfully');
-    } catch (error: any) {
-      console.error('Error sending test notification:', error);
+      
+      console.log('✅ Manual test notification sent');
       Alert.alert(
-        '⚠️ Test Error',
-        'There was an issue sending the notification: ' + (error?.message || 'Unknown error'),
+        '✅ Test Notification Sent',
+        'Manual test notification sent!\n\n' +
+        'Check your notification center for the notification.\n\n' +
+        'If you don\'t see it:\n' +
+        '• Check Settings → Notifications → Guras\n' +
+        '• Ensure "Allow Notifications" is ON\n' +
+        '• Try putting the app in background first',
         [{ text: 'OK' }]
       );
+    } catch (error: any) {
+      console.error('❌ Manual test notification failed:', error);
+      Alert.alert('❌ Test Failed', 'Failed to send manual test notification: ' + (error?.message || 'Unknown error'));
     }
   }
 
@@ -1215,6 +1221,56 @@ class NotificationService {
         console.error('Error in FCM token test:', error);
         Alert.alert('❌ Test Error', 'An error occurred during the FCM token test: ' + (error?.message || 'Unknown error'));
       }
+  }
+
+  // Send an immediate test notification
+  async sendImmediateTestNotification(): Promise<void> {
+    try {
+      console.log('🧪 Sending immediate test notification...');
+      
+      // Check if we're on iOS Simulator
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator detected - cannot send real notifications');
+        Alert.alert('📱 iOS Simulator', 'Cannot send real notifications on simulator. Use a real device or TestFlight.');
+        return;
+      }
+
+      // Check permission
+      const hasPermission = await this.hasPermission();
+      if (!hasPermission) {
+        console.log('⚠️ No notification permission');
+        Alert.alert('⚠️ Permission Required', 'Please enable notifications in Settings → Notifications → Guras');
+        return;
+      }
+
+      // Create a test quote
+      const testQuote: Quote = {
+        id: 999,
+        text: "This is a test background notification - if you see this, notifications are working!",
+        author: "Test System",
+        category: "test"
+      };
+
+      // Send notification
+      await this.sendQuoteNotification(testQuote, 'daily_quote');
+      
+      console.log('✅ Test notification sent');
+      Alert.alert(
+        '✅ Test Notification Sent',
+        'Test notification has been sent!\n\n' +
+        '1. Put the app in background (press home button)\n' +
+        '2. Check notification center\n' +
+        '3. You should see the notification\n\n' +
+        'If you don\'t see it, check:\n' +
+        '• Settings → Notifications → Guras\n' +
+        '• Ensure "Allow Notifications" is ON\n' +
+        '• Check "Show in Notification Center"',
+        [{ text: 'OK' }]
+      );
+    } catch (error: any) {
+      console.error('❌ Test notification failed:', error);
+      Alert.alert('❌ Test Failed', 'Failed to send test notification: ' + (error?.message || 'Unknown error'));
+    }
   }
 
   // Test background notification functionality
