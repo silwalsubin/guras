@@ -75,7 +75,13 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error registering FCM token");
-                return StatusCode(500, new { success = false, message = "Failed to register token" });
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to register token",
+                    error = ex.Message,
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
+                });
             }
         }
 
@@ -127,7 +133,13 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending FCM notification");
-                return StatusCode(500, new { success = false, message = "Failed to send notification" });
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to send notification",
+                    error = ex.Message,
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
+                });
             }
         }
 
@@ -151,7 +163,13 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting registered tokens");
-                return StatusCode(500, new { success = false, message = "Failed to get tokens" });
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to get tokens",
+                    error = ex.Message,
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
+                });
             }
         }
 
@@ -188,7 +206,13 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending test notification");
-                return StatusCode(500, new { success = false, message = "Failed to send test notification" });
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to send test notification",
+                    error = ex.Message,
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
+                });
             }
         }
 
@@ -279,7 +303,183 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending quote notifications");
-                return StatusCode(500, new { success = false, message = "Failed to send notifications" });
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to send notifications",
+                    error = ex.Message,
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
+
+        [HttpPost("test-fcm-connection")]
+        [AllowAnonymous]
+        public async Task<IActionResult> TestFCMConnection([FromBody] TestFCMConnectionRequest request)
+        {
+            try
+            {
+                var firebaseApp = FirebaseApp.DefaultInstance;
+                if (firebaseApp == null)
+                {
+                    return BadRequest(new { success = false, message = "Firebase not initialized" });
+                }
+
+                if (string.IsNullOrEmpty(request.Token))
+                {
+                    return BadRequest(new { success = false, message = "Token is required" });
+                }
+
+                _logger.LogInformation($"Testing FCM connection with token: {request.Token[..20]}...");
+
+                // Try to send a test message to the provided token
+                var testMessage = new Message()
+                {
+                    Token = request.Token,
+                    Notification = new Notification()
+                    {
+                        Title = request.Title ?? "🧘 FCM Connection Test",
+                        Body = request.Body ?? "This is a test message to verify FCM connectivity!"
+                    },
+                    Data = new Dictionary<string, string>
+                    {
+                        ["type"] = "fcm_connection_test",
+                        ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(),
+                        ["test"] = "true"
+                    },
+                    Android = new AndroidConfig()
+                    {
+                        Notification = new AndroidNotification()
+                        {
+                            Sound = "default",
+                            Priority = NotificationPriority.HIGH,
+                            ChannelId = "test-notifications"
+                        }
+                    },
+                    Apns = new ApnsConfig()
+                    {
+                        Aps = new Aps()
+                        {
+                            Sound = "default",
+                            Badge = 1
+                        }
+                    }
+                };
+
+                try
+                {
+                    var response = await FirebaseMessaging.DefaultInstance.SendAsync(testMessage);
+                    _logger.LogInformation($"FCM connection test successful: {response}");
+                    
+                    return Ok(new { 
+                        success = true, 
+                        message = "FCM connection test completed successfully",
+                        messageId = response,
+                        token = request.Token[..20] + "..."
+                    });
+                }
+                catch (FirebaseMessagingException ex)
+                {
+                    _logger.LogError(ex, "Firebase messaging error during connection test");
+                    return StatusCode(500, new { 
+                        success = false, 
+                        message = "FCM connection test failed",
+                        error = ex.Message,
+                        errorType = ex.GetType().Name,
+                        stackTrace = ex.StackTrace,
+                        token = request.Token[..20] + "..."
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during FCM connection test");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "FCM connection test failed",
+                    error = ex.Message,
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
+
+        [HttpPost("test-token")]
+        [AllowAnonymous]
+        public async Task<IActionResult> TestSpecificToken([FromBody] TestTokenRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Token))
+                {
+                    return BadRequest(new { success = false, message = "Token is required" });
+                }
+
+                _logger.LogInformation($"Testing notification to specific token: {request.Token[..20]}...");
+
+                var message = new Message()
+                {
+                    Token = request.Token,
+                    Notification = new Notification()
+                    {
+                        Title = request.Title ?? "🧘 Test Notification",
+                        Body = request.Body ?? "This is a test notification sent to a specific token!"
+                    },
+                    Data = new Dictionary<string, string>
+                    {
+                        ["type"] = "test_token",
+                        ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(),
+                        ["test"] = "true"
+                    },
+                    Android = new AndroidConfig()
+                    {
+                        Notification = new AndroidNotification()
+                        {
+                            Sound = "default",
+                            Priority = NotificationPriority.HIGH,
+                            ChannelId = "test-notifications"
+                        }
+                    },
+                    Apns = new ApnsConfig()
+                    {
+                        Aps = new Aps()
+                        {
+                            Sound = "default",
+                            Badge = 1
+                        }
+                    }
+                };
+
+                var response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                _logger.LogInformation($"Test notification sent successfully: {response}");
+
+                return Ok(new { 
+                    success = true, 
+                    messageId = response,
+                    message = "Test notification sent successfully"
+                });
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                _logger.LogError(ex, "Firebase messaging error when testing token");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to send test notification",
+                    error = ex.Message,
+                    errorType = "FirebaseMessagingException",
+                    stackTrace = ex.StackTrace
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error testing specific token");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to send test notification",
+                    error = ex.Message,
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
+                });
             }
         }
     }
@@ -326,5 +526,21 @@ namespace apis.Controllers
         public string Text { get; set; } = string.Empty;
         public string Author { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
+    }
+
+    public class TestTokenRequest
+    {
+        [Required]
+        public string Token { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
+    }
+
+    public class TestFCMConnectionRequest
+    {
+        [Required]
+        public string Token { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
     }
 } 
