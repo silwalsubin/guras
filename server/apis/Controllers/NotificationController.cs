@@ -285,7 +285,18 @@ namespace apis.Controllers
                         Aps = new Aps()
                         {
                             Sound = "default",
-                            Badge = 1
+                            Badge = 1,
+                            ContentAvailable = true,
+                            Alert = new ApsAlert()
+                            {
+                                Title = "🧘 Daily Wisdom",
+                                Body = $"\"{request.Quote.Text}\" - {request.Quote.Author}"
+                            }
+                        },
+                        Headers = new Dictionary<string, string>
+                        {
+                            ["apns-priority"] = "10",
+                            ["apns-push-type"] = "alert"
                         }
                     }
                 }).ToList();
@@ -361,7 +372,18 @@ namespace apis.Controllers
                         Aps = new Aps()
                         {
                             Sound = "default",
-                            Badge = 1
+                            Badge = 1,
+                            ContentAvailable = true,
+                            Alert = new ApsAlert()
+                            {
+                                Title = request.Title ?? "🧘 FCM Connection Test",
+                                Body = request.Body ?? "This is a test message to verify FCM connectivity!"
+                            }
+                        },
+                        Headers = new Dictionary<string, string>
+                        {
+                            ["apns-priority"] = "10",
+                            ["apns-push-type"] = "alert"
                         }
                     }
                 };
@@ -445,7 +467,18 @@ namespace apis.Controllers
                         Aps = new Aps()
                         {
                             Sound = "default",
-                            Badge = 1
+                            Badge = 1,
+                            ContentAvailable = true,
+                            Alert = new ApsAlert()
+                            {
+                                Title = request.Title ?? "🧘 Test Notification",
+                                Body = request.Body ?? "This is a test notification sent to a specific token!"
+                            }
+                        },
+                        Headers = new Dictionary<string, string>
+                        {
+                            ["apns-priority"] = "10",
+                            ["apns-push-type"] = "alert"
                         }
                     }
                 };
