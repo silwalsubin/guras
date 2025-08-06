@@ -1,8 +1,8 @@
 using FirebaseAdmin.Auth;
 
-namespace apis.Authentication;
+namespace services.authentication.Services;
 
-public interface IFirebaseService
+public interface IAuthenticationService
 {
     Task<FirebaseToken> VerifyIdTokenAsync(string idToken);
     Task<UserRecord> GetUserAsync(string uid);

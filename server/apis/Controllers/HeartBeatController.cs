@@ -4,6 +4,9 @@ using apis.Configuration;
 using apis.Services;
 using Dapper;
 using Npgsql;
+using services.aws;
+using services.aws.Services;
+using services.aws.Utilities;
 
 namespace apis.Controllers;
 
@@ -12,7 +15,7 @@ namespace apis.Controllers;
 public class HeartBeatController(
     ILogger<HeartBeatController> logger, 
     DbConnectionProvider dbConnectionProvider, 
-    IS3Service s3Service
+    AudioFilesService audioFilesService
 ): ControllerBase
 {
     [HttpGet]
@@ -39,7 +42,7 @@ public class HeartBeatController(
     {
         logger.LogInformation("S3 Connection Heart Beat endpoint called");
         // Try to list files in the bucket (this will test connectivity and permissions)
-        var files = await s3Service.ListFilesAsync("");
+        var files = await audioFilesService.ListFilesAsync("");
         var fileCount = files.Count();
         return Ok(fileCount);
     }

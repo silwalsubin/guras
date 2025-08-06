@@ -1,33 +1,35 @@
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-namespace apis.Authentication;
+namespace services.authentication.Services;
 
-public class FirebaseService : IFirebaseService
+public class FirebaseService : IAuthenticationService
 {
     private readonly FirebaseAuth _firebaseAuth;
 
-    public FirebaseService(IConfiguration configuration)
+    public FirebaseService(IConfiguration configuration, ILogger<FirebaseService> logger)
     {
         // Initialize Firebase Admin SDK if not already initialized
         if (FirebaseApp.DefaultInstance == null)
         {
             var serviceAccountPath = configuration["Firebase:ServiceAccountPath"];
             
-            Console.WriteLine($"🔍 Firebase initialization - ServiceAccountPath: {serviceAccountPath}");
-            Console.WriteLine($"🔍 Current directory: {Directory.GetCurrentDirectory()}");
+            logger.LogInformation("Firebase initialization - ServiceAccountPath: {ServiceAccountPath}", serviceAccountPath);
+            logger.LogInformation("Current directory: {CurrentDirectory}", Directory.GetCurrentDirectory());
             
             try
             {
                 if (!string.IsNullOrEmpty(serviceAccountPath))
                 {
-                    Console.WriteLine($"🔍 Checking if file exists: {serviceAccountPath}");
-                    Console.WriteLine($"🔍 File.Exists result: {File.Exists(serviceAccountPath)}");
+                    logger.LogInformation("Checking if file exists: {ServiceAccountPath}", serviceAccountPath);
+                    logger.LogInformation("File.Exists result: {FileExists}", File.Exists(serviceAccountPath));
                     
                     if (File.Exists(serviceAccountPath))
                     {
-                        Console.WriteLine($"🔍 File size: {new FileInfo(serviceAccountPath).Length} bytes");
+                        logger.LogInformation("File size: {FileSize} bytes", new FileInfo(serviceAccountPath).Length);
                         
                         // Read and parse the service account file to get project info
                         try
@@ -37,78 +39,78 @@ public class FirebaseService : IFirebaseService
                             
                             if (serviceAccountData != null && serviceAccountData.ContainsKey("project_id"))
                             {
-                                Console.WriteLine($"🔍 Firebase Project ID: {serviceAccountData["project_id"]}");
+                                logger.LogInformation("Firebase Project ID: {ProjectId}", serviceAccountData["project_id"]);
                             }
                             
                             if (serviceAccountData != null && serviceAccountData.ContainsKey("client_email"))
                             {
-                                Console.WriteLine($"🔍 Service Account Email: {serviceAccountData["client_email"]}");
+                                logger.LogInformation("Service Account Email: {ClientEmail}", serviceAccountData["client_email"]);
                             }
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"⚠️ Could not parse service account file: {ex.Message}");
+                            logger.LogWarning(ex, "⚠️ Could not parse service account file: {ErrorMessage}", ex.Message);
                         }
                         
                         FirebaseApp.Create(new AppOptions
                         {
                             Credential = GoogleCredential.FromFile(serviceAccountPath)
                         });
-                        Console.WriteLine($"✅ Firebase Admin SDK initialized successfully from {serviceAccountPath}");
+                        logger.LogInformation("Firebase Admin SDK initialized successfully from {ServiceAccountPath}", serviceAccountPath);
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Firebase service account file not found at: {serviceAccountPath}");
-                        Console.WriteLine("📋 Available files in current directory:");
+                        logger.LogWarning("⚠️ Firebase service account file not found at: {ServiceAccountPath}", serviceAccountPath);
+                        logger.LogInformation("Available files in current directory:");
                         foreach (var file in Directory.GetFiles("."))
                         {
-                            Console.WriteLine($"   - {file}");
+                            logger.LogInformation("   - {FileName}", file);
                         }
                         
-                        Console.WriteLine("📋 Available files in apis directory:");
+                        logger.LogInformation("Available files in apis directory:");
                         if (Directory.Exists("apis"))
                         {
                             foreach (var file in Directory.GetFiles("apis"))
                             {
-                                Console.WriteLine($"   - apis/{file}");
+                                logger.LogInformation("   - apis/{FileName}", file);
                             }
                         }
                         else
                         {
-                            Console.WriteLine("   - apis directory does not exist");
+                            logger.LogInformation("   - apis directory does not exist");
                         }
                         
                         // For development/testing, try default credentials
                         try
                         {
-                            Console.WriteLine("🔍 Trying default credentials...");
+                            logger.LogInformation("Trying default credentials...");
                             FirebaseApp.Create(new AppOptions
                             {
                                 Credential = GoogleCredential.GetApplicationDefault()
                             });
-                            Console.WriteLine("✅ Firebase Admin SDK initialized with default credentials");
+                            logger.LogInformation("Firebase Admin SDK initialized with default credentials");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"❌ Failed to initialize Firebase with default credentials: {ex.Message}");
-                            Console.WriteLine("⚠️ Firebase authentication and notifications will not work");
+                            logger.LogError(ex, "❌ Failed to initialize Firebase with default credentials: {ErrorMessage}", ex.Message);
+                            logger.LogWarning("⚠️ Firebase authentication and notifications will not work");
                         }
                     }
                 }
                 else
                 {
-                    Console.WriteLine("⚠️ Firebase service account path not configured");
+                    logger.LogWarning("⚠️ Firebase service account path not configured");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Failed to initialize Firebase Admin SDK: {ex.Message}");
-                Console.WriteLine("⚠️ Firebase authentication and notifications will not work");
+                logger.LogError(ex, "❌ Failed to initialize Firebase Admin SDK: {ErrorMessage}", ex.Message);
+                logger.LogWarning("⚠️ Firebase authentication and notifications will not work");
             }
         }
         else
         {
-            Console.WriteLine("✅ Firebase Admin SDK already initialized");
+            logger.LogInformation("Firebase Admin SDK already initialized");
         }
 
         _firebaseAuth = FirebaseAuth.DefaultInstance;

@@ -1,30 +1,23 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using apis.Authentication;
+using services.authentication;
+using services.authentication.Services;
 
 namespace apis.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(ILogger<AuthController> logger, IAuthenticationService authenticationService)
+    : ControllerBase
 {
-    private readonly ILogger<AuthController> _logger;
-    private readonly IFirebaseService _firebaseService;
-
-    public AuthController(ILogger<AuthController> logger, IFirebaseService firebaseService)
-    {
-        _logger = logger;
-        _firebaseService = firebaseService;
-    }
-
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
         {
-            var firebaseToken = await _firebaseService.VerifyIdTokenAsync(request.IdToken);
-            var user = await _firebaseService.GetUserAsync(firebaseToken.Uid);
+            var firebaseToken = await authenticationService.VerifyIdTokenAsync(request.IdToken);
+            var user = await authenticationService.GetUserAsync(firebaseToken.Uid);
 
             var response = new LoginResponse
             {
@@ -35,12 +28,12 @@ public class AuthController : ControllerBase
                 EmailVerified = user.EmailVerified
             };
 
-            _logger.LogInformation("User {Email} logged in successfully", user.Email);
+            logger.LogInformation("User {Email} logged in successfully", user.Email);
             return Ok(response);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning("Login failed: {Message}", ex.Message);
+            logger.LogWarning("Login failed: {Message}", ex.Message);
             return Unauthorized(new { message = "Invalid token" });
         }
     }
