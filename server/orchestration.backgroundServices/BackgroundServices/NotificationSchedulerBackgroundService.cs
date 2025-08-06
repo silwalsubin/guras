@@ -1,29 +1,24 @@
 using System.Text.Json;
 using FirebaseAdmin.Messaging;
 using Microsoft.Extensions.DependencyInjection;
-using services.quotes.Services;
-using services.quotes.Domain;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using services.notifications.Services;
+using services.quotes.Domain;
+using services.quotes.Services;
 
-namespace orchestration.backgroundServices.Services;
+namespace orchestration.backgroundServices.BackgroundServices;
 
-public class NotificationSchedulerBackgroundService : BackgroundService
+public class NotificationSchedulerBackgroundService(
+    ILogger<NotificationSchedulerBackgroundService> logger,
+    IServiceScopeFactory scopeFactory)
+    : BackgroundService
 {
-    private readonly ILogger<NotificationSchedulerBackgroundService> _logger;
-    private readonly IServiceScopeFactory _scopeFactory;
     private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(5); // Check every 5 minutes
-
-    public NotificationSchedulerBackgroundService(
-        ILogger<NotificationSchedulerBackgroundService> logger,
-        IServiceScopeFactory scopeFactory)
-    {
-        _logger = logger;
-        _scopeFactory = scopeFactory;
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Notification Scheduler Service started");
+        logger.LogInformation("Notification Scheduler Service started");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -33,13 +28,13 @@ public class NotificationSchedulerBackgroundService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in notification scheduler");
+                logger.LogError(ex, "Error in notification scheduler");
             }
 
             await Task.Delay(_checkInterval, stoppingToken);
         }
 
-        _logger.LogInformation("Notification Scheduler Service stopped");
+        logger.LogInformation("Notification Scheduler Service stopped");
     }
 
     private async Task CheckAndSendScheduledNotifications()
@@ -48,7 +43,7 @@ public class NotificationSchedulerBackgroundService : BackgroundService
         {
             // Get current time
             var now = DateTime.UtcNow;
-            _logger.LogDebug($"Checking for scheduled notifications at {now:yyyy-MM-dd HH:mm:ss} UTC");
+            logger.LogDebug($"Checking for scheduled notifications at {now:yyyy-MM-dd HH:mm:ss} UTC");
 
             // TODO: Get users who have notifications enabled and are due for a notification
             // This would typically query your database for:
@@ -61,7 +56,7 @@ public class NotificationSchedulerBackgroundService : BackgroundService
 
             if (userTokens.Any())
             {
-                using var scope = _scopeFactory.CreateScope();
+                using var scope = scopeFactory.CreateScope();
                 var quotesService = scope.ServiceProvider.GetRequiredService<IQuotesService>();
                 var quote = quotesService.GetRandomQuote();
                 await SendQuoteNotificationToUsers(userTokens, quote);
@@ -69,7 +64,7 @@ public class NotificationSchedulerBackgroundService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking scheduled notifications");
+            logger.LogError(ex, "Error checking scheduled notifications");
         }
     }
 
@@ -79,18 +74,18 @@ public class NotificationSchedulerBackgroundService : BackgroundService
         {
             // For now, get tokens from the notification token service
             // In production, this would query the database
-            _logger.LogDebug("Getting active user tokens from notification token service");
+            logger.LogDebug("Getting active user tokens from notification token service");
             
-            using var scope = _scopeFactory.CreateScope();
+            using var scope = scopeFactory.CreateScope();
             var notificationTokenService = scope.ServiceProvider.GetRequiredService<INotificationTokenService>();
             var tokens = notificationTokenService.GetStoredTokens();
-            _logger.LogInformation($"Found {tokens.Count} registered tokens");
+            logger.LogInformation($"Found {tokens.Count} registered tokens");
             
             return tokens;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting active user tokens");
+            logger.LogError(ex, "Error getting active user tokens");
             return new List<string>();
         }
     }
@@ -99,7 +94,7 @@ public class NotificationSchedulerBackgroundService : BackgroundService
     {
         try
         {
-            _logger.LogInformation($"Sending quote notification to {userTokens.Count} users");
+            logger.LogInformation($"Sending quote notification to {userTokens.Count} users");
 
             var messages = userTokens.Select(token => new Message()
             {
@@ -135,13 +130,13 @@ public class NotificationSchedulerBackgroundService : BackgroundService
             }).ToList();
 
             var response = await FirebaseMessaging.DefaultInstance.SendAllAsync(messages);
-            _logger.LogInformation($"Quote notifications sent: {response.SuccessCount} successful, {response.FailureCount} failed");
+            logger.LogInformation($"Quote notifications sent: {response.SuccessCount} successful, {response.FailureCount} failed");
 
             // TODO: Update database with last notification sent time for each user
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending quote notifications to users");
+            logger.LogError(ex, "Error sending quote notifications to users");
         }
     }
 } 

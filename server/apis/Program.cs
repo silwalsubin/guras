@@ -1,13 +1,6 @@
 using apis.Configuration;
-using apis.Services;
-using Microsoft.AspNetCore.Authentication;
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
-using System.IO;
-using services.authentication;
+using orchestration.backgroundServices.BackgroundServices;
 using services.authentication.Configuration;
-using services.authentication.Domain;
-using orchestration.backgroundServices.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
