@@ -5,6 +5,10 @@ WORKDIR /src
 # Copy the solution file and restore dependencies
 COPY guras.sln ./
 COPY apis/apis.csproj apis/
+COPY services/services.csproj services/
+COPY orchestration/orchestration.csproj orchestration/
+COPY services.aws/services.aws.csproj services.aws/
+COPY services.authentication/services.authentication.csproj services.authentication/
 RUN dotnet restore
 
 # Copy the rest of the source code
