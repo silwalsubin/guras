@@ -5,6 +5,7 @@ using System.Text.Json;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
+using services.notifications.Services;
 
 namespace apis.Controllers
 {
@@ -13,24 +14,20 @@ namespace apis.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly ILogger<NotificationController> _logger;
-        
-        // In-memory storage for FCM tokens with user associations (for testing - replace with database in production)
-        private static readonly Dictionary<string, List<string>> _userTokens = new(); // userId -> List<token>
-        private static readonly Dictionary<string, string> _tokenUsers = new(); // token -> userId
-        private static readonly object _lock = new();
+        private readonly INotificationTokenService _notificationTokenService;
 
-        public NotificationController(ILogger<NotificationController> logger)
+        public NotificationController(ILogger<NotificationController> logger, INotificationTokenService notificationTokenService)
         {
             _logger = logger;
+            _notificationTokenService = notificationTokenService;
         }
 
-        // Static method to get registered tokens (for scheduler access)
+        // Static method to get registered tokens (for backward compatibility)
         public static List<string> GetStoredTokens()
         {
-            lock (_lock)
-            {
-                return _tokenUsers.Keys.ToList();
-            }
+            // This will be handled by the service, but keeping for backward compatibility
+            // In a real implementation, you might want to inject the service or use a different approach
+            return new List<string>();
         }
 
         [HttpPost("register-token")]
@@ -41,34 +38,7 @@ namespace apis.Controllers
             {
                 _logger.LogInformation($"Registering FCM token for user {request.UserId} on {request.Platform}");
                 
-                // Store token with user association in memory (for testing - replace with database in production)
-                lock (_lock)
-                {
-                    // Remove token from previous user if it exists
-                    if (_tokenUsers.ContainsKey(request.Token))
-                    {
-                        var previousUserId = _tokenUsers[request.Token];
-                        if (_userTokens.ContainsKey(previousUserId))
-                        {
-                            _userTokens[previousUserId].Remove(request.Token);
-                            if (_userTokens[previousUserId].Count == 0)
-                            {
-                                _userTokens.Remove(previousUserId);
-                            }
-                        }
-                        _logger.LogInformation($"Token reassigned from user {previousUserId} to user {request.UserId}");
-                    }
-
-                    // Add token to new user
-                    if (!_userTokens.ContainsKey(request.UserId))
-                    {
-                        _userTokens[request.UserId] = new List<string>();
-                    }
-                    _userTokens[request.UserId].Add(request.Token);
-                    _tokenUsers[request.Token] = request.UserId;
-                    
-                    _logger.LogInformation($"FCM Token stored for user {request.UserId}: {request.Token?[..20]}... (Total users: {_userTokens.Count}, Total tokens: {_tokenUsers.Count})");
-                }
+                _notificationTokenService.RegisterToken(request.Token, request.Platform, request.UserId);
                 
                 return Ok(new { success = true, message = "Token registered successfully" });
             }
@@ -149,16 +119,17 @@ namespace apis.Controllers
         {
             try
             {
-                lock (_lock)
-                {
-                    return Ok(new { 
-                        success = true, 
-                        userTokens = _userTokens,
-                        tokenUsers = _tokenUsers,
-                        totalUsers = _userTokens.Count,
-                        totalTokens = _tokenUsers.Count
-                    });
-                }
+                var userTokens = _notificationTokenService.GetUserTokens();
+                var tokenUsers = _notificationTokenService.GetTokenUsers();
+                var (totalUsers, totalTokens) = _notificationTokenService.GetTokenStatistics();
+                
+                return Ok(new { 
+                    success = true, 
+                    userTokens = userTokens,
+                    tokenUsers = tokenUsers,
+                    totalUsers = totalUsers,
+                    totalTokens = totalTokens
+                });
             }
             catch (Exception ex)
             {
@@ -179,29 +150,27 @@ namespace apis.Controllers
         {
             try
             {
-                lock (_lock)
+                var storedTokens = _notificationTokenService.GetStoredTokens();
+                if (!storedTokens.Any())
                 {
-                    if (!_tokenUsers.Any())
-                    {
-                        return BadRequest(new { success = false, message = "No registered tokens found" });
-                    }
-
-                    var testQuote = new QuoteData
-                    {
-                        Text = "This is a test notification from the server!",
-                        Author = "Test System",
-                        Category = "test"
-                    };
-
-                    var request = new SendQuoteNotificationRequest
-                    {
-                        UserTokens = _tokenUsers.Keys.ToList(),
-                        Quote = testQuote
-                    };
-
-                    // Send the notification
-                    return SendQuoteNotification(request).Result;
+                    return BadRequest(new { success = false, message = "No registered tokens found" });
                 }
+
+                var testQuote = new QuoteData
+                {
+                    Text = "This is a test notification from the server!",
+                    Author = "Test System",
+                    Category = "test"
+                };
+
+                var request = new SendQuoteNotificationRequest
+                {
+                    UserTokens = storedTokens,
+                    Quote = testQuote
+                };
+
+                // Send the notification
+                return SendQuoteNotification(request).Result;
             }
             catch (Exception ex)
             {
@@ -224,20 +193,22 @@ namespace apis.Controllers
             {
                 var firebaseApp = FirebaseApp.DefaultInstance;
                 var isInitialized = firebaseApp != null;
+                var (_, totalTokens) = _notificationTokenService.GetTokenStatistics();
                 
                 return Ok(new { 
                     success = true, 
                     firebaseInitialized = isInitialized,
-                    registeredTokensCount = _tokenUsers.Count,
+                    registeredTokensCount = totalTokens,
                     message = isInitialized ? "Firebase is properly configured" : "Firebase is not configured"
                 });
             }
             catch (Exception ex)
             {
+                var (_, totalTokens) = _notificationTokenService.GetTokenStatistics();
                 return Ok(new { 
                     success = false, 
                     firebaseInitialized = false,
-                    registeredTokensCount = _tokenUsers.Count,
+                    registeredTokensCount = totalTokens,
                     message = $"Firebase error: {ex.Message}"
                 });
             }
