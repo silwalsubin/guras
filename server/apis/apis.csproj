@@ -22,6 +22,7 @@
       <ProjectReference Include="..\services.authentication\services.authentication.csproj" />
       <ProjectReference Include="..\services.aws\services.aws.csproj" />
       <ProjectReference Include="..\services.quotes\services.quotes.csproj" />
+      <ProjectReference Include="..\orchestration.backgroundServices\orchestration.backgroundServices.csproj" />
     </ItemGroup>
 
 </Project>

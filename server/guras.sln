@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.authentication", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.quotes", "services.quotes\services.quotes.csproj", "{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orchestration.backgroundServices", "orchestration.backgroundServices\orchestration.backgroundServices.csproj", "{9B7E8D6G-5EF0-5260-BD23-EF99G441D33}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B7E8D6G-5EF0-5260-BD23-EF99G441D33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B7E8D6G-5EF0-5260-BD23-EF99G441D33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B7E8D6G-5EF0-5260-BD23-EF99G441D33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B7E8D6G-5EF0-5260-BD23-EF99G441D33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
