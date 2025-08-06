@@ -1,5 +1,7 @@
 using System.Text.Json;
 using FirebaseAdmin.Messaging;
+using services.quotes.Services;
+using services.quotes.Domain;
 
 namespace apis.Services
 {
@@ -57,7 +59,9 @@ namespace apis.Services
 
                 if (userTokens.Any())
                 {
-                    var quote = GetRandomQuote();
+                    using var scope = _scopeFactory.CreateScope();
+                    var quotesService = scope.ServiceProvider.GetRequiredService<IQuotesService>();
+                    var quote = quotesService.GetRandomQuote();
                     await SendQuoteNotificationToUsers(userTokens, quote);
                 }
             }
@@ -138,27 +142,5 @@ namespace apis.Services
             }
         }
 
-        private QuoteData GetRandomQuote()
-        {
-            // Sample quotes - in production, this would come from your quotes service/database
-            var quotes = new List<QuoteData>
-            {
-                new() { Text = "Peace comes from within. Do not seek it without.", Author = "Buddha", Category = "inner-peace" },
-                new() { Text = "The present moment is the only time over which we have any power.", Author = "Thich Nhat Hanh", Category = "mindfulness" },
-                new() { Text = "Meditation is not about stopping thoughts, but recognizing that we are more than our thoughts.", Author = "Arianna Huffington", Category = "meditation" },
-                new() { Text = "Your task is not to seek for love, but merely to seek and find all the barriers within yourself that you have built against it.", Author = "Rumi", Category = "self-love" },
-                new() { Text = "The quieter you become, the more you are able to hear.", Author = "Ram Dass", Category = "awareness" }
-            };
-
-            var random = new Random();
-            return quotes[random.Next(quotes.Count)];
-        }
-    }
-
-    public class QuoteData
-    {
-        public string Text { get; set; } = string.Empty;
-        public string Author { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
     }
 } 

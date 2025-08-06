@@ -21,10 +21,7 @@
     <ItemGroup>
       <ProjectReference Include="..\services.authentication\services.authentication.csproj" />
       <ProjectReference Include="..\services.aws\services.aws.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Authentication\" />
+      <ProjectReference Include="..\services.quotes\services.quotes.csproj" />
     </ItemGroup>
 
 </Project>

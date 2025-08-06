@@ -9,6 +9,7 @@ COPY services/services.csproj services/
 COPY orchestration/orchestration.csproj orchestration/
 COPY services.aws/services.aws.csproj services.aws/
 COPY services.authentication/services.authentication.csproj services.authentication/
+COPY services.quotes/services.quotes.csproj services.quotes/
 RUN dotnet restore
 
 # Copy the rest of the source code
