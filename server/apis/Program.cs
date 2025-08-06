@@ -7,6 +7,7 @@ using System.IO;
 using services.authentication;
 using services.authentication.Configuration;
 using services.authentication.Domain;
+using orchestration.backgroundServices.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +33,7 @@ builder.Services.AddAuthenticationServices();
 builder.Services.AddAuthorization();
 
 // Add background services
-builder.Services.AddHostedService<NotificationSchedulerService>();
+builder.Services.AddHostedService<NotificationSchedulerBackgroundService>();
 
 var app = builder.Build();
 
