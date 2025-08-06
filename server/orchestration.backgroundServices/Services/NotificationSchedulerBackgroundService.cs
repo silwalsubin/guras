@@ -3,6 +3,7 @@ using FirebaseAdmin.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using services.quotes.Services;
 using services.quotes.Domain;
+using services.notifications.Services;
 
 namespace orchestration.backgroundServices.Services;
 
@@ -76,12 +77,13 @@ public class NotificationSchedulerBackgroundService : BackgroundService
     {
         try
         {
-            // For now, get tokens from the NotificationController's in-memory storage
+            // For now, get tokens from the notification token service
             // In production, this would query the database
-            _logger.LogDebug("Getting active user tokens from memory storage");
+            _logger.LogDebug("Getting active user tokens from notification token service");
             
-            // Access the static tokens from NotificationController
-            var tokens = apis.Controllers.NotificationController.GetStoredTokens();
+            using var scope = _scopeFactory.CreateScope();
+            var notificationTokenService = scope.ServiceProvider.GetRequiredService<INotificationTokenService>();
+            var tokens = notificationTokenService.GetStoredTokens();
             _logger.LogInformation($"Found {tokens.Count} registered tokens");
             
             return tokens;

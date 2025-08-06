@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\apis\apis.csproj" />
     <ProjectReference Include="..\services.quotes\services.quotes.csproj" />
+    <ProjectReference Include="..\services.notifications\services.notifications.csproj" />
   </ItemGroup>
 
 </Project> 
