@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using apis.Services;
+using services.aws;
+using services.aws.Services;
 
 namespace apis.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AudioController(IS3Service s3Service, ILogger<AudioController> logger) : ControllerBase
+public class AudioController(AudioFilesService audioFilesService, ILogger<AudioController> logger) : ControllerBase
 {
     [HttpPost("upload-url")]
     public async Task<IActionResult> GetUploadUrl([FromBody] GetUploadUrlRequest request)
@@ -24,7 +26,7 @@ public class AudioController(IS3Service s3Service, ILogger<AudioController> logg
             var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
 
             var expiration = TimeSpan.FromMinutes(request.ExpirationMinutes ?? 15);
-            var presignedUrl = await s3Service.GeneratePresignedUploadUrlAsync(uniqueFileName, expiration);
+            var presignedUrl = await audioFilesService.GeneratePreSignedUploadUrlAsync(uniqueFileName, expiration);
 
             return Ok(new
             {
@@ -46,13 +48,13 @@ public class AudioController(IS3Service s3Service, ILogger<AudioController> logg
         try
         {
             var expiration = TimeSpan.FromMinutes(expirationMinutes ?? 60);
-            var files = await s3Service.ListFilesAsync();
+            var files = await audioFilesService.ListFilesAsync();
             
             var audioFilesWithUrls = new List<object>();
             
             foreach (var fileName in files)
             {
-                var downloadUrl = await s3Service.GeneratePresignedDownloadUrlAsync(fileName, expiration);
+                var downloadUrl = await audioFilesService.GeneratePreSignedDownloadUrlAsync(fileName, expiration);
                 audioFilesWithUrls.Add(new
                 {
                     FileName = fileName,
@@ -80,7 +82,7 @@ public class AudioController(IS3Service s3Service, ILogger<AudioController> logg
     {
         try
         {
-            var files = await s3Service.ListFilesAsync(prefix ?? "");
+            var files = await audioFilesService.ListFilesAsync(prefix ?? "");
             return Ok(new { Files = files });
         }
         catch (Exception ex)
@@ -100,7 +102,7 @@ public class AudioController(IS3Service s3Service, ILogger<AudioController> logg
                 return BadRequest("File name is required");
             }
 
-            var success = await s3Service.DeleteFileAsync(fileName);
+            var success = await audioFilesService.DeleteFileAsync(fileName);
             if (success)
             {
                 return Ok(new { Message = "File deleted successfully" });
@@ -122,7 +124,7 @@ public class AudioController(IS3Service s3Service, ILogger<AudioController> logg
     {
         try
         {
-            var exists = await s3Service.FileExistsAsync(fileName);
+            var exists = await audioFilesService.FileExistsAsync(fileName);
             return Ok(new { Exists = exists });
         }
         catch (Exception ex)

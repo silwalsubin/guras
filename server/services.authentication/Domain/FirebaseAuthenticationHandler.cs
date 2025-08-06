@@ -1,26 +1,20 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using IAuthenticationService = services.authentication.Services.IAuthenticationService;
 
-namespace apis.Authentication;
+namespace services.authentication.Domain;
 
-public class FirebaseAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+public class FirebaseAuthenticationHandler(
+    IOptionsMonitor<AuthenticationSchemeOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder,
+    ISystemClock clock,
+    IAuthenticationService authenticationService)
+    : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder, clock)
 {
-    private readonly IFirebaseService _firebaseService;
-
-    public FirebaseAuthenticationHandler(
-        IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder,
-        ISystemClock clock,
-        IFirebaseService firebaseService)
-        : base(options, logger, encoder, clock)
-    {
-        _firebaseService = firebaseService;
-    }
-
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         if (!Request.Headers.ContainsKey("Authorization"))
@@ -38,7 +32,7 @@ public class FirebaseAuthenticationHandler : AuthenticationHandler<Authenticatio
 
         try
         {
-            var firebaseToken = await _firebaseService.VerifyIdTokenAsync(token);
+            var firebaseToken = await authenticationService.VerifyIdTokenAsync(token);
             
             var claims = new List<Claim>
             {

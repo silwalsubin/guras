@@ -1,10 +1,12 @@
-using apis.Authentication;
 using apis.Configuration;
 using apis.Services;
 using Microsoft.AspNetCore.Authentication;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using System.IO;
+using services.authentication;
+using services.authentication.Configuration;
+using services.authentication.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,11 +24,9 @@ builder.Services.AddSwaggerGen();
 // Add MVC services for controllers
 builder.Services.AddControllers();
 
-builder.Services.ConfigureServices();
+ApisServiceConfiguration.ConfigureServices(builder.Services);
 
-// Configure authentication
-builder.Services.AddAuthentication("Firebase")
-    .AddScheme<AuthenticationSchemeOptions, FirebaseAuthenticationHandler>("Firebase", _ => { });
+builder.Services.AddAuthenticationServices();
 
 // Configure authorization
 builder.Services.AddAuthorization();
