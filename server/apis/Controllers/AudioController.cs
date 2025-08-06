@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using apis.Services;
-using services.aws;
 using services.aws.Services;
 
 namespace apis.Controllers;

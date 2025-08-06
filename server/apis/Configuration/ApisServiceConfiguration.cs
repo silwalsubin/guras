@@ -1,7 +1,4 @@
-using apis.Services;
-using Amazon.S3;
 using services.authentication.Configuration;
-using services.aws;
 using services.aws.Configuration;
 using services.quotes.Configuration;
 using services.notifications.Configuration;

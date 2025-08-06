@@ -1,12 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using apis.Configuration;
-using apis.Services;
 using Dapper;
 using Npgsql;
-using services.aws;
 using services.aws.Services;
-using services.aws.Utilities;
 
 namespace apis.Controllers;
 
