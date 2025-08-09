@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
   View,
+  RefreshControl,
 } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
+import { RootState } from '@/store';
+import { RefreshUtils } from '@/utils/refreshUtils';
 import {
   AppHeader,
   SectionHeader,
@@ -19,6 +22,8 @@ import {
 
 const HomeScreen: React.FC = () => {
   const dispatch = useDispatch();
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Sample progress data
   const progressData: ProgressData = {
@@ -39,8 +44,39 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      console.log('🔄 Refreshing home screen data...');
+      
+      const result = await RefreshUtils.refreshHomeScreen();
+      
+      if (result.success) {
+        console.log('✅ Home screen refreshed successfully');
+      } else {
+        console.warn('⚠️ Some items failed to refresh:', result.errors);
+      }
+      
+    } catch (error) {
+      console.error('Error refreshing home screen:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
   return (
-    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.scrollView} 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={isDarkMode ? '#FFFFFF' : '#000000'}
+          colors={['#14B8A6']} // Primary brand color
+        />
+      }
+    >
       {/* Header */}
       <AppHeader 
         onProfilePress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))} 

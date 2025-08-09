@@ -42,6 +42,11 @@ const BottomNavigation = () => {
         iconType="fontawesome"
         solid
       />
+      <FooterMenuItem
+        tabKey={TAB_KEYS.PROFILE}
+        iconName="user"
+        iconType="feather"
+      />
     </View>
   );
 };

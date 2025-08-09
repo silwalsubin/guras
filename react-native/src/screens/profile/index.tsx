@@ -1,464 +1,376 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Image,
   StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  Switch,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import Feather from 'react-native-vector-icons/Feather';
-import { useAuth } from '@/contexts/AuthContext';
-import { apiService } from '@/services/api';
-import { UserProfile } from '@/types/user';
-import SignOutButton from './components/SignOutButton';
-import NotificationSettings from './components/NotificationSettings';
-import { TYPOGRAPHY } from '@/config/fonts';
-import { getThemeColors, getBrandColors } from '@/config/colors';
-import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
-import { toggleDarkMode } from '@/store/themeSlice';
 import { RootState } from '@/store';
-import notificationService from '@/services/notificationService';
+import { setDarkMode } from '@/store/themeSlice';
+import { getThemeColors, getBrandColors, COLORS } from '@/config/colors';
+import { RefreshUtils } from '@/utils/refreshUtils';
+import { ProfileAvatar } from '@/components/shared';
+import NotificationSettings from './components/NotificationSettings';
+import quotesService, { NotificationPreferences } from '@/services/quotesService';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ProfileScreen: React.FC = () => {
   const dispatch = useDispatch();
-  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const { user } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
-
-  // Check if user has a profile picture (from Firebase user or API profile)
-  const hasProfilePicture = (user?.photoURL && user.photoURL.length > 0) || 
-                          (profile?.photoUrl && profile.photoUrl.length > 0);
-  const profilePictureUrl = user?.photoURL || profile?.photoUrl;
+  
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>({
+    enabled: true,
+    frequency: 'daily',
+    quietHours: { start: '22:00', end: '08:00' }
+  });
 
   useEffect(() => {
-    fetchProfile();
+    loadNotificationPreferences();
   }, []);
 
-  const fetchProfile = async () => {
+  const loadNotificationPreferences = async () => {
     try {
-      setLoading(true);
-      
-      const response = await apiService.getProfile();
-      
-      if (response.error) {
-        Alert.alert('Error', response.error);
-      } else if (response.data) {
-        setProfile(response.data);
-      }
-    } catch {
-      // handle error
-    } finally {
-      setLoading(false);
+      const preferences = await quotesService.getNotificationPreferences();
+      setNotificationPreferences(preferences);
+    } catch (error) {
+      console.error('Error loading notification preferences:', error);
     }
   };
 
-  const renderProfileInfo = (label: string, value: string | boolean | undefined | null) => {
-    if (value === undefined || value === null) return null;
-    
-    const displayValue = typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
-    
-    return (
-      <View style={styles.profileInfo}>
-        <Text style={[styles.profileLabel, { color: themeColors.textSecondary }]}>
-          {label}:
-        </Text>
-        <Text style={[styles.profileValue, { color: themeColors.textPrimary }]}>
-          {displayValue}
-        </Text>
-      </View>
-    );
+  const toggleTheme = () => {
+    dispatch(setDarkMode(!isDarkMode));
   };
 
-  if (loading) {
-    return (
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <View style={[styles.logo, { backgroundColor: brandColors.primary }]}>
-              {hasProfilePicture ? (
-                <Image 
-                  source={{ uri: profilePictureUrl }} 
-                  style={styles.logoImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Text style={styles.logoText}>👤</Text>
-              )}
-            </View>
-            <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
-              Profile
-            </Text>
-          </View>
-          <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: themeColors.border }]}
-            onPress={() => dispatch(setActiveTab(TAB_KEYS.HOME))}
-          >
-            <Text style={[styles.backButtonText, { color: themeColors.textPrimary }]}>←</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={brandColors.primary} />
-          <Text style={[styles.loadingText, { color: themeColors.textPrimary }]}>
-            Loading profile...
-          </Text>
-        </View>
-      </ScrollView>
-    );
-  }
+  const toggleNotificationSettings = () => {
+    setShowNotificationSettings(!showNotificationSettings);
+  };
+
+  const handleNotificationPreferenceChange = async (preferences: NotificationPreferences) => {
+    try {
+      setNotificationPreferences(preferences);
+      await quotesService.setNotificationPreferences(preferences);
+    } catch (error) {
+      console.error('Error updating notification preferences:', error);
+      Alert.alert('Error', 'Failed to update notification preferences');
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      console.log('🔄 Refreshing profile data...');
+      
+      const result = await RefreshUtils.refreshProfileScreen();
+      
+      if (result.success) {
+        console.log('✅ Profile refreshed successfully');
+        // Reload local state
+        await loadNotificationPreferences();
+      } else {
+        console.warn('⚠️ Some items failed to refresh:', result.errors);
+      }
+      
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   return (
-    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-      {/* Header */}
+    <ScrollView 
+      style={[styles.container, { backgroundColor: themeColors.background }]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={isDarkMode ? '#FFFFFF' : '#000000'}
+          colors={['#14B8A6']} // Primary brand color
+        />
+      }
+    >
       <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <View style={[styles.logo, { backgroundColor: brandColors.primary }]}>
-            {hasProfilePicture ? (
-              <Image 
-                source={{ uri: profilePictureUrl }} 
-                style={styles.logoImage}
-                resizeMode="cover"
+        <ProfileAvatar 
+          size={80} 
+          showEditButton={true}
+          onPress={() => {
+            Alert.alert(
+              'Edit Profile Picture',
+              'Profile picture editing will be available soon! You can update your profile picture in your account settings.',
+              [{ text: 'OK' }]
+            );
+          }}
+        />
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { color: themeColors.textPrimary }]}>Profile</Text>
+          {refreshing && (
+            <View style={styles.refreshIndicator}>
+              <ActivityIndicator 
+                size="small" 
+                color={brandColors.primary}
+                style={styles.spinner}
               />
-            ) : (
-              <Text style={styles.logoText}>👤</Text>
-            )}
-          </View>
-          <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
-            Profile
-          </Text>
+            </View>
+          )}
         </View>
-        <TouchableOpacity 
-          style={[styles.backButton, { backgroundColor: themeColors.border }]}
-          onPress={() => dispatch(setActiveTab(TAB_KEYS.HOME))}
-        >
-          <Text style={[styles.backButtonText, { color: themeColors.textPrimary }]}>←</Text>
-        </TouchableOpacity>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
+          Manage your app preferences and settings
+        </Text>
       </View>
 
-      {/* Profile Picture and Basic Info */}
-      {profile?.photoUrl && (
-        <View style={styles.profilePictureSection}>
-          <Image 
-            source={{ uri: profile.photoUrl }} 
-            style={[styles.profilePicture, { borderColor: brandColors.primary }]}
-            resizeMode="cover"
-          />
+      {/* User Info Section */}
+      {user && (
+        <View style={styles.userInfoSection}>
+          <View style={styles.userInfoCard}>
+            <View style={styles.userInfoRow}>
+              <Text style={[styles.userInfoLabel, { color: themeColors.textSecondary }]}>
+                Name:
+              </Text>
+              <Text style={[styles.userInfoValue, { color: themeColors.textPrimary }]}>
+                {user.displayName || 'Not set'}
+              </Text>
+            </View>
+            <View style={styles.userInfoRow}>
+              <Text style={[styles.userInfoLabel, { color: themeColors.textSecondary }]}>
+                Email:
+              </Text>
+              <Text style={[styles.userInfoValue, { color: themeColors.textPrimary }]}>
+                {user.email || 'Not available'}
+              </Text>
+            </View>
+            {user.emailVerified && (
+              <View style={styles.verifiedBadge}>
+                <Text style={styles.verifiedText}>✓ Verified</Text>
+              </View>
+            )}
+          </View>
         </View>
       )}
 
-      {/* User Info */}
-      <View style={styles.profileSection}>
-        <View style={[styles.profileCard, { 
-          backgroundColor: themeColors.card,
-          shadowColor: themeColors.textSecondary,
-        }]}>
-          <Text style={[styles.profileTitle, { color: themeColors.textPrimary }]}>
-            Account Information
-          </Text>
-          
-          {renderProfileInfo('Display Name', profile?.displayName)}
-          {renderProfileInfo('Email', profile?.email)}
-          {renderProfileInfo('User ID', profile?.uid)}
-          {renderProfileInfo('Email Verified', profile?.emailVerified)}
-          
-          {/* Fallback to Firebase user data if API data is not available */}
-          {!profile && user && (
-            <>
-              {renderProfileInfo('Email', user.email)}
-              {renderProfileInfo('User ID', user.uid)}
-              {renderProfileInfo('Email Verified', user.emailVerified)}
-            </>
-          )}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
+          Appearance
+        </Text>
+        
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
+              Dark Mode
+            </Text>
+            <Text style={[styles.settingDescription, { color: themeColors.textSecondary }]}>
+              Switch between light and dark themes
+            </Text>
+          </View>
+          <Switch
+            value={isDarkMode}
+            onValueChange={toggleTheme}
+            trackColor={{ false: themeColors.border, true: brandColors.primary }}
+            thumbColor={isDarkMode ? COLORS.WHITE : themeColors.textSecondary}
+          />
         </View>
       </View>
 
-      {/* Notification Settings */}
-      <View style={styles.profileSection}>
-        <NotificationSettings />
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
+          Notifications
+        </Text>
+        
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
+              Push Notifications
+            </Text>
+            <Text style={[styles.settingDescription, { color: themeColors.textSecondary }]}>
+              {notificationPreferences.enabled 
+                ? `Enabled - ${notificationPreferences.frequency} updates`
+                : 'Disabled'
+              }
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.settingsButton, { backgroundColor: brandColors.primary }]}
+            onPress={toggleNotificationSettings}
+          >
+            <Text style={styles.settingsButtonText}>Configure</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Theme Toggle Button (Temporary for testing) */}
-      <View style={styles.refreshSection}>
-        <TouchableOpacity 
-          style={[styles.refreshButton, { backgroundColor: brandColors.primary }]}
-          onPress={() => dispatch(toggleDarkMode())}
-        >
-          <Feather name={isDarkMode ? "sun" : "moon"} size={20} color={themeColors.card} />
-          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
-            {isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          </Text>
-        </TouchableOpacity>
+      {showNotificationSettings && (
+        <View style={styles.notificationSettingsContainer}>
+          <NotificationSettings />
+        </View>
+      )}
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
+          About
+        </Text>
+        
+        <View style={styles.aboutItem}>
+          <Text style={[styles.aboutLabel, { color: themeColors.textPrimary }]}>App Version</Text>
+          <Text style={[styles.aboutValue, { color: themeColors.textSecondary }]}>1.0.0</Text>
+        </View>
+        
+        <View style={styles.aboutItem}>
+          <Text style={[styles.aboutLabel, { color: themeColors.textPrimary }]}>Build</Text>
+          <Text style={[styles.aboutValue, { color: themeColors.textSecondary }]}>2024.1</Text>
+        </View>
       </View>
-
-      {/* Debug Buttons */}
-      <View style={styles.refreshSection}>
-        <TouchableOpacity 
-          style={[styles.refreshButton, { backgroundColor: themeColors.card }]}
-          onPress={fetchProfile}
-        >
-          <Feather name="refresh-cw" size={20} color={themeColors.textPrimary} />
-          <Text style={[styles.refreshButtonText, { color: themeColors.textPrimary }]}>
-            Refresh Profile
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* FCM Test Button */}
-      <View style={styles.refreshSection}>
-        <TouchableOpacity
-          style={[styles.refreshButton, { backgroundColor: brandColors.secondary }]}
-          onPress={() => notificationService.testFCMTokenGeneration()}
-        >
-          <Feather name="wifi" size={20} color={themeColors.card} />
-          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
-            Test FCM Token
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Force FCM Token Generation Button */}
-      <View style={styles.refreshSection}>
-        <TouchableOpacity
-          style={[styles.refreshButton, { backgroundColor: '#FF6B35' }]}
-          onPress={() => {
-            // Show immediate feedback
-            Alert.alert(
-              '🔍 Debug',
-              'Button pressed! Starting FCM token generation...',
-              [
-                {
-                  text: 'Continue',
-                  onPress: async () => {
-                    try {
-                      // Check if method exists
-                      if (typeof notificationService.forceGenerateFCMToken !== 'function') {
-                        Alert.alert(
-                          '❌ Error',
-                          'forceGenerateFCMToken method is not available',
-                          [{ text: 'OK' }]
-                        );
-                        return;
-                      }
-
-                      // Call the method
-                      const token = await notificationService.forceGenerateFCMToken();
-
-                      if (token) {
-                        Alert.alert(
-                          '✅ Success!',
-                          `FCM Token generated successfully!\n\nToken: ${token.substring(0, 30)}...`,
-                          [{ text: 'OK' }]
-                        );
-                      } else {
-                        Alert.alert(
-                          '⚠️ Warning',
-                          'Token generation completed but returned null',
-                          [{ text: 'OK' }]
-                        );
-                      }
-                    } catch (error) {
-                      Alert.alert(
-                        '❌ Error',
-                        `Failed to generate FCM token: ${error instanceof Error ? error.message : String(error)}`,
-                        [{ text: 'OK' }]
-                      );
-                    }
-                  }
-                },
-                { text: 'Cancel' }
-              ]
-            );
-          }}
-        >
-          <Feather name="zap" size={20} color={themeColors.card} />
-          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
-            🔑 Force FCM Token
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Debug Notifications Button */}
-      <View style={styles.refreshSection}>
-        <TouchableOpacity
-          style={[styles.refreshButton, { backgroundColor: brandColors.primaryDark }]}
-          onPress={() => notificationService.debugNotificationStatus()}
-        >
-          <Feather name="info" size={20} color={themeColors.card} />
-          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
-            Debug Notifications
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-
-
-      {/* Basic Firebase Test Button */}
-      <View style={styles.refreshSection}>
-        <TouchableOpacity 
-          style={[styles.refreshButton, { backgroundColor: '#FF6B6B' }]}
-          onPress={() => notificationService.testBasicFirebaseConnection()}
-        >
-          <Feather name="zap" size={20} color={themeColors.card} />
-          <Text style={[styles.refreshButtonText, { color: themeColors.card }]}>
-            Test Firebase Connection
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Sign Out Button */}
-      <View style={styles.signOutSection}>
-        <SignOutButton 
-          style={styles.signOutButton}
-          textStyle={styles.signOutButtonText}
-        />
-      </View>
-
-      {/* Bottom padding to prevent content from being hidden by footer */}
-      <View style={styles.bottomPadding} />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
     flex: 1,
+    padding: 16,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingVertical: 32,
+    marginBottom: 24,
   },
-  logoContainer: {
+
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  logoText: {
-    fontSize: 20,
-  },
-  logoImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 20,
-  },
-  appName: {
-    ...TYPOGRAPHY.H4,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backButtonText: {
-    ...TYPOGRAPHY.H6,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  loadingText: {
     marginTop: 16,
-    ...TYPOGRAPHY.BODY,
+    marginBottom: 8,
   },
-  profilePictureSection: {
-    alignItems: 'center',
-    marginBottom: 20,
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
   },
-  profilePicture: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: '#14B8A6', // This will be updated dynamically
-  },
-  profileSection: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
-  },
-  profileCard: {
+  refreshIndicator: {
+    marginLeft: 12,
+    padding: 6,
     borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000', // This will be updated dynamically
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(128, 128, 128, 0.2)',
   },
-  profileTitle: {
-    ...TYPOGRAPHY.H5,
-    marginBottom: 16,
+  spinner: {
+    width: 20,
+    height: 20,
   },
-  profileInfo: {
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  userInfoSection: {
+    marginBottom: 24,
+  },
+  userInfoCard: {
+    backgroundColor: 'rgba(128, 128, 128, 0.05)',
+    borderRadius: 12,
+    padding: 16,
+  },
+  userInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    paddingVertical: 8,
   },
-  profileLabel: {
-    ...TYPOGRAPHY.BODY,
-  },
-  profileValue: {
-    ...TYPOGRAPHY.BODY_SMALL,
+  userInfoLabel: {
+    fontSize: 14,
     fontWeight: '500',
+  },
+  userInfoValue: {
+    fontSize: 14,
+    fontWeight: '600',
     flex: 1,
     textAlign: 'right',
     marginLeft: 16,
   },
-  refreshSection: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+  verifiedBadge: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
   },
-  refreshButton: {
+  verifiedText: {
+    color: COLORS.WHITE,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-  },
-  refreshButtonText: {
-    ...TYPOGRAPHY.BUTTON,
-    marginLeft: 8,
-  },
-  signOutSection: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
-  },
-  signOutButton: {
-    borderRadius: 12,
+    justifyContent: 'space-between',
     paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(128, 128, 128, 0.05)',
+    borderRadius: 12,
   },
-  signOutButtonText: {
-    ...TYPOGRAPHY.BUTTON,
+  settingInfo: {
+    flex: 1,
+    marginRight: 16,
   },
-  // Add bottom padding to account for the footer
-  bottomPadding: {
-    height: 100, // Account for bottom navigation + safe area
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  settingDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  settingsButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  settingsButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  notificationSettingsContainer: {
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: 'rgba(128, 128, 128, 0.03)',
+    borderRadius: 12,
+  },
+  aboutItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(128, 128, 128, 0.05)',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  aboutLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  aboutValue: {
+    fontSize: 14,
   },
 });
 

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
   Text,
   View,
+  RefreshControl,
 } from 'react-native';
 import { getThemeColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
@@ -16,19 +17,52 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
 import { RootState } from '@/store';
+import { RefreshUtils } from '@/utils/refreshUtils';
 
 const LearnScreen = () => {
   const dispatch = useDispatch();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleLearningAction = (action: string) => {
     console.log(`Learning action: ${action}`);
     // Add navigation logic based on action
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      console.log('🔄 Refreshing learn screen content...');
+      
+      const result = await RefreshUtils.refreshLearnScreen();
+      
+      if (result.success) {
+        console.log('✅ Learn screen refreshed successfully');
+      } else {
+        console.warn('⚠️ Some items failed to refresh:', result.errors);
+      }
+      
+    } catch (error) {
+      console.error('Error refreshing learn screen:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
   return (
-    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.scrollView} 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={isDarkMode ? '#FFFFFF' : '#000000'}
+          colors={['#14B8A6']} // Primary brand color
+        />
+      }
+    >
       {/* Header */}
       <AppHeader 
         onProfilePress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))} 

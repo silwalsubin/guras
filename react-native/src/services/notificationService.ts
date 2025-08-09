@@ -19,11 +19,7 @@ const safeNotificationSetItem = async (key: string, value: string): Promise<void
 
 const safeNotificationGetItem = async (key: string): Promise<string | null> => {
   try {
-    const value = fallbackNotificationStorage[key] || null;
-    if (value) {
-      console.log(`✅ Notification retrieved ${key}:`, value.substring(0, 30) + '...');
-    }
-    return value;
+    return fallbackNotificationStorage[key] || null;
   } catch (error) {
     console.error('Notification storage get error:', error);
     return fallbackNotificationStorage[key] || null;
@@ -44,573 +40,133 @@ export interface NotificationData {
   timestamp: number;
 }
 
+// Server API response types
+interface ServerNotificationPreferences {
+  enabled: boolean;
+  frequency: string;
+  quietHours: {
+    start: string;
+    end: string;
+  };
+  lastNotificationSent: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface UpdatePreferencesRequest {
+  enabled: boolean;
+  frequency: string;
+  quietHours: {
+    start: string;
+    end: string;
+  };
+}
+
 class NotificationService {
-  private static instance: NotificationService;
-  private backgroundTaskId: NodeJS.Timeout | null = null;
-  private initialized = false;
   private fcmToken: string | null = null;
+  private backgroundTaskId: NodeJS.Timeout | null = null;
   private isSimulator: boolean = false;
 
-  static getInstance(): NotificationService {
-    if (!NotificationService.instance) {
-      NotificationService.instance = new NotificationService();
-    }
-    return NotificationService.instance;
+  constructor() {
+    this.checkIfSimulator();
+    this.initializeFCM();
   }
 
-  // Check if running on iOS Simulator
-  private async checkIfSimulator(): Promise<boolean> {
-    if (Platform.OS !== 'ios') {
-      return false;
-    }
-
+  private async checkIfSimulator() {
     try {
-      const DeviceInfo = require('react-native-device-info');
-      if (DeviceInfo && typeof DeviceInfo.isSimulator === 'function') {
-        const isIOSSimulator = await DeviceInfo.isSimulator();
-        console.log('📱 iOS Simulator check:', isIOSSimulator);
-        return isIOSSimulator;
-      }
-    } catch (error) {
-      console.log('Could not check simulator status:', error);
-    }
-
-    // Fallback check for simulator
-    try {
-      const { Platform: RNPlatform } = require('react-native');
-      if (RNPlatform.OS === 'ios' && __DEV__) {
-        // Additional check for development mode
-        console.log('📱 Development mode detected on iOS');
-        return true; // Assume simulator in dev mode
-      }
-    } catch (error) {
-      console.log('Could not perform fallback simulator check:', error);
-    }
-
-    return false;
-  }
-
-  // Initialize Firebase Cloud Messaging
-  private async initializeFCM(): Promise<void> {
-    try {
-      console.log('🔥 Initializing Firebase Cloud Messaging...');
-
-      // Check if Firebase messaging is available
-      if (!messaging) {
-        console.warn('⚠️ Firebase messaging module not available');
-        return;
-      }
-
-      // Firebase connection check - removed debugging test to prevent initialization errors
-
       // Check if we're on iOS Simulator
-      this.isSimulator = await this.checkIfSimulator();
+      if (Platform.OS === 'ios') {
+        const simulatorCheck = await fetch('http://localhost:8081/status');
+        this.isSimulator = true;
+        console.log('📱 iOS Simulator detected');
+      }
+    } catch (error) {
+      // Not simulator
+      this.isSimulator = false;
+    }
+  }
+
+  private async initializeFCM() {
+    try {
       if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - FCM will not work');
-        console.log('ℹ️ FCM requires a real device or TestFlight for push notifications');
-        console.log('ℹ️ Notifications will be simulated locally');
+        console.log('📱 iOS Simulator - FCM not available');
         return;
       }
 
-      // Check current permission status
-      const currentPermission = await messaging().hasPermission();
-      console.log('🔍 Current FCM permission status:', currentPermission);
+      // Request permission
+      const authStatus = await messaging().requestPermission();
+      const enabled = authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+                     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-      // Register the app with FCM - this is critical for APNs token
-      let registrationSuccessful = false;
+      if (enabled) {
+        console.log('✅ Notification permission granted');
+        await this.getFCMToken();
+      } else {
+        console.log('❌ Notification permission denied');
+      }
+    } catch (error) {
+      console.error('Error initializing FCM:', error);
+    }
+  }
 
-      // First check if already registered
-      try {
-        const isAlreadyRegistered = messaging().isDeviceRegisteredForRemoteMessages;
-        console.log('📱 Device already registered check:', isAlreadyRegistered);
-        if (isAlreadyRegistered) {
-          console.log('✅ Device is already registered for remote messages');
-          registrationSuccessful = true;
-        }
-      } catch (checkError) {
-        console.log('⚠️ Could not check existing registration status:', checkError);
+  private async getFCMToken(): Promise<string | null> {
+    try {
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator - skipping FCM token');
+        return null;
       }
 
-      // If not already registered, try to register
-      if (!registrationSuccessful) {
-        try {
-          console.log('📱 Registering device for remote messages...');
-          await messaging().registerDeviceForRemoteMessages();
-          console.log('✅ Successfully registered device for remote messages');
-          registrationSuccessful = true;
-        } catch (registerError: any) {
-          console.error('❌ Failed to register device for remote messages:', registerError);
-          console.error('🔴 Registration error details:', JSON.stringify(registerError, null, 2));
-
-          // Show alert for TestFlight debugging
-          Alert.alert(
-            '❌ Registration Failed',
-            `Failed to register device for remote messages:\n\n${registerError?.message || 'Unknown error'}\n\nThis is required for FCM tokens. Without registration, FCM tokens cannot be generated.\n\nDetails: ${JSON.stringify(registerError, null, 2)}`,
-            [{ text: 'OK' }]
-          );
-
-          // Don't continue if registration failed
-          console.error('� CRITICAL: Device registration failed - stopping FCM initialization');
-          return;
-        }
-      }
-
-      // Verify registration was successful
-      if (!registrationSuccessful) {
-        console.error('🔴 CRITICAL: Device registration failed - APNs token not available');
-        console.error('🔴 This will prevent FCM token generation');
-
-        // Show critical error alert
-        Alert.alert(
-          '🔴 CRITICAL ERROR',
-          'Device registration failed - APNs token not available. This will prevent FCM token generation. FCM tokens require successful device registration.',
-          [{ text: 'OK' }]
-        );
-        return; // Don't continue if registration failed
-      }
-
-      // Wait a moment for APNs token to be properly set
-      if (registrationSuccessful) {
-        console.log('⏳ Waiting for APNs token to be set...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-
-      // Get the FCM token - retry multiple times if needed
-      let token = null;
-      let attempts = 0;
-      const maxAttempts = 3;
-
-      while (!token && attempts < maxAttempts) {
-        attempts++;
-        console.log(`🔑 Attempt ${attempts}/${maxAttempts}: Requesting FCM token...`);
-        
-        try {
-          await messaging().registerDeviceForRemoteMessages();
-          token = await messaging().getToken();
-          if (token) {
-            this.fcmToken = token;
-            await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
-            console.log('📱 FCM Token obtained:', token.substring(0, 20) + '...');
-
-            // Send token to server for user registration
-            await this.registerTokenWithServer(token);
-            break;
-          } else {
-            console.warn(`⚠️ Attempt ${attempts}: No FCM token received`);
-          }
-        } catch (tokenError: any) {
-          console.warn(`⚠️ Attempt ${attempts}: Failed to get FCM token:`, tokenError);
-
-          // Show alert for TestFlight debugging
-          Alert.alert(
-            `⚠️ FCM Token Attempt ${attempts} Failed`,
-            `Failed to get FCM token:\n\n${tokenError?.message || 'Unknown error'}\n\nError details: ${JSON.stringify(tokenError, null, 2)}`,
-            [{ text: 'OK' }]
-          );
-
-          // Check for specific APNs token error
-          if (tokenError && typeof tokenError === 'object' && 'message' in tokenError &&
-              typeof tokenError.message === 'string' && tokenError.message.includes('APNs token')) {
-            console.error('🔴 APNs token not available - device registration may have failed');
-            console.error('🔴 This usually means the device registration failed earlier');
-
-            // Show specific APNs error alert
-            Alert.alert(
-              '🔴 APNs Token Error',
-              'APNs token not available - device registration may have failed. This usually means the device registration failed earlier.',
-              [{ text: 'OK' }]
-            );
-
-            if (attempts === maxAttempts) {
-              console.log('❌ FCM token generation failed due to missing APNs token');
-              Alert.alert(
-                '❌ FCM Token Failed',
-                'FCM token generation failed due to missing APNs token after all attempts.',
-                [{ text: 'OK' }]
-              );
-              return;
-            }
-          }
-
-          if (attempts === maxAttempts) {
-            console.log('ℹ️ FCM token not available - this is normal on iOS Simulator');
-            console.log('ℹ️ Use a real device or TestFlight for push notifications');
-
-            // Show final failure alert
-            Alert.alert(
-              'ℹ️ FCM Token Unavailable',
-              'FCM token not available after all attempts. This is normal on iOS Simulator. Use a real device or TestFlight for push notifications.',
-              [{ text: 'OK' }]
-            );
-            return;
-          }
-          // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
-
-      // Note: APNS token listener might not be available in this Firebase version
-      console.log('📱 APNS token will be handled automatically by Firebase');
-
-      // Listen for token refresh
-      const unsubscribeTokenRefresh = messaging().onTokenRefresh((token) => {
+      const token = await messaging().getToken();
+      if (token) {
         this.fcmToken = token;
-        safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
-        console.log('🔄 FCM Token refreshed:', token.substring(0, 20) + '...');
-        this.registerTokenWithServer(token);
-      });
-
-      // Handle foreground messages
-      const unsubscribeForeground = messaging().onMessage(async (remoteMessage) => {
-        console.log('📬 FCM message received in foreground:', remoteMessage);
-        this.handleForegroundMessage(remoteMessage);
-      });
-
-      // Handle background messages
-      messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-        console.log('📬 FCM message received in background:', remoteMessage);
+        console.log('✅ FCM token obtained:', token.substring(0, 20) + '...');
         
-        try {
-          const { notification, data } = remoteMessage;
-          
-          // Process background notification data
-          if (data && data.type === 'daily_quote' && data.quote) {
-            try {
-              const quote = JSON.parse(data.quote);
-              // Store the quote for when app becomes active
-              await quotesService.setCurrentQuote(quote);
-              console.log('✅ Quote updated from background message');
-            } catch (parseError) {
-              console.warn('⚠️ Error parsing quote from background FCM data:', parseError);
-            }
-          }
-          
-          // Return resolved promise to indicate successful processing
-          return Promise.resolve();
-        } catch (error) {
-          console.error('❌ Error handling background message:', error);
-          return Promise.resolve(); // Always resolve to prevent retries
-        }
-      });
-
-      console.log('✅ FCM initialized successfully');
-    } catch (error: any) {
-      console.error('❌ FCM initialization failed:', error);
-      console.log('ℹ️ This is expected on iOS Simulator - use a real device for FCM testing');
-
-      // Show alert for TestFlight debugging
-      Alert.alert(
-        '❌ FCM Initialization Failed',
-        `FCM initialization failed:\n\n${error?.message || 'Unknown error'}\n\nThis is expected on iOS Simulator - use a real device for FCM testing.\n\nError details: ${error?.toString() || 'Unknown error'}`,
-        [{ text: 'OK' }]
-      );
+        // Store token locally
+        await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
+        
+        // Send token to server
+        await this.sendTokenToServer(token);
+        
+        return token;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting FCM token:', error);
+      return null;
     }
   }
 
-  // Register FCM token with server
-  private async registerTokenWithServer(token: string): Promise<void> {
+  private async sendTokenToServer(token: string) {
     try {
-      // Check if we're on iOS Simulator
-      if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - skipping FCM token registration');
-        return;
-      }
-
-      console.log('📤 Registering FCM token with server:', API_CONFIG.BASE_URL);
-      
-      // Get current user ID from auth context
-      let userId = 'anonymous-user';
-      try {
-        const { getAuth } = require('@react-native-firebase/auth');
-        const auth = getAuth();
-        if (auth.currentUser) {
-          userId = auth.currentUser.uid;
-          console.log('👤 Using authenticated user ID:', userId);
-        } else {
-          console.log('👤 No authenticated user, using anonymous ID');
-        }
-      } catch (authError) {
-        console.warn('⚠️ Could not get user ID from auth context:', authError?.toString() || 'Unknown error');
-      }
+      // Get current user ID from auth context (you'll need to implement this)
+      const userId = 'current-user-id'; // TODO: Get from auth context
       
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/register-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this.getAuthToken()}`
         },
         body: JSON.stringify({
           token,
           platform: Platform.OS,
-          userId: userId,
-        }),
+          userId
+        })
       });
-
-      console.log('📡 Server response status:', response.status);
-      console.log('📡 Server response headers:', response.headers);
 
       if (response.ok) {
-        const result = await response.json();
-        console.log('✅ FCM token registered with server:', result);
+        console.log('✅ FCM token sent to server');
       } else {
-        const errorText = await response.text();
-        console.warn('⚠️ Failed to register FCM token with server. Status:', response.status);
-        console.warn('⚠️ Error response:', errorText);
-      }
-    } catch (error: any) {
-      console.warn('⚠️ Error registering FCM token with server:', error);
-      console.warn('⚠️ Server URL:', API_CONFIG.BASE_URL);
-
-      // Show alert for TestFlight debugging
-      Alert.alert(
-        '⚠️ Server Registration Error',
-        `Error registering FCM token with server:\n\n${error?.message || 'Unknown error'}\n\nServer URL: ${API_CONFIG.BASE_URL}\n\nError details: ${error?.toString() || 'Unknown error'}`,
-        [{ text: 'OK' }]
-      );
-    }
-  }
-
-  // Handle foreground FCM messages
-  private handleForegroundMessage(remoteMessage: any): void {
-    try {
-      const { notification, data } = remoteMessage;
-      
-      console.log('📬 Foreground message received:', { notification, data });
-      
-      // Don't show alerts for foreground messages - let system handle notifications
-      // The system will automatically show the notification banner when app is active
-      
-      // Update quote if it's a quote notification
-      if (data && data.type === 'daily_quote' && data.quote) {
-        try {
-          const quote = JSON.parse(data.quote);
-          quotesService.setCurrentQuote(quote);
-          console.log('✅ Quote updated from foreground message');
-        } catch (parseError) {
-          console.warn('⚠️ Error parsing quote from FCM data:', parseError);
-        }
+        console.warn('⚠️ Failed to send FCM token to server');
       }
     } catch (error) {
-      console.error('❌ Error handling foreground message:', error);
+      console.error('Error sending FCM token to server:', error);
     }
   }
 
-  // Handle notification tap
-  private handleNotificationTap(data: any): void {
-    console.log('👆 Notification tapped:', data);
-    
-    // Handle navigation or app state updates based on notification data
-    if (data && data.type === 'daily_quote' && data.quote) {
-      try {
-        const quote = JSON.parse(data.quote);
-        quotesService.setCurrentQuote(quote);
-        console.log('✅ Quote updated from notification tap');
-      } catch (parseError) {
-        console.warn('⚠️ Error parsing quote from notification tap:', parseError);
-      }
-    }
-  }
-
-  // Send FCM notification via server
-  private async sendFCMNotification(notificationData: {
-    title: string;
-    body: string;
-    data: { [key: string]: string };
-  }): Promise<void> {
-    try {
-      // Check if we're on iOS Simulator
-      if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - simulating FCM notification locally');
-        console.log('📱 Notification would be:', notificationData.title, '-', notificationData.body);
-        
-        // Show a local alert instead of sending FCM
-        Alert.alert(
-          '📱 Simulator Notification',
-          `${notificationData.title}\n\n${notificationData.body}\n\n(Simulated - FCM not available on simulator)`,
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
-      // Check if we have a valid FCM token
-      if (!this.fcmToken) {
-        console.warn('⚠️ No FCM token available, trying to get one...');
-        try {
-          await messaging().registerDeviceForRemoteMessages();
-          const token = await messaging().getToken();
-          if (token) {
-            this.fcmToken = token;
-            console.log('✅ Got FCM token:', token.substring(0, 20) + '...');
-          } else {
-            throw new Error('Failed to get FCM token');
-          }
-        } catch (tokenError) {
-          console.error('❌ Failed to get FCM token:', tokenError);
-          throw new Error('No FCM token available for sending notifications');
-        }
-      }
-
-      console.log('📤 Sending FCM notification to server:', API_CONFIG.BASE_URL);
-      console.log('📤 FCM Token:', this.fcmToken.substring(0, 20) + '...');
-      console.log('📤 Notification data:', notificationData);
-      
-      const requestBody = {
-        ...notificationData,
-        token: this.fcmToken,
-        platform: Platform.OS,
-      };
-
-      console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
-      
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log('📡 Server response status:', response.status);
-      console.log('📡 Server response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Server error response:', errorText);
-        throw new Error(`Server responded with status: ${response.status}. Error: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ FCM notification sent successfully via server:', result);
-    } catch (error: any) {
-      console.error('❌ Failed to send FCM notification via server:', error);
-      console.error('❌ Server URL:', API_CONFIG.BASE_URL);
-      console.error('❌ FCM Token:', this.fcmToken ? 'Available' : 'Missing');
-
-      // Show alert for TestFlight debugging
-      Alert.alert(
-        '❌ FCM Send Failed',
-        `Failed to send FCM notification via server:\n\n${error?.message || 'Unknown error'}\n\nServer URL: ${API_CONFIG.BASE_URL}\nFCM Token: ${this.fcmToken ? 'Available' : 'Missing'}\n\nError details: ${error?.toString() || 'Unknown error'}`,
-        [{ text: 'OK' }]
-      );
-
-      throw error;
-    }
-  }
-
-  // Initialize notification service
-  async initialize(): Promise<void> {
-    if (this.initialized) return;
-
-    try {
-      console.log('🔔 Initializing push notifications...');
-      
-      // Initialize FCM
-      await this.initializeFCM();
-      
-      // Request permissions
-      const hasPermission = await this.requestPermission();
-      if (hasPermission) {
-        console.log('✅ Push notification permission granted!');
-      } else {
-        console.log('⚠️ Push notification permission denied');
-      }
-
-      // Start background quote scheduler
-      await this.startQuoteScheduler();
-
-      this.initialized = true;
-      console.log('✅ Push notifications initialized!');
-    } catch (error: any) {
-      console.error('Error initializing notification service:', error);
-
-      // Show alert for TestFlight debugging
-      Alert.alert(
-        '❌ Notification Service Init Failed',
-        `Error initializing notification service:\n\n${error?.message || 'Unknown error'}\n\nContinuing with limited functionality.\n\nError details: ${JSON.stringify(error, null, 2)}`,
-        [{ text: 'OK' }]
-      );
-
-      this.initialized = true; // Continue with limited functionality
-    }
-  }
-
-  // Request notification permissions for both iOS and Android
-  async requestPermission(): Promise<boolean> {
-    try {
-      if (Platform.OS === 'ios') {
-        console.log('📱 Requesting iOS notification permissions...');
-        
-        try {
-          // First, check if we can register for remote notifications
-          const canRegister = await messaging().hasPermission();
-          console.log('🔍 Current iOS permission status:', canRegister);
-          
-          // Request permission with all options
-          const authStatus = await messaging().requestPermission({
-            alert: true,
-            badge: true,
-            sound: true,
-            announcement: false,
-            carPlay: false,
-            criticalAlert: false,
-            provisional: false,
-          });
-          
-          console.log('📱 iOS permission request result:', authStatus);
-          
-          const granted = authStatus === messaging.AuthorizationStatus.AUTHORIZED || 
-                         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-          
-          await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.NOTIFICATION_PERMISSION, JSON.stringify(granted));
-          
-          if (granted) {
-            // Register for remote notifications
-            try {
-              await messaging().registerDeviceForRemoteMessages();
-              console.log('✅ Successfully registered for remote notifications');
-            } catch (registerError) {
-              console.warn('⚠️ Failed to register for remote notifications:', registerError);
-            }
-          }
-          
-          console.log('✅ iOS notification permission result:', granted, authStatus);
-          return granted;
-        } catch (firebaseError) {
-          console.warn('⚠️ Firebase messaging not available, falling back to basic permissions:', firebaseError);
-          // Fallback: assume permission granted for now
-          await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.NOTIFICATION_PERMISSION, JSON.stringify(true));
-          return true;
-        }
-      } else {
-        console.log('🤖 Requesting Android notification permissions...');
-        
-        // Request permission for Android 13+ (API level 33+)
-        if (typeof Platform.Version === 'number' && Platform.Version >= 33) {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-            {
-              title: 'Notification Permission',
-              message: 'Guras would like to send you daily wisdom notifications',
-              buttonNeutral: 'Ask Me Later',
-              buttonNegative: 'Cancel',
-              buttonPositive: 'OK',
-            }
-          );
-          
-          const hasPermission = granted === PermissionsAndroid.RESULTS.GRANTED;
-          await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.NOTIFICATION_PERMISSION, JSON.stringify(hasPermission));
-          console.log('✅ Android notification permission result:', hasPermission);
-          return hasPermission;
-        } else {
-          // For older Android versions, notifications are granted by default
-          await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.NOTIFICATION_PERMISSION, JSON.stringify(true));
-          console.log('✅ Android notification permission granted (older version)');
-          return true;
-        }
-      }
-    } catch (error) {
-      console.error('Error requesting notification permission:', error);
-      return false;
-    }
+  private async getAuthToken(): Promise<string> {
+    // TODO: Implement getting auth token from your auth system
+    return 'dummy-token';
   }
 
   // Check if notifications are enabled
@@ -689,12 +245,19 @@ class NotificationService {
     }
   }
 
-  // Stop the quote scheduler
-  stopQuoteScheduler(): void {
-    if (this.backgroundTaskId) {
-      clearInterval(this.backgroundTaskId);
-      this.backgroundTaskId = null;
-      console.log('🛑 Push notification scheduler stopped');
+  // Send immediate test notification
+  private async sendImmediateTestNotification(): Promise<void> {
+    try {
+      if (this.isSimulator) {
+        console.log('📱 iOS Simulator - skipping test notification');
+        return;
+      }
+
+      const quote = await quotesService.getCurrentQuote();
+      await this.sendQuoteNotification(quote, 'daily_quote');
+      console.log('✅ Test notification sent');
+    } catch (error) {
+      console.error('Error sending test notification:', error);
     }
   }
 
@@ -785,30 +348,18 @@ class NotificationService {
     }
   }
 
-  // Send push notification for both iOS and Android
   async sendQuoteNotification(quote: Quote, type: 'daily_quote' | 'hourly_quote' | '5min_quote'): Promise<void> {
     try {
-      const title = type === 'daily_quote' ? '🧘 Daily Wisdom' : 
-                   type === '5min_quote' ? '⚡ Quick Inspiration' : '✨ Hourly Inspiration';
-      const body = `"${quote.text}" - ${quote.author}`;
-
-      console.log(`🔔 Sending push notification: ${title} - ${body.substring(0, 50)}...`);
-      
-      // Check if we're on iOS Simulator
       if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - simulating quote notification locally');
-        
-        // Show a local alert instead of sending FCM
-        Alert.alert(
-          '📱 Simulator Quote Notification',
-          `${title}\n\n${body}\n\n(Simulated - FCM not available on simulator)`,
-          [{ text: 'OK' }]
-        );
-        
-        // Always update the current quote in the app
-        await quotesService.setCurrentQuote(quote);
+        console.log('📱 iOS Simulator - skipping FCM notification');
         return;
       }
+
+      const title = '🧘 Daily Wisdom';
+      const body = `"${quote.text}" - ${quote.author}`;
+      
+      console.log(`🔔 Sending notification: ${title}`);
+      console.log(`📝 Body: ${body}`);
       
       // Force FCM token generation if not available
       if (!this.fcmToken) {
@@ -853,93 +404,154 @@ class NotificationService {
       
       // Always update the current quote in the app
       await quotesService.setCurrentQuote(quote);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error sending quote notification:', error);
-
-      // Show alert for TestFlight debugging
-      Alert.alert(
-        '❌ Quote Notification Failed',
-        `Error sending quote notification:\n\n${error?.message || 'Unknown error'}\n\nError details: ${JSON.stringify(error, null, 2)}`,
-        [{ text: 'OK' }]
-      );
-
-      throw error; // Re-throw to show the real error
+      throw error;
     }
   }
 
-  // Manual trigger for testing notifications
-  async sendTestNotification(): Promise<void> {
+  private async sendFCMNotification(notification: {
+    title: string;
+    body: string;
+    data: Record<string, string>;
+  }): Promise<void> {
     try {
-      console.log('🧪 Sending test notification...');
-      
-      // Check if we're on iOS Simulator
-      if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - using local notification');
-        Alert.alert(
-          '📱 iOS Simulator Notice',
-          'FCM does not work on iOS Simulator. This is a local notification test.\n\nTo test real push notifications, use a physical device or TestFlight.',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
-      // Check if we have FCM token for real devices
       if (!this.fcmToken) {
-        console.log('⚠️ No FCM token available');
-        Alert.alert(
-          '⚠️ No FCM Token',
-          'FCM token not available. This is required for push notifications.\n\nPlease restart the app and try again.',
-          [{ text: 'OK' }]
-        );
-        return;
+        throw new Error('No FCM token available');
       }
 
-      // Create a test quote
-      const testQuote: Quote = {
-        id: 888,
-        text: "This is a manual test notification from the app",
-        author: "Manual Test",
-        category: "test"
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/send-quote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this.getAuthToken()}`
+        },
+        body: JSON.stringify({
+          userTokens: [this.fcmToken],
+          quote: {
+            text: notification.data.quote,
+            author: 'Guras'
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Server notification response:', result);
+    } catch (error) {
+      console.error('Error sending FCM notification via server:', error);
+      throw error;
+    }
+  }
+
+  // Sync user preferences with server
+  async syncPreferencesWithServer(): Promise<void> {
+    try {
+      const localPreferences = await quotesService.getNotificationPreferences();
+      
+      // Convert local frequency to server format
+      const serverFrequency = this.convertFrequencyToServer(localPreferences.frequency);
+      
+      const request: UpdatePreferencesRequest = {
+        enabled: localPreferences.enabled,
+        frequency: serverFrequency,
+        quietHours: {
+          start: localPreferences.quietHours.start,
+          end: localPreferences.quietHours.end
+        }
       };
 
-      // Send the notification
-      await this.sendQuoteNotification(testQuote, 'daily_quote');
-      
-      console.log('✅ Manual test notification sent');
-      Alert.alert(
-        '✅ Test Notification Sent',
-        'Manual test notification sent!\n\n' +
-        'Check your notification center for the notification.\n\n' +
-        'If you don\'t see it:\n' +
-        '• Check Settings → Notifications → Guras\n' +
-        '• Ensure "Allow Notifications" is ON\n' +
-        '• Try putting the app in background first',
-        [{ text: 'OK' }]
-      );
-    } catch (error: any) {
-      console.error('❌ Manual test notification failed:', error);
-      Alert.alert('❌ Test Failed', 'Failed to send manual test notification: ' + (error?.message || 'Unknown error'));
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/usernotificationpreferences`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this.getAuthToken()}`
+        },
+        body: JSON.stringify(request)
+      });
+
+      if (response.ok) {
+        const serverPreferences: ServerNotificationPreferences = await response.json();
+        console.log('✅ Preferences synced with server:', serverPreferences);
+        
+        // Update local preferences with server data
+        const updatedLocalPreferences: NotificationPreferences = {
+          enabled: serverPreferences.enabled,
+          frequency: this.convertFrequencyFromServer(serverPreferences.frequency),
+          quietHours: {
+            start: serverPreferences.quietHours.start,
+            end: serverPreferences.quietHours.end
+          }
+        };
+        
+        await quotesService.setNotificationPreferences(updatedLocalPreferences);
+      } else {
+        console.warn('⚠️ Failed to sync preferences with server');
+      }
+    } catch (error) {
+      console.error('Error syncing preferences with server:', error);
     }
   }
 
-  // Schedule a notification for a specific time
-  async scheduleNotification(quote: Quote, date: Date, type: 'daily_quote' | 'hourly_quote' | '5min_quote'): Promise<void> {
+  // Load user preferences from server
+  async loadPreferencesFromServer(): Promise<NotificationPreferences | null> {
     try {
-      const title = type === 'daily_quote' ? '🧘 Daily Wisdom' : 
-                   type === '5min_quote' ? '⚡ Quick Inspiration' : '✨ Hourly Inspiration';
-      const body = `"${quote.text}" - ${quote.author}`;
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/usernotificationpreferences`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${await this.getAuthToken()}`
+        }
+      });
 
-      try {
-        console.log(`📅 Would schedule ${Platform.OS === 'ios' ? 'iOS' : 'Android'} notification for ${date.toLocaleString()}: ${title}`);
-        console.log(`📝 Scheduled notification body: ${body.substring(0, 100)}...`);
+      if (response.ok) {
+        const serverPreferences: ServerNotificationPreferences = await response.json();
+        console.log('✅ Loaded preferences from server:', serverPreferences);
         
-        // Note: Actual scheduling would require platform-specific implementation
-        console.log(`✅ Notification scheduling logged`);
-      } catch (scheduleError) {
-        console.error('Error logging scheduled notification:', scheduleError);
+        // Convert server format to local format
+        const localPreferences: NotificationPreferences = {
+          enabled: serverPreferences.enabled,
+          frequency: this.convertFrequencyFromServer(serverPreferences.frequency),
+          quietHours: {
+            start: serverPreferences.quietHours.start,
+            end: serverPreferences.quietHours.end
+          }
+        };
+        
+        // Update local storage
+        await quotesService.setNotificationPreferences(localPreferences);
+        
+        return localPreferences;
+      } else {
+        console.warn('⚠️ Failed to load preferences from server');
+        return null;
       }
     } catch (error) {
-      console.error('Error scheduling notification:', error);
+      console.error('Error loading preferences from server:', error);
+      return null;
+    }
+  }
+
+  private convertFrequencyToServer(frequency: string): string {
+    switch (frequency) {
+      case '5min': return '5min';
+      case 'hourly': return 'hourly';
+      case 'twice-daily': return 'twice-daily';
+      case 'daily': return 'daily';
+      default: return 'daily';
+    }
+  }
+
+  private convertFrequencyFromServer(frequency: string): string {
+    switch (frequency.toLowerCase()) {
+      case '5min': return '5min';
+      case 'hourly': return 'hourly';
+      case 'twice-daily': return 'twice-daily';
+      case 'daily': return 'daily';
+      default: return 'daily';
     }
   }
 
@@ -947,6 +559,9 @@ class NotificationService {
   async updatePreferences(preferences: NotificationPreferences): Promise<void> {
     try {
       await quotesService.setNotificationPreferences(preferences);
+      
+      // Sync with server
+      await this.syncPreferencesWithServer();
       
       // Restart scheduler with new preferences
       await this.startQuoteScheduler();
@@ -990,409 +605,31 @@ class NotificationService {
     }
   }
 
-  // Cancel all scheduled notifications
-  cancelAllNotifications(): void {
+  // Send test notification
+  async sendTestNotification(): Promise<void> {
     try {
-      console.log('📱 Would cancel all local notifications');
-      console.log('🔢 Would reset badge count to 0');
-      console.log('✅ All notifications would be cancelled');
-    } catch (error) {
-      console.error('Error logging notification cancellation:', error);
-    }
-  }
-
-  // Debug function to check notification status
-  async debugNotificationStatus(): Promise<void> {
-    try {
-      console.log('🔍 === NOTIFICATION DEBUG INFO ===');
-      
-      console.log('📱 Platform:', Platform.OS);
-      console.log('📱 iOS Simulator:', this.isSimulator);
-      
-      // Check FCM availability
-      console.log('📱 Firebase messaging available:', !!messaging);
-      
-      // Check permission status
-      const hasPermission = await this.hasPermission();
-      console.log('🔔 Has permission:', hasPermission);
-      
-      // Check FCM token
-      console.log('🔑 FCM token exists:', !!this.fcmToken);
-      if (this.fcmToken) {
-        console.log('🔑 FCM token preview:', this.fcmToken.substring(0, 20) + '...');
-      }
-      
-      // Check stored token
-      const storedToken = await safeNotificationGetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN);
-      console.log('💾 Stored FCM token exists:', !!storedToken);
-      
-      // Check notification preferences
-      const preferences = await quotesService.getNotificationPreferences();
-      console.log('⚙️ Notification preferences:', preferences);
-      
-      // Check last notification time
-      const lastNotification = await safeNotificationGetItem(NOTIFICATION_STORAGE_KEYS.LAST_NOTIFICATION_TIME);
-      console.log('⏰ Last notification time:', lastNotification);
-      
-      // Check if scheduler is running
-      console.log('🔄 Scheduler running:', !!this.backgroundTaskId);
-      
-      // Certificate trust check for iOS
-      if (Platform.OS === 'ios' && !this.isSimulator) {
-        console.log('🔐 CERTIFICATE CHECK:');
-        console.log('🔐 Check Keychain Access for "Apple Push Services: com.cosmos.guras"');
-        console.log('🔐 Certificate should be set to "Always Trust"');
-        console.log('🔐 If certificate shows "not trusted", FCM will fail');
-      }
-      
-      console.log('🔍 === END DEBUG INFO ===');
-      
-      // Show alert with debug info
-      Alert.alert(
-        '🔍 Notification Debug Info',
-        `Platform: ${Platform.OS}\n` +
-        `iOS Simulator: ${this.isSimulator ? '✅ Yes' : '❌ No'}\n` +
-        `Permission: ${hasPermission ? '✅ Granted' : '❌ Denied'}\n` +
-        `FCM Token: ${this.fcmToken ? '✅ Available' : '❌ Missing'}\n` +
-        `Preferences: ${preferences.enabled ? '✅ Enabled' : '❌ Disabled'}\n` +
-        `Scheduler: ${this.backgroundTaskId ? '✅ Running' : '❌ Stopped'}\n\n` +
-        `${this.isSimulator ? '⚠️ FCM does not work on iOS Simulator!\n\n' : ''}` +
-        `${Platform.OS === 'ios' && !this.isSimulator && !this.fcmToken ? '🔐 FCM Token Missing - Check Firebase Console\n\n' : ''}` +
-        `If notifications aren't working:\n` +
-        `1. Check Settings → Notifications → Guras\n` +
-        `2. Ensure "Allow Notifications" is ON\n` +
-        `3. Use a real device or TestFlight for FCM testing\n` +
-        `${Platform.OS === 'ios' && !this.isSimulator && !this.fcmToken ? '4. Verify Firebase Console APNs setup' : ''}`,
-        [{ text: 'OK' }]
-      );
-    } catch (error) {
-      console.error('Error in debug function:', error);
-    }
-  }
-
-  // Test FCM token generation specifically for TestFlight debugging
-  async testFCMTokenGeneration(): Promise<void> {
-    try {
-      console.log('🧪 === FCM TOKEN GENERATION TEST ===');
-      
-      // Check platform
-      console.log('📱 Platform:', Platform.OS);
-      
-      // Check if we're on iOS Simulator
       if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - FCM tokens cannot be generated');
-        Alert.alert('📱 iOS Simulator', 'FCM tokens cannot be generated on iOS Simulator. Use a real device or TestFlight.');
+        console.log('📱 iOS Simulator - skipping test notification');
         return;
       }
 
-      console.log('🔑 Attempting to get FCM token...');
-      
-      // Check if messaging is available
-      if (!messaging) {
-        Alert.alert('❌ Error', 'Firebase messaging is not available');
-        return;
-      }
-
-      console.log('✅ Firebase messaging module is available');
-      console.log('🔧 Testing basic messaging functionality...');
-
-      // Skip Firebase app check - go directly to messaging
-      console.log('🔧 Skipping Firebase app check, testing messaging directly...');
-
-      // Try to access messaging directly - this should trigger Firebase initialization
-      let hasPermission;
-      try {
-        console.log('🔧 Testing Firebase messaging access...');
-        hasPermission = await messaging().hasPermission();
-        console.log('🔔 Permission status:', hasPermission);
-      } catch (messagingError) {
-        console.error('❌ Firebase messaging not available:', messagingError);
-        console.error('🔴 Messaging error details:', JSON.stringify(messagingError, null, 2));
-        
-        // Try alternative approach
-        try {
-          console.log('🔧 Trying alternative Firebase messaging approach...');
-          const messagingInstance = messaging();
-          hasPermission = await messagingInstance.hasPermission();
-          console.log('✅ Alternative approach worked, permission status:', hasPermission);
-        } catch (altError) {
-          console.error('❌ Alternative approach also failed:', altError);
-          Alert.alert('❌ Firebase Error', 'Firebase messaging is not available. Please restart the app.');
-          return;
-        }
-      }
-      
-      if (hasPermission !== messaging.AuthorizationStatus.AUTHORIZED && 
-          hasPermission !== messaging.AuthorizationStatus.PROVISIONAL) {
-        Alert.alert('❌ Permission Denied', 'Notification permission is required for FCM tokens');
-        return;
-      }
-
-      // Register for remote messages and wait for APNS token
-      try {
-        console.log('📱 Registering for remote messages...');
-        await messaging().registerDeviceForRemoteMessages();
-        console.log('✅ Successfully registered for remote messages');
-        
-        // Wait for APNS token to be available
-        console.log('⏳ Waiting for APNS token to be set...');
-        let apnsTokenAvailable = false;
-        let attempts = 0;
-        const maxAttempts = 10; // Wait up to 10 seconds
-        
-        while (!apnsTokenAvailable && attempts < maxAttempts) {
-          attempts++;
-          console.log(`🔍 Attempt ${attempts}/${maxAttempts}: Checking for APNS token...`);
-          
-          try {
-            // Try to get APNS token - this will fail if not available, but that's expected
-            const apnsToken = await messaging().getAPNSToken();
-            if (apnsToken) {
-              console.log('✅ APNS token is available');
-              apnsTokenAvailable = true;
-              break;
-            }
-          } catch (apnsError) {
-            console.log(`⏳ APNS token not ready yet (attempt ${attempts})`);
-          }
-          
-          // Wait 1 second before next attempt
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        if (!apnsTokenAvailable) {
-          console.warn('⚠️ APNS token not available after waiting, but continuing anyway...');
-        }
-        
-      } catch (registerError) {
-        console.warn('⚠️ Failed to register for remote messages:', registerError);
-        console.error('🔴 Registration error details:', JSON.stringify(registerError, null, 2));
-        Alert.alert('⚠️ Registration Failed', 'Failed to register for remote notifications. This might be a certificate issue.');
-        return;
-      }
-
-      // Try to get FCM token with detailed error handling
-      try {
-        console.log('🔑 Requesting FCM token...');
-        await messaging().registerDeviceForRemoteMessages();
-        const token = await messaging().getToken();
-        console.log('🔑 Raw token response:', token);
-        
-        if (token && token.length > 0) {
-          this.fcmToken = token;
-          await safeNotificationSetItem(NOTIFICATION_STORAGE_KEYS.FCM_TOKEN, token);
-          console.log('✅ FCM Token generated successfully!');
-          console.log('🔑 Token preview:', token.substring(0, 30) + '...');
-          console.log('🔑 Token length:', token.length);
-          
-          Alert.alert(
-            '✅ FCM Token Generated!',
-            `Token: ${token.substring(0, 30)}...\n\nThis means FCM is working correctly in your TestFlight build.`,
-            [{ text: 'OK' }]
-          );
-        } else {
-          throw new Error('No token received or token is empty');
-        }
-              } catch (tokenError: any) {
-          console.error('❌ FCM token generation failed:', tokenError);
-          console.error('🔴 Token error details:', JSON.stringify(tokenError, null, 2));
-          
-          // More detailed error analysis
-          let errorMessage = 'Unknown error';
-          let errorType = 'Unknown';
-          
-          if (tokenError?.message) {
-            errorMessage = tokenError.message;
-            if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-              errorType = 'Network';
-            } else if (errorMessage.includes('permission')) {
-              errorType = 'Permission';
-            } else if (errorMessage.includes('certificate') || errorMessage.includes('APNs')) {
-              errorType = 'Certificate';
-            } else if (errorMessage.includes('configuration') || errorMessage.includes('Firebase')) {
-              errorType = 'Configuration';
-            }
-          }
-          
-          console.log(`🔍 Error type: ${errorType}`);
-          console.log(`🔍 Error message: ${errorMessage}`);
-          
-          Alert.alert(
-            `❌ FCM Token Failed (${errorType})`,
-            `Failed to generate FCM token.\n\n` +
-            `Error: ${errorMessage}\n\n` +
-            `Possible solutions:\n` +
-            `${errorType === 'Network' ? '• Check internet connection\n' : ''}` +
-            `${errorType === 'Permission' ? '• Check notification permissions\n' : ''}` +
-            `${errorType === 'Certificate' ? '• Verify Firebase console APNs setup\n' : ''}` +
-            `${errorType === 'Configuration' ? '• Check Firebase configuration files\n' : ''}` +
-            `• Ensure you\'re using TestFlight, not simulator`,
-            [{ text: 'OK' }]
-          );
-        }
-        
-        console.log('🧪 === END FCM TOKEN TEST ===');
-      } catch (error: any) {
-        console.error('Error in FCM token test:', error);
-        Alert.alert('❌ Test Error', 'An error occurred during the FCM token test: ' + (error?.message || 'Unknown error'));
-      }
-  }
-
-  // Send an immediate test notification
-  async sendImmediateTestNotification(): Promise<void> {
-    try {
-      console.log('🧪 Sending immediate test notification...');
-      
-      // Check if we're on iOS Simulator
-      if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - cannot send real notifications');
-        Alert.alert('📱 iOS Simulator', 'Cannot send real notifications on simulator. Use a real device or TestFlight.');
-        return;
-      }
-
-      // Check permission
-      const hasPermission = await this.hasPermission();
-      if (!hasPermission) {
-        console.log('⚠️ No notification permission');
-        Alert.alert('⚠️ Permission Required', 'Please enable notifications in Settings → Notifications → Guras');
-        return;
-      }
-
-      // Create a test quote
-      const testQuote: Quote = {
-        id: 999,
-        text: "This is a test background notification - if you see this, notifications are working!",
-        author: "Test System",
-        category: "test"
-      };
-
-      // Send notification
-      await this.sendQuoteNotification(testQuote, 'daily_quote');
-      
+      const quote = await quotesService.getCurrentQuote();
+      await this.sendQuoteNotification(quote, 'daily_quote');
       console.log('✅ Test notification sent');
-      Alert.alert(
-        '✅ Test Notification Sent',
-        'Test notification has been sent!\n\n' +
-        '1. Put the app in background (press home button)\n' +
-        '2. Check notification center\n' +
-        '3. You should see the notification\n\n' +
-        'If you don\'t see it, check:\n' +
-        '• Settings → Notifications → Guras\n' +
-        '• Ensure "Allow Notifications" is ON\n' +
-        '• Check "Show in Notification Center"',
-        [{ text: 'OK' }]
-      );
-    } catch (error: any) {
-      console.error('❌ Test notification failed:', error);
-      Alert.alert('❌ Test Failed', 'Failed to send test notification: ' + (error?.message || 'Unknown error'));
-    }
-  }
-
-  // Test background notification functionality
-  async testBackgroundNotification(): Promise<void> {
-    try {
-      console.log('🧪 === BACKGROUND NOTIFICATION TEST ===');
-      
-      // Check if we're on iOS Simulator
-      if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - background notifications not available');
-        Alert.alert('📱 iOS Simulator', 'Background notifications cannot be tested on iOS Simulator. Use a real device or TestFlight.');
-        return;
-      }
-
-      console.log('📤 Sending test background notification...');
-      
-      // Create a test quote
-      const testQuote: Quote = {
-        id: 999,
-        text: "This is a test background notification",
-        author: "Test Author",
-        category: "test"
-      };
-
-      // Send notification that should appear in background
-      await this.sendQuoteNotification(testQuote, 'daily_quote');
-      
-      console.log('✅ Test background notification sent');
-      console.log('📱 Check your device notification center');
-      console.log('📱 The notification should appear even when app is in background');
-      
-      Alert.alert(
-        '✅ Test Sent',
-        'Background notification test sent!\n\n' +
-        '1. Put the app in background (press home button)\n' +
-        '2. Wait for the notification to appear\n' +
-        '3. Tap the notification to open the app\n\n' +
-        'If you don\'t see the notification, check:\n' +
-        '• Settings → Notifications → Guras\n' +
-        '• Ensure "Allow Notifications" is ON\n' +
-        '• Check "Show in Notification Center"',
-        [{ text: 'OK' }]
-      );
-      
-      console.log('🧪 === END BACKGROUND NOTIFICATION TEST ===');
-    } catch (error: any) {
-      console.error('❌ Background notification test failed:', error);
-      Alert.alert('❌ Test Failed', 'Background notification test failed: ' + (error?.message || 'Unknown error'));
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      throw error;
     }
   }
 
   // Cleanup
-  destroy(): void {
-    this.stopQuoteScheduler();
-    console.log('✅ Notification service destroyed');
-  }
-
-  // Simple test to check basic Firebase connectivity
-  async testBasicFirebaseConnection(): Promise<void> {
-    try {
-      console.log('🔍 === BASIC FIREBASE CONNECTION TEST ===');
-
-      // Check if we're on iOS Simulator
-      if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - Firebase connection test not applicable');
-        Alert.alert('📱 iOS Simulator', 'Firebase connection test is not applicable on iOS Simulator. Use a real device or TestFlight for Firebase testing.');
-        return;
-      }
-
-      // Check if Firebase messaging module is available
-      if (!messaging) {
-        Alert.alert('❌ Error', 'Firebase messaging module not available');
-        return;
-      }
-
-      // Try to access Firebase app properly
-      try {
-        const firebaseApp = require('@react-native-firebase/app').default;
-        console.log('✅ Firebase app available:', firebaseApp.name);
-        console.log('✅ Firebase app options:', firebaseApp.options);
-      } catch (firebaseError) {
-        console.error('❌ Firebase app error:', firebaseError);
-        Alert.alert('❌ Firebase Error', 'Firebase app is not properly initialized');
-        return;
-      }
-
-      // Check if we can access messaging
-      try {
-        const messagingInstance = messaging();
-        console.log('✅ Firebase messaging available');
-
-        // Try to check permission status as a basic test
-        const permissionStatus = await messagingInstance.hasPermission();
-        console.log('✅ Firebase messaging permission check successful:', permissionStatus);
-      } catch (messagingError) {
-        console.error('❌ Firebase messaging error:', messagingError);
-        Alert.alert('❌ Messaging Error', 'Firebase messaging is not available');
-        return;
-      }
-
-      Alert.alert('✅ Firebase Working!', 'Firebase is properly connected and messaging is available');
-      console.log('🔍 === END BASIC TEST ===');
-    } catch (error: any) {
-      console.error('Error in basic Firebase test:', error);
-      Alert.alert('❌ Test Error', 'Basic Firebase test failed: ' + (error?.message || 'Unknown error'));
+  cleanup(): void {
+    if (this.backgroundTaskId) {
+      clearInterval(this.backgroundTaskId);
+      this.backgroundTaskId = null;
     }
   }
 }
 
-export default NotificationService.getInstance(); 
+// Export singleton instance
+export default new NotificationService(); 

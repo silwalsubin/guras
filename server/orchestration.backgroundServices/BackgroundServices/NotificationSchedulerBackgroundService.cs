@@ -4,99 +4,105 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using services.notifications.Services;
+using services.notifications.Domain;
 using services.quotes.Domain;
 using services.quotes.Services;
 
 namespace orchestration.backgroundServices.BackgroundServices;
 
-public class NotificationSchedulerBackgroundService(
-    ILogger<NotificationSchedulerBackgroundService> logger,
-    IServiceScopeFactory scopeFactory)
-    : BackgroundService
+public class NotificationSchedulerBackgroundService : BackgroundService
 {
-    private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(5); // Check every 5 minutes
+    private readonly ILogger<NotificationSchedulerBackgroundService> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(1); // Check every minute
+
+    public NotificationSchedulerBackgroundService(
+        ILogger<NotificationSchedulerBackgroundService> logger,
+        IServiceScopeFactory scopeFactory)
+    {
+        _logger = logger;
+        _scopeFactory = scopeFactory;
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("Notification Scheduler Service started");
+        _logger.LogInformation("Notification Scheduler Background Service started");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await CheckAndSendScheduledNotifications();
+                await CheckAndSendNotifications();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error in notification scheduler");
+                _logger.LogError(ex, "Error in notification scheduler loop");
             }
 
             await Task.Delay(_checkInterval, stoppingToken);
         }
 
-        logger.LogInformation("Notification Scheduler Service stopped");
+        _logger.LogInformation("Notification Scheduler Background Service stopped");
     }
 
-    private async Task CheckAndSendScheduledNotifications()
+    private async Task CheckAndSendNotifications()
     {
         try
         {
             // Get current time
             var now = DateTime.UtcNow;
-            logger.LogDebug($"Checking for scheduled notifications at {now:yyyy-MM-dd HH:mm:ss} UTC");
+            _logger.LogDebug($"Checking for scheduled notifications at {now:yyyy-MM-dd HH:mm:ss} UTC");
 
-            // TODO: Get users who have notifications enabled and are due for a notification
-            // This would typically query your database for:
-            // 1. Users with notifications enabled
-            // 2. Users whose last notification was sent according to their frequency preference
-            // 3. Users not in quiet hours
+            using var scope = _scopeFactory.CreateScope();
+            var preferencesService = scope.ServiceProvider.GetRequiredService<IUserNotificationPreferencesService>();
+            var quotesService = scope.ServiceProvider.GetRequiredService<IQuotesService>();
+            var tokenService = scope.ServiceProvider.GetRequiredService<INotificationTokenService>();
 
-            // For demo purposes, let's simulate getting user tokens
-            var userTokens = await GetActiveUserTokens();
+            // Get users who are due for notifications based on their preferences
+            var usersDueForNotification = await preferencesService.GetUsersDueForNotificationAsync();
 
-            if (userTokens.Any())
+            if (usersDueForNotification.Any())
             {
-                using var scope = scopeFactory.CreateScope();
-                var quotesService = scope.ServiceProvider.GetRequiredService<IQuotesService>();
+                _logger.LogInformation("Found {Count} users due for notifications", usersDueForNotification.Count);
+                
+                // Get a random quote for this notification cycle
                 var quote = quotesService.GetRandomQuote();
-                await SendQuoteNotificationToUsers(userTokens, quote);
+                
+                foreach (var userPreferences in usersDueForNotification)
+                {
+                    await SendQuoteNotificationToUser(userPreferences, quote, tokenService, preferencesService);
+                }
+            }
+            else
+            {
+                _logger.LogDebug("No users due for notifications at this time");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error checking scheduled notifications");
+            _logger.LogError(ex, "Error checking scheduled notifications");
         }
     }
 
-    private async Task<List<string>> GetActiveUserTokens()
+    private async Task SendQuoteNotificationToUser(
+        UserNotificationPreferences userPreferences, 
+        QuoteData quote, 
+        INotificationTokenService tokenService,
+        IUserNotificationPreferencesService preferencesService)
     {
         try
         {
-            // For now, get tokens from the notification token service
-            // In production, this would query the database
-            logger.LogDebug("Getting active user tokens from notification token service");
-            
-            using var scope = scopeFactory.CreateScope();
-            var notificationTokenService = scope.ServiceProvider.GetRequiredService<INotificationTokenService>();
-            var tokens = notificationTokenService.GetStoredTokens();
-            logger.LogInformation($"Found {tokens.Count} registered tokens");
-            
-            return tokens;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error getting active user tokens");
-            return new List<string>();
-        }
-    }
+            // Get user's FCM tokens
+            var userTokens = tokenService.GetUserTokens();
+            if (!userTokens.TryGetValue(userPreferences.UserId, out var tokens) || !tokens.Any())
+            {
+                _logger.LogWarning("No FCM tokens found for user {UserId}", userPreferences.UserId);
+                return;
+            }
 
-    private async Task SendQuoteNotificationToUsers(List<string> userTokens, QuoteData quote)
-    {
-        try
-        {
-            logger.LogInformation($"Sending quote notification to {userTokens.Count} users");
+            _logger.LogInformation($"Sending quote notification to user {userPreferences.UserId} with {tokens.Count} tokens");
 
-            var messages = userTokens.Select(token => new Message()
+            var messages = tokens.Select(token => new Message()
             {
                 Token = token,
                 Notification = new Notification()
@@ -107,7 +113,7 @@ public class NotificationSchedulerBackgroundService(
                 Data = new Dictionary<string, string>
                 {
                     ["quote"] = JsonSerializer.Serialize(quote),
-                    ["type"] = "daily_quote",
+                    ["type"] = GetNotificationType(userPreferences.Frequency),
                     ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()
                 },
                 Android = new AndroidConfig()
@@ -124,19 +130,46 @@ public class NotificationSchedulerBackgroundService(
                     Aps = new Aps()
                     {
                         Sound = "default",
-                        Badge = 1
+                        Badge = 1,
+                        ContentAvailable = true,
+                        Alert = new ApsAlert()
+                        {
+                            Title = "🧘 Daily Wisdom",
+                            Body = $"\"{quote.Text}\" - {quote.Author}"
+                        }
+                    },
+                    Headers = new Dictionary<string, string>
+                    {
+                        ["apns-priority"] = "10",
+                        ["apns-push-type"] = "alert"
                     }
                 }
             }).ToList();
 
             var response = await FirebaseMessaging.DefaultInstance.SendAllAsync(messages);
-            logger.LogInformation($"Quote notifications sent: {response.SuccessCount} successful, {response.FailureCount} failed");
+            _logger.LogInformation($"Quote notifications sent to user {userPreferences.UserId}: {response.SuccessCount} successful, {response.FailureCount} failed");
 
-            // TODO: Update database with last notification sent time for each user
+            // Update the user's last notification sent time
+            if (response.SuccessCount > 0)
+            {
+                await preferencesService.UpdateLastNotificationSentAsync(userPreferences.UserId);
+            }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error sending quote notifications to users");
+            _logger.LogError(ex, "Error sending quote notification to user {UserId}", userPreferences.UserId);
         }
+    }
+
+    private string GetNotificationType(NotificationFrequency frequency)
+    {
+        return frequency switch
+        {
+            NotificationFrequency.FiveMinutes => "5min_quote",
+            NotificationFrequency.Hourly => "hourly_quote",
+            NotificationFrequency.TwiceDaily => "twice_daily_quote",
+            NotificationFrequency.Daily => "daily_quote",
+            _ => "daily_quote"
+        };
     }
 } 
