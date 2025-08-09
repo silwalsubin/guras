@@ -1,5 +1,6 @@
 import { Alert, Platform, PermissionsAndroid } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
+import { getAuth } from '@react-native-firebase/auth';
 import { API_CONFIG } from '@/config/api';
 import quotesService, { Quote, NotificationPreferences } from './quotesService';
 
@@ -76,13 +77,21 @@ class NotificationService {
     try {
       // Check if we're on iOS Simulator
       if (Platform.OS === 'ios') {
-        const simulatorCheck = await fetch('http://localhost:8081/status');
-        this.isSimulator = true;
-        console.log('📱 iOS Simulator detected');
+        try {
+          const simulatorCheck = await fetch('http://localhost:8081/status');
+          this.isSimulator = true;
+          console.log('📱 iOS Simulator detected');
+        } catch (error) {
+          // Metro bundler not running, but could still be simulator
+          this.isSimulator = false;
+          console.log('📱 iOS Device or Simulator (Metro not accessible)');
+        }
+      } else {
+        this.isSimulator = false;
       }
     } catch (error) {
-      // Not simulator
       this.isSimulator = false;
+      console.log('📱 Device detection failed, assuming device');
     }
   }
 
@@ -138,8 +147,10 @@ class NotificationService {
 
   private async sendTokenToServer(token: string) {
     try {
-      // Get current user ID from auth context (you'll need to implement this)
-      const userId = 'current-user-id'; // TODO: Get from auth context
+      // Get current user ID from auth context
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const userId = user?.uid || 'unknown-user';
       
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/register-token`, {
         method: 'POST',
@@ -148,9 +159,9 @@ class NotificationService {
           'Authorization': `Bearer ${await this.getAuthToken()}`
         },
         body: JSON.stringify({
-          token,
-          platform: Platform.OS,
-          userId
+          Token: token,
+          Platform: Platform.OS,
+          UserId: userId
         })
       });
 
@@ -165,8 +176,18 @@ class NotificationService {
   }
 
   private async getAuthToken(): Promise<string> {
-    // TODO: Implement getting auth token from your auth system
-    return 'dummy-token';
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (user) {
+        const token = await user.getIdToken();
+        return token;
+      }
+      throw new Error('No authenticated user found');
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      throw new Error('Authentication token not available');
+    }
   }
 
   // Check if notifications are enabled
@@ -376,10 +397,10 @@ class NotificationService {
         } catch (tokenError: any) {
           console.error('❌ FCM token generation failed:', tokenError);
 
-          // Show alert for TestFlight debugging
+          // Show alert for debugging
           Alert.alert(
             '❌ FCM Token Generation Failed',
-            `FCM token generation failed:\n\n${tokenError?.message || 'Unknown error'}\n\nFCM token is required for push notifications. Check Firebase setup.\n\nError details: ${JSON.stringify(tokenError, null, 2)}`,
+            `FCM token generation failed:\n\n${tokenError?.message || 'Unknown error'}\n\nFCM token is required for push notifications. Check Firebase setup.`,
             [{ text: 'OK' }]
           );
 
@@ -427,10 +448,11 @@ class NotificationService {
           'Authorization': `Bearer ${await this.getAuthToken()}`
         },
         body: JSON.stringify({
-          userTokens: [this.fcmToken],
-          quote: {
-            text: notification.data.quote,
-            author: 'Guras'
+          UserTokens: [this.fcmToken],
+          Quote: {
+            Text: notification.data.quote,
+            Author: 'Guras',
+            Category: 'daily'
           }
         })
       });
@@ -471,7 +493,14 @@ class NotificationService {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${await this.getAuthToken()}`
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify({
+          Enabled: request.enabled,
+          Frequency: request.frequency,
+          QuietHours: {
+            Start: request.quietHours.start,
+            End: request.quietHours.end
+          }
+        })
       });
 
       if (response.ok) {
@@ -608,16 +637,48 @@ class NotificationService {
   // Send test notification
   async sendTestNotification(): Promise<void> {
     try {
+      console.log('🔔 Starting test notification...');
+      
       if (this.isSimulator) {
-        console.log('📱 iOS Simulator - skipping test notification');
+        console.log('📱 iOS Simulator detected - FCM notifications not available');
+        Alert.alert(
+          '📱 iOS Simulator',
+          'Push notifications are not available in iOS Simulator. Please test on a physical device.',
+          [{ text: 'OK' }]
+        );
         return;
       }
 
+      // Check permission first
+      const hasPermission = await this.hasPermission();
+      if (!hasPermission) {
+        console.log('❌ No notification permission');
+        Alert.alert(
+          '❌ Permission Required',
+          'Please grant notification permission to send test notifications.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Check if FCM token is available
+      if (!this.fcmToken) {
+        console.log('🔑 No FCM token available, generating...');
+        await this.getFCMToken();
+        if (!this.fcmToken) {
+          throw new Error('Failed to generate FCM token');
+        }
+      }
+
+      console.log('✅ FCM token available:', this.fcmToken.substring(0, 20) + '...');
+      
       const quote = await quotesService.getCurrentQuote();
+      console.log('📝 Quote loaded:', quote.text.substring(0, 50) + '...');
+      
       await this.sendQuoteNotification(quote, 'daily_quote');
-      console.log('✅ Test notification sent');
+      console.log('✅ Test notification sent successfully');
     } catch (error) {
-      console.error('Error sending test notification:', error);
+      console.error('❌ Error sending test notification:', error);
       throw error;
     }
   }
