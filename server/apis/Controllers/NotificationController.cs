@@ -89,8 +89,7 @@ namespace apis.Controllers
                     {
                         Aps = new Aps()
                         {
-                            Sound = "default",
-                            Badge = 1
+                            Sound = "default"
                         }
                     }
                 };
@@ -256,7 +255,6 @@ namespace apis.Controllers
                         Aps = new Aps()
                         {
                             Sound = "default",
-                            Badge = 1,
                             ContentAvailable = true,
                             Alert = new ApsAlert()
                             {
@@ -343,7 +341,6 @@ namespace apis.Controllers
                         Aps = new Aps()
                         {
                             Sound = "default",
-                            Badge = 1,
                             ContentAvailable = true,
                             Alert = new ApsAlert()
                             {
@@ -438,7 +435,6 @@ namespace apis.Controllers
                         Aps = new Aps()
                         {
                             Sound = "default",
-                            Badge = 1,
                             ContentAvailable = true,
                             Alert = new ApsAlert()
                             {

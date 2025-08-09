@@ -130,7 +130,6 @@ public class NotificationSchedulerBackgroundService : BackgroundService
                     Aps = new Aps()
                     {
                         Sound = "default",
-                        Badge = 1,
                         ContentAvailable = true,
                         Alert = new ApsAlert()
                         {

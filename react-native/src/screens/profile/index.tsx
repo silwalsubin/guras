@@ -228,6 +228,9 @@ const ProfileScreen: React.FC = () => {
           <Text style={[styles.aboutValue, { color: themeColors.textSecondary }]}>2024.1</Text>
         </View>
       </View>
+
+      {/* Bottom padding to prevent content from being hidden by footer */}
+      <View style={styles.bottomPadding} />
     </ScrollView>
   );
 };
@@ -371,6 +374,10 @@ const styles = StyleSheet.create({
   },
   aboutValue: {
     fontSize: 14,
+  },
+  // Add bottom padding to account for the footer
+  bottomPadding: {
+    height: 100, // Account for bottom navigation + safe area
   },
 });
 
