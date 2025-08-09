@@ -7,6 +7,10 @@ export interface AudioFile {
   fileName: string;
   downloadUrl: string;
   expiresAt: string;
+  // Optional metadata from server
+  title?: string;
+  artist?: string;
+  artworkUrl?: string | null;
 }
 
 export interface AudioFilesResponse {

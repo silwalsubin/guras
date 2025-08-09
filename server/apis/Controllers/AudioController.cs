@@ -53,11 +53,43 @@ public class AudioController(AudioFilesService audioFilesService, ILogger<AudioC
             foreach (var fileName in files)
             {
                 var downloadUrl = await audioFilesService.GeneratePreSignedDownloadUrlAsync(fileName, expiration);
+                // Basic metadata derivation
+                var title = Path.GetFileNameWithoutExtension(fileName) ?? string.Empty;
+                var artist = "Guras";
+
+                // Try find artwork/background image by convention
+                string? artworkKey = null;
+                var baseName = Path.GetFileNameWithoutExtension(fileName) ?? string.Empty;
+                var candidateKeys = new[]
+                {
+                    $"{baseName}.jpg",
+                    $"{baseName}.png",
+                    $"artwork/{baseName}.jpg",
+                    $"artwork/{baseName}.png",
+                };
+                foreach (var candidate in candidateKeys)
+                {
+                    if (await audioFilesService.FileExistsAsync(candidate))
+                    {
+                        artworkKey = candidate;
+                        break;
+                    }
+                }
+
+                string? artworkUrl = null;
+                if (!string.IsNullOrWhiteSpace(artworkKey))
+                {
+                    artworkUrl = await audioFilesService.GeneratePreSignedDownloadUrlAsync(artworkKey!, expiration);
+                }
+
                 audioFilesWithUrls.Add(new
                 {
                     FileName = fileName,
                     DownloadUrl = downloadUrl,
-                    ExpiresAt = DateTime.UtcNow.Add(expiration)
+                    ExpiresAt = DateTime.UtcNow.Add(expiration),
+                    Title = title,
+                    Artist = artist,
+                    ArtworkUrl = artworkUrl
                 });
             }
 

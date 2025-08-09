@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, FlatList, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, FlatList, Alert, ImageBackground, Image } from 'react-native';
 import TrackPlayer, { State } from 'react-native-track-player';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Slider from '@react-native-community/slider';
@@ -31,6 +31,7 @@ const MusicPlayer: React.FC = () => {
     url: string;
     title: string;
     artist: string;
+    artworkUrl?: string | null;
   } | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -43,6 +44,24 @@ const MusicPlayer: React.FC = () => {
       marginTop: 32,
       marginBottom: 100, // Account for footer height
       flex: 1,
+    },
+    background: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.25,
+    },
+    artworkFallback: {
+      width: 200,
+      height: 200,
+      borderRadius: 16,
+      overflow: 'hidden',
+      marginTop: 24,
+      backgroundColor: COLORS.GRAY_100,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     title: {
       fontSize: 18,
@@ -228,11 +247,13 @@ const MusicPlayer: React.FC = () => {
                 if (currentTrackInfo) {
                   const trackIndex = response.data.files.findIndex(file => file.fileName === currentTrackInfo.id);
                   if (trackIndex !== -1) {
+                    const apiItem = response.data.files[trackIndex];
                     setCurrentTrack({
                       id: currentTrackInfo.id || '',
                       url: currentTrackInfo.url || '',
-                      title: currentTrackInfo.title || '',
-                      artist: currentTrackInfo.artist || '',
+                      title: currentTrackInfo.title || apiItem?.title || '',
+                      artist: currentTrackInfo.artist || apiItem?.artist || '',
+                      artworkUrl: (apiItem?.artworkUrl ?? undefined),
                     });
                     setCurrentTrackIndex(trackIndex);
                   }
@@ -267,11 +288,11 @@ const MusicPlayer: React.FC = () => {
       const track = {
         id: audioFile.fileName,
         url: audioFile.downloadUrl,
-        title: audioFile.fileName.replace(/\.[^/.]+$/, ""), // Remove file extension
-        artist: 'Guras',
+        title: audioFile.title ?? audioFile.fileName.replace(/\.[^/.]+$/, ""),
+        artist: audioFile.artist ?? 'Guras',
       };
 
-      setCurrentTrack(track);
+      setCurrentTrack({ ...track, artworkUrl: audioFile.artworkUrl ?? null });
       setCurrentTrackIndex(index);
 
       // Stop current playback and load new track
@@ -334,8 +355,13 @@ const MusicPlayer: React.FC = () => {
 
   const trackInfo = getCurrentTrackInfo();
 
+  const bgSource = currentTrack?.artworkUrl ? { uri: currentTrack.artworkUrl } : undefined;
+
   return (
     <View style={styles.container}>
+      {bgSource && (
+        <ImageBackground source={bgSource} blurRadius={16} style={styles.background} />
+      )}
       <Text style={[styles.title, { color: themeColors.textPrimary }]}>
         {trackInfo.title}
       </Text>
@@ -344,6 +370,13 @@ const MusicPlayer: React.FC = () => {
       <Text style={[styles.trackPosition, { color: themeColors.textSecondary }]}>
         {trackInfo.position}
       </Text>
+
+      {/* Center artwork fallback when no bg available */}
+      {!bgSource && (
+        <View style={styles.artworkFallback}>
+          <FontAwesome name="music" size={48} color={brandColors.primary} />
+        </View>
+      )}
 
       <View style={styles.spacer} />
       
