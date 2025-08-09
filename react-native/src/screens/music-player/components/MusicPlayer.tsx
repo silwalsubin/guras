@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, FlatList, Alert, ImageBackground, Image } from 'react-native';
-import TrackPlayer, { State } from 'react-native-track-player';
+import TrackPlayer, { State, Event } from 'react-native-track-player';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Slider from '@react-native-community/slider';
 import { COLORS, getThemeColors, getBrandColors } from '@/config/colors';
@@ -305,7 +305,7 @@ const MusicPlayer: React.FC = () => {
   };
 
   // Navigate to next track
-  const nextTrack = async () => {
+  const nextTrack = async (autoPlay: boolean = false) => {
     if (audioFiles.length === 0) return;
     
     const wasPlaying = isPlaying;
@@ -313,7 +313,7 @@ const MusicPlayer: React.FC = () => {
     await loadTrack(audioFiles[nextIndex], nextIndex);
     
     // If previous track was playing, start playing the new track
-    if (wasPlaying) {
+    if (wasPlaying || autoPlay) {
       await TrackPlayer.play();
     }
   };
@@ -331,6 +331,18 @@ const MusicPlayer: React.FC = () => {
       await TrackPlayer.play();
     }
   };
+
+  // Auto-advance to next track when current finishes
+  useEffect(() => {
+    const sub = TrackPlayer.addEventListener(Event.PlaybackQueueEnded, async () => {
+      if (audioFiles.length > 0) {
+        await nextTrack(true);
+      }
+    });
+    return () => {
+      sub.remove();
+    };
+  }, [audioFiles, currentTrackIndex]);
 
   // Update slider value from progress only when not sliding and not pending seek
   useEffect(() => {
@@ -396,7 +408,7 @@ const MusicPlayer: React.FC = () => {
         
         <TouchableOpacity 
           style={[styles.navButton, { opacity: audioFiles.length <= 1 ? 0.3 : 1 }]} 
-          onPress={nextTrack}
+          onPress={() => nextTrack()}
           disabled={audioFiles.length <= 1}
         >
           <FontAwesome name="step-forward" size={24} color={brandColors.primary} />
