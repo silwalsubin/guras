@@ -13,6 +13,7 @@ export { default as DailyQuoteCard } from './cards/DailyQuoteCard';
 // UI Components
 export { default as PrimaryButton } from './ui/PrimaryButton';
 export { default as ProgressRow } from './ui/ProgressRow';
+export { default as ProfileAvatar } from './ui/ProfileAvatar';
 
 // Export ProgressData type for external use
 export type { ProgressData } from './cards/ProgressCard'; 

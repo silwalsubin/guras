@@ -1,6 +1,7 @@
 using apis.Configuration;
 using orchestration.backgroundServices.BackgroundServices;
 using services.authentication.Configuration;
+using services.notifications.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Services.AddControllers();
 ApisServiceConfiguration.ConfigureServices(builder.Services);
 
 builder.Services.AddAuthenticationServices();
+builder.Services.AddNotificationsServices();
 
 // Configure authorization
 builder.Services.AddAuthorization();

@@ -5,9 +5,10 @@ namespace services.notifications.Configuration;
 
 public static class NotificationsServicesConfiguration
 {
-    public static IServiceCollection ConfigureServices(this IServiceCollection services)
+    public static IServiceCollection AddNotificationsServices(this IServiceCollection services)
     {
         services.AddScoped<INotificationTokenService, NotificationTokenService>();
+        services.AddScoped<IUserNotificationPreferencesService, UserNotificationPreferencesService>();
         return services;
     }
 } 

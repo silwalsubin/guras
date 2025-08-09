@@ -13,7 +13,7 @@ public static class ApisServiceConfiguration
         AuthenticationServicesConfiguration.ConfigureServices(services);
         AwsServicesConfiguration.ConfigureServices(services);
         QuotesServicesConfiguration.ConfigureServices(services);
-        NotificationsServicesConfiguration.ConfigureServices(services);
+        services.AddNotificationsServices();
         return services;
     }
 }
