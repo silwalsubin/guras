@@ -46,6 +46,7 @@ type: "always_apply"
 - When possible, use native React Native or Firebase alternatives
 - Use absolute imports with `@/` prefix (configured in babel and tsconfig)
 - Remove unused imports and dependencies promptly
+- Use npm for package management (never yarn)
 
 ## Audio & Media
 - Use react-native-track-player for audio functionality
@@ -77,12 +78,24 @@ type: "always_apply"
 - Test on both iOS and Android when making platform-specific changes
 - Use meaningful variable and function names for self-documenting code
 
+## React Native Development Workflow
+- Prefer running on the iOS Simulator over a physical device
+- Run `npx @react-native-community/cli run-ios` in a new terminal in the foreground; do not run it as a background process
+
+## Backend (.NET) Conventions
+- Keep ASP.NET controllers thin and move business logic into corresponding services
+- Use `ILogger<T>` for logging instead of `Console.WriteLine`
+
 ## AI Assistant Preferences
+- Ask before making any code changes unless explicitly instructed by the user
 - Use parallel tool calls when possible for efficiency
 - Provide detailed explanations with step-by-step approaches
 - Mark TODO items as completed immediately after finishing tasks
 - Show code citations with proper line number format: ```startLine:endLine:filepath
 - Always follow up on linter errors and fix them properly
+
+## CI/CD & Deployment
+- Use GitHub Actions for all deployment tasks; do not run deployment scripts locally
 
 ## Problem-Solving Approach
 - **NEVER implement fallbacks before asking for permissions or solving the real problem**
