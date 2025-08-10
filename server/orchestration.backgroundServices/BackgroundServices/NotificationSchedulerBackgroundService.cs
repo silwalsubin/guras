@@ -145,11 +145,29 @@ public class NotificationSchedulerBackgroundService : BackgroundService
                 }
             }).ToList();
 
-            var response = await FirebaseMessaging.DefaultInstance.SendAllAsync(messages);
-            _logger.LogInformation($"Quote notifications sent to user {userPreferences.UserId}: {response.SuccessCount} successful, {response.FailureCount} failed");
+            // Use SendAsync in a loop instead of SendAllAsync to avoid 404 batch endpoint issues
+            var successCount = 0;
+            var failureCount = 0;
+
+            foreach (var message in messages)
+            {
+                try
+                {
+                    var response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                    successCount++;
+                    _logger.LogInformation($"Quote notification sent successfully to user {userPreferences.UserId} with token: {message.Token[..20]}...");
+                }
+                catch (Exception ex)
+                {
+                    failureCount++;
+                    _logger.LogError(ex, $"Failed to send quote notification to user {userPreferences.UserId} with token {message.Token[..20]}...");
+                }
+            }
+
+            _logger.LogInformation($"Quote notifications sent to user {userPreferences.UserId}: {successCount} successful, {failureCount} failed");
 
             // Update the user's last notification sent time
-            if (response.SuccessCount > 0)
+            if (successCount > 0)
             {
                 await preferencesService.UpdateLastNotificationSentAsync(userPreferences.UserId);
             }
