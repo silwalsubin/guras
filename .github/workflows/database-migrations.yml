@@ -84,7 +84,7 @@ jobs:
         echo "Database connection: jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}"
         echo "User: ${{ env.DB_USER }}"
         echo "Password: ***"
-        echo "Flyway version: $(flyway -version)"
+        echo "Flyway version: $(flyway --version)"
         echo "Listing migrations directory:"
         ls -la migrations/
         echo "Running Flyway validate..."
@@ -113,14 +113,7 @@ jobs:
           -password="${{ env.DB_PASS }}" \
           info
           
-    - name: Notify on failure
-      if: failure()
-      uses: 8398a7/action-slack@v3
-      with:
-        status: failure
-        text: 'Database migration failed for ${{ github.event.inputs.environment }} environment'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-      continue-on-error: true
+
 
   migrate-production:
     name: Migrate Production Database
@@ -185,7 +178,6 @@ jobs:
           -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
           -user="${{ env.DB_USER }}" \
           -password="${{ env.DB_PASS }}" \
-          -locations=filesystem:migrations \
           validate
 
     - name: Run migrations
@@ -196,7 +188,6 @@ jobs:
           -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
           -user="${{ env.DB_USER }}" \
           -password="${{ env.DB_PASS }}" \
-          -locations=filesystem:migrations \
           migrate
 
     - name: Migration status
@@ -206,14 +197,6 @@ jobs:
           -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
           -user="${{ env.DB_USER }}" \
           -password="${{ env.DB_PASS }}" \
-          -locations=filesystem:migrations \
           info
 
-    - name: Notify on failure
-      if: failure()
-      uses: 8398a7/action-slack@v3
-      with:
-        status: failure
-        text: 'Database migration failed for production environment'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-      continue-on-error: true
+
