@@ -56,19 +56,27 @@ jobs:
         ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
         echo "Getting database connection details for $ENVIRONMENT environment..."
         
-        # Get database details from AWS Secrets Manager
-        DB_SECRET=$(aws secretsmanager get-secret-value \
-          --secret-id "guras-$ENVIRONMENT-db-connection" \
-          --region ${{ env.AWS_REGION }} \
-          --query 'SecretString' \
-          --output text)
-        
-        # Parse the JSON secret
-        DB_HOST=$(echo "$DB_SECRET" | jq -r '.ServerName')
-        DB_PORT=$(echo "$DB_SECRET" | jq -r '.Port')
-        DB_NAME=$(echo "$DB_SECRET" | jq -r '.DatabaseName')
-        DB_USER=$(echo "$DB_SECRET" | jq -r '.Username')
-        DB_PASSWORD=$(echo "$DB_SECRET" | jq -r '.Password')
+        if [ "$ENVIRONMENT" = "staging" ]; then
+          # For staging, use hardcoded values from appsettings.Development.json
+          DB_HOST="staging-guras-db.cypui6c4kp4c.us-east-1.rds.amazonaws.com"
+          DB_PORT="5432"
+          DB_USER="guras_admin"
+          DB_PASS="(jMP*S)OrQ15OpEj"
+          DB_NAME="guras_staging"
+        else
+          # For production, get from AWS Secrets Manager
+          DB_SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id "guras/db-credentials" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'SecretString' \
+            --output text)
+          
+          DB_HOST=$(echo "$DB_SECRET" | jq -r '.ServerName')
+          DB_PORT=$(echo "$DB_SECRET" | jq -r '.Port')
+          DB_USER=$(echo "$DB_SECRET" | jq -r '.UserName')
+          DB_PASS=$(echo "$DB_SECRET" | jq -r '.Password')
+          DB_NAME=$(echo "$DB_SECRET" | jq -r '.DatabaseName')
+        fi
         
         echo "Database connection details retrieved:"
         echo "Host: $DB_HOST"
@@ -81,7 +89,7 @@ jobs:
         echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
         echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
         echo "DB_USER=$DB_USER" >> $GITHUB_ENV
-        echo "DB_PASSWORD=$DB_PASSWORD" >> $GITHUB_ENV
+        echo "DB_PASSWORD=$DB_PASS" >> $GITHUB_ENV
         
     - name: Setup Flyway
       run: |
