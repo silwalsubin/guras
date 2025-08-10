@@ -210,33 +210,7 @@ resource "aws_security_group" "rds" {
     }
   }
 
-  # Allow access from GitHub Actions runners (IPv4)
-  ingress {
-    protocol    = "tcp"
-    from_port   = 5432
-    to_port     = 5432
-    cidr_blocks = [
-      "140.82.112.0/20",    # GitHub Actions
-      "185.199.108.0/22",   # GitHub Actions
-      "192.30.252.0/22",    # GitHub Actions
-      "208.74.204.0/22"     # GitHub Actions
-    ]
-    description = "GitHub Actions runners for database migrations (IPv4)"
-  }
 
-  # Allow access from GitHub Actions runners (IPv6)
-  ingress {
-    protocol        = "tcp"
-    from_port       = 5432
-    to_port         = 5432
-    ipv6_cidr_blocks = [
-      "2620:112:3000::/44", # GitHub Actions IPv6
-      "2606:50c0:8000::/48", # GitHub Actions IPv6
-      "2a06:98c0::/29",     # GitHub Actions IPv6
-      "2001:67c:2f18::/48"  # GitHub Actions IPv6
-    ]
-    description = "GitHub Actions runners for database migrations (IPv6)"
-  }
 
   tags = {
     Name = "${var.environment}-rds-sg"
