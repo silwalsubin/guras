@@ -80,11 +80,18 @@ jobs:
     - name: Validate migrations (dry run)
       run: |
         cd database
+        echo "Current directory: $(pwd)"
+        echo "Database connection: jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}"
+        echo "User: ${{ env.DB_USER }}"
+        echo "Password: ***"
+        echo "Flyway version: $(flyway -version)"
+        echo "Listing migrations directory:"
+        ls -la migrations/
+        echo "Running Flyway validate..."
         flyway -configFiles=flyway.conf \
           -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
           -user="${{ env.DB_USER }}" \
           -password="${{ env.DB_PASS }}" \
-          -locations=filesystem:migrations \
           validate
           
     - name: Run migrations
@@ -95,7 +102,6 @@ jobs:
           -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
           -user="${{ env.DB_USER }}" \
           -password="${{ env.DB_PASS }}" \
-          -locations=filesystem:migrations \
           migrate
           
     - name: Migration status
@@ -105,7 +111,6 @@ jobs:
           -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
           -user="${{ env.DB_USER }}" \
           -password="${{ env.DB_PASS }}" \
-          -locations=filesystem:migrations \
           info
           
     - name: Notify on failure
