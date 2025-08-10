@@ -64,12 +64,19 @@ jobs:
         
         echo "CodeBuild started with ID: $BUILD_ID"
         
-        # Wait for build to complete
+        # Wait for build to complete by polling
         echo "Waiting for build to complete..."
-        aws codebuild wait build-completed --id "$BUILD_ID"
-        
-        # Get build status
-        BUILD_STATUS=$(aws codebuild batch-get-builds --ids "$BUILD_ID" --query 'builds[0].buildStatus' --output text)
+        while true; do
+          BUILD_STATUS=$(aws codebuild batch-get-builds --ids "$BUILD_ID" --query 'builds[0].buildStatus' --output text)
+          echo "Current build status: $BUILD_STATUS"
+          
+          if [ "$BUILD_STATUS" = "SUCCEEDED" ] || [ "$BUILD_STATUS" = "FAILED" ] || [ "$BUILD_STATUS" = "STOPPED" ]; then
+            break
+          fi
+          
+          echo "Build still in progress, waiting 30 seconds..."
+          sleep 30
+        done
         
         if [ "$BUILD_STATUS" = "SUCCEEDED" ]; then
           echo "✅ Database migration completed successfully!"
