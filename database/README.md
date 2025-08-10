@@ -21,15 +21,21 @@ Flyway migrations follow the pattern: `V{version}__{description}.sql`
 
 ## Running Migrations
 
-### GitHub Actions (Recommended)
+### CodeBuild Execution (Recommended)
 
-Migrations are manually triggered via GitHub Actions UI:
+Migrations are executed via AWS CodeBuild, which provides:
+- **VPC Access**: Direct connection to RDS without IP whitelisting
+- **Security**: Runs in your AWS environment with proper IAM roles
+- **Cost-Effective**: Free tier covers most use cases
+- **Reliability**: No network connectivity issues
 
-**Manual Trigger:**
-1. Go to Actions → Database Migrations
-2. Click "Run workflow"
-3. Select environment (staging/production)
-4. Choose dry run or actual migration
+### GitHub Actions
+
+Migrations are triggered via GitHub Actions workflow dispatch:
+1. **Manual Trigger**: Go to Actions → Database Migrations → Run workflow
+2. **Environment Selection**: Choose staging or production
+3. **CodeBuild Integration**: GitHub Actions triggers CodeBuild project
+4. **Real-time Monitoring**: Watch progress in both GitHub and AWS Console
 
 #### Environment Protection
 
@@ -45,13 +51,22 @@ The workflow includes environment protection similar to the terraform-deploy wor
 2. Set environment variables for database connection
 3. Run: `flyway -configFiles=database/flyway.conf migrate`
 
+**Note**: Local execution requires IP whitelisting in RDS security groups
+
 ## Environment Variables
 
-The GitHub Action automatically retrieves database credentials from AWS Secrets Manager using the same pattern as the server:
+Both GitHub Actions and CodeBuild automatically retrieve database credentials from AWS Secrets Manager:
 
 - **Secret Name**: `guras/db-credentials`
 - **Structure**: Matches the server's `DbConfiguration` class
 - **Fields**: `ServerName`, `Port`, `DatabaseName`, `UserName`, `Password`
+
+### CodeBuild Environment Variables
+
+CodeBuild receives these additional variables:
+- **ENVIRONMENT**: Set to staging/production based on workflow input
+- **AWS_REGION**: Set to us-east-1
+- **Database credentials**: Retrieved from Secrets Manager during build
 
 ## Current Tables
 

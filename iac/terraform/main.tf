@@ -136,6 +136,16 @@ output "vpc_id" {
   value       = module.vpc.vpc_id
 }
 
+output "private_subnet_ids" {
+  description = "Private subnet IDs"
+  value       = module.vpc.private_subnets
+}
+
+output "rds_security_group_id" {
+  description = "RDS security group ID"
+  value       = module.vpc.rds_security_group_id
+}
+
 output "ecr_repository_url" {
   description = "ECR Repository URL"
   value       = module.ecr.repository_url

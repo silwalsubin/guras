@@ -35,10 +35,38 @@ module "main" {
   external_rds_access_cidrs = var.external_rds_access_cidrs
 }
 
+# CodeBuild module for database migrations
+module "codebuild" {
+  source = "../../modules/codebuild"
+  
+  project_name         = "guras"
+  environment          = var.environment
+  github_repo_url      = "https://github.com/subinsilwal/guras.git"
+  vpc_id               = module.main.vpc_id
+  private_subnet_ids   = module.main.private_subnet_ids
+  rds_security_group_id = module.main.rds_security_group_id
+  
+  tags = {
+    Environment = var.environment
+    Project     = "guras"
+    Purpose     = "database-migrations"
+  }
+}
+
 # Outputs from the main module
 output "vpc_id" {
   description = "VPC ID"
   value       = module.main.vpc_id
+}
+
+output "private_subnet_ids" {
+  description = "Private subnet IDs"
+  value       = module.main.private_subnet_ids
+}
+
+output "rds_security_group_id" {
+  description = "RDS security group ID"
+  value       = module.main.rds_security_group_id
 }
 
 output "ecr_repository_url" {
@@ -75,4 +103,15 @@ output "main_domain_url" {
 output "staging_subdomain_url" {
   description = "Staging subdomain URL"
   value       = module.main.staging_subdomain_url
+}
+
+# CodeBuild outputs
+output "codebuild_project_name" {
+  description = "CodeBuild project name for database migrations"
+  value       = module.codebuild.codebuild_project_name
+}
+
+output "codebuild_project_arn" {
+  description = "CodeBuild project ARN for database migrations"
+  value       = module.codebuild.codebuild_project_arn
 } 
