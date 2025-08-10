@@ -1,9 +1,4 @@
-# GitHub Source Credentials
-resource "aws_codebuild_source_credential" "github" {
-  auth_type   = "PERSONAL_ACCESS_TOKEN"
-  server_type = "GITHUB"
-  token       = var.github_token
-}
+# GitHub Source Credentials - Will be created dynamically by GitHub Actions
 
 resource "aws_codebuild_project" "database_migrations" {
   name          = "${var.project_name}-database-migrations"

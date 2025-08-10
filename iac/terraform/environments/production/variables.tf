@@ -79,8 +79,4 @@ variable "route53_zone_id" {
   type        = string
 }
 
-variable "github_token" {
-  description = "GitHub Personal Access Token for CodeBuild authentication"
-  type        = string
-  sensitive   = true
-} 
+ 
