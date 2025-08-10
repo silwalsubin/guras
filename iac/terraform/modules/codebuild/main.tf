@@ -24,7 +24,7 @@ resource "aws_codebuild_project" "database_migrations" {
   }
 
   source {
-    type                = "GITHUB"
+    type                = "GITHUB_ENTERPRISE"
     location            = var.github_repo_url
     git_clone_depth     = 1
     buildspec           = "buildspec-database.yml"
