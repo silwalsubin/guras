@@ -12,7 +12,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setNotificationPreferences } from '@/store/quotesSlice';
-import { getThemeColors, getBrandColors } from '@/config/colors';
+import { getThemeColors, getBrandColors, COLORS } from '@/config/colors';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import quotesService, { NotificationPreferences } from '@/services/quotesService';
 import notificationService from '@/services/notificationService';
@@ -131,7 +131,7 @@ const NotificationSettings: React.FC = () => {
     }
   };
 
-  const handleFrequencyChange = async (frequency: string) => {
+  const handleFrequencyChange = async (frequency: '5min' | 'hourly' | 'daily' | 'twice-daily') => {
     try {
       setIsLoading(true);
       
@@ -192,7 +192,7 @@ const NotificationSettings: React.FC = () => {
     }
   };
 
-  const getFrequencyDescription = (frequency: string): string => {
+  const getFrequencyDescription = (frequency: '5min' | 'hourly' | 'daily' | 'twice-daily'): string => {
     switch (frequency) {
       case '5min': return 'every 5 minutes';
       case 'hourly': return 'every hour';
@@ -202,7 +202,7 @@ const NotificationSettings: React.FC = () => {
     }
   };
 
-  const getFrequencyLabel = (frequency: string): string => {
+  const getFrequencyLabel = (frequency: '5min' | 'hourly' | 'daily' | 'twice-daily'): string => {
     switch (frequency) {
       case '5min': return 'Every 5 Minutes';
       case 'hourly': return 'Every Hour';
@@ -301,8 +301,8 @@ const NotificationSettings: React.FC = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={isDarkMode ? '#FFFFFF' : '#000000'}
-          colors={['#14B8A6']} // Primary brand color
+          tintColor={isDarkMode ? COLORS.WHITE : COLORS.BLACK}
+          colors={[COLORS.PRIMARY]} // Primary brand color
         />
       }
     >

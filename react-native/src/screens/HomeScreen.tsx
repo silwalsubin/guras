@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
 import { RootState } from '@/store';
 import { RefreshUtils } from '@/utils/refreshUtils';
+import { COLORS } from '@/config/colors';
 import {
   AppHeader,
   SectionHeader,
@@ -72,8 +73,8 @@ const HomeScreen: React.FC = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={isDarkMode ? '#FFFFFF' : '#000000'}
-          colors={['#14B8A6']} // Primary brand color
+          tintColor={isDarkMode ? COLORS.WHITE : COLORS.BLACK}
+          colors={[COLORS.PRIMARY]} // Primary brand color
         />
       }
     >

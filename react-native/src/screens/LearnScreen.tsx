@@ -6,7 +6,7 @@ import {
   View,
   RefreshControl,
 } from 'react-native';
-import { getThemeColors } from '@/config/colors';
+import { getThemeColors, COLORS } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import {
   AppHeader,
@@ -58,8 +58,8 @@ const LearnScreen = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={isDarkMode ? '#FFFFFF' : '#000000'}
-          colors={['#14B8A6']} // Primary brand color
+          tintColor={isDarkMode ? COLORS.WHITE : COLORS.BLACK}
+          colors={[COLORS.PRIMARY]} // Primary brand color
         />
       }
     >
