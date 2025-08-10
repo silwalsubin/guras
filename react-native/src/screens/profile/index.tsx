@@ -13,7 +13,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setDarkMode } from '@/store/themeSlice';
-import { getThemeColors, getBrandColors, COLORS } from '@/config/colors';
+import { getThemeColors, getBrandColors, COLORS, colorUtils } from '@/config/colors';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { ProfileAvatar } from '@/components/shared';
 import NotificationSettings from './components/NotificationSettings';
@@ -95,8 +95,8 @@ const ProfileScreen: React.FC = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={isDarkMode ? '#FFFFFF' : '#000000'}
-          colors={['#14B8A6']} // Primary brand color
+          tintColor={isDarkMode ? COLORS.WHITE : COLORS.BLACK}
+          colors={[COLORS.PRIMARY]} // Primary brand color
         />
       }
     >
@@ -261,9 +261,9 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     padding: 6,
     borderRadius: 16,
-    backgroundColor: 'rgba(128, 128, 128, 0.1)',
+    backgroundColor: colorUtils.withOpacity(COLORS.GRAY_500, 0.1),
     borderWidth: 1,
-    borderColor: 'rgba(128, 128, 128, 0.2)',
+    borderColor: colorUtils.withOpacity(COLORS.GRAY_500, 0.2),
   },
   spinner: {
     width: 20,
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   userInfoCard: {
-    backgroundColor: 'rgba(128, 128, 128, 0.05)',
+    backgroundColor: colorUtils.withOpacity(COLORS.GRAY_500, 0.05),
     borderRadius: 12,
     padding: 16,
   },
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   },
   verifiedBadge: {
     alignSelf: 'flex-end',
-    backgroundColor: '#10B981',
+    backgroundColor: COLORS.SUCCESS,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(128, 128, 128, 0.05)',
+    backgroundColor: colorUtils.withOpacity(COLORS.GRAY_500, 0.05),
     borderRadius: 12,
   },
   settingInfo: {
@@ -348,14 +348,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   settingsButtonText: {
-    color: 'white',
+    color: COLORS.WHITE,
     fontSize: 14,
     fontWeight: '600',
   },
   notificationSettingsContainer: {
     marginBottom: 24,
     padding: 16,
-    backgroundColor: 'rgba(128, 128, 128, 0.03)',
+    backgroundColor: colorUtils.withOpacity(COLORS.GRAY_500, 0.03),
     borderRadius: 12,
   },
   aboutItem: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(128, 128, 128, 0.05)',
+    backgroundColor: colorUtils.withOpacity(COLORS.GRAY_500, 0.05),
     borderRadius: 8,
     marginBottom: 8,
   },

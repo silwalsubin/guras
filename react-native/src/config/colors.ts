@@ -2,9 +2,9 @@
 // Color palette for the meditation app
 export const COLORS = {
   // Primary brand colors
-  PRIMARY: '#14B8A6',
-  PRIMARY_DARK: '#0D9488',
-  PRIMARY_LIGHT: '#5EEAD4',
+  PRIMARY: '#10B981',
+  PRIMARY_DARK: '#059669',
+  PRIMARY_LIGHT: '#34D399',
   
   // Secondary colors
   SECONDARY: '#6366F1',
@@ -54,7 +54,7 @@ export const COLORS = {
   OVERLAY_DARK: 'rgba(22, 33, 62, 0.7)',
   
   // Navigation colors
-  NAV_ACTIVE: '#14B8A6',
+  NAV_ACTIVE: '#10B981',
   NAV_INACTIVE: '#718096',
   
   // Card colors
