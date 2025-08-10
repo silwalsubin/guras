@@ -1,3 +1,10 @@
+# GitHub Source Credentials
+resource "aws_codebuild_source_credential" "github" {
+  auth_type   = "PERSONAL_ACCESS_TOKEN"
+  server_type = "GITHUB"
+  token       = var.github_token
+}
+
 resource "aws_codebuild_project" "database_migrations" {
   name          = "${var.project_name}-database-migrations"
   description   = "CodeBuild project for running Flyway database migrations"

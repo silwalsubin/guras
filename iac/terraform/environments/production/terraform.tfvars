@@ -19,4 +19,7 @@ db_allocated_storage = 50
 
 # Domain and DNS settings
 domain_name = "gurasuniverse.com"
-route53_zone_id = "Z03420161UX2FR5OUM4K8"  # Replace with your actual Route53 hosted zone ID 
+route53_zone_id = "Z03420161UX2FR5OUM4K8"  # Replace with your actual Route53 hosted zone ID
+
+# GitHub authentication for CodeBuild
+github_token = "your_github_personal_access_token_here"  # Replace with your actual GitHub PAT 

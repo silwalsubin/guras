@@ -40,6 +40,7 @@ module "codebuild" {
   project_name         = "guras"
   environment          = var.environment
   github_repo_url      = "https://github.com/subinsilwal/guras.git"
+  github_token         = var.github_token
   vpc_id               = module.main.vpc_id
   private_subnet_ids   = module.main.private_subnet_ids
   rds_security_group_id = module.main.rds_security_group_id
