@@ -28,12 +28,11 @@ resource "aws_codebuild_project" "database_migrations" {
     buildspec       = "buildspec-database.yml"
   }
 
-  # Temporarily comment out VPC config to resolve DHCP issues
-  # vpc_config {
-  #   vpc_id             = var.vpc_id
-  #   subnets            = var.private_subnet_ids
-  #   security_group_ids = [aws_security_group.codebuild_sg.id]
-  # }
+  vpc_config {
+    vpc_id             = var.vpc_id
+    subnets            = var.private_subnet_ids
+    security_group_ids = [aws_security_group.codebuild_sg.id]
+  }
 
   logs_config {
     cloudwatch_logs {
@@ -95,7 +94,11 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "ec2:DeleteNetworkInterface",
           "ec2:DescribeVpcs",
           "ec2:DescribeSubnets",
-          "ec2:DescribeSecurityGroups"
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeDhcpOptions",
+          "ec2:DescribeRouteTables",
+          "ec2:DescribeInternetGateways",
+          "ec2:DescribeNatGateways"
         ]
       }
     ]
@@ -119,15 +122,14 @@ resource "aws_security_group" "codebuild_sg" {
   })
 }
 
-# Temporarily comment out RDS security group rule since VPC config is disabled
-# # Allow CodeBuild to connect to RDS
-# resource "aws_security_group_rule" "codebuild_to_rds" {
-#   count = var.rds_security_group_id != null ? 1 : 0
-# 
-#   type                     = "ingress"
-#   from_port                = 5432
-#   to_port                  = 5432
-#   protocol                 = "tcp"
-#   source_security_group_id = aws_security_group.codebuild_sg.id
-#   security_group_id        = var.rds_security_group_id
-# }
+# Allow CodeBuild to connect to RDS
+resource "aws_security_group_rule" "codebuild_to_rds" {
+  count = var.rds_security_group_id != null ? 1 : 0
+
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.codebuild_sg.id
+  security_group_id        = var.rds_security_group_id
+}
