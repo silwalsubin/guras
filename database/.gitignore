@@ -1,0 +1,26 @@
+# Database .gitignore
+
+# Flyway
+flyway.conf.local
+flyway.conf.production
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment-specific configs
+flyway.conf.*.local
+
+# Backup files
+*.bak
+*.backup
+
+# Data dumps
+*.sql.dump
+*.dump
+
+# Connection test files
+connection-test.*
