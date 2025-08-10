@@ -44,6 +44,14 @@ jobs:
         
         echo "Starting CodeBuild migration for $ENVIRONMENT environment..."
         
+        # Create or update GitHub source credentials
+        echo "Setting up GitHub source credentials..."
+        aws codebuild import-source-credentials \
+          --server-type GITHUB \
+          --auth-type PERSONAL_ACCESS_TOKEN \
+          --token "${{ secrets.GITHUB_TOKEN }}" \
+          --should-overwrite || true
+        
         # Create environment variables JSON file
         cat > env-vars.json << EOF
         [

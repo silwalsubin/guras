@@ -91,8 +91,4 @@ variable "external_rds_access_cidrs" {
   default     = []
 }
 
-variable "github_token" {
-  description = "GitHub Personal Access Token for CodeBuild authentication"
-  type        = string
-  sensitive   = true
-} 
+ 

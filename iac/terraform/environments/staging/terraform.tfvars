@@ -25,5 +25,4 @@ route53_zone_id = "Z03420161UX2FR5OUM4K8"  # Replace with your actual Route53 ho
 allow_external_rds_access = true
 external_rds_access_cidrs = ["99.135.177.6/32"]  # Your specific IP address for secure access
 
-# GitHub authentication for CodeBuild
-github_token = "your_github_personal_access_token_here"  # Replace with your actual GitHub PAT 
+ 
