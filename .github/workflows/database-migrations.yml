@@ -40,11 +40,19 @@ jobs:
     - name: Setup GitHub Source Credentials
       run: |
         echo "Setting up GitHub source credentials for CodeBuild..."
+        echo "Using AWS region: ${{ env.AWS_REGION }}"
+        
+        # Create source credentials with explicit region
         aws codebuild import-source-credentials \
+          --region ${{ env.AWS_REGION }} \
           --server-type GITHUB \
           --auth-type PERSONAL_ACCESS_TOKEN \
           --token "${{ secrets.GITHUB_TOKEN }}" \
           --should-overwrite || true
+        
+        # Verify credentials were created
+        echo "Verifying source credentials..."
+        aws codebuild list-source-credentials --region ${{ env.AWS_REGION }} || echo "Warning: Could not list source credentials"
         
         echo "✅ Source credentials created/updated successfully"
         
@@ -54,6 +62,10 @@ jobs:
         PROJECT_NAME="guras-database-migrations"
         
         echo "Starting CodeBuild migration for $ENVIRONMENT environment..."
+        
+        # Debug: Check if source credentials exist
+        echo "Checking source credentials before starting CodeBuild..."
+        aws codebuild list-source-credentials --region ${{ env.AWS_REGION }} || echo "Warning: Could not list source credentials"
         
         # Create environment variables JSON file
         cat > env-vars.json << EOF
