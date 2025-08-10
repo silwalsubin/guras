@@ -37,6 +37,20 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
         
+    - name: Update GitHub IPs for RDS Access
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo "Ensuring GitHub Actions can access RDS..."
+        
+        # Trigger the IP update workflow
+        gh workflow run update-github-ips.yml --ref ${{ github.ref }}
+        
+        # Wait a moment for the workflow to start
+        sleep 10
+        
+        echo "✅ GitHub IPs update workflow triggered"
+        
     - name: Get database connection details
       run: |
         ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
