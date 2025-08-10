@@ -17,6 +17,7 @@ import { getThemeColors, getBrandColors, COLORS, colorUtils } from '@/config/col
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { ProfileAvatar } from '@/components/shared';
 import NotificationSettings from './components/NotificationSettings';
+import SignOutButton from './components/SignOutButton';
 import quotesService, { NotificationPreferences } from '@/services/quotesService';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -227,6 +228,15 @@ const ProfileScreen: React.FC = () => {
           <Text style={[styles.aboutLabel, { color: themeColors.textPrimary }]}>Build</Text>
           <Text style={[styles.aboutValue, { color: themeColors.textSecondary }]}>2024.1</Text>
         </View>
+      </View>
+
+      {/* Account Section */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
+          Account
+        </Text>
+        
+        <SignOutButton />
       </View>
 
       {/* Bottom padding to prevent content from being hidden by footer */}
