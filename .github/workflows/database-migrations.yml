@@ -37,20 +37,23 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
         
+    - name: Setup GitHub Source Credentials
+      run: |
+        echo "Setting up GitHub source credentials for CodeBuild..."
+        aws codebuild import-source-credentials \
+          --server-type GITHUB \
+          --auth-type PERSONAL_ACCESS_TOKEN \
+          --token "${{ secrets.GITHUB_TOKEN }}" \
+          --should-overwrite || true
+        
+        echo "✅ Source credentials created/updated successfully"
+        
     - name: Start CodeBuild migration
       run: |
         ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
         PROJECT_NAME="guras-database-migrations"
         
         echo "Starting CodeBuild migration for $ENVIRONMENT environment..."
-        
-        # Create or update GitHub source credentials
-        echo "Setting up GitHub source credentials..."
-        aws codebuild import-source-credentials \
-          --server-type GITHUB \
-          --auth-type PERSONAL_ACCESS_TOKEN \
-          --token "${{ secrets.GITHUB_TOKEN }}" \
-          --should-overwrite || true
         
         # Create environment variables JSON file
         cat > env-vars.json << EOF
