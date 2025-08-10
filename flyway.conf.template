@@ -1,0 +1,26 @@
+# Flyway Configuration Template for Guras Project
+# Copy this file to flyway.<environment>.conf and fill in your credentials
+
+# Database connection (update these values for your environment)
+flyway.url=jdbc:postgresql://your-database-host:5432/your_database_name
+flyway.user=your_username
+flyway.password=your_password
+
+# Migration locations
+flyway.locations=filesystem:database/migrations
+
+# Schema management
+flyway.schemas=public
+flyway.createSchemas=true
+
+# Migration behavior
+flyway.baselineOnMigrate=true
+flyway.baselineVersion=0
+flyway.validateOnMigrate=true
+flyway.outOfOrder=false
+
+# Logging
+flyway.loggers=slf4j
+
+# Safety settings
+flyway.cleanDisabled=false
