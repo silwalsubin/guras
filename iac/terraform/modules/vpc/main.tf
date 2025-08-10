@@ -9,6 +9,22 @@ resource "aws_vpc" "main" {
   }
 }
 
+# DHCP Options Set
+resource "aws_vpc_dhcp_options" "main" {
+  domain_name         = "us-east-1.compute.internal"
+  domain_name_servers = ["AmazonProvidedDNS"]
+
+  tags = {
+    Name = "${var.environment}-dhcp-options"
+  }
+}
+
+# DHCP Options Association
+resource "aws_vpc_dhcp_options_association" "main" {
+  vpc_id          = aws_vpc.main.id
+  dhcp_options_id = aws_vpc_dhcp_options.main.id
+}
+
 # Internet Gateway
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
