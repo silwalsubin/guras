@@ -1,0 +1,120 @@
+name: Update GitHub IPs for RDS Access
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run daily at 2 AM UTC to keep IPs current
+    - cron: '0 2 * * *'
+  workflow_run:
+    workflows: ["Database Migrations"]
+    types: [requested]
+
+env:
+  AWS_REGION: "us-east-1"
+
+jobs:
+  update-github-ips:
+    name: Update GitHub IPs in RDS Security Group
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Get GitHub IP ranges
+      id: github-ips
+      run: |
+        echo "Fetching latest GitHub IP ranges..."
+        
+        # Get GitHub Actions IP ranges
+        GITHUB_ACTIONS_IPS=$(curl -s https://api.github.com/meta | jq -r '.actions[] | select(. != null)')
+        
+        # Get GitHub webhook IPs (for completeness)
+        GITHUB_WEBHOOK_IPS=$(curl -s https://api.github.com/meta | jq -r '.hooks[] | select(. != null)')
+        
+        # Combine and format for AWS CLI
+        ALL_IPS=$(echo -e "$GITHUB_ACTIONS_IPS\n$GITHUB_WEBHOOK_IPS" | grep -v '^$' | tr '\n' ',' | sed 's/,$//')
+        
+        echo "Found IP ranges: $ALL_IPS"
+        echo "ips=$ALL_IPS" >> $GITHUB_OUTPUT
+        
+    - name: Get RDS Security Group ID
+      id: security-group
+      run: |
+        echo "Getting RDS security group ID..."
+        
+        # Get the security group ID from AWS
+        SG_ID=$(aws ec2 describe-security-groups \
+          --filters "Name=group-name,Values=*-rds-*" "Name=vpc-id,Values=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=staging-vpc" --query 'Vpcs[0].VpcId' --output text)" \
+          --query 'SecurityGroups[0].GroupId' \
+          --output text)
+        
+        echo "RDS Security Group ID: $SG_ID"
+        echo "sg-id=$SG_ID" >> $GITHUB_OUTPUT
+        
+    - name: Update RDS Security Group
+      run: |
+        echo "Updating RDS security group with GitHub IP ranges..."
+        
+        SG_ID="${{ steps.security-group.outputs.sg-id }}"
+        IPS="${{ steps.github-ips.outputs.ips }}"
+        
+        # Remove existing GitHub Actions rules (if any)
+        echo "Removing existing GitHub Actions rules..."
+        aws ec2 describe-security-group-rules \
+          --filters "Name=group-id,Values=$SG_ID" "Name=description,Values=*GitHub Actions*" \
+          --query 'SecurityGroupRules[?IpProtocol==`tcp` && FromPort==`5432` && ToPort==`5432`].SecurityGroupRuleId' \
+          --output text | tr '\t' '\n' | grep -v '^$' | while read rule_id; do
+          if [ ! -z "$rule_id" ]; then
+            echo "Removing rule: $rule_id"
+            aws ec2 revoke-security-group-ingress --group-id $SG_ID --security-group-rule-ids $rule_id || true
+          fi
+        done
+        
+        # Add new GitHub Actions rules
+        echo "Adding new GitHub Actions rules..."
+        echo "$IPS" | tr ',' '\n' | while read ip_range; do
+          if [ ! -z "$ip_range" ]; then
+            echo "Adding IP range: $ip_range"
+            aws ec2 authorize-security-group-ingress \
+              --group-id $SG_ID \
+              --protocol tcp \
+              --port 5432 \
+              --cidr $ip_range \
+              --description "GitHub Actions runners for database migrations" || true
+          fi
+        done
+        
+        echo "✅ RDS security group updated successfully!"
+        
+    - name: Verify Access
+      run: |
+        echo "Verifying GitHub Actions can reach RDS..."
+        
+        # Get database connection details
+        DB_SECRET=$(aws secretsmanager get-secret-value \
+          --secret-id "guras-staging-db-connection" \
+          --region ${{ env.AWS_REGION }} \
+          --query 'SecretString' \
+          --output text)
+        
+        DB_HOST=$(echo "$DB_SECRET" | jq -r '.ServerName')
+        DB_PORT=$(echo "$DB_SECRET" | jq -r '.Port')
+        
+        echo "Testing connection to $DB_HOST:$DB_PORT..."
+        
+        # Test connection (timeout after 10 seconds)
+        if timeout 10 bash -c "</dev/tcp/$DB_HOST/$DB_PORT"; then
+          echo "✅ Connection successful! GitHub Actions can reach RDS."
+        else
+          echo "❌ Connection failed. Check security group configuration."
+          exit 1
+        fi
