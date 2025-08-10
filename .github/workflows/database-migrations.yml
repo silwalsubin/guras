@@ -44,10 +44,21 @@ jobs:
         
         echo "Starting CodeBuild migration for $ENVIRONMENT environment..."
         
+        # Create environment variables JSON file
+        cat > env-vars.json << EOF
+        [
+          {
+            "name": "ENVIRONMENT",
+            "value": "$ENVIRONMENT",
+            "type": "PLAIN_TEXT"
+          }
+        ]
+        EOF
+        
         # Start the CodeBuild project
         BUILD_ID=$(aws codebuild start-build \
           --project-name "$PROJECT_NAME" \
-          --environment-variables-override "name=ENVIRONMENT,value=$ENVIRONMENT,type=PLAIN_TEXT" \
+          --environment-variables-override file://env-vars.json \
           --query 'build.id' \
           --output text)
         
