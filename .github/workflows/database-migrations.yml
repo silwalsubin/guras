@@ -42,6 +42,18 @@ jobs:
         wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3-linux-x64.tar.gz | tar -xzf -
         echo "$PWD/flyway-9.22.3" >> $GITHUB_PATH
         
+        echo "Flyway installation debug:"
+        echo "Current directory: $(pwd)"
+        echo "Flyway directory contents:"
+        ls -la flyway-9.22.3/
+        echo "Flyway binary permissions:"
+        ls -la flyway-9.22.3/flyway
+        echo "Java version:"
+        java -version
+        echo "PATH: $PATH"
+        echo "Testing Flyway directly:"
+        ./flyway-9.22.3/flyway --version || echo "Direct Flyway call failed"
+        
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -135,6 +147,18 @@ jobs:
       run: |
         wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3-linux-x64.tar.gz | tar -xzf -
         echo "$PWD/flyway-9.22.3" >> $GITHUB_PATH
+        
+        echo "Flyway installation debug:"
+        echo "Current directory: $(pwd)"
+        echo "Flyway directory contents:"
+        ls -la flyway-9.22.3/
+        echo "Flyway binary permissions:"
+        ls -la flyway-9.22.3/flyway
+        echo "Java version:"
+        java -version
+        echo "PATH: $PATH"
+        echo "Testing Flyway directly:"
+        ./flyway-9.22.3/flyway --version || echo "Direct Flyway call failed"
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -174,10 +198,18 @@ jobs:
     - name: Validate migrations (dry run)
       run: |
         cd database
+        echo "Testing Flyway installation..."
+        flyway --version || echo "Flyway version check failed"
+        
+        echo "Testing basic Flyway command..."
+        flyway -help || echo "Flyway help failed"
+        
+        echo "Running Flyway validate with verbose output..."
         flyway -configFiles=flyway.conf \
           -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
           -user="${{ env.DB_USER }}" \
           -password="${{ env.DB_PASS }}" \
+          -verbose \
           validate
 
     - name: Run migrations
