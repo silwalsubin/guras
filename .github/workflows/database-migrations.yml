@@ -43,12 +43,17 @@ jobs:
         echo "Using AWS region: ${{ env.AWS_REGION }}"
         
         # Create source credentials with explicit region
+        echo "Creating source credentials for GitHub..."
         aws codebuild import-source-credentials \
           --region ${{ env.AWS_REGION }} \
           --server-type GITHUB \
           --auth-type PERSONAL_ACCESS_TOKEN \
           --token "${{ secrets.GITHUB_TOKEN }}" \
           --should-overwrite || true
+        
+        # Wait a moment for credentials to propagate
+        echo "Waiting for credentials to propagate..."
+        sleep 10
         
         # Verify credentials were created
         echo "Verifying source credentials..."
