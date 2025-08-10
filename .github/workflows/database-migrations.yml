@@ -38,6 +38,8 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         
     - name: Update GitHub IPs for RDS Access
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         echo "Ensuring GitHub Actions can access RDS..."
         
