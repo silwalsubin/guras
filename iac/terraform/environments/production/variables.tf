@@ -77,4 +77,10 @@ variable "domain_name" {
 variable "route53_zone_id" {
   description = "Route53 hosted zone ID"
   type        = string
+}
+
+variable "github_token" {
+  description = "GitHub Personal Access Token for CodeBuild authentication"
+  type        = string
+  sensitive   = true
 } 

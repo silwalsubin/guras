@@ -29,6 +29,12 @@ variable "rds_security_group_id" {
   default     = null
 }
 
+variable "github_token" {
+  description = "GitHub Personal Access Token for CodeBuild authentication"
+  type        = string
+  sensitive   = true
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

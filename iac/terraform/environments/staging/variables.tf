@@ -89,4 +89,10 @@ variable "external_rds_access_cidrs" {
   description = "CIDR blocks allowed to access RDS externally"
   type        = list(string)
   default     = []
+}
+
+variable "github_token" {
+  description = "GitHub Personal Access Token for CodeBuild authentication"
+  type        = string
+  sensitive   = true
 } 
