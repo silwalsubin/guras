@@ -24,10 +24,11 @@ resource "aws_codebuild_project" "database_migrations" {
   }
 
   source {
-    type            = "GITHUB"
-    location        = var.github_repo_url
-    git_clone_depth = 1
-    buildspec       = "buildspec-database.yml"
+    type                = "GITHUB"
+    location            = var.github_repo_url
+    git_clone_depth     = 1
+    buildspec           = "buildspec-database.yml"
+    report_build_status = false
   }
 
   vpc_config {
@@ -85,6 +86,15 @@ resource "aws_iam_role_policy" "codebuild_policy" {
         Resource = ["*"]
         Action = [
           "secretsmanager:GetSecretValue"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Resource = ["*"]
+        Action = [
+          "codebuild:ImportSourceCredentials",
+          "codebuild:DeleteSourceCredentials",
+          "codebuild:ListSourceCredentials"
         ]
       },
       {
