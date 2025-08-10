@@ -225,8 +225,6 @@ namespace apis.Controllers
                     return BadRequest(new { success = false, message = "No user tokens provided" });
                 }
 
-
-
                 var messages = request.UserTokens.Select(token => new Message()
                 {
                     Token = token,
@@ -270,14 +268,36 @@ namespace apis.Controllers
                     }
                 }).ToList();
 
-                var response = await FirebaseMessaging.DefaultInstance.SendAllAsync(messages);
-                _logger.LogInformation($"Quote notifications sent: {response.SuccessCount} successful, {response.FailureCount} failed");
+                // Use SendAsync in a loop instead of SendAllAsync to avoid 404 batch endpoint issues
+                var successCount = 0;
+                var failureCount = 0;
+                var errors = new List<string>();
+
+                foreach (var message in messages)
+                {
+                    try
+                    {
+                        var response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                        successCount++;
+                        _logger.LogInformation($"Quote notification sent successfully to token: {message.Token[..20]}...");
+                    }
+                    catch (Exception ex)
+                    {
+                        failureCount++;
+                        var errorMsg = $"Failed to send to token {message.Token[..20]}...: {ex.Message}";
+                        errors.Add(errorMsg);
+                        _logger.LogError(ex, errorMsg);
+                    }
+                }
+
+                _logger.LogInformation($"Quote notifications completed: {successCount} successful, {failureCount} failed");
 
                 return Ok(new 
                 { 
                     success = true, 
-                    successCount = response.SuccessCount,
-                    failureCount = response.FailureCount
+                    successCount = successCount,
+                    failureCount = failureCount,
+                    errors = errors.Any() ? errors : null
                 });
             }
             catch (Exception ex)
