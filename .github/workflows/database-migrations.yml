@@ -50,7 +50,7 @@ jobs:
           {
             "name": "ENVIRONMENT",
             "value": "$ENVIRONMENT",
-            "type": "PLAIN_TEXT"
+            "type": "STRING"
           }
         ]
         EOF
