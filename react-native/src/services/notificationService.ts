@@ -445,31 +445,60 @@ class NotificationService {
         throw new Error('No FCM token available');
       }
 
+      const requestBody = {
+        UserTokens: [this.fcmToken],
+        Quote: {
+          Text: notification.data.quote,
+          Author: 'Guras',
+          Category: 'daily'
+        }
+      };
+      
+      const authToken = await this.getAuthToken();
+
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/notification/send-quote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await this.getAuthToken()}`
+          'Authorization': `Bearer ${authToken}`
         },
-        body: JSON.stringify({
-          UserTokens: [this.fcmToken],
-          Quote: {
-            Text: notification.data.quote,
-            Author: 'Guras',
-            Category: 'daily'
-          }
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // Show detailed server error information
+        let errorDetails = `Status: ${response.status}\nStatus Text: ${response.statusText}`;
+        
+        // Try to parse as JSON for more details
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorDetails += `\n\nError Details:\n${JSON.stringify(errorJson, null, 2)}`;
+        } catch {
+          errorDetails += `\n\nResponse Body:\n${errorText}`;
+        }
+        
+        // Show the error details in an alert
+        Alert.alert(
+          '❌ Server Error Details',
+          errorDetails,
+          [{ text: 'OK' }]
+        );
+        
         throw new Error(`Server error: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('✅ Server notification response:', result);
+      
+      // Show success details
+      Alert.alert(
+        '✅ Server Response',
+        `Notification sent successfully!\n\nServer Response:\n${JSON.stringify(result, null, 2)}`,
+        [{ text: 'OK' }]
+      );
+      
     } catch (error) {
-      console.error('Error sending FCM notification via server:', error);
       throw error;
     }
   }
@@ -641,10 +670,7 @@ class NotificationService {
   // Send test notification
   async sendTestNotification(): Promise<void> {
     try {
-      console.log('🔔 Starting test notification...');
-      
       if (this.isSimulator) {
-        console.log('📱 iOS Simulator detected - FCM notifications not available');
         Alert.alert(
           '📱 iOS Simulator',
           'Push notifications are not available in iOS Simulator. Please test on a physical device.',
@@ -656,7 +682,6 @@ class NotificationService {
       // Check permission first
       const hasPermission = await this.hasPermission();
       if (!hasPermission) {
-        console.log('❌ No notification permission');
         Alert.alert(
           '❌ Permission Required',
           'Please grant notification permission to send test notifications.',
@@ -665,92 +690,188 @@ class NotificationService {
         return;
       }
 
-      // Check if FCM token is available
-      if (!this.fcmToken) {
-        console.log('🔑 No FCM token available, generating...');
-        try {
-          await this.getFCMToken();
-          if (!this.fcmToken) {
-            Alert.alert(
-              '🔑 FCM Token Error',
-              'Failed to generate FCM token. This might be due to:\n\n• Firebase configuration issue\n• Network connectivity problem\n• App not properly registered with Firebase\n\nPlease check your internet connection and try again.',
-              [{ text: 'OK' }]
-            );
-            return;
-          }
-        } catch (tokenError) {
-          Alert.alert(
-            '🔑 FCM Token Generation Failed',
-            `Failed to generate FCM token:\n\n${tokenError && typeof tokenError === 'object' && 'message' in tokenError ? String(tokenError.message) : 'Unknown error'}\n\nThis might be due to:\n• Firebase configuration issue\n• Network connectivity problem\n• App not properly registered with Firebase`,
-            [{ text: 'OK' }]
-          );
-          return;
-        }
-      }
-
-      console.log('✅ FCM token available:', this.fcmToken.substring(0, 20) + '...');
+      // Check authentication status
+      const auth = getAuth();
+      const user = auth.currentUser;
       
-      // Load quote
-      let quote;
-      try {
-        quote = await quotesService.getCurrentQuote();
-        console.log('📝 Quote loaded:', quote.text.substring(0, 50) + '...');
-      } catch (quoteError) {
+      if (!user) {
         Alert.alert(
-          '📝 Quote Loading Error',
-          `Failed to load quote for notification:\n\n${quoteError && typeof quoteError === 'object' && 'message' in quoteError ? String(quoteError.message) : 'Unknown error'}\n\nThis might be due to:\n• Network connectivity issue\n• Server not responding\n• Quote service configuration problem`,
+          '❌ Authentication Required',
+          'You must be signed in to send test notifications. Please sign in and try again.',
           [{ text: 'OK' }]
         );
         return;
       }
+
+      // Show authentication status
+      Alert.alert(
+        '🔐 Authentication Status',
+        `✅ User ID: ${user.uid}\n📧 Email: ${user.email || 'Not set'}\n🔑 Verified: ${user.emailVerified ? 'Yes' : 'No'}`,
+        [{ text: 'Continue', onPress: () => this.continueTestNotification() }]
+      );
       
-      // Send the notification
-      try {
-        await this.sendQuoteNotification(quote, 'daily_quote');
-        console.log('✅ Test notification sent successfully');
-        
-        // Show success message
+    } catch (error) {
+      Alert.alert(
+        '❌ Unexpected Error',
+        `An unexpected error occurred:\n\n${error && typeof error === 'object' && 'message' in error ? String(error.message) : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  }
+
+  // Continue with test notification after auth check
+  private async continueTestNotification(): Promise<void> {
+    try {
+      // Check if FCM token is available
+      if (!this.fcmToken) {
         Alert.alert(
-          '✅ Success!',
-          'Test notification sent successfully!\n\nIf you don\'t see it:\n• Check your notification center\n• Ensure Do Not Disturb is off\n• Check notification settings in iOS Settings',
-          [{ text: 'OK' }]
+          '🔑 FCM Token Status',
+          'No FCM token available. Attempting to generate one...',
+          [{ text: 'OK', onPress: () => this.generateFCMToken() }]
         );
-      } catch (notificationError) {
-        console.error('❌ Error sending notification:', notificationError);
-        
-        // Show detailed error message
-        let errorMessage = 'Unknown error occurred while sending notification.';
-        
-        if (notificationError && typeof notificationError === 'object' && 'message' in notificationError) {
-          const errorMsg = String(notificationError.message);
-          if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
-            errorMessage = 'Authentication failed. Please sign in again and try.';
-          } else if (errorMsg.includes('500') || errorMsg.includes('Internal Server Error')) {
-            errorMessage = 'Server error occurred. Please try again later.';
-          } else if (errorMsg.includes('Network') || errorMsg.includes('fetch')) {
-            errorMessage = 'Network error. Please check your internet connection.';
-          } else {
-            errorMessage = errorMsg;
-          }
-        }
-        
+        return;
+      }
+
+      // Show FCM token status
+      Alert.alert(
+        '🔑 FCM Token Status',
+        `✅ FCM token available\nToken: ${this.fcmToken.substring(0, 20)}...`,
+        [{ text: 'Continue', onPress: () => this.testAuthToken() }]
+      );
+      
+    } catch (error) {
+      Alert.alert(
+        '❌ FCM Token Error',
+        `Error checking FCM token:\n\n${error && typeof error === 'object' && 'message' in error ? String(error.message) : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  }
+
+  // Generate FCM token
+  private async generateFCMToken(): Promise<void> {
+    try {
+      Alert.alert(
+        '🔄 Generating FCM Token',
+        'Please wait while we generate your FCM token...',
+        [{ text: 'OK' }]
+      );
+
+      await this.getFCMToken();
+      
+      if (this.fcmToken) {
         Alert.alert(
-          '❌ Notification Failed',
-          `Failed to send test notification:\n\n${errorMessage}\n\nThis might be due to:\n• Network connectivity issue\n• Server not responding\n• Authentication problem\n• FCM configuration issue`,
+          '✅ FCM Token Generated',
+          `Token: ${this.fcmToken.substring(0, 20)}...\n\nContinuing with notification test...`,
+          [{ text: 'Continue', onPress: () => this.testAuthToken() }]
+        );
+      } else {
+        Alert.alert(
+          '❌ FCM Token Failed',
+          'Failed to generate FCM token. This might be due to:\n\n• Firebase configuration issue\n• Network connectivity problem\n• App not properly registered with Firebase',
           [{ text: 'OK' }]
         );
       }
     } catch (error) {
-      console.error('❌ Error sending test notification:', error);
-      
-      // Show generic error message
       Alert.alert(
-        '❌ Unexpected Error',
-        `An unexpected error occurred:\n\n${error && typeof error === 'object' && 'message' in error ? String(error.message) : 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`,
+        '❌ FCM Token Generation Failed',
+        `Failed to generate FCM token:\n\n${error && typeof error === 'object' && 'message' in error ? String(error.message) : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  }
+
+  // Test auth token generation
+  private async testAuthToken(): Promise<void> {
+    try {
+      Alert.alert(
+        '🔑 Testing Auth Token',
+        'Generating authentication token...',
+        [{ text: 'OK' }]
+      );
+
+      const authToken = await this.getAuthToken();
+      
+      Alert.alert(
+        '✅ Auth Token Generated',
+        `Token: ${authToken.substring(0, 20)}...\n\nContinuing with notification test...`,
+        [{ text: 'Continue', onPress: () => this.loadQuoteAndSend() }]
+      );
+      
+    } catch (error) {
+      Alert.alert(
+        '❌ Auth Token Failed',
+        `Failed to generate authentication token:\n\n${error && typeof error === 'object' && 'message' in error ? String(error.message) : 'Unknown error'}\n\nThis might be due to:\n• Firebase authentication issue\n• Network connectivity problem\n• Token refresh failure\n\nPlease try signing out and signing back in.`,
+        [{ text: 'OK' }]
+      );
+    }
+  }
+
+  // Load quote and send notification
+  private async loadQuoteAndSend(): Promise<void> {
+    try {
+      Alert.alert(
+        '📝 Loading Quote',
+        'Loading quote for notification...',
+        [{ text: 'OK' }]
+      );
+
+      const quote = await quotesService.getCurrentQuote();
+      
+      Alert.alert(
+        '✅ Quote Loaded',
+        `Quote: "${quote.text.substring(0, 50)}..."\nAuthor: ${quote.author}\n\nSending notification to server...`,
+        [{ text: 'Continue', onPress: () => this.sendNotificationToServer(quote) }]
+      );
+      
+    } catch (error) {
+      Alert.alert(
+        '❌ Quote Loading Failed',
+        `Failed to load quote:\n\n${error && typeof error === 'object' && 'message' in error ? String(error.message) : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  }
+
+  // Send notification to server
+  private async sendNotificationToServer(quote: any): Promise<void> {
+    try {
+      Alert.alert(
+        '🚀 Sending to Server',
+        `Server: ${API_CONFIG.BASE_URL}\nEndpoint: /api/notification/send-quote\n\nSending notification...`,
+        [{ text: 'OK' }]
+      );
+
+      await this.sendQuoteNotification(quote, 'daily_quote');
+      
+      Alert.alert(
+        '✅ Success!',
+        'Test notification sent successfully!\n\nIf you don\'t see it:\n• Check your notification center\n• Ensure Do Not Disturb is off\n• Check notification settings in iOS Settings',
         [{ text: 'OK' }]
       );
       
-      throw error;
+    } catch (error) {
+      let errorMessage = 'Unknown error occurred while sending notification.';
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMsg = String(error.message);
+        
+        if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+          errorMessage = 'Authentication failed. Please sign in again and try.';
+        } else if (errorMsg.includes('500') || errorMsg.includes('Internal Server Error')) {
+          errorMessage = 'Server error occurred. Please try again later.';
+        } else if (errorMsg.includes('Network') || errorMsg.includes('fetch')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else {
+          errorMessage = errorMsg;
+        }
+      }
+      
+      Alert.alert(
+        '❌ Notification Failed',
+        `Failed to send test notification:\n\n${errorMessage}\n\nThis might be due to:\n• Network connectivity issue\n• Server not responding\n• Authentication problem\n• FCM configuration issue`,
+        [{ text: 'OK' }]
+      );
     }
   }
 
