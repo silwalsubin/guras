@@ -59,8 +59,18 @@ jobs:
         DB_CREDS=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query SecretString --output text)
         
         # Parse JSON and set environment variables (matching the server's DbConfiguration structure)
-        echo "DB_HOST=$(echo $DB_CREDS | jq -r '.ServerName')" >> $GITHUB_ENV
-        echo "DB_PORT=$(echo $DB_CREDS | jq -r '.Port')" >> $GITHUB_ENV
+        # Handle case where ServerName might already include port
+        SERVER_NAME=$(echo $DB_CREDS | jq -r '.ServerName')
+        if [[ $SERVER_NAME == *:* ]]; then
+          # ServerName already contains port, extract host and port
+          echo "DB_HOST=$(echo $SERVER_NAME | cut -d: -f1)" >> $GITHUB_ENV
+          echo "DB_PORT=$(echo $SERVER_NAME | cut -d: -f2)" >> $GITHUB_ENV
+        else
+          # ServerName is just hostname, use separate port
+          echo "DB_HOST=$SERVER_NAME" >> $GITHUB_ENV
+          echo "DB_PORT=$(echo $DB_CREDS | jq -r '.Port')" >> $GITHUB_ENV
+        fi
+        
         echo "DB_NAME=$(echo $DB_CREDS | jq -r '.DatabaseName')" >> $GITHUB_ENV
         echo "DB_USER=$(echo $DB_CREDS | jq -r '.UserName')" >> $GITHUB_ENV
         echo "DB_PASS=$(echo $DB_CREDS | jq -r '.Password')" >> $GITHUB_ENV
@@ -145,8 +155,18 @@ jobs:
         DB_CREDS=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query SecretString --output text)
         
         # Parse JSON and set environment variables (matching the server's DbConfiguration structure)
-        echo "DB_HOST=$(echo $DB_CREDS | jq -r '.ServerName')" >> $GITHUB_ENV
-        echo "DB_PORT=$(echo $DB_CREDS | jq -r '.Port')" >> $GITHUB_ENV
+        # Handle case where ServerName might already include port
+        SERVER_NAME=$(echo $DB_CREDS | jq -r '.ServerName')
+        if [[ $SERVER_NAME == *:* ]]; then
+          # ServerName already contains port, extract host and port
+          echo "DB_HOST=$(echo $SERVER_NAME | cut -d: -f1)" >> $GITHUB_ENV
+          echo "DB_PORT=$(echo $SERVER_NAME | cut -d: -f2)" >> $GITHUB_ENV
+        else
+          # ServerName is just hostname, use separate port
+          echo "DB_HOST=$SERVER_NAME" >> $GITHUB_ENV
+          echo "DB_PORT=$(echo $DB_CREDS | jq -r '.Port')" >> $GITHUB_ENV
+        fi
+        
         echo "DB_NAME=$(echo $DB_CREDS | jq -r '.DatabaseName')" >> $GITHUB_ENV
         echo "DB_USER=$(echo $DB_CREDS | jq -r '.UserName')" >> $GITHUB_ENV
         echo "DB_PASS=$(echo $DB_CREDS | jq -r '.Password')" >> $GITHUB_ENV
