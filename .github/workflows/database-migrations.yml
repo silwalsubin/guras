@@ -17,7 +17,8 @@ on:
         default: false
         type: boolean
 
-
+env:
+  AWS_REGION: "us-east-1"
 
 jobs:
   migrate-staging:
@@ -46,7 +47,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: ${{ env.AWS_REGION }}
         
     - name: Get database credentials from AWS Secrets Manager
       id: db-secrets
@@ -132,7 +133,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: ${{ env.AWS_REGION }}
 
     - name: Get database credentials from AWS Secrets Manager
       id: db-secrets
