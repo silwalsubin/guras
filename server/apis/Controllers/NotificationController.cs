@@ -684,6 +684,72 @@ namespace apis.Controllers
                 });
             }
         }
+
+        [HttpPost("test-background-service")]
+        [AllowAnonymous]
+        public async Task<IActionResult> TestBackgroundService()
+        {
+            try
+            {
+                _logger.LogInformation("Testing background service notification logic");
+
+                using var scope = _scopeFactory.CreateScope();
+                var preferencesService = scope.ServiceProvider.GetRequiredService<IUserNotificationPreferencesService>();
+                var tokenService = scope.ServiceProvider.GetRequiredService<INotificationTokenService>();
+                var quotesService = scope.ServiceProvider.GetRequiredService<IQuotesService>();
+
+                // Get all user preferences for debugging
+                var allPreferences = await preferencesService.GetAllUserPreferencesAsync();
+                _logger.LogInformation($"Total users with preferences: {allPreferences.Count}");
+                
+                var debugInfo = new List<object>();
+                foreach (var pref in allPreferences)
+                {
+                    var isDue = await preferencesService.IsUserDueForNotificationAsync(pref.UserId);
+                    var hasTokens = tokenService.GetUserTokens().TryGetValue(pref.UserId, out var tokens);
+                    debugInfo.Add(new
+                    {
+                        UserId = pref.UserId,
+                        Enabled = pref.Enabled,
+                        Frequency = pref.Frequency.ToString(),
+                        LastNotificationSent = pref.LastNotificationSent.ToString("yyyy-MM-dd HH:mm:ss UTC"),
+                        IsDue = isDue,
+                        HasTokens = hasTokens,
+                        TokenCount = hasTokens ? tokens.Count : 0
+                    });
+                }
+
+                // Get users who are due for notifications
+                var usersDueForNotification = await preferencesService.GetUsersDueForNotificationAsync();
+                _logger.LogInformation($"Users due for notification: {usersDueForNotification.Count}");
+
+                return Ok(new 
+                { 
+                    success = true, 
+                    message = "Background service test completed",
+                    totalUsers = allPreferences.Count,
+                    usersDue = usersDueForNotification.Count,
+                    debugInfo = debugInfo,
+                    usersDueDetails = usersDueForNotification.Select(u => new
+                    {
+                        UserId = u.UserId,
+                        Frequency = u.Frequency.ToString(),
+                        LastSent = u.LastNotificationSent.ToString("yyyy-MM-dd HH:mm:ss UTC")
+                    }).ToList()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error testing background service");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to test background service",
+                    error = ex.Message,
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
     }
 
     public class RegisterTokenRequest

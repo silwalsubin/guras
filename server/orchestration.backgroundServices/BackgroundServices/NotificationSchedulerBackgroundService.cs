@@ -57,6 +57,15 @@ public class NotificationSchedulerBackgroundService : BackgroundService
             var tokenService = scope.ServiceProvider.GetRequiredService<INotificationTokenService>();
             var quotesService = scope.ServiceProvider.GetRequiredService<IQuotesService>();
 
+            // Get all user preferences for debugging
+            var allPreferences = await preferencesService.GetAllUserPreferencesAsync();
+            _logger.LogInformation($"Total users with preferences: {allPreferences.Count}");
+            
+            foreach (var pref in allPreferences)
+            {
+                _logger.LogInformation($"User {pref.UserId}: Enabled={pref.Enabled}, Frequency={pref.Frequency}, LastSent={pref.LastNotificationSent:yyyy-MM-dd HH:mm:ss} UTC");
+            }
+
             // Get users who are due for notifications based on their preferences
             var usersDueForNotification = await preferencesService.GetUsersDueForNotificationAsync();
 
@@ -72,7 +81,7 @@ public class NotificationSchedulerBackgroundService : BackgroundService
             }
             else
             {
-                _logger.LogDebug("No users due for notifications at this time");
+                _logger.LogInformation("No users due for notifications at this time");
             }
         }
         catch (Exception ex)

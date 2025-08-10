@@ -108,6 +108,24 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
         return IsUserInQuietHours(preferences, DateTime.UtcNow);
     }
 
+    public async Task<List<UserNotificationPreferences>> GetAllUserPreferencesAsync()
+    {
+        await Task.CompletedTask; // Simulate async operation
+        
+        lock (_lock)
+        {
+            return _userPreferences.Values.ToList();
+        }
+    }
+
+    public async Task<bool> IsUserDueForNotificationAsync(string userId)
+    {
+        var preferences = await GetUserPreferencesAsync(userId);
+        if (preferences == null) return false;
+        
+        return IsUserDueForNotification(preferences, DateTime.UtcNow);
+    }
+
     private bool IsUserInQuietHours(UserNotificationPreferences preferences, DateTime now)
     {
         var currentTime = now.TimeOfDay;
@@ -125,6 +143,12 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
 
     private bool IsUserDueForNotification(UserNotificationPreferences preferences, DateTime now)
     {
+        // If LastNotificationSent is DateTime.MinValue, this is a new user who should get a notification immediately
+        if (preferences.LastNotificationSent == DateTime.MinValue)
+        {
+            return true;
+        }
+        
         var timeSinceLastNotification = now - preferences.LastNotificationSent;
         
         return preferences.Frequency switch
