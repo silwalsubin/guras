@@ -98,7 +98,13 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "ec2:DescribeDhcpOptions",
           "ec2:DescribeRouteTables",
           "ec2:DescribeInternetGateways",
-          "ec2:DescribeNatGateways"
+          "ec2:DescribeNatGateways",
+          "ec2:CreateTags",
+          "ec2:DeleteTags",
+          "ec2:CreateNetworkInterfacePermission",
+          "ec2:AttachNetworkInterface",
+          "ec2:DetachNetworkInterface",
+          "ec2:ModifyNetworkInterfaceAttribute"
         ]
       }
     ]
