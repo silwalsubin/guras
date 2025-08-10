@@ -6,6 +6,9 @@ using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using services.notifications.Services;
+using services.notifications.Domain;
+using Microsoft.Extensions.DependencyInjection;
+using services.quotes.Services;
 
 namespace apis.Controllers
 {
@@ -15,11 +18,13 @@ namespace apis.Controllers
     {
         private readonly ILogger<NotificationController> _logger;
         private readonly INotificationTokenService _notificationTokenService;
+        private readonly IServiceProvider _scopeFactory;
 
-        public NotificationController(ILogger<NotificationController> logger, INotificationTokenService notificationTokenService)
+        public NotificationController(ILogger<NotificationController> logger, INotificationTokenService notificationTokenService, IServiceProvider scopeFactory)
         {
             _logger = logger;
             _notificationTokenService = notificationTokenService;
+            _scopeFactory = scopeFactory;
         }
 
         // Static method to get registered tokens (for backward compatibility)
@@ -502,6 +507,183 @@ namespace apis.Controllers
                 });
             }
         }
+
+        [HttpPost("set-test-schedule")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SetTestSchedule([FromBody] SetTestScheduleRequest request)
+        {
+            try
+            {
+                _logger.LogInformation($"Setting test notification schedule for user {request.UserId}");
+
+                using var scope = _scopeFactory.CreateScope();
+                var preferencesService = scope.ServiceProvider.GetRequiredService<IUserNotificationPreferencesService>();
+
+                var preferences = new UserNotificationPreferences
+                {
+                    UserId = request.UserId,
+                    Enabled = true,
+                    Frequency = request.Frequency,
+                    QuietHoursStart = new TimeSpan(0, 0, 0), // No quiet hours for testing
+                    QuietHoursEnd = new TimeSpan(0, 0, 0),
+                    LastNotificationSent = DateTime.MinValue // Force immediate notification
+                };
+
+                await preferencesService.CreateOrUpdateUserPreferencesAsync(preferences);
+
+                _logger.LogInformation($"Test schedule set for user {request.UserId}: {request.Frequency}");
+
+                return Ok(new { 
+                    success = true, 
+                    message = $"Test notification schedule set to {request.Frequency}",
+                    userId = request.UserId,
+                    frequency = request.Frequency.ToString()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting test notification schedule");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to set test schedule",
+                    error = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("test-schedule-immediate")]
+        [AllowAnonymous]
+        public async Task<IActionResult> TestScheduleImmediate([FromBody] TestScheduleImmediateRequest request)
+        {
+            try
+            {
+                _logger.LogInformation($"Testing immediate notification schedule for user {request.UserId}");
+
+                using var scope = _scopeFactory.CreateScope();
+                var preferencesService = scope.ServiceProvider.GetRequiredService<IUserNotificationPreferencesService>();
+                var quotesService = scope.ServiceProvider.GetRequiredService<IQuotesService>();
+                var tokenService = scope.ServiceProvider.GetRequiredService<INotificationTokenService>();
+
+                // Set user preferences to trigger immediate notification
+                var preferences = new UserNotificationPreferences
+                {
+                    UserId = request.UserId,
+                    Enabled = true,
+                    Frequency = request.Frequency,
+                    QuietHoursStart = new TimeSpan(0, 0, 0), // No quiet hours for testing
+                    QuietHoursEnd = new TimeSpan(0, 0, 0),
+                    LastNotificationSent = DateTime.MinValue // Force immediate notification
+                };
+
+                await preferencesService.CreateOrUpdateUserPreferencesAsync(preferences);
+
+                // Get user's FCM tokens
+                var userTokens = tokenService.GetUserTokens();
+                if (!userTokens.TryGetValue(request.UserId, out var tokens) || !tokens.Any())
+                {
+                    return BadRequest(new { success = false, message = "No FCM tokens found for user" });
+                }
+
+                // Get a random quote
+                var quote = quotesService.GetRandomQuote();
+
+                // Send notification immediately (same logic as background service)
+                var messages = tokens.Select(token => new Message()
+                {
+                    Token = token,
+                    Notification = new Notification()
+                    {
+                        Title = "🧘 Test Schedule Notification",
+                        Body = $"\"{quote.Text}\" - {quote.Author}"
+                    },
+                    Data = new Dictionary<string, string>
+                    {
+                        ["quote"] = JsonSerializer.Serialize(quote),
+                        ["type"] = "test_schedule",
+                        ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()
+                    },
+                    Android = new AndroidConfig()
+                    {
+                        Notification = new AndroidNotification()
+                        {
+                            Sound = "default",
+                            Priority = NotificationPriority.HIGH,
+                            ChannelId = "test-schedule"
+                        }
+                    },
+                    Apns = new ApnsConfig()
+                    {
+                        Aps = new Aps()
+                        {
+                            Sound = "default",
+                            ContentAvailable = true,
+                            Alert = new ApsAlert()
+                            {
+                                Title = "🧘 Test Schedule Notification",
+                                Body = $"\"{quote.Text}\" - {quote.Author}"
+                            }
+                        },
+                        Headers = new Dictionary<string, string>
+                        {
+                            ["apns-priority"] = "10",
+                            ["apns-push-type"] = "alert"
+                        }
+                    }
+                }).ToList();
+
+                // Send notifications using SendAsync (working method)
+                var successCount = 0;
+                var failureCount = 0;
+                var errors = new List<string>();
+
+                foreach (var message in messages)
+                {
+                    try
+                    {
+                        var response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                        successCount++;
+                        _logger.LogInformation($"Test schedule notification sent successfully to token: {message.Token[..20]}...");
+                    }
+                    catch (Exception ex)
+                    {
+                        failureCount++;
+                        var errorMsg = $"Failed to send to token {message.Token[..20]}...: {ex.Message}";
+                        errors.Add(errorMsg);
+                        _logger.LogError(ex, errorMsg);
+                    }
+                }
+
+                // Update last notification sent time
+                if (successCount > 0)
+                {
+                    await preferencesService.UpdateLastNotificationSentAsync(request.UserId);
+                }
+
+                _logger.LogInformation($"Test schedule notifications completed: {successCount} successful, {failureCount} failed");
+
+                return Ok(new 
+                { 
+                    success = true, 
+                    message = $"Test schedule notification sent immediately",
+                    successCount = successCount,
+                    failureCount = failureCount,
+                    errors = errors.Any() ? errors : null,
+                    quote = quote,
+                    frequency = request.Frequency.ToString()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error testing immediate notification schedule");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Failed to test notification schedule",
+                    error = ex.Message,
+                    errorType = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
     }
 
     public class RegisterTokenRequest
@@ -562,5 +744,21 @@ namespace apis.Controllers
         public string Token { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Body { get; set; } = string.Empty;
+    }
+
+    public class SetTestScheduleRequest
+    {
+        [Required]
+        public string UserId { get; set; } = string.Empty;
+        [Required]
+        public NotificationFrequency Frequency { get; set; }
+    }
+
+    public class TestScheduleImmediateRequest
+    {
+        [Required]
+        public string UserId { get; set; } = string.Empty;
+        [Required]
+        public NotificationFrequency Frequency { get; set; }
     }
 } 

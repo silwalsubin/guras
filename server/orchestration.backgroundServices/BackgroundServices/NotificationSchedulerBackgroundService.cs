@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using services.notifications.Services;
 using services.notifications.Domain;
-using services.quotes.Domain;
 using services.quotes.Services;
 
 namespace orchestration.backgroundServices.BackgroundServices;
@@ -51,12 +50,12 @@ public class NotificationSchedulerBackgroundService : BackgroundService
         {
             // Get current time
             var now = DateTime.UtcNow;
-            _logger.LogDebug($"Checking for scheduled notifications at {now:yyyy-MM-dd HH:mm:ss} UTC");
+            _logger.LogInformation($"Checking for scheduled notifications at {now:yyyy-MM-dd HH:mm:ss} UTC");
 
             using var scope = _scopeFactory.CreateScope();
             var preferencesService = scope.ServiceProvider.GetRequiredService<IUserNotificationPreferencesService>();
-            var quotesService = scope.ServiceProvider.GetRequiredService<IQuotesService>();
             var tokenService = scope.ServiceProvider.GetRequiredService<INotificationTokenService>();
+            var quotesService = scope.ServiceProvider.GetRequiredService<IQuotesService>();
 
             // Get users who are due for notifications based on their preferences
             var usersDueForNotification = await preferencesService.GetUsersDueForNotificationAsync();
@@ -65,12 +64,10 @@ public class NotificationSchedulerBackgroundService : BackgroundService
             {
                 _logger.LogInformation("Found {Count} users due for notifications", usersDueForNotification.Count);
                 
-                // Get a random quote for this notification cycle
-                var quote = quotesService.GetRandomQuote();
-                
                 foreach (var userPreferences in usersDueForNotification)
                 {
-                    await SendQuoteNotificationToUser(userPreferences, quote, tokenService, preferencesService);
+                    _logger.LogInformation($"User {userPreferences.UserId} is due for {userPreferences.Frequency} notification");
+                    await SendScheduledQuoteNotificationToUser(userPreferences, tokenService, preferencesService, quotesService);
                 }
             }
             else
@@ -84,11 +81,11 @@ public class NotificationSchedulerBackgroundService : BackgroundService
         }
     }
 
-    private async Task SendQuoteNotificationToUser(
+    private async Task SendScheduledQuoteNotificationToUser(
         UserNotificationPreferences userPreferences, 
-        QuoteData quote, 
         INotificationTokenService tokenService,
-        IUserNotificationPreferencesService preferencesService)
+        IUserNotificationPreferencesService preferencesService,
+        IQuotesService quotesService)
     {
         try
         {
@@ -100,7 +97,9 @@ public class NotificationSchedulerBackgroundService : BackgroundService
                 return;
             }
 
-            _logger.LogInformation($"Sending quote notification to user {userPreferences.UserId} with {tokens.Count} tokens");
+            // Get a random quote for this notification
+            var quote = quotesService.GetRandomQuote();
+            _logger.LogInformation($"Sending quote notification to user {userPreferences.UserId} with {tokens.Count} tokens. Quote: \"{quote.Text}\" - {quote.Author}");
 
             var messages = tokens.Select(token => new Message()
             {
@@ -114,7 +113,9 @@ public class NotificationSchedulerBackgroundService : BackgroundService
                 {
                     ["quote"] = JsonSerializer.Serialize(quote),
                     ["type"] = GetNotificationType(userPreferences.Frequency),
-                    ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()
+                    ["frequency"] = userPreferences.Frequency.ToString(),
+                    ["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(),
+                    ["message"] = "scheduled_quote"
                 },
                 Android = new AndroidConfig()
                 {
@@ -122,7 +123,7 @@ public class NotificationSchedulerBackgroundService : BackgroundService
                     {
                         Sound = "default",
                         Priority = NotificationPriority.HIGH,
-                        ChannelId = "daily-quotes"
+                        ChannelId = "scheduled-notifications"
                     }
                 },
                 Apns = new ApnsConfig()
@@ -170,6 +171,7 @@ public class NotificationSchedulerBackgroundService : BackgroundService
             if (successCount > 0)
             {
                 await preferencesService.UpdateLastNotificationSentAsync(userPreferences.UserId);
+                _logger.LogInformation($"Updated last notification time for user {userPreferences.UserId} to {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
             }
         }
         catch (Exception ex)
