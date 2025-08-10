@@ -34,18 +34,9 @@ function MainApp(): React.JSX.Element {
     dispatch(setDarkMode(systemColorScheme === 'dark'));
   }, [systemColorScheme, dispatch]);
 
-  // Initialize notification service
+  // Notification service initializes itself in constructor
   useEffect(() => {
-    const initializeNotifications = async () => {
-      try {
-        await notificationService.initialize();
-        console.log('Notification service initialized');
-      } catch (error) {
-        console.error('Failed to initialize notification service:', error);
-      }
-    };
-
-    initializeNotifications();
+    console.log('Notification service available');
   }, []);
 
   const themeColors = getThemeColors(isDarkMode);

@@ -5,7 +5,7 @@ import { API_CONFIG } from '@/config/api';
 import quotesService, { Quote, NotificationPreferences } from './quotesService';
 
 // In-memory storage for notifications - no AsyncStorage dependency
-let fallbackNotificationStorage: { [key: string]: string } = {};
+const fallbackNotificationStorage: { [key: string]: string } = {};
 
 // Safe storage operations using only in-memory storage
 const safeNotificationSetItem = async (key: string, value: string): Promise<void> => {
@@ -78,10 +78,10 @@ class NotificationService {
       // Check if we're on iOS Simulator
       if (Platform.OS === 'ios') {
         try {
-          const simulatorCheck = await fetch('http://localhost:8081/status');
+          await fetch('http://localhost:8081/status');
           this.isSimulator = true;
           console.log('📱 iOS Simulator detected');
-        } catch (error) {
+        } catch {
           // Metro bundler not running, but could still be simulator
           this.isSimulator = false;
           console.log('📱 iOS Device or Simulator (Metro not accessible)');
@@ -89,7 +89,7 @@ class NotificationService {
       } else {
         this.isSimulator = false;
       }
-    } catch (error) {
+    } catch {
       this.isSimulator = false;
       console.log('📱 Device detection failed, assuming device');
     }
@@ -344,22 +344,26 @@ class NotificationService {
       const timeDiff = now.getTime() - lastTime.getTime();
       
       switch (preferences.frequency) {
-        case '5min':
+        case '5min': {
           const fiveMinPassed = timeDiff >= 5 * 60 * 1000; // 5 minutes
           if (fiveMinPassed) console.log('⚡ 5-minute notification due');
           return fiveMinPassed;
-        case 'hourly':
+        }
+        case 'hourly': {
           const hoursPassed = timeDiff >= 60 * 60 * 1000; // 1 hour
           if (hoursPassed) console.log('⏰ Hourly notification due');
           return hoursPassed;
-        case 'twice-daily':
+        }
+        case 'twice-daily': {
           const twiceDailyPassed = timeDiff >= 12 * 60 * 60 * 1000; // 12 hours
           if (twiceDailyPassed) console.log('🌅 Twice-daily notification due');
           return twiceDailyPassed;
-        case 'daily':
+        }
+        case 'daily': {
           const dailyPassed = timeDiff >= 24 * 60 * 60 * 1000; // 24 hours
           if (dailyPassed) console.log('🌙 Daily notification due');
           return dailyPassed;
+        }
         default:
           return false;
       }
@@ -394,13 +398,13 @@ class NotificationService {
           } else {
             throw new Error('Failed to get FCM token - check Firebase configuration');
           }
-        } catch (tokenError: any) {
+        } catch (tokenError: unknown) {
           console.error('❌ FCM token generation failed:', tokenError);
 
           // Show alert for debugging
           Alert.alert(
             '❌ FCM Token Generation Failed',
-            `FCM token generation failed:\n\n${tokenError?.message || 'Unknown error'}\n\nFCM token is required for push notifications. Check Firebase setup.`,
+            `FCM token generation failed:\n\n${tokenError && typeof tokenError === 'object' && 'message' in tokenError ? String(tokenError.message) : 'Unknown error'}\n\nFCM token is required for push notifications. Check Firebase setup.`,
             [{ text: 'OK' }]
           );
 
@@ -564,7 +568,7 @@ class NotificationService {
     }
   }
 
-  private convertFrequencyToServer(frequency: string): string {
+  private convertFrequencyToServer(frequency: '5min' | 'hourly' | 'daily' | 'twice-daily'): string {
     switch (frequency) {
       case '5min': return '5min';
       case 'hourly': return 'hourly';
@@ -574,7 +578,7 @@ class NotificationService {
     }
   }
 
-  private convertFrequencyFromServer(frequency: string): string {
+  private convertFrequencyFromServer(frequency: string): '5min' | 'hourly' | 'daily' | 'twice-daily' {
     switch (frequency.toLowerCase()) {
       case '5min': return '5min';
       case 'hourly': return 'hourly';
@@ -664,21 +668,88 @@ class NotificationService {
       // Check if FCM token is available
       if (!this.fcmToken) {
         console.log('🔑 No FCM token available, generating...');
-        await this.getFCMToken();
-        if (!this.fcmToken) {
-          throw new Error('Failed to generate FCM token');
+        try {
+          await this.getFCMToken();
+          if (!this.fcmToken) {
+            Alert.alert(
+              '🔑 FCM Token Error',
+              'Failed to generate FCM token. This might be due to:\n\n• Firebase configuration issue\n• Network connectivity problem\n• App not properly registered with Firebase\n\nPlease check your internet connection and try again.',
+              [{ text: 'OK' }]
+            );
+            return;
+          }
+        } catch (tokenError) {
+          Alert.alert(
+            '🔑 FCM Token Generation Failed',
+            `Failed to generate FCM token:\n\n${tokenError && typeof tokenError === 'object' && 'message' in tokenError ? String(tokenError.message) : 'Unknown error'}\n\nThis might be due to:\n• Firebase configuration issue\n• Network connectivity problem\n• App not properly registered with Firebase`,
+            [{ text: 'OK' }]
+          );
+          return;
         }
       }
 
       console.log('✅ FCM token available:', this.fcmToken.substring(0, 20) + '...');
       
-      const quote = await quotesService.getCurrentQuote();
-      console.log('📝 Quote loaded:', quote.text.substring(0, 50) + '...');
+      // Load quote
+      let quote;
+      try {
+        quote = await quotesService.getCurrentQuote();
+        console.log('📝 Quote loaded:', quote.text.substring(0, 50) + '...');
+      } catch (quoteError) {
+        Alert.alert(
+          '📝 Quote Loading Error',
+          `Failed to load quote for notification:\n\n${quoteError && typeof quoteError === 'object' && 'message' in quoteError ? String(quoteError.message) : 'Unknown error'}\n\nThis might be due to:\n• Network connectivity issue\n• Server not responding\n• Quote service configuration problem`,
+          [{ text: 'OK' }]
+        );
+        return;
+      }
       
-      await this.sendQuoteNotification(quote, 'daily_quote');
-      console.log('✅ Test notification sent successfully');
+      // Send the notification
+      try {
+        await this.sendQuoteNotification(quote, 'daily_quote');
+        console.log('✅ Test notification sent successfully');
+        
+        // Show success message
+        Alert.alert(
+          '✅ Success!',
+          'Test notification sent successfully!\n\nIf you don\'t see it:\n• Check your notification center\n• Ensure Do Not Disturb is off\n• Check notification settings in iOS Settings',
+          [{ text: 'OK' }]
+        );
+      } catch (notificationError) {
+        console.error('❌ Error sending notification:', notificationError);
+        
+        // Show detailed error message
+        let errorMessage = 'Unknown error occurred while sending notification.';
+        
+        if (notificationError && typeof notificationError === 'object' && 'message' in notificationError) {
+          const errorMsg = String(notificationError.message);
+          if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+            errorMessage = 'Authentication failed. Please sign in again and try.';
+          } else if (errorMsg.includes('500') || errorMsg.includes('Internal Server Error')) {
+            errorMessage = 'Server error occurred. Please try again later.';
+          } else if (errorMsg.includes('Network') || errorMsg.includes('fetch')) {
+            errorMessage = 'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = errorMsg;
+          }
+        }
+        
+        Alert.alert(
+          '❌ Notification Failed',
+          `Failed to send test notification:\n\n${errorMessage}\n\nThis might be due to:\n• Network connectivity issue\n• Server not responding\n• Authentication problem\n• FCM configuration issue`,
+          [{ text: 'OK' }]
+        );
+      }
     } catch (error) {
       console.error('❌ Error sending test notification:', error);
+      
+      // Show generic error message
+      Alert.alert(
+        '❌ Unexpected Error',
+        `An unexpected error occurred:\n\n${error && typeof error === 'object' && 'message' in error ? String(error.message) : 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`,
+        [{ text: 'OK' }]
+      );
+      
       throw error;
     }
   }
