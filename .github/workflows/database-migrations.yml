@@ -1,4 +1,4 @@
-name: Database Migrations
+name: Database Migrations via CodeBuild
 
 on:
   workflow_dispatch:
@@ -21,39 +21,15 @@ env:
   AWS_REGION: "us-east-1"
 
 jobs:
-  migrate-staging:
-    name: Migrate Staging Database
+  trigger-codebuild:
+    name: Trigger CodeBuild Migration
     runs-on: ubuntu-latest
-    if: github.event.inputs.environment == 'staging' || github.event.inputs.environment == null
-    environment: staging
+    environment: ${{ github.event.inputs.environment || 'staging' }}
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        
-    - name: Download Flyway
-      run: |
-        wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3-linux-x64.tar.gz | tar -xzf -
-        echo "$PWD/flyway-9.22.3" >> $GITHUB_PATH
-        
-        echo "Flyway installation debug:"
-        echo "Current directory: $(pwd)"
-        echo "Flyway directory contents:"
-        ls -la flyway-9.22.3/
-        echo "Flyway binary permissions:"
-        ls -la flyway-9.22.3/flyway
-        echo "Java version:"
-        java -version
-        echo "PATH: $PATH"
-        echo "Testing Flyway directly:"
-        ./flyway-9.22.3/flyway --version || echo "Direct Flyway call failed"
-        
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -61,174 +37,35 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
         
-    - name: Get database credentials from AWS Secrets Manager
-      id: db-secrets
+    - name: Start CodeBuild migration
       run: |
-        # Use the same secret name pattern as the server
-        SECRET_NAME="guras/db-credentials"
+        ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
+        PROJECT_NAME="guras-database-migrations"
         
-        # Get database credentials from AWS Secrets Manager
-        DB_CREDS=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query SecretString --output text)
+        echo "Starting CodeBuild migration for $ENVIRONMENT environment..."
         
-        # Parse JSON and set environment variables (matching the server's DbConfiguration structure)
-        # Handle case where ServerName might already include port
-        SERVER_NAME=$(echo $DB_CREDS | jq -r '.ServerName')
-        if [[ $SERVER_NAME == *:* ]]; then
-          # ServerName already contains port, extract host and port
-          echo "DB_HOST=$(echo $SERVER_NAME | cut -d: -f1)" >> $GITHUB_ENV
-          echo "DB_PORT=$(echo $SERVER_NAME | cut -d: -f2)" >> $GITHUB_ENV
+        # Start the CodeBuild project
+        BUILD_ID=$(aws codebuild start-build \
+          --project-name "$PROJECT_NAME" \
+          --environment-variables-override \
+            name=ENVIRONMENT,value="$ENVIRONMENT",type=PLAIN_TEXT \
+          --query 'build.id' \
+          --output text)
+        
+        echo "CodeBuild started with ID: $BUILD_ID"
+        
+        # Wait for build to complete
+        echo "Waiting for build to complete..."
+        aws codebuild wait build-completed --id "$BUILD_ID"
+        
+        # Get build status
+        BUILD_STATUS=$(aws codebuild batch-get-builds --ids "$BUILD_ID" --query 'builds[0].buildStatus' --output text)
+        
+        if [ "$BUILD_STATUS" = "SUCCEEDED" ]; then
+          echo "✅ Database migration completed successfully!"
         else
-          # ServerName is just hostname, use separate port
-          echo "DB_HOST=$SERVER_NAME" >> $GITHUB_ENV
-          echo "DB_PORT=$(echo $DB_CREDS | jq -r '.Port')" >> $GITHUB_ENV
+          echo "❌ Database migration failed with status: $BUILD_STATUS"
+          exit 1
         fi
-        
-        echo "DB_NAME=$(echo $DB_CREDS | jq -r '.DatabaseName')" >> $GITHUB_ENV
-        echo "DB_USER=$(echo $DB_CREDS | jq -r '.UserName')" >> $GITHUB_ENV
-        echo "DB_PASS=$(echo $DB_CREDS | jq -r '.Password')" >> $GITHUB_ENV
-        
-        echo "Database credentials retrieved from $SECRET_NAME"
-        
-    - name: Validate migrations (dry run)
-      run: |
-        cd database
-        echo "Current directory: $(pwd)"
-        echo "Database connection: jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}"
-        echo "User: ${{ env.DB_USER }}"
-        echo "Password: ***"
-        echo "Flyway version: $(flyway --version)"
-        echo "Listing migrations directory:"
-        ls -la migrations/
-        echo "Running Flyway validate..."
-        flyway -configFiles=flyway.conf \
-          -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
-          -user="${{ env.DB_USER }}" \
-          -password="${{ env.DB_PASS }}" \
-          validate
-          
-    - name: Run migrations
-      if: ${{ !github.event.inputs.dry_run }}
-      run: |
-        cd database
-        flyway -configFiles=flyway.conf \
-          -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
-          -user="${{ env.DB_USER }}" \
-          -password="${{ env.DB_PASS }}" \
-          migrate
-          
-    - name: Migration status
-      run: |
-        cd database
-        flyway -configFiles=flyway.conf \
-          -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
-          -user="${{ env.DB_USER }}" \
-          -password="${{ env.DB_PASS }}" \
-          info
-          
-
-
-  migrate-production:
-    name: Migrate Production Database
-    runs-on: ubuntu-latest
-    if: github.event.inputs.environment == 'production'
-    environment: production
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-
-    - name: Download Flyway
-      run: |
-        wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3-linux-x64.tar.gz | tar -xzf -
-        echo "$PWD/flyway-9.22.3" >> $GITHUB_PATH
-        
-        echo "Flyway installation debug:"
-        echo "Current directory: $(pwd)"
-        echo "Flyway directory contents:"
-        ls -la flyway-9.22.3/
-        echo "Flyway binary permissions:"
-        ls -la flyway-9.22.3/flyway
-        echo "Java version:"
-        java -version
-        echo "PATH: $PATH"
-        echo "Testing Flyway directly:"
-        ./flyway-9.22.3/flyway --version || echo "Direct Flyway call failed"
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-
-    - name: Get database credentials from AWS Secrets Manager
-      id: db-secrets
-      run: |
-        # Use the same secret name pattern as the server
-        SECRET_NAME="guras/db-credentials"
-        
-        # Get database credentials from AWS Secrets Manager
-        DB_CREDS=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query SecretString --output text)
-        
-        # Parse JSON and set environment variables (matching the server's DbConfiguration structure)
-        # Handle case where ServerName might already include port
-        SERVER_NAME=$(echo $DB_CREDS | jq -r '.ServerName')
-        if [[ $SERVER_NAME == *:* ]]; then
-          # ServerName already contains port, extract host and port
-          echo "DB_HOST=$(echo $SERVER_NAME | cut -d: -f1)" >> $GITHUB_ENV
-          echo "DB_PORT=$(echo $SERVER_NAME | cut -d: -f2)" >> $GITHUB_ENV
-        else
-          # ServerName is just hostname, use separate port
-          echo "DB_HOST=$SERVER_NAME" >> $GITHUB_ENV
-          echo "DB_PORT=$(echo $DB_CREDS | jq -r '.Port')" >> $GITHUB_ENV
-        fi
-        
-        echo "DB_NAME=$(echo $DB_CREDS | jq -r '.DatabaseName')" >> $GITHUB_ENV
-        echo "DB_USER=$(echo $DB_CREDS | jq -r '.UserName')" >> $GITHUB_ENV
-        echo "DB_PASS=$(echo $DB_CREDS | jq -r '.Password')" >> $GITHUB_ENV
-        
-        echo "Database credentials retrieved from $SECRET_NAME"
-
-    - name: Validate migrations (dry run)
-      run: |
-        cd database
-        echo "Testing Flyway installation..."
-        flyway --version || echo "Flyway version check failed"
-        
-        echo "Testing basic Flyway command..."
-        flyway -help || echo "Flyway help failed"
-        
-        echo "Running Flyway validate with verbose output..."
-        flyway -configFiles=flyway.conf \
-          -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
-          -user="${{ env.DB_USER }}" \
-          -password="${{ env.DB_PASS }}" \
-          -verbose \
-          validate
-
-    - name: Run migrations
-      if: ${{ !github.event.inputs.dry_run }}
-      run: |
-        cd database
-        flyway -configFiles=flyway.conf \
-          -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
-          -user="${{ env.DB_USER }}" \
-          -password="${{ env.DB_PASS }}" \
-          migrate
-
-    - name: Migration status
-      run: |
-        cd database
-        flyway -configFiles=flyway.conf \
-          -url="jdbc:postgresql://${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }}" \
-          -user="${{ env.DB_USER }}" \
-          -password="${{ env.DB_PASS }}" \
-          info
 
 

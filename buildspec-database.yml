@@ -1,0 +1,88 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+    commands:
+      - echo "Installing Flyway..."
+      - wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3-linux-x64.tar.gz | tar -xzf -
+      - echo "$PWD/flyway-9.22.3" >> $PATH
+      - echo "Flyway installation complete"
+      - echo "Java version:"
+      - java -version
+      - echo "Flyway version:"
+      - ./flyway-9.22.3/flyway --version
+
+  pre_build:
+    commands:
+      - echo "Setting up database connection..."
+      - echo "Environment: $ENVIRONMENT"
+      - echo "Current directory: $(pwd)"
+      - echo "Listing database directory:"
+      - ls -la database/
+      - echo "Listing migrations:"
+      - ls -la database/migrations/
+
+  build:
+    commands:
+      - echo "Running database migration for $ENVIRONMENT environment..."
+      - cd database
+      
+      - echo "Getting database credentials from AWS Secrets Manager..."
+      - |
+        # Get database credentials from AWS Secrets Manager
+        SECRET_NAME="guras/db-credentials"
+        DB_CREDS=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query SecretString --output text)
+        
+        # Parse JSON and set environment variables
+        SERVER_NAME=$(echo $DB_CREDS | jq -r '.ServerName')
+        if [[ $SERVER_NAME == *:* ]]; then
+          # ServerName already contains port, extract host and port
+          export DB_HOST=$(echo $SERVER_NAME | cut -d: -f1)
+          export DB_PORT=$(echo $SERVER_NAME | cut -d: -f2)
+        else
+          # ServerName is just hostname, use separate port
+          export DB_HOST=$SERVER_NAME
+          export DB_PORT=$(echo $DB_CREDS | jq -r '.Port')
+        fi
+        
+        export DB_NAME=$(echo $DB_CREDS | jq -r '.DatabaseName')
+        export DB_USER=$(echo $DB_CREDS | jq -r '.UserName')
+        export DB_PASS=$(echo $DB_CREDS | jq -r '.Password')
+        
+        echo "Database connection details:"
+        echo "Host: $DB_HOST"
+        echo "Port: $DB_PORT"
+        echo "Database: $DB_NAME"
+        echo "User: $DB_USER"
+      
+      - echo "Running Flyway validate..."
+      - ./flyway-9.22.3/flyway -configFiles=flyway.conf \
+          -url="jdbc:postgresql://$DB_HOST:$DB_PORT/$DB_NAME" \
+          -user="$DB_USER" \
+          -password="$DB_PASS" \
+          validate
+      
+      - echo "Running Flyway migrate..."
+      - ./flyway-9.22.3/flyway -configFiles=flyway.conf \
+          -url="jdbc:postgresql://$DB_HOST:$DB_PORT/$DB_NAME" \
+          -user="$DB_USER" \
+          -password="$DB_PASS" \
+          migrate
+      
+      - echo "Migration complete. Getting status..."
+      - ./flyway-9.22.3/flyway -configFiles=flyway.conf \
+          -url="jdbc:postgresql://$DB_HOST:$DB_PORT/$DB_NAME" \
+          -user="$DB_USER" \
+          -password="$DB_PASS" \
+          info
+
+  post_build:
+    commands:
+      - echo "Database migration completed successfully for $ENVIRONMENT environment"
+
+artifacts:
+  files:
+    - '**/*'
+  name: database-migration-$CODEBUILD_BUILD_NUMBER
