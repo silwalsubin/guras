@@ -22,9 +22,11 @@ const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
   return (
     <View style={styles.header}>
       <View style={styles.logoContainer}>
-        <View style={[styles.logo, { backgroundColor: brandColors.primary }]}>
-          <Text style={styles.logoText}>🧘</Text>
-        </View>
+        <Image 
+          source={require('../../../../assets/app-logo.png')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
           guras
         </Text>
@@ -64,9 +66,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
   },
   logoText: {
     fontSize: 20,

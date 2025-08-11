@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { TYPOGRAPHY } from '@/config/fonts';
@@ -67,7 +68,11 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.logo}>🧘</Text>
+            <Image 
+              source={require('../../assets/app-logo.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Join us on your meditation journey</Text>
           </View>
@@ -161,7 +166,8 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logo: {
-    fontSize: 64,
+    width: 80,
+    height: 80,
     marginBottom: 16,
   },
   title: {
