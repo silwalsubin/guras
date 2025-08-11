@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import GoogleSignInButton from './components/GoogleSignInButton';
@@ -65,7 +66,11 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.logo}>🧘</Text>
+            <Image 
+              source={require('../../../assets/app-logo.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to continue your meditation journey</Text>
           </View>
@@ -151,7 +156,8 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logo: {
-    fontSize: 64,
+    width: 80,
+    height: 80,
     marginBottom: 16,
   },
   title: {
