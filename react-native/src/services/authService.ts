@@ -52,7 +52,9 @@ class AuthService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`;
+        console.error('Server error response:', { status: response.status, error: errorData });
+        throw new Error(errorMessage);
       }
 
       return await response.json();
@@ -97,12 +99,18 @@ class AuthService {
 
       const idToken = await currentUser.getIdToken();
       
-      return await this.makeRequest<SignUpResponse>('/api/auth/signup', 'POST', {
+      console.log('Calling server signup endpoint with:', { email, name, hasIdToken: !!idToken });
+      
+      const response = await this.makeRequest<SignUpResponse>('/api/auth/signup', 'POST', {
         idToken,
         email,
         name,
       });
+      
+      console.log('Server signup response:', response);
+      return response;
     } catch (error) {
+      console.error('Signup failed:', error);
       if (error instanceof Error) {
         throw error;
       }
