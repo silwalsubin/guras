@@ -22,6 +22,7 @@ interface SignUpScreenProps {
 }
 
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
+  const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -33,7 +34,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
   };
 
   const handleSignUp = async (): Promise<void> => {
-    if (!email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -45,7 +46,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
 
     setLoading(true);
     try {
-      await signUp(email, password);
+      await signUp(email, password, name);
       
       // Show success message that includes server sync info
       Alert.alert(
@@ -71,6 +72,12 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         message = 'Password is too weak. Please use at least 6 characters.';
       } else if (message.includes('invalid-email')) {
         message = 'Please enter a valid email address.';
+      } else if (message.includes('failed to sync with server')) {
+        message = 'Account created with Firebase but failed to sync with our servers. Please try again or contact support.';
+      } else if (message.includes('Invalid Firebase ID token')) {
+        message = 'Authentication failed. Please try signing up again.';
+      } else if (message.includes('Signup failed')) {
+        message = 'Server error during signup. Please try again or contact support.';
       }
       
       Alert.alert('Sign Up Error', message);
@@ -99,6 +106,19 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
 
           {/* Form */}
           <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your full name"
+                placeholderTextColor={COLORS.GRAY_400}
+                value={name}
+                onChangeText={handleInputChange(setName)}
+                autoCapitalize="words"
+                autoCorrect={false}
+              />
+            </View>
+
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
               <TextInput

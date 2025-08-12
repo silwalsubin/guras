@@ -7,7 +7,7 @@ interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, name?: string) => {
     try {
       const auth = getAuth();
       // First, create user with Firebase
@@ -61,12 +61,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // After Firebase success, sync with your server
       try {
-        await authService.signUp(email);
+        await authService.signUp(email, name);
         console.log('User successfully synced with server');
       } catch (serverError) {
         console.warn('Failed to sync with server, but Firebase auth succeeded:', serverError);
-        // Don't fail the signup if server sync fails
-        // User can still use the app, server sync can be retried later
+        // Re-throw server error so the UI can show it to the user
+        throw new Error(`Account created with Firebase but failed to sync with server: ${serverError instanceof Error ? serverError.message : 'Unknown server error'}`);
       }
     } catch (error: unknown) {
       let message = 'Unknown error';
