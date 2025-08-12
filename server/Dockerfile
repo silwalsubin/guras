@@ -13,6 +13,7 @@ COPY services.authentication/services.authentication.csproj services.authenticat
 COPY services.quotes/services.quotes.csproj services.quotes/
 COPY services.notifications/services.notifications.csproj services.notifications/
 COPY orchestration.backgroundServices/orchestration.backgroundServices.csproj orchestration.backgroundServices/
+COPY tests/tests.csproj tests/
 RUN dotnet restore
 
 # Copy the rest of the source code
@@ -25,6 +26,7 @@ COPY services.authentication/ services.authentication/
 COPY services.quotes/ services.quotes/
 COPY services.notifications/ services.notifications/
 COPY orchestration.backgroundServices/ orchestration.backgroundServices/
+COPY tests/ tests/
 
 # Build the application
 WORKDIR /src/apis
