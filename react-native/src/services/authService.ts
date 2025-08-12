@@ -64,6 +64,25 @@ class AuthService {
     body?: any
   ): Promise<T> {
     const fullUrl = `${API_CONFIG.BASE_URL}${endpoint}`;
+    
+    // Get the current Firebase ID token for authentication
+    let authHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+    
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      
+      if (currentUser) {
+        const idToken = await currentUser.getIdToken();
+        authHeaders['Authorization'] = `Bearer ${idToken}`;
+        console.log('🔑 Added Authorization header with Firebase ID token');
+      } else {
+        console.log('⚠️ No authenticated user found, request will be unauthenticated');
+      }
+    } catch (error) {
+      console.log('⚠️ Could not get Firebase ID token:', error);
+    }
+    
     console.log(`🌐 Making ${method} request to full URL: ${fullUrl}`);
     console.log(`📋 Request details:`, {
       method,
@@ -71,15 +90,13 @@ class AuthService {
       baseUrl: API_CONFIG.BASE_URL,
       fullUrl,
       body: body ? JSON.stringify(body) : 'No body',
-      headers: { 'Content-Type': 'application/json' }
+      headers: authHeaders
     });
     
     try {
       const response = await fetch(fullUrl, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders,
         body: body ? JSON.stringify(body) : undefined,
       });
 
