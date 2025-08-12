@@ -1,4 +1,4 @@
-namespace services.Persistence;
+namespace services.users.Persistence;
 
 public class UserRecord
 {

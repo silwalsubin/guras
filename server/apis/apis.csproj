@@ -11,7 +11,7 @@
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
         <PackageReference Include="FirebaseAdmin" Version="2.4.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.4.0"/>
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.7.1"/>
         <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.0.16"/>
         <PackageReference Include="AWSSDK.S3" Version="4.0.0.12"/>
         <PackageReference Include="Npgsql" Version="9.0.3"/>
@@ -19,10 +19,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\services.authentication\services.authentication.csproj" />
       <ProjectReference Include="..\services.quotes\services.quotes.csproj" />
       <ProjectReference Include="..\services.notifications\services.notifications.csproj" />
       <ProjectReference Include="..\orchestration.backgroundServices\orchestration.backgroundServices.csproj" />
+      <ProjectReference Include="..\services.users\services.users.csproj" />
       <ProjectReference Include="..\services\services.csproj" />
       <ProjectReference Include="..\utilities.aws\utilities.aws.csproj" />
     </ItemGroup>

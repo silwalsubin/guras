@@ -1,17 +1,15 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
-using services.authentication.Domain;
-using services.authentication.Services;
-using services.Services;
-using IAuthenticationService = services.authentication.Services.IAuthenticationService;
+using services.users.Domain;
+using services.users.Services;
 
-namespace services.authentication.Configuration;
+namespace services.users.Configuration;
 
 public static class AuthenticationServicesConfiguration
 {
     public static IServiceCollection ConfigureServices(this IServiceCollection services)
     {
-        services.AddScoped<IAuthenticationService, FirebaseService>();
+        services.AddScoped<IUserAuthService, FirebaseService>();
         return services;
     }
 

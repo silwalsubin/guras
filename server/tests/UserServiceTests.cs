@@ -1,9 +1,9 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using services.Domain;
-using services.Persistence;
-using services.Services;
+using services.users.Domain;
+using services.users.Persistence;
+using services.users.Services;
 using Xunit;
 
 namespace tests;

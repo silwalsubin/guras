@@ -3,21 +3,21 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using IAuthenticationService = services.authentication.Services.IAuthenticationService;
-using services.Services;
-using services.Persistence;
+using services.users.Services;
 
-namespace services.authentication.Domain;
+namespace services.users.Domain;
 
 public class FirebaseAuthenticationHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,
-    ILoggerFactory logger,
+    ILoggerFactory loggerFactory,
     UrlEncoder encoder,
     ISystemClock clock,
-    IAuthenticationService authenticationService,
+    IUserAuthService userAuthService,
     UserService userService)
-    : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder, clock)
+    : AuthenticationHandler<AuthenticationSchemeOptions>(options, loggerFactory, encoder, clock)
 {
+    private readonly ILogger<FirebaseAuthenticationHandler> _logger = loggerFactory.CreateLogger<FirebaseAuthenticationHandler>();
+
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         if (!Request.Headers.ContainsKey("Authorization"))
@@ -35,7 +35,7 @@ public class FirebaseAuthenticationHandler(
 
         try
         {
-            var firebaseToken = await authenticationService.VerifyIdTokenAsync(token);
+            var firebaseToken = await userAuthService.VerifyIdTokenAsync(token);
             
             var claims = new List<Claim>
             {
@@ -48,12 +48,12 @@ public class FirebaseAuthenticationHandler(
             // Add custom claims if they exist
             if (firebaseToken.Claims.ContainsKey("name"))
             {
-                claims.Add(new Claim(ClaimTypes.Name, firebaseToken.Claims["name"].ToString()));
+                claims.Add(new Claim(ClaimTypes.Name, firebaseToken.Claims["name"]?.ToString() ?? ""));
             }
 
             if (firebaseToken.Claims.ContainsKey("picture"))
             {
-                claims.Add(new Claim("picture", firebaseToken.Claims["picture"].ToString()));
+                claims.Add(new Claim("picture", firebaseToken.Claims["picture"]?.ToString() ?? ""));
             }
 
             // Try to get the application user ID from the database
@@ -70,9 +70,7 @@ public class FirebaseAuthenticationHandler(
             }
             catch (Exception ex)
             {
-                // Log the error but don't fail authentication
-                // User might not exist in database yet (e.g., during signup)
-                logger.LogWarning("Could not fetch application user data: {Message}", ex.Message);
+                _logger.LogWarning("Could not fetch application user data: {Message}", ex.Message);
             }
 
             var identity = new ClaimsIdentity(claims, Scheme.Name);

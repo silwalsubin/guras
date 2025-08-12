@@ -1,6 +1,9 @@
 using FluentAssertions;
-using services.Domain;
-using services.Services;
+using services.users.Domain;
+using services.users.Services;
+using utilities.Persistence;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace tests;

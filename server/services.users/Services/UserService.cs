@@ -1,9 +1,9 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using services.Domain;
-using services.Persistence;
+using services.users.Domain;
+using services.users.Persistence;
 
-namespace services.Services;
+namespace services.users.Services;
 
 public class UserService(IUserRepository userRepository, ILogger<UserService> logger)
 {
