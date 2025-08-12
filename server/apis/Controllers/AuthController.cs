@@ -36,10 +36,11 @@ public class AuthController(ILogger<AuthController> logger, IAuthenticationServi
             
             var response = new SignUpResponse
             {
-                Uid = userId.ToString(),
-                Email = request.Email,
-                DisplayName = request.Name,
-                IsNewUser = true
+                uid = userId.ToString(),
+                email = request.Email,
+                displayName = request.Name,
+                isNewUser = true,
+                firebaseUid = firebaseToken.Uid
             };
             
             return Ok(response);
@@ -79,11 +80,15 @@ public class AuthController(ILogger<AuthController> logger, IAuthenticationServi
 
             var response = new LoginResponse
             {
-                Uid = dbUser.UserId.ToString(),
-                Email = dbUser.Email,
-                DisplayName = dbUser.Name,
-                PhotoUrl = firebaseUser?.PhotoUrl,
-                EmailVerified = firebaseUser?.EmailVerified ?? false
+                Success = true,
+                Message = "Login successful",
+                User = new UserInfo
+                {
+                    Id = dbUser.UserId.ToString(),
+                    Email = dbUser.Email,
+                    Name = dbUser.Name,
+                    FirebaseUid = firebaseToken.Uid
+                }
             };
 
             logger.LogInformation("User {Email} logged in successfully", dbUser.Email);
@@ -136,10 +141,11 @@ public class SignUpRequest
 
 public class SignUpResponse
 {
-    public string Uid { get; set; } = string.Empty;
-    public string? Email { get; set; }
-    public string? DisplayName { get; set; }
-    public bool IsNewUser { get; set; }
+    public string uid { get; set; } = string.Empty;
+    public string? email { get; set; }
+    public string? displayName { get; set; }
+    public bool isNewUser { get; set; }
+    public string firebaseUid { get; set; } = string.Empty;
 }
 
 public class LoginRequest
@@ -149,11 +155,9 @@ public class LoginRequest
 
 public class LoginResponse
 {
-    public string Uid { get; set; } = string.Empty;
-    public string? Email { get; set; }
-    public string? DisplayName { get; set; }
-    public string? PhotoUrl { get; set; }
-    public bool EmailVerified { get; set; }
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public UserInfo User { get; set; } = new UserInfo();
 }
 
 public class UserProfile
@@ -163,4 +167,12 @@ public class UserProfile
     public string? DisplayName { get; set; }
     public string? PhotoUrl { get; set; }
     public bool EmailVerified { get; set; }
+}
+
+public class UserInfo
+{
+    public string Id { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Name { get; set; }
+    public string FirebaseUid { get; set; } = string.Empty;
 } 
