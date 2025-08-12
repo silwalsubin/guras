@@ -1,0 +1,73 @@
+name: Run Unit Tests
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ '**' ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: guras_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Setup Java for Flyway
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: Install Flyway
+      run: |
+        wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/11.11.0/flyway-commandline-11.11.0-linux-x64.tar.gz | tar -xzv
+        sudo ln -s $(pwd)/flyway-11.11.0/flyway /usr/local/bin/flyway
+    
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h localhost -p 5432 -U postgres; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+    
+    - name: Run Flyway Migrations
+      run: |
+        cd server
+        flyway -url=jdbc:postgresql://localhost:5432/guras_test -user=postgres -password=postgres -locations=filesystem:../database/migrations migrate
+    
+    - name: Restore dependencies
+      run: |
+        cd server
+        dotnet restore
+    
+    - name: Build
+      run: |
+        cd server
+        dotnet build --no-restore
+    
+    - name: Test
+      run: |
+        cd server
+        dotnet test --no-build --verbosity normal --logger "console;verbosity=detailed"
