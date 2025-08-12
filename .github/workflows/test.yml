@@ -41,9 +41,9 @@ jobs:
         java-version: '17'
     
     - name: Install Flyway
-      run: |
-        wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/11.11.0/flyway-commandline-11.11.0-linux-x64.tar.gz | tar -xzv
-        sudo ln -s $(pwd)/flyway-11.11.0/flyway /usr/local/bin/flyway
+      uses: flyway/flyway-github-action@v1
+      with:
+        version: '11.11.0'
     
     - name: Wait for PostgreSQL
       run: |
