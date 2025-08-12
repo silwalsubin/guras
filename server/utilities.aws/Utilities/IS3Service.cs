@@ -1,4 +1,4 @@
-namespace services.aws.Utilities;
+namespace utilities.aws.Utilities;
 
 public interface IS3Service
 {

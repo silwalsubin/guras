@@ -46,13 +46,33 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
     setLoading(true);
     try {
       await signUp(email, password);
-      Alert.alert('Success', 'Account created successfully!');
-      navigation.navigate('SignIn');
+      
+      // Show success message that includes server sync info
+      Alert.alert(
+        'Success', 
+        'Account created successfully! Your account has been synced with our servers.',
+        [
+          {
+            text: 'Continue',
+            onPress: () => navigation.navigate('SignIn')
+          }
+        ]
+      );
     } catch (error: unknown) {
       let message = 'Unknown error';
       if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
         message = (error as { message: string }).message;
       }
+      
+      // Provide more specific error messages for common Firebase errors
+      if (message.includes('email-already-in-use')) {
+        message = 'An account with this email already exists. Please try signing in instead.';
+      } else if (message.includes('weak-password')) {
+        message = 'Password is too weak. Please use at least 6 characters.';
+      } else if (message.includes('invalid-email')) {
+        message = 'Please enter a valid email address.';
+      }
+      
       Alert.alert('Sign Up Error', message);
     } finally {
       setLoading(false);

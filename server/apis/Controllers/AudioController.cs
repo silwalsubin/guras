@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using services.aws.Services;
+using utilities.aws.Utilities;
 
 namespace apis.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AudioController(AudioFilesService audioFilesService, ILogger<AudioController> logger) : ControllerBase
+public class AudioController(AudioFilesUtility audioFilesUtility, ILogger<AudioController> logger) : ControllerBase
 {
     [HttpPost("upload-url")]
     public async Task<IActionResult> GetUploadUrl([FromBody] GetUploadUrlRequest request)
@@ -24,7 +24,7 @@ public class AudioController(AudioFilesService audioFilesService, ILogger<AudioC
             var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
 
             var expiration = TimeSpan.FromMinutes(request.ExpirationMinutes ?? 15);
-            var presignedUrl = await audioFilesService.GeneratePreSignedUploadUrlAsync(uniqueFileName, expiration);
+            var presignedUrl = await audioFilesUtility.GeneratePreSignedUploadUrlAsync(uniqueFileName, expiration);
 
             return Ok(new
             {
@@ -46,13 +46,13 @@ public class AudioController(AudioFilesService audioFilesService, ILogger<AudioC
         try
         {
             var expiration = TimeSpan.FromMinutes(expirationMinutes ?? 60);
-            var files = await audioFilesService.ListFilesAsync();
+            var files = await audioFilesUtility.ListFilesAsync();
             
             var audioFilesWithUrls = new List<object>();
             
             foreach (var fileName in files)
             {
-                var downloadUrl = await audioFilesService.GeneratePreSignedDownloadUrlAsync(fileName, expiration);
+                var downloadUrl = await audioFilesUtility.GeneratePreSignedDownloadUrlAsync(fileName, expiration);
                 // Basic metadata derivation
                 var title = Path.GetFileNameWithoutExtension(fileName) ?? string.Empty;
                 var artist = "Guras";
@@ -69,7 +69,7 @@ public class AudioController(AudioFilesService audioFilesService, ILogger<AudioC
                 };
                 foreach (var candidate in candidateKeys)
                 {
-                    if (await audioFilesService.FileExistsAsync(candidate))
+                    if (await audioFilesUtility.FileExistsAsync(candidate))
                     {
                         artworkKey = candidate;
                         break;
@@ -79,7 +79,7 @@ public class AudioController(AudioFilesService audioFilesService, ILogger<AudioC
                 string? artworkUrl = null;
                 if (!string.IsNullOrWhiteSpace(artworkKey))
                 {
-                    artworkUrl = await audioFilesService.GeneratePreSignedDownloadUrlAsync(artworkKey!, expiration);
+                    artworkUrl = await audioFilesUtility.GeneratePreSignedDownloadUrlAsync(artworkKey!, expiration);
                 }
 
                 audioFilesWithUrls.Add(new
@@ -112,7 +112,7 @@ public class AudioController(AudioFilesService audioFilesService, ILogger<AudioC
     {
         try
         {
-            var files = await audioFilesService.ListFilesAsync(prefix ?? "");
+            var files = await audioFilesUtility.ListFilesAsync(prefix ?? "");
             return Ok(new { Files = files });
         }
         catch (Exception ex)
@@ -132,7 +132,7 @@ public class AudioController(AudioFilesService audioFilesService, ILogger<AudioC
                 return BadRequest("File name is required");
             }
 
-            var success = await audioFilesService.DeleteFileAsync(fileName);
+            var success = await audioFilesUtility.DeleteFileAsync(fileName);
             if (success)
             {
                 return Ok(new { Message = "File deleted successfully" });
@@ -154,7 +154,7 @@ public class AudioController(AudioFilesService audioFilesService, ILogger<AudioC
     {
         try
         {
-            var exists = await audioFilesService.FileExistsAsync(fileName);
+            var exists = await audioFilesUtility.FileExistsAsync(fileName);
             return Ok(new { Exists = exists });
         }
         catch (Exception ex)

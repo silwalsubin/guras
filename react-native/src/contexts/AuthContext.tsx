@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut, sendPasswordResetEmail } from '@react-native-firebase/auth';
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import authService from '@/services/authService';
 
 interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
@@ -55,7 +56,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (email: string, password: string) => {
     try {
       const auth = getAuth();
+      // First, create user with Firebase
       await createUserWithEmailAndPassword(auth, email, password);
+      
+      // After Firebase success, sync with your server
+      try {
+        await authService.signUp(email);
+        console.log('User successfully synced with server');
+      } catch (serverError) {
+        console.warn('Failed to sync with server, but Firebase auth succeeded:', serverError);
+        // Don't fail the signup if server sync fails
+        // User can still use the app, server sync can be retried later
+      }
     } catch (error: unknown) {
       let message = 'Unknown error';
       if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {

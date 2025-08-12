@@ -3,7 +3,7 @@ using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using Newtonsoft.Json;
 
-namespace services.aws.Utilities;
+namespace utilities.aws.Utilities;
 
 public static class AwsUtility
 {

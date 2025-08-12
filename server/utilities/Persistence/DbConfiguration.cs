@@ -1,4 +1,4 @@
-namespace apis.Configuration;
+namespace utilities.Persistence;
 
 public class DbConfiguration
 {

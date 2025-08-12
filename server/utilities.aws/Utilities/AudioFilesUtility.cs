@@ -1,13 +1,11 @@
-using services.aws.Utilities;
+namespace utilities.aws.Utilities;
 
-namespace services.aws.Services;
-
-public class AudioFilesService
+public class AudioFilesUtility
 {
     private readonly IS3Service _s3Service;
     private readonly string _bucketName;
 
-    public AudioFilesService(IS3Service s3Service)
+    public AudioFilesUtility(IS3Service s3Service)
     {
         _s3Service = s3Service;
         // Get bucket name from environment or configuration
