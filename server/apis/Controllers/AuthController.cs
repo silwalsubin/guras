@@ -63,24 +63,36 @@ public class AuthController(ILogger<AuthController> logger, IAuthenticationServi
         try
         {
             var firebaseToken = await authenticationService.VerifyIdTokenAsync(request.IdToken);
-            var user = await authenticationService.GetUserAsync(firebaseToken.Uid);
+            
+            // Try to get user from our database first
+            var dbUser = await userService.GetUserByFireBaseUserIdAsync(firebaseToken.Uid);
+            
+            if (dbUser == null)
+            {
+                // User doesn't exist in our database
+                logger.LogWarning("Login failed for Firebase UID {FirebaseUid}: User not found in database", firebaseToken.Uid);
+                return Unauthorized(new { message = "User not found in database. Please sign up first." });
+            }
+            
+            // Get additional Firebase user info
+            var firebaseUser = await authenticationService.GetUserAsync(firebaseToken.Uid);
 
             var response = new LoginResponse
             {
-                Uid = user.Uid,
-                Email = user.Email,
-                DisplayName = user.DisplayName,
-                PhotoUrl = user.PhotoUrl,
-                EmailVerified = user.EmailVerified
+                Uid = dbUser.UserId.ToString(),
+                Email = dbUser.Email,
+                DisplayName = dbUser.Name,
+                PhotoUrl = firebaseUser?.PhotoUrl,
+                EmailVerified = firebaseUser?.EmailVerified ?? false
             };
 
-            logger.LogInformation("User {Email} logged in successfully", user.Email);
+            logger.LogInformation("User {Email} logged in successfully", dbUser.Email);
             return Ok(response);
         }
         catch (Exception ex)
         {
             logger.LogWarning("Login failed: {Message}", ex.Message);
-            return Unauthorized(new { message = "Invalid token" });
+            return Unauthorized(new { message = "Login failed", error = ex.Message });
         }
     }
 

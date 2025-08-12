@@ -23,6 +23,11 @@ public class UserService(IUserRepository userRepository, ILogger<UserService> lo
         return await userRepository.GetByFirebaseUidAsync(fireBaseUserId);
     }
 
+    public async Task<UserRecord?> GetUserByFireBaseUserIdAsync(string fireBaseUserId)
+    {
+        return await userRepository.GetByFirebaseUidAsync(fireBaseUserId);
+    }
+
     public async Task<Guid> CreateUserAsync(CreateNewUserPayload payload)
     {
         payload.Validate();

@@ -128,11 +128,50 @@ class AuthService {
       }
 
       const idToken = await currentUser.getIdToken();
+      const email = currentUser.email;
+      const displayName = currentUser.displayName;
       
-      return await this.makeRequest<LoginResponse>('/api/auth/login', 'POST', {
-        idToken,
-      });
+      console.log('Google Sign In - attempting to sync with server:', { email, displayName, hasIdToken: !!idToken });
+      
+      try {
+        // First, try to login (user might already exist)
+        const loginResponse = await this.makeRequest<LoginResponse>('/api/auth/login', 'POST', {
+          idToken,
+        });
+        
+        console.log('Google Sign In - user already exists, login successful');
+        return loginResponse;
+        
+      } catch (loginError: any) {
+        // If login fails, user probably doesn't exist, so create them
+        if (loginError.message?.includes('User not found') || loginError.message?.includes('Invalid token')) {
+          console.log('Google Sign In - user not found, creating new user via signup');
+          
+          const signupResponse = await this.makeRequest<SignUpResponse>('/api/auth/signup', 'POST', {
+            idToken,
+            email,
+            name: displayName || email?.split('@')[0] || 'User',
+          });
+          
+          console.log('Google Sign In - new user created successfully');
+          
+          // Convert SignUpResponse to LoginResponse format
+          return {
+            success: true,
+            message: 'User created successfully',
+            user: {
+              id: signupResponse.uid,
+              email: signupResponse.email || email || '',
+              name: signupResponse.displayName || displayName || '',
+            },
+          };
+        }
+        
+        // Re-throw other login errors
+        throw loginError;
+      }
     } catch (error) {
+      console.error('Google Sign In failed:', error);
       if (error instanceof Error) {
         throw error;
       }
