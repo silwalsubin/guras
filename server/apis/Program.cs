@@ -1,6 +1,6 @@
 using apis.Configuration;
 using orchestration.backgroundServices.BackgroundServices;
-using services.authentication.Configuration;
+using services.users.Configuration;
 using services.notifications.Configuration;
 using utilities.Persistence;
 

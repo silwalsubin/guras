@@ -1,7 +1,6 @@
-using services.authentication.Configuration;
+using services.users.Configuration;
 using services.quotes.Configuration;
 using services.notifications.Configuration;
-using services.Configuration;
 using utilities.aws.Configuration;
 
 namespace apis.Configuration;

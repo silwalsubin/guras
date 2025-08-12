@@ -1,7 +1,6 @@
 using Ardalis.GuardClauses;
-using services.Persistence;
 
-namespace services.Domain;
+namespace services.users.Domain;
 
 public static class PayloadValidationExtensions
 {

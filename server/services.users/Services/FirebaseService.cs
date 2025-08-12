@@ -4,9 +4,9 @@ using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace services.authentication.Services;
+namespace services.users.Services;
 
-public class FirebaseService : IAuthenticationService
+public class FirebaseService : IUserAuthService
 {
     private readonly FirebaseAuth _firebaseAuth;
 

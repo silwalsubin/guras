@@ -1,16 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using services.authentication;
-using services.authentication.Services;
-using services.Services;
-using services.Domain;
+using services.users.Services;
+using services.users.Domain;
+using Microsoft.Extensions.Logging;
 
 namespace apis.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(ILogger<AuthController> logger, IAuthenticationService authenticationService, UserService userService)
+public class AuthController(ILogger<AuthController> logger, IUserAuthService userAuthService, UserService userService)
     : ControllerBase
 {
     [HttpPost("signup")]
@@ -19,7 +18,7 @@ public class AuthController(ILogger<AuthController> logger, IAuthenticationServi
         try
         {
             // Verify Firebase ID token
-            var firebaseToken = await authenticationService.VerifyIdTokenAsync(request.IdToken);
+            var firebaseToken = await userAuthService.VerifyIdTokenAsync(request.IdToken);
             
             // Create payload for user service
             var createUserPayload = new CreateNewUserPayload

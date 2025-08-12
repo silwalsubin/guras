@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using services.Services;
-using services.Persistence;
+using services.users.Persistence;
+using services.users.Services;
 
-namespace services.Configuration;
+namespace services.users.Configuration;
 
 public static class UserServicesConfiguration
 {

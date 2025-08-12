@@ -1,7 +1,10 @@
 using Dapper;
+using Microsoft.Extensions.Logging;
+using services.users.Domain;
+using utilities.Persistence;
 using utilities.Persistence.ConnectionFactories;
 
-namespace services.Persistence;
+namespace services.users.Persistence;
 
 public class UserRepository(IDbConnectionFactory dbConnectionFactory) : IUserRepository
 {
