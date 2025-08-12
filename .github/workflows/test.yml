@@ -41,9 +41,27 @@ jobs:
         java-version: '17'
     
     - name: Install Flyway
-      uses: flyway/flyway-github-action@v1
-      with:
-        version: '11.11.0'
+      run: |
+        # Download Flyway with proper error handling
+        curl -L -o flyway.tar.gz https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/11.11.0/flyway-commandline-11.11.0-linux-x64.tar.gz
+        
+        # Verify download was successful
+        if [ ! -f flyway.tar.gz ] || [ ! -s flyway.tar.gz ]; then
+          echo "Failed to download Flyway"
+          exit 1
+        fi
+        
+        # Extract with verbose output for debugging
+        tar -xzf flyway.tar.gz
+        
+        # Install to system path
+        sudo ln -sf $(pwd)/flyway-11.11.0/flyway /usr/local/bin/flyway
+        
+        # Verify installation
+        flyway -version
+        
+        # Clean up download
+        rm flyway.tar.gz
     
     - name: Wait for PostgreSQL
       run: |
