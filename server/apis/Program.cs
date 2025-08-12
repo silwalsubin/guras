@@ -2,14 +2,15 @@ using apis.Configuration;
 using orchestration.backgroundServices.BackgroundServices;
 using services.authentication.Configuration;
 using services.notifications.Configuration;
+using utilities.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var appSettingsDbConfiguration = builder.Configuration
+var dbConfiguration = builder.Configuration
     .GetSection("DbConfiguration")
     .Get<DbConfiguration>();
 
-builder.Services.AddSingleton(appSettingsDbConfiguration!);
+builder.Services.AddSingleton(dbConfiguration!);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -19,7 +20,7 @@ builder.Services.AddSwaggerGen();
 // Add MVC services for controllers
 builder.Services.AddControllers();
 
-ApisServiceConfiguration.ConfigureServices(builder.Services);
+ApisServiceConfiguration.ConfigureApiServices(builder.Services);
 
 builder.Services.AddAuthenticationServices();
 builder.Services.AddNotificationsServices();

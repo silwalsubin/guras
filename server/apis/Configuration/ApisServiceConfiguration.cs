@@ -1,19 +1,20 @@
 using services.authentication.Configuration;
-using services.aws.Configuration;
 using services.quotes.Configuration;
 using services.notifications.Configuration;
+using services.Configuration;
+using utilities.aws.Configuration;
 
 namespace apis.Configuration;
 
 public static class ApisServiceConfiguration
 {
-    public static IServiceCollection ConfigureServices(this IServiceCollection services)
+    public static IServiceCollection ConfigureApiServices(this IServiceCollection services)
     {
-        services.AddScoped<DbConnectionProvider>();
         AuthenticationServicesConfiguration.ConfigureServices(services);
-        AwsServicesConfiguration.ConfigureServices(services);
+        services.AddAwsUtilities();
         QuotesServicesConfiguration.ConfigureServices(services);
         services.AddNotificationsServices();
+        services.AddUserServices();
         return services;
     }
 }

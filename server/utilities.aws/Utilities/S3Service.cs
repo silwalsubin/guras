@@ -2,7 +2,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
 
-namespace services.aws.Utilities;
+namespace utilities.aws.Utilities;
 
 public class S3Service(IAmazonS3 s3Client, ILogger<S3Service> logger) : IS3Service
 {
@@ -89,7 +89,7 @@ public class S3Service(IAmazonS3 s3Client, ILogger<S3Service> logger) : IS3Servi
             };
 
             var response = await s3Client.ListObjectsV2Async(request);
-            var fileNames = Enumerable.ToList<string>(response.S3Objects?.Select(obj => obj.Key)) ?? new List<string>();
+            var fileNames = (response.S3Objects?.Select(obj => obj.Key)).ToList<string>() ?? new List<string>();
             
             logger.LogInformation("Listed {Count} files with prefix: {Prefix}", fileNames.Count, prefix);
             

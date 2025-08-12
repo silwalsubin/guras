@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using apis.Configuration;
 using Dapper;
-using Npgsql;
-using services.aws.Services;
+using utilities.aws.Utilities;
+using utilities.Persistence.ConnectionFactories;
 
 namespace apis.Controllers;
 
@@ -11,8 +10,8 @@ namespace apis.Controllers;
 [Route("api/[controller]")]
 public class HeartBeatController(
     ILogger<HeartBeatController> logger, 
-    DbConnectionProvider dbConnectionProvider, 
-    AudioFilesService audioFilesService
+    IDbConnectionFactory dbConnectionFactory,
+    AudioFilesUtility audioFilesUtility
 ): ControllerBase
 {
     [HttpGet]
@@ -27,8 +26,7 @@ public class HeartBeatController(
     [AllowAnonymous]
     public async Task<IActionResult> GetDbConnectionHeartBeat()
     {
-        var connectionString = await dbConnectionProvider.GetConnectionStringAsync();
-        await using var connection = new NpgsqlConnection(connectionString);
+        using var connection = await dbConnectionFactory.GetConnectionAsync();
         var sqlServerTime = await connection.QuerySingleAsync<DateTime>("SELECT NOW()");
         return Ok(sqlServerTime);
     }
@@ -39,7 +37,7 @@ public class HeartBeatController(
     {
         logger.LogInformation("S3 Connection Heart Beat endpoint called");
         // Try to list files in the bucket (this will test connectivity and permissions)
-        var files = await audioFilesService.ListFilesAsync("");
+        var files = await audioFilesUtility.ListFilesAsync("");
         var fileCount = files.Count();
         return Ok(fileCount);
     }
