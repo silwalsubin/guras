@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using IAuthenticationService = services.authentication.Services.IAuthenticationService;
+using services.Services;
+using services.Persistence;
 
 namespace services.authentication.Domain;
 
@@ -12,7 +14,8 @@ public class FirebaseAuthenticationHandler(
     ILoggerFactory logger,
     UrlEncoder encoder,
     ISystemClock clock,
-    IAuthenticationService authenticationService)
+    IAuthenticationService authenticationService,
+    UserService userService)
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder, clock)
 {
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -51,6 +54,25 @@ public class FirebaseAuthenticationHandler(
             if (firebaseToken.Claims.ContainsKey("picture"))
             {
                 claims.Add(new Claim("picture", firebaseToken.Claims["picture"].ToString()));
+            }
+
+            // Try to get the application user ID from the database
+            try
+            {
+                var dbUser = await userService.GetUserByFireBaseUserIdAsync(firebaseToken.Uid);
+                if (dbUser != null)
+                {
+                    // Add application user ID to claims
+                    claims.Add(new Claim("application_user_id", dbUser.UserId.ToString()));
+                    claims.Add(new Claim("application_email", dbUser.Email ?? ""));
+                    claims.Add(new Claim("application_name", dbUser.Name ?? ""));
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error but don't fail authentication
+                // User might not exist in database yet (e.g., during signup)
+                logger.LogWarning("Could not fetch application user data: {Message}", ex.Message);
             }
 
             var identity = new ClaimsIdentity(claims, Scheme.Name);
