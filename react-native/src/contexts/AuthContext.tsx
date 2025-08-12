@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name?: string) => Promise<void>;
+  googleSignIn: () => Promise<any>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
@@ -103,11 +104,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const googleSignIn = async () => {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      
+      if (!currentUser) {
+        throw new Error('No authenticated user found');
+      }
+
+      const idToken = await currentUser.getIdToken();
+      const email = currentUser.email;
+      const displayName = currentUser.displayName;
+      
+      try {
+        // Use the authService.googleSignIn method which has the proper logic
+        const response = await authService.googleSignIn();
+        
+        return response;
+        
+      } catch (error: any) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('❌ Google Sign In failed:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Google sign in failed');
+    }
+  };
+
   const value = {
     user,
     loading,
     signIn,
     signUp,
+    googleSignIn,
     signOut,
     resetPassword,
   };
