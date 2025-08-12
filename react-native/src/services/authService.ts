@@ -38,13 +38,44 @@ export interface UserProfile {
 }
 
 class AuthService {
+  private isAuthenticating = false;
+  private currentApplicationUserId: string | null = null;
+
+  // Store the application user ID after successful authentication
+  setApplicationUserId(userId: string) {
+    this.currentApplicationUserId = userId;
+    console.log('💾 Stored application user ID:', userId);
+  }
+
+  // Get the stored application user ID
+  getApplicationUserId(): string | null {
+    return this.currentApplicationUserId;
+  }
+
+  // Clear the stored application user ID (e.g., on sign out)
+  clearApplicationUserId() {
+    this.currentApplicationUserId = null;
+    console.log('🗑️ Cleared application user ID');
+  }
+
   private async makeRequest<T>(
     endpoint: string,
     method: 'GET' | 'POST' = 'POST',
     body?: any
   ): Promise<T> {
+    const fullUrl = `${API_CONFIG.BASE_URL}${endpoint}`;
+    console.log(`🌐 Making ${method} request to full URL: ${fullUrl}`);
+    console.log(`📋 Request details:`, {
+      method,
+      endpoint,
+      baseUrl: API_CONFIG.BASE_URL,
+      fullUrl,
+      body: body ? JSON.stringify(body) : 'No body',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
+      const response = await fetch(fullUrl, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -52,15 +83,42 @@ class AuthService {
         body: body ? JSON.stringify(body) : undefined,
       });
 
+      console.log(`📡 Server response for ${fullUrl}:`, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        url: response.url
+      });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`;
-        console.error('Server error response:', { status: response.status, error: errorData });
+        console.error('❌ Server error response details:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          error: errorData, 
+          endpoint,
+          fullUrl,
+          requestBody: body
+        });
         throw new Error(errorMessage);
       }
 
-      return await response.json();
+      const responseData = await response.json();
+      console.log(`✅ Server response successful for ${fullUrl}:`, {
+        endpoint,
+        fullUrl,
+        responseData,
+        requestBody: body
+      });
+      return responseData;
     } catch (error) {
+      console.error(`💥 Request failed for ${fullUrl}:`, {
+        endpoint,
+        fullUrl,
+        error: error instanceof Error ? error.message : error,
+        requestBody: body
+      });
       if (error instanceof Error) {
         throw error;
       }
@@ -69,6 +127,12 @@ class AuthService {
   }
 
   async login(): Promise<LoginResponse> {
+    if (this.isAuthenticating) {
+      throw new Error('Authentication already in progress. Please wait.');
+    }
+
+    this.isAuthenticating = true;
+    
     try {
       const auth = getAuth();
       const currentUser = auth.currentUser;
@@ -81,55 +145,49 @@ class AuthService {
       const email = currentUser.email;
       const displayName = currentUser.displayName;
       
-      try {
-        // First, try to login (user might already exist)
-        const loginResponse = await this.makeRequest<LoginResponse>('/api/auth/login', 'POST', {
-          idToken,
-        });
-        
-        console.log('✅ Login successful:', loginResponse);
-        return loginResponse;
-        
-      } catch (loginError: any) {
-        console.log('❌ Login failed:', loginError.message);
-        
-        // If login fails, user probably doesn't exist, so create them
-        if (loginError.message?.includes('User not found in database') || loginError.message?.includes('User not found') || loginError.message?.includes('Invalid token')) {
-          console.log('🆕 User not found, creating new user via signup');
-          
-          const signupResponse = await this.makeRequest<SignUpResponse>('/api/auth/signup', 'POST', {
-            idToken,
-            email,
-            name: displayName || email?.split('@')[0] || 'User',
-          });
-          
-          console.log('✅ New user created successfully:', signupResponse);
-          
-          // Convert SignUpResponse to LoginResponse format
-          return {
-            success: true,
-            message: 'User created successfully',
-            user: {
-              id: signupResponse.uid,
-              email: signupResponse.email || email || '',
-              name: signupResponse.displayName || displayName || '',
-              firebaseUid: signupResponse.firebaseUid,
-            },
-          };
-        }
-        
-        // Re-throw other login errors
-        throw loginError;
-      }
+      // Instead of trying to login first, let's create the user directly
+      // This avoids the confusing "login fails, so signup" flow
+      console.log('🆕 Creating new user via signup...');
+      
+      const signupPayload = {
+        IdToken: idToken,
+        Email: email,
+        Name: displayName || email?.split('@')[0] || 'User',
+      };
+      console.log('📤 Signup request payload:', signupPayload);
+      
+      const signupResponse = await this.makeRequest<SignUpResponse>('/api/auth/signup', 'POST', signupPayload);
+      
+      console.log('✅ New user created successfully:', signupResponse);
+      
+      // Return the signup response directly - no need to convert to login format
+      return {
+        success: true,
+        message: 'User created successfully',
+        user: {
+          id: signupResponse.uid, // This is the application user ID
+          email: signupResponse.email || email || '',
+          name: signupResponse.displayName || displayName || '',
+          firebaseUid: signupResponse.firebaseUid,
+        },
+      };
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
       throw new Error('Login failed');
+    } finally {
+      this.isAuthenticating = false;
     }
   }
 
   async signUp(email: string, name?: string): Promise<SignUpResponse> {
+    if (this.isAuthenticating) {
+      throw new Error('Authentication already in progress. Please wait.');
+    }
+
+    this.isAuthenticating = true;
+    
     try {
       const auth = getAuth();
       const currentUser = auth.currentUser;
@@ -143,9 +201,9 @@ class AuthService {
       console.log('🆕 Calling server signup endpoint with:', { email, name, hasIdToken: !!idToken });
       
       const response = await this.makeRequest<SignUpResponse>('/api/auth/signup', 'POST', {
-        idToken,
-        email,
-        name,
+        IdToken: idToken,
+        Email: email,
+        Name: name,
       });
       
       console.log('✅ Server signup response:', response);
@@ -156,10 +214,26 @@ class AuthService {
         throw error;
       }
       throw new Error('Sign up failed');
+    } finally {
+      this.isAuthenticating = false;
     }
   }
 
   async googleSignIn(): Promise<LoginResponse> {
+    if (this.isAuthenticating) {
+      console.log('🚫 Authentication already in progress, blocking duplicate call');
+      throw new Error('Authentication already in progress. Please wait.');
+    }
+
+    console.log('🚀 Starting Google Sign In authentication flow');
+    console.log('🔧 Environment config:', {
+      baseUrl: API_CONFIG.BASE_URL,
+      environment: API_CONFIG.ENVIRONMENT,
+      debugMode: API_CONFIG.DEBUG_MODE
+    });
+    
+    this.isAuthenticating = true;
+    
     try {
       const auth = getAuth();
       const currentUser = auth.currentUser;
@@ -172,52 +246,95 @@ class AuthService {
       const email = currentUser.email;
       const displayName = currentUser.displayName;
       
+      console.log('🔑 Got Firebase credentials:', { 
+        email, 
+        displayName, 
+        hasIdToken: !!idToken,
+        idTokenLength: idToken?.length || 0,
+        currentUserUid: currentUser.uid
+      });
+      
+      // Decode the ID token to see what's in it (for debugging)
       try {
-        // First, try to login (user might already exist)
-        const loginResponse = await this.makeRequest<LoginResponse>('/api/auth/login', 'POST', {
-          idToken,
-        });
-        
-        console.log('✅ Google Sign In - user already exists, login successful');
-        return loginResponse;
-        
-      } catch (loginError: any) {
-        console.log('❌ Google Sign In - login failed:', loginError.message);
-        
-        // If login fails, user probably doesn't exist, so create them
-        if (loginError.message?.includes('User not found') || loginError.message?.includes('Invalid token')) {
-          console.log('🆕 Google Sign In - user not found, creating new user via signup');
-          
-          const signupResponse = await this.makeRequest<SignUpResponse>('/api/auth/signup', 'POST', {
-            idToken,
-            email,
-            name: displayName || email?.split('@')[0] || 'User',
+        const tokenParts = idToken.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.log('🔍 ID Token payload:', {
+            uid: payload.uid,
+            email: payload.email,
+            iss: payload.iss,
+            aud: payload.aud,
+            exp: payload.exp
           });
-          
-          console.log('✅ Google Sign In - new user created successfully');
-          
-          // Convert SignUpResponse to LoginResponse format
-          return {
-            success: true,
-            message: 'User created successfully',
-            user: {
-              id: signupResponse.uid,
-              email: signupResponse.email || email || '',
-              name: signupResponse.displayName || displayName || '',
-              firebaseUid: signupResponse.firebaseUid,
-            },
-          };
+        }
+      } catch (decodeError) {
+        console.log('⚠️ Could not decode ID token payload:', decodeError);
+      }
+      
+      // Check if user exists by attempting to get their profile
+      // If they don't exist, create them via signup
+      try {
+        console.log('🔍 Checking if user exists by attempting to get profile...');
+        const profileResponse = await this.makeRequest<{ user: any }>('/api/auth/profile', 'GET');
+        console.log('✅ User already exists, profile retrieved:', profileResponse);
+        
+        // Store the application user ID for future use
+        const userId = profileResponse.user.uid || profileResponse.user.id;
+        if (userId) {
+          this.setApplicationUserId(userId);
         }
         
-        // Re-throw other login errors
-        throw loginError;
+        // User exists, return success response
+        return {
+          success: true,
+          message: 'User authenticated successfully',
+          user: {
+            id: userId,
+            email: profileResponse.user.email,
+            name: profileResponse.user.name || profileResponse.user.displayName,
+            firebaseUid: profileResponse.user.firebaseUid || currentUser.uid,
+          },
+        };
+        
+      } catch (profileError: any) {
+        // Profile not found means user doesn't exist, so create them
+        console.log('🆕 User profile not found, creating new user via signup');
+        
+        const signupPayload = {
+          IdToken: idToken,
+          Email: email,
+          Name: displayName || email?.split('@')[0] || 'User',
+        };
+        console.log('📤 Signup request payload:', signupPayload);
+        
+        const signupResponse = await this.makeRequest<SignUpResponse>('/api/auth/signup', 'POST', signupPayload);
+        
+        console.log('✅ New user created successfully:', signupResponse);
+        
+        // Store the application user ID for future use
+        this.setApplicationUserId(signupResponse.uid);
+        
+        // Return the signup response with the application user ID
+        return {
+          success: true,
+          message: 'User created successfully',
+          user: {
+            id: signupResponse.uid, // This is the application user ID
+            email: signupResponse.email || email || '',
+            name: signupResponse.displayName || displayName || '',
+            firebaseUid: signupResponse.firebaseUid,
+          },
+        };
       }
     } catch (error) {
-      console.error('Google Sign In failed:', error);
+      console.error('❌ Google Sign In failed:', error);
       if (error instanceof Error) {
         throw error;
       }
       throw new Error('Google sign in failed');
+    } finally {
+      console.log('🏁 Google Sign In authentication flow completed, resetting flag');
+      this.isAuthenticating = false;
     }
   }
 
@@ -241,9 +358,17 @@ class AuthService {
   }
 
   async signOut(): Promise<void> {
+    // Clear stored application user ID
+    this.clearApplicationUserId();
+    
     // Firebase handles the sign out, no server call needed
     const auth = getAuth();
     await auth.signOut();
+  }
+
+  // Helper method to check if authentication is in progress
+  isAuthenticationInProgress(): boolean {
+    return this.isAuthenticating;
   }
 }
 

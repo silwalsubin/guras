@@ -58,54 +58,12 @@ public class AuthController(ILogger<AuthController> logger, IAuthenticationServi
         }
     }
 
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
-    {
-        try
-        {
-            var firebaseToken = await authenticationService.VerifyIdTokenAsync(request.IdToken);
-            
-            // Try to get user from our database first
-            var dbUser = await userService.GetUserByFireBaseUserIdAsync(firebaseToken.Uid);
-            
-            if (dbUser == null)
-            {
-                // User doesn't exist in our database
-                logger.LogWarning("Login failed for Firebase UID {FirebaseUid}: User not found in database", firebaseToken.Uid);
-                return Unauthorized(new { message = "User not found in database. Please sign up first." });
-            }
-            
-            // Get additional Firebase user info
-            var firebaseUser = await authenticationService.GetUserAsync(firebaseToken.Uid);
-
-            var response = new LoginResponse
-            {
-                Success = true,
-                Message = "Login successful",
-                User = new UserInfo
-                {
-                    Id = dbUser.UserId.ToString(),
-                    Email = dbUser.Email,
-                    Name = dbUser.Name,
-                    FirebaseUid = firebaseToken.Uid
-                }
-            };
-
-            logger.LogInformation("User {Email} logged in successfully", dbUser.Email);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning("Login failed: {Message}", ex.Message);
-            return Unauthorized(new { message = "Login failed", error = ex.Message });
-        }
-    }
-
     [Authorize]
     [HttpGet("profile")]
     public IActionResult GetProfile()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var applicationUserId = User.FindFirst("application_user_id")?.Value;
+        var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var email = User.FindFirst(ClaimTypes.Email)?.Value;
         var name = User.FindFirst(ClaimTypes.Name)?.Value;
         var picture = User.FindFirst("picture")?.Value;
@@ -113,7 +71,7 @@ public class AuthController(ILogger<AuthController> logger, IAuthenticationServi
 
         var profile = new UserProfile
         {
-            Uid = userId,
+            Uid = applicationUserId ?? firebaseUid ?? "", // Prefer application user ID, fallback to Firebase UID
             Email = email,
             DisplayName = name,
             PhotoUrl = picture,
@@ -127,8 +85,13 @@ public class AuthController(ILogger<AuthController> logger, IAuthenticationServi
     [HttpGet("verify")]
     public IActionResult VerifyToken()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Ok(new { message = "Token is valid", userId });
+        var applicationUserId = User.FindFirst("application_user_id")?.Value;
+        var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Ok(new { 
+            message = "Token is valid", 
+            applicationUserId = applicationUserId,
+            firebaseUid = firebaseUid
+        });
     }
 }
 
@@ -146,11 +109,6 @@ public class SignUpResponse
     public string? displayName { get; set; }
     public bool isNewUser { get; set; }
     public string firebaseUid { get; set; } = string.Empty;
-}
-
-public class LoginRequest
-{
-    public string IdToken { get; set; } = string.Empty;
 }
 
 public class LoginResponse
