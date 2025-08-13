@@ -31,9 +31,22 @@ const GoogleSignInButton: React.FC = () => {
     } catch (error: unknown) {
       console.error('❌ Google Sign In failed:', error);
       let message = 'Something went wrong.';
+      
       if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
-        message = (error as { message: string }).message;
+        const errorMessage = (error as { message: string }).message;
+        
+        // Provide more specific error messages
+        if (errorMessage.includes('already exists')) {
+          message = 'This Google account is already registered. Please try signing in again.';
+        } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+          message = 'Network error. Please check your internet connection and try again.';
+        } else if (errorMessage.includes('cancelled')) {
+          message = 'Sign-in was cancelled.';
+        } else {
+          message = errorMessage;
+        }
       }
+      
       Alert.alert('Google Sign-In Error', message);
     } finally {
       setLoading(false);
