@@ -14,6 +14,8 @@ export { default as DailyQuoteCard } from './cards/DailyQuoteCard';
 export { default as PrimaryButton } from './ui/PrimaryButton';
 export { default as ProgressRow } from './ui/ProgressRow';
 export { default as ProfileAvatar } from './ui/ProfileAvatar';
+export { default as LoveButton } from './ui/LoveButton';
+export { default as CommentButton } from './ui/CommentButton';
 
 // Export ProgressData type for external use
 export type { ProgressData } from './cards/ProgressCard'; 

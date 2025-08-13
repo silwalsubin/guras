@@ -37,6 +37,11 @@ const BottomNavigation = () => {
         solid
       />
       <FooterMenuItem
+        tabKey={TAB_KEYS.ACTIVITY}
+        iconName="activity"
+        iconType="feather"
+      />
+      <FooterMenuItem
         tabKey={TAB_KEYS.LEARN}
         iconName="book-open"
         iconType="fontawesome"
