@@ -70,12 +70,10 @@ const ProfileScreen: React.FC = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      console.log('🔄 Refreshing profile data...');
-      
       const result = await RefreshUtils.refreshProfileScreen();
       
       if (result.success) {
-        console.log('✅ Profile refreshed successfully');
+        // Profile refreshed successfully
         // Reload local state
         await loadNotificationPreferences();
       } else {

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDispatch } from 'react-redux';
+import { resetToHomeTab } from '@/store/navigationSlice';
 import SignInScreen from '@/screens/sign-in';
 import SignUpScreen from '@/screens/SignUpScreen';
 import { TYPOGRAPHY } from '@/config/fonts';
@@ -13,6 +15,14 @@ interface AuthWrapperProps {
 const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const { user, loading } = useAuth();
   const [authScreen, setAuthScreen] = useState<'signIn' | 'signUp'>('signIn');
+  const dispatch = useDispatch();
+
+  // Reset navigation to home tab when user logs in
+  useEffect(() => {
+    if (user) {
+      dispatch(resetToHomeTab());
+    }
+  }, [user, dispatch]);
 
   // Create a navigation object for auth screens
   const authNavigation = {

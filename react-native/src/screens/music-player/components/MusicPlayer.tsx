@@ -6,6 +6,8 @@ import Slider from '@react-native-community/slider';
 import { COLORS, getThemeColors, getBrandColors } from '@/config/colors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { apiService, AudioFile } from '@/services/api';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 // Helper function to format time in MM:SS format
 const formatTime = (seconds: number): string => {
@@ -35,9 +37,13 @@ const MusicPlayer: React.FC = () => {
   } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const themeColors = getThemeColors(false); // Assuming light mode
+  // Get the actual theme state from Redux
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  
+  const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
   const shadowColor = COLORS.SHADOW;
+  
   const styles = StyleSheet.create({
     container: {
       alignItems: 'center',
@@ -67,6 +73,18 @@ const MusicPlayer: React.FC = () => {
       position: 'relative',
       alignItems: 'center',
       marginTop: 24,
+    },
+    titleContainer: {
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    titlePlaceholder: {
+      width: 200,
+      height: 22, // Match title fontSize (18) + some padding
+    },
+    positionPlaceholder: {
+      width: 100,
+      height: 18, // Match trackPosition fontSize (14) + some padding
     },
     title: {
       fontSize: 18,
@@ -367,6 +385,9 @@ const MusicPlayer: React.FC = () => {
 
     // Get current track info for display
   const getCurrentTrackInfo = () => {
+    if (loading) {
+      return { title: '', position: '' };
+    }
     if (!currentTrack || audioFiles.length === 0) {
       return { title: 'No tracks available', position: '0 / 0' };
     }
@@ -385,136 +406,166 @@ const MusicPlayer: React.FC = () => {
       {bgSource && (
         <ImageBackground source={bgSource} blurRadius={16} style={styles.background} />
       )}
-      <Text style={[styles.title, { color: themeColors.textPrimary }]}>
-        {trackInfo.title}
-      </Text>
       
-      {/* Track Position */}
-      <Text style={[styles.trackPosition, { color: themeColors.textSecondary }]}>
-        {trackInfo.position}
-      </Text>
+      {/* Always reserve space for title and position to maintain layout */}
+      <View style={styles.titleContainer}>
+        {!loading && trackInfo.title ? (
+          <>
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+              {trackInfo.title}
+            </Text>
+            
+            {/* Track Position */}
+            <Text style={[styles.trackPosition, { color: themeColors.textSecondary }]}>
+              {trackInfo.position}
+            </Text>
+          </>
+        ) : (
+          // Invisible placeholders to maintain exact layout during loading
+          <>
+            <View style={[styles.titlePlaceholder, { marginBottom: 8 }]} />
+            <View style={[styles.positionPlaceholder, { marginBottom: 12 }]} />
+          </>
+        )}
+      </View>
 
       {/* Center artwork fallback when no bg available */}
       {!bgSource && (
         <View style={styles.artworkContainer}>
-          <View style={styles.artworkFallback}>
-            <FontAwesome name="music" size={48} color={brandColors.primary} />
+          <View style={[
+            styles.artworkFallback,
+            { 
+              backgroundColor: isDarkMode ? COLORS.GRAY_800 : COLORS.GRAY_200,
+              borderWidth: 2,
+              borderColor: isDarkMode ? COLORS.GRAY_600 : COLORS.GRAY_300
+            }
+          ]}>
+            <FontAwesome 
+              name="music" 
+              size={48} 
+              color={isDarkMode ? brandColors.primary : brandColors.primary} 
+            />
           </View>
         </View>
       )}
 
       <View style={styles.spacer} />
       
-      {/* Playback Controls */}
-      <View style={styles.controlsContainer}>
-        <TouchableOpacity 
-          style={[styles.navButton, { opacity: audioFiles.length <= 1 ? 0.3 : 1 }]} 
-          onPress={previousTrack}
-          disabled={audioFiles.length <= 1}
-        >
-          <FontAwesome name="step-backward" size={24} color={brandColors.primary} />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.playPauseButton} onPress={togglePlayback}>
-          <FontAwesome name={isPlaying ? 'pause' : 'play'} size={32} color={brandColors.primary} />
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.navButton, { opacity: audioFiles.length <= 1 ? 0.3 : 1 }]} 
-          onPress={() => nextTrack()}
-          disabled={audioFiles.length <= 1}
-        >
-          <FontAwesome name="step-forward" size={24} color={brandColors.primary} />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.progressContainer}>
-        <View style={styles.timeRow}>
-          <Text style={[styles.timeText, { color: themeColors.textSecondary }]}> 
-            {formatTime(progress.position)}
-          </Text>
-          <Text style={[styles.timeText, { color: themeColors.textSecondary }]}> 
-            {formatTime(progress.duration)}
-          </Text>
-        </View>
-        <View style={{ width: SLIDER_WIDTH, height: SLIDER_HEIGHT, position: 'relative', justifyContent: 'center' }}>
-          <Slider
-            style={{ width: SLIDER_WIDTH, height: SLIDER_HEIGHT, position: 'absolute', left: 0, top: 0 }}
-            minimumValue={0}
-            maximumValue={progress.duration}
-            value={isSliding ? sliderValue : (pendingSeek !== null ? pendingSeek : sliderValue)}
-            minimumTrackTintColor={brandColors.primary}
-            maximumTrackTintColor={themeColors.textSecondary}
-            thumbTintColor="transparent" // Hide default thumb
-            onSlidingStart={() => setIsSliding(true)}
-            onSlidingComplete={async (value) => {
-              setPendingSeek(value);
-              if (isSetup && progress.duration > 0) {
-                await TrackPlayer.seekTo(value);
-              }
-              setIsSliding(false);
-            }}
-            onValueChange={(value) => setSliderValue(value)}
-            disabled={!isSetup || progress.duration === 0}
-          />
-          {/* Static custom thumb overlay */}
-          <View
-            pointerEvents="none"
-            style={[
-              styles.customThumb,
-              {
-                left: Math.max(
-                  TRACK_OFFSET,
-                  Math.min(
-                    SLIDER_WIDTH - THUMB_SIZE - TRACK_OFFSET,
-                    thumbPosition - (THUMB_SIZE / 2)
-                  )
-                ),
-              },
-            ]}
-          />
-          {/* Floating time label above thumb while sliding */}
-          {isSliding && (
-            <View
-              style={{
-                position: 'absolute',
-                left: Math.max(
-                  TRACK_OFFSET,
-                  Math.min(
-                    SLIDER_WIDTH - THUMB_SIZE - TRACK_OFFSET,
-                    thumbPosition - (THUMB_SIZE / 2)
-                  )
-                ),
-                top: -32, // 32px above the slider
-                width: 72,
-                alignItems: 'center',
-                zIndex: 20,
-              }}
+      {/* Playback Controls - Only show when there are audio files */}
+      {audioFiles.length > 0 && (
+        <>
+          <View style={styles.controlsContainer}>
+            <TouchableOpacity 
+              style={[styles.navButton, { opacity: audioFiles.length <= 1 ? 0.3 : 1 }]} 
+              onPress={previousTrack}
+              disabled={audioFiles.length <= 1}
             >
-              <View
-                style={{
-                  backgroundColor: themeColors.card,
-                  borderRadius: 8,
-                  paddingHorizontal: 8,
-                  paddingVertical: 4,
-                  shadowColor: shadowColor,
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
-              >
-                <Text
-                  style={{ color: themeColors.textPrimary, fontWeight: '600', fontSize: 12, textAlign: 'center' }}
-                  numberOfLines={1}
-                  ellipsizeMode="clip"
-                >
-                  {formatTime(sliderValue)}
-                </Text>
-              </View>
+              <FontAwesome name="step-backward" size={24} color={brandColors.primary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.playPauseButton} onPress={togglePlayback}>
+              <FontAwesome name={isPlaying ? 'pause' : 'play'} size={32} color={brandColors.primary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.navButton, { opacity: audioFiles.length <= 1 ? 0.3 : 1 }]} 
+              onPress={() => nextTrack()}
+              disabled={audioFiles.length <= 1}
+            >
+              <FontAwesome name="step-forward" size={24} color={brandColors.primary} />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.progressContainer}>
+            <View style={styles.timeRow}>
+              <Text style={[styles.timeText, { color: themeColors.textSecondary }]}> 
+                {formatTime(progress.position)}
+              </Text>
+              <Text style={[styles.timeText, { color: themeColors.textSecondary }]}> 
+                {formatTime(progress.duration)}
+              </Text>
             </View>
-          )}
-        </View>
-      </View>
+            <View style={{ width: SLIDER_WIDTH, height: SLIDER_HEIGHT, position: 'relative', justifyContent: 'center' }}>
+              <Slider
+                style={{ width: SLIDER_WIDTH, height: SLIDER_HEIGHT, position: 'absolute', left: 0, top: 0 }}
+                minimumValue={0}
+                maximumValue={progress.duration}
+                value={isSliding ? sliderValue : (pendingSeek !== null ? pendingSeek : sliderValue)}
+                minimumTrackTintColor={brandColors.primary}
+                maximumTrackTintColor={themeColors.textSecondary}
+                thumbTintColor="transparent" // Hide default thumb
+                onSlidingStart={() => setIsSliding(true)}
+                onSlidingComplete={async (value) => {
+                  setPendingSeek(value);
+                  if (isSetup && progress.duration > 0) {
+                    await TrackPlayer.seekTo(value);
+                  }
+                  setIsSliding(false);
+                }}
+                onValueChange={(value) => setSliderValue(value)}
+                disabled={!isSetup || progress.duration === 0}
+              />
+              {/* Static custom thumb overlay */}
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.customThumb,
+                  {
+                    left: Math.max(
+                      TRACK_OFFSET,
+                      Math.min(
+                        SLIDER_WIDTH - THUMB_SIZE - TRACK_OFFSET,
+                        thumbPosition - (THUMB_SIZE / 2)
+                      )
+                    ),
+                  },
+                ]}
+              />
+              {/* Floating time label above thumb while sliding */}
+              {isSliding && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: Math.max(
+                      TRACK_OFFSET,
+                      Math.min(
+                        SLIDER_WIDTH - THUMB_SIZE - TRACK_OFFSET,
+                        thumbPosition - (THUMB_SIZE / 2)
+                      )
+                    ),
+                    top: -32, // 32px above the slider
+                    width: 72,
+                    alignItems: 'center',
+                    zIndex: 20,
+                  }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: themeColors.card,
+                      borderRadius: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      shadowColor: shadowColor,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                  >
+                    <Text
+                      style={{ color: themeColors.textPrimary, fontWeight: '600', fontSize: 12, textAlign: 'center' }}
+                      numberOfLines={1}
+                      ellipsizeMode="clip"
+                    >
+                      {formatTime(sliderValue)}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </>
+      )}
     </View>
   );
 };

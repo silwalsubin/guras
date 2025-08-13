@@ -37,7 +37,6 @@ const ActivityScreen: React.FC = () => {
   };
 
   const handleQuickAction = (action: string) => {
-    console.log(`Quick action: ${action}`);
     // Add navigation logic based on action
     if (action === 'Meditate') {
       dispatch(setActiveTab(TAB_KEYS.AUDIO));
@@ -47,12 +46,10 @@ const ActivityScreen: React.FC = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      console.log('🔄 Refreshing activity screen data...');
-      
       const result = await RefreshUtils.refreshHomeScreen();
       
       if (result.success) {
-        console.log('✅ Activity screen refreshed successfully');
+        // Activity screen refreshed successfully
       } else {
         console.warn('⚠️ Some items failed to refresh:', result.errors);
       }

@@ -15,7 +15,7 @@ interface NavigationState {
 }
 
 const initialState: NavigationState = {
-  activeTab: TAB_KEYS.ACTIVITY,
+  activeTab: TAB_KEYS.HOME, // Changed from ACTIVITY to HOME as default
 };
 
 const navigationSlice = createSlice({
@@ -25,8 +25,11 @@ const navigationSlice = createSlice({
     setActiveTab(state, action: PayloadAction<TabKey>) {
       state.activeTab = action.payload;
     },
+    resetToHomeTab(state) {
+      state.activeTab = TAB_KEYS.HOME;
+    },
   },
 });
 
-export const { setActiveTab } = navigationSlice.actions;
+export const { setActiveTab, resetToHomeTab } = navigationSlice.actions;
 export default navigationSlice.reducer; 
