@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export const TAB_KEYS = {
   HOME: 'home',
+  ACTIVITY: 'activity',
   AUDIO: 'audio',
   LEARN: 'learn',
   PROFILE: 'profile',
@@ -14,7 +15,7 @@ interface NavigationState {
 }
 
 const initialState: NavigationState = {
-  activeTab: TAB_KEYS.HOME,
+  activeTab: TAB_KEYS.ACTIVITY,
 };
 
 const navigationSlice = createSlice({

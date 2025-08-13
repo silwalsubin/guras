@@ -63,6 +63,11 @@ const MusicPlayer: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    artworkContainer: {
+      position: 'relative',
+      alignItems: 'center',
+      marginTop: 24,
+    },
     title: {
       fontSize: 18,
       fontWeight: '600',
@@ -209,6 +214,12 @@ const MusicPlayer: React.FC = () => {
       shadowOpacity: 0.25,
       shadowRadius: 4,
       elevation: 4,
+    },
+    loveButtonContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginLeft: 16,
+      marginBottom: 16,
     },
   });
 
@@ -385,8 +396,10 @@ const MusicPlayer: React.FC = () => {
 
       {/* Center artwork fallback when no bg available */}
       {!bgSource && (
-        <View style={styles.artworkFallback}>
-          <FontAwesome name="music" size={48} color={brandColors.primary} />
+        <View style={styles.artworkContainer}>
+          <View style={styles.artworkFallback}>
+            <FontAwesome name="music" size={48} color={brandColors.primary} />
+          </View>
         </View>
       )}
 

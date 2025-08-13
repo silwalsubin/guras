@@ -18,9 +18,10 @@ import store, { RootState } from './src/store';
 import { TAB_KEYS } from './src/store/navigationSlice';
 import { setDarkMode } from './src/store/themeSlice';
 import { MusicPlayerProvider } from './src/contexts/MusicPlayerContext';
-import HomeScreen from './src/screens/HomeScreen';
+import ActivityScreen from './src/screens/ActivityScreen';
 import LearnScreen from './src/screens/LearnScreen';
 import MusicPlayerScreen from './src/screens/music-player';
+import HomeScreen from './src/screens/HomeScreen';
 import BottomNavigation from './src/components/app/navigation/BottomNavigation';
 import notificationService from './src/services/notificationService';
 
@@ -45,6 +46,8 @@ function MainApp(): React.JSX.Element {
     switch (activeTab) {
       case TAB_KEYS.HOME:
         return <HomeScreen />;
+      case TAB_KEYS.ACTIVITY:
+        return <ActivityScreen />;
       case TAB_KEYS.AUDIO:
         return <MusicPlayerScreen />;
       case TAB_KEYS.LEARN:
