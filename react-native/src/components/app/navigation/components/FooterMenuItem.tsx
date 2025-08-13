@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome5';
 import { getThemeColors } from '@/config/colors';
@@ -37,7 +37,7 @@ const FooterMenuItem = ({
   const iconColor = isActive ? themeColors.navActive : themeColors.navInactive;
 
   return (
-    <TouchableOpacity
+    <Pressable
       style={[
         styles.navItem, 
         isActive && styles.activeNavItem
@@ -49,7 +49,7 @@ const FooterMenuItem = ({
       ) : (
         <FontAwesome name={iconName} size={24} solid={solid} color={iconColor} />
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

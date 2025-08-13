@@ -5,7 +5,8 @@ import {
   View,
   RefreshControl,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
 import { RootState } from '@/store';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { COLORS } from '@/config/colors';
@@ -15,18 +16,17 @@ import {
 } from '@/components/shared';
 
 const HomeScreen: React.FC = () => {
+  const dispatch = useDispatch();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      console.log('🔄 Refreshing home screen data...');
-      
       const result = await RefreshUtils.refreshHomeScreen();
       
       if (result.success) {
-        console.log('✅ Home screen refreshed successfully');
+        // Home screen refreshed successfully
       } else {
         console.warn('⚠️ Some items failed to refresh:', result.errors);
       }
@@ -53,7 +53,7 @@ const HomeScreen: React.FC = () => {
     >
       {/* Header */}
       <AppHeader 
-        onProfilePress={() => console.log('Profile pressed')} 
+        onProfilePress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))} 
       />
 
       {/* Daily Wisdom */}

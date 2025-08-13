@@ -25,7 +25,8 @@ import HomeScreen from './src/screens/HomeScreen';
 import BottomNavigation from './src/components/app/navigation/BottomNavigation';
 import notificationService from './src/services/notificationService';
 
-function MainApp(): React.JSX.Element {
+// Move MainApp outside of App function to fix Redux connection
+const MainApp: React.FC = () => {
   const systemColorScheme = useColorScheme();
   const activeTab = useSelector((state: RootState) => state.navigation.activeTab);
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
@@ -66,6 +67,7 @@ function MainApp(): React.JSX.Element {
         backgroundColor="transparent"
         translucent
       />
+      
       <View style={styles.mainContent}>
         <MusicPlayerProvider>
           {renderActiveTab()}
@@ -75,7 +77,7 @@ function MainApp(): React.JSX.Element {
       <BottomNavigation />
     </SafeAreaView>
   );
-}
+};
 
 function App(): React.JSX.Element {
   useEffect(() => {
