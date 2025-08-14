@@ -16,7 +16,7 @@ const CommentButton: React.FC<CommentButtonProps> = ({
   commentCount,
   onPress,
   isDarkMode = false,
-  size = 24,
+  size = 20,
   showCount = true,
 }) => {
   const themeColors = getThemeColors(isDarkMode);
@@ -25,7 +25,7 @@ const CommentButton: React.FC<CommentButtonProps> = ({
     <View style={styles.container}>
       <TouchableOpacity onPress={onPress}>
         <FontAwesome 
-          name="comment" 
+          name="comment-o" 
           size={size} 
           color={themeColors.textSecondary} 
         />
@@ -46,8 +46,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   commentCount: {
-    ...TYPOGRAPHY.BODY_SMALL,
-    marginLeft: 8,
+    ...TYPOGRAPHY.CAPTION,
+    marginLeft: 4,
   },
 });
 
