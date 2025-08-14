@@ -27,7 +27,8 @@ const CommentButton: React.FC<CommentButtonProps> = ({
         <FontAwesome 
           name="comment-o" 
           size={size} 
-          color={themeColors.textSecondary} 
+          color={themeColors.textSecondary}
+          style={{ transform: [{ scaleX: -1 }] }}
         />
       </TouchableOpacity>
       
@@ -46,7 +47,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   commentCount: {
-    ...TYPOGRAPHY.CAPTION,
+    fontSize: 10,
+    fontWeight: '400',
     marginLeft: 4,
   },
 });

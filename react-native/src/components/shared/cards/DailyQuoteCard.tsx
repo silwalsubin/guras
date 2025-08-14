@@ -154,11 +154,9 @@ const DailyQuoteCard: React.FC = () => {
         </View>
         
         <View style={styles.quoteContainer}>
-          <Text style={styles.quoteMark}>"</Text>
           <Text style={[styles.quoteText, { color: themeColors.textPrimary }]}>
             {currentQuote.text}
           </Text>
-          <Text style={styles.quoteMark}>"</Text>
         </View>
       </BaseCard>
 
@@ -223,11 +221,10 @@ const styles = StyleSheet.create({
   quoteContainer: {
     alignItems: 'center',
     marginBottom: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     paddingTop: 12,
     paddingBottom: 12,
     borderRadius: 12,
-    marginHorizontal: 12,
   },
   quoteText: {
     ...TYPOGRAPHY.BODY,
@@ -238,7 +235,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     fontWeight: '300',
     letterSpacing: 0.6,
-    marginHorizontal: 4,
+    width: '100%',
   },
   categoryText: {
     ...TYPOGRAPHY.CAPTION,
@@ -252,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 16,
     marginBottom: 0,
-    gap: 20,
+    gap: 6,
   },
   loadingText: {
     ...TYPOGRAPHY.BODY,
@@ -272,12 +269,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-  },
-  quoteMark: {
-    fontSize: 24,
-    fontStyle: 'italic',
-    color: '#BDC3C7', // A neutral color for the quote marks
-    marginHorizontal: 10,
   },
   followButton: {
     position: 'absolute',
