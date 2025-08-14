@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getThemeColors } from '@/config/colors';
 
 interface ShareButtonProps {
@@ -19,8 +19,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={onPress}>
-        <FontAwesome 
-          name="share-square-o" 
+        <MaterialIcons 
+          name="send" 
           size={size} 
           color={themeColors.textSecondary}
         />
