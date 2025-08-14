@@ -22,5 +22,8 @@ export { default as ProgressRow } from './ui/ProgressRow';
 export { default as ProfileAvatar } from './ui/ProfileAvatar';
 export { default as HorizontalSeparator } from './ui/HorizontalSeparator';
 
+// Meditation Components
+export { default as MeditationTimer } from './MeditationTimer';
+
 // Export ProgressData type for external use
 export type { ProgressData } from './cards/ProgressCard'; 

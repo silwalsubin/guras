@@ -13,11 +13,10 @@ import { COLORS } from '@/config/colors';
 import {
   AppHeader,
   SectionHeader,
-  QuickStartCard,
   ProgressCard,
-  QuickActionCard,
   RecentSessionsCard,
   ProgressData,
+  MeditationTimer,
 } from '@/components/shared';
 
 const ActivityScreen: React.FC = () => {
@@ -32,15 +31,14 @@ const ActivityScreen: React.FC = () => {
     streak: 0,
   };
 
-  const handleBeginSession = () => {
-    dispatch(setActiveTab(TAB_KEYS.AUDIO));
-  };
 
-  const handleQuickAction = (action: string) => {
-    // Add navigation logic based on action
-    if (action === 'Meditate') {
-      dispatch(setActiveTab(TAB_KEYS.AUDIO));
-    }
+
+
+
+  const handleMeditationComplete = (duration: number) => {
+    // Track meditation session completion
+    console.log(`Meditation session completed: ${duration} minutes`);
+    // TODO: Update progress data, save to storage, etc.
   };
 
   const onRefresh = useCallback(async () => {
@@ -79,11 +77,9 @@ const ActivityScreen: React.FC = () => {
         onProfilePress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))} 
       />
 
-      {/* Quick Start Card */}
-      <View style={styles.quickStartSection}>
-        <QuickStartCard 
-          onBeginSession={handleBeginSession}
-        />
+      {/* Meditation Timer */}
+      <View style={styles.meditationSection}>
+        <MeditationTimer onSessionComplete={handleMeditationComplete} />
       </View>
 
       {/* Daily Progress */}
@@ -94,32 +90,7 @@ const ActivityScreen: React.FC = () => {
         />
       </View>
 
-      {/* Quick Actions */}
-      <View style={styles.quickActionsSection}>
-        <SectionHeader title="Quick Actions" />
-        <View style={styles.quickActionsGrid}>
-          <QuickActionCard 
-            icon="🧘‍♀️" 
-            title="Meditate" 
-            onPress={() => handleQuickAction('Meditate')}
-          />
-          <QuickActionCard 
-            icon="🕯️" 
-            title="Mindfulness" 
-            onPress={() => handleQuickAction('Mindfulness')}
-          />
-          <QuickActionCard 
-            icon="🌙" 
-            title="Sleep" 
-            onPress={() => handleQuickAction('Sleep')}
-          />
-          <QuickActionCard 
-            icon="📿" 
-            title="Wisdom" 
-            onPress={() => handleQuickAction('Wisdom')}
-          />
-        </View>
-      </View>
+
 
       {/* Recent Sessions */}
       <View style={styles.recentSection}>
@@ -137,22 +108,12 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  quickStartSection: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
+  meditationSection: {
+    marginBottom: 20,
   },
   progressSection: {
     paddingHorizontal: 20,
     marginBottom: 32,
-  },
-  quickActionsSection: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
   },
   recentSection: {
     paddingHorizontal: 20,
