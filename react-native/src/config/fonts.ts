@@ -67,6 +67,13 @@ export const FONTS = {
     android: 'Roboto',
     default: 'System',
   }),
+  
+  // Quote-specific font - Georgia is excellent for inspirational text
+  QUOTE: Platform.select({
+    ios: 'Georgia',
+    android: 'Georgia',
+    default: 'Georgia',
+  }),
 };
 
 // Font sizes for consistent typography
@@ -180,12 +187,13 @@ export const TYPOGRAPHY = {
   
   // Special text
   LOGO: {
-    fontFamily: FONTS.SECONDARY_BOLD,
+    fontFamily: FONTS.QUOTE,
     fontSize: FONT_SIZES.XXL,
-    fontWeight: FONT_WEIGHTS.BOLD,
+    fontWeight: FONT_WEIGHTS.SEMIBOLD,
+    fontStyle: 'italic',
   },
   QUOTE: {
-    fontFamily: FONTS.SECONDARY,
+    fontFamily: FONTS.QUOTE,
     fontSize: FONT_SIZES.LG,
     fontWeight: FONT_WEIGHTS.REGULAR,
     fontStyle: 'italic',

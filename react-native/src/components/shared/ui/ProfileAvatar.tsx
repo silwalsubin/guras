@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { useSelector } from 'react-redux';
 import { getThemeColors, getBrandColors, COLORS } from '@/config/colors';
 import { RootState } from '@/store';
@@ -67,7 +68,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
         />
         {showEditButton && (
           <View style={[styles.editButton, { backgroundColor: brandColors.primary }]}>
-            <Text style={styles.editButtonText}>✏️</Text>
+            <Icon name="pencil" size={14} color="white" />
           </View>
         )}
       </TouchableOpacity>
@@ -98,7 +99,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
       </View>
       {showEditButton && (
         <View style={[styles.editButton, { backgroundColor: brandColors.primary }]}>
-          <Text style={styles.editButtonText}>✏️</Text>
+          <Icon name="pencil" size={14} color="white" />
         </View>
       )}
     </TouchableOpacity>
@@ -160,10 +161,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
     elevation: 3,
   },
-  editButtonText: {
-    fontSize: 14,
-    color: COLORS.WHITE,
-  },
+
 });
 
 export default ProfileAvatar;

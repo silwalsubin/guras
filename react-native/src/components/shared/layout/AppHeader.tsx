@@ -5,6 +5,7 @@ import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { RootState } from '@/store';
 import { useAuth } from '@/contexts/AuthContext';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 interface AppHeaderProps {
   onProfilePress: () => void;
@@ -22,11 +23,6 @@ const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
   return (
     <View style={styles.header}>
       <View style={styles.logoContainer}>
-        <Image 
-          source={require('../../../../assets/app-logo.png')} 
-          style={styles.logo}
-          resizeMode="contain"
-        />
         <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
           guras
         </Text>
@@ -59,21 +55,10 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   logoContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
   },
-  logo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-    overflow: 'hidden',
-  },
-  logoText: {
-    fontSize: 20,
-  },
   appName: {
-    ...TYPOGRAPHY.H4,
+    ...TYPOGRAPHY.LOGO,
   },
   profileButton: {
     width: 40,
