@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Text, StyleSheet, TouchableOpacity, Dimensions, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
-import { RootState } from '@/store';
-import BaseCard from './BaseCard';
-import quotesService, { Quote } from '@/services/quotesService';
+import { BaseCard } from '@/components/shared';
 import { LoveButton } from '@/components/shared';
 import { CommentButton } from '@/components/shared';
+import quotesService, { Quote } from '@/services/quotesService';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -85,9 +86,20 @@ const DailyQuoteCard: React.FC = () => {
   if (loading) {
     return (
       <BaseCard style={styles.card}>
-        <Text style={[styles.title, { color: themeColors.textPrimary }]}>
-          ✨ Daily Wisdom
-        </Text>
+        <View style={styles.titleContainer}>
+          <Image 
+            source={require('../../../../assets/app-logo.png')} 
+            style={styles.titleIcon}
+          />
+          <View style={styles.titleTextContainer}>
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+              Loading...
+            </Text>
+            <Text style={[styles.authorText, { color: themeColors.textSecondary }]}>
+              Please wait
+            </Text>
+          </View>
+        </View>
         <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
           Loading inspiration...
         </Text>
@@ -95,12 +107,23 @@ const DailyQuoteCard: React.FC = () => {
     );
   }
 
-  if (!currentQuote || quotes.length === 0) {
+  if (!currentQuote) {
     return (
       <BaseCard style={styles.card}>
-        <Text style={[styles.title, { color: themeColors.textPrimary }]}>
-          ✨ Daily Wisdom
-        </Text>
+        <View style={styles.titleContainer}>
+          <Image 
+            source={require('../../../../assets/app-logo.png')} 
+            style={styles.titleTextContainer}
+          />
+          <View style={styles.titleTextContainer}>
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+              No quotes available
+            </Text>
+            <Text style={[styles.authorText, { color: themeColors.textSecondary }]}>
+              Try again later
+            </Text>
+          </View>
+        </View>
         <Text style={[styles.errorText, { color: themeColors.textSecondary }]}>
           No quotes available
         </Text>
@@ -111,22 +134,31 @@ const DailyQuoteCard: React.FC = () => {
   return (
     <View style={styles.cardContainer}>
       <BaseCard style={styles.card}>
-        <Text style={[styles.title, { color: themeColors.textPrimary }]}>
-          ✨ Daily Wisdom
-        </Text>
+        <TouchableOpacity style={[styles.followButton, { backgroundColor: brandColors.primary }]}>
+          <Text style={styles.followButtonText}>Follow</Text>
+        </TouchableOpacity>
+        
+        <View style={styles.titleContainer}>
+          <Image 
+            source={require('../../../../assets/app-logo.png')} 
+            style={styles.titleIcon}
+          />
+          <View style={styles.titleTextContainer}>
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+              {currentQuote.author}
+            </Text>
+            <Text style={[styles.authorText, { color: themeColors.textSecondary }]}>
+              {currentQuote.category.replace('-', ' ')}
+            </Text>
+          </View>
+        </View>
         
         <View style={styles.quoteContainer}>
+          <Text style={styles.quoteMark}>"</Text>
           <Text style={[styles.quoteText, { color: themeColors.textPrimary }]}>
-            "{currentQuote.text}"
+            {currentQuote.text}
           </Text>
-          
-          <Text style={[styles.authorText, { color: themeColors.textSecondary }]}>
-            — {currentQuote.author}
-          </Text>
-          
-          <Text style={[styles.categoryText, { color: brandColors.primary }]}>
-            #{currentQuote.category.replace('-', ' ')}
-          </Text>
+          <Text style={styles.quoteMark}>"</Text>
         </View>
       </BaseCard>
 
@@ -156,34 +188,64 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 8,
   },
-  title: {
-    ...TYPOGRAPHY.H6,
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
-    textAlign: 'center',
+    marginTop: -8,
+    marginLeft: -8,
+  },
+  titleIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  titleTextContainer: {
+    flexDirection: 'column',
+  },
+  title: {
+    ...TYPOGRAPHY.BODY_SMALL,
+    marginBottom: 3,
+    textAlign: 'left',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  authorText: {
+    ...TYPOGRAPHY.CAPTION,
+    textAlign: 'left',
+    marginBottom: 0,
+    textTransform: 'capitalize',
+    fontWeight: '400',
+    letterSpacing: 0.2,
+    opacity: 0.8,
   },
   quoteContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderRadius: 12,
+    marginHorizontal: 12,
   },
   quoteText: {
     ...TYPOGRAPHY.BODY,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 19,
+    lineHeight: 30,
     fontStyle: 'italic',
     textAlign: 'center',
-    marginBottom: 12,
-  },
-  authorText: {
-    ...TYPOGRAPHY.BODY_SMALL,
-    textAlign: 'center',
-    marginBottom: 8,
-    fontWeight: '500',
+    marginBottom: 0,
+    fontWeight: '300',
+    letterSpacing: 0.6,
+    marginHorizontal: 4,
   },
   categoryText: {
     ...TYPOGRAPHY.CAPTION,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 0,
     textTransform: 'capitalize',
+    fontWeight: '500',
   },
   likeButtonContainer: {
     flexDirection: 'row',
@@ -201,6 +263,36 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.BODY,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  quoteMark: {
+    fontSize: 24,
+    fontStyle: 'italic',
+    color: '#BDC3C7', // A neutral color for the quote marks
+    marginHorizontal: 10,
+  },
+  followButton: {
+    position: 'absolute',
+    top: 16,
+    right: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    zIndex: 1,
+  },
+  followButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 });
 

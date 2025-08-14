@@ -18,7 +18,7 @@ const LoveButton: React.FC<LoveButtonProps> = ({
   likeCount,
   onPress,
   isDarkMode = false,
-  size = 24,
+  size = 20,
   showCount = true,
 }) => {
   const themeColors = getThemeColors(isDarkMode);
@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   likeCount: {
-    ...TYPOGRAPHY.BODY_SMALL,
-    marginLeft: 8,
+    ...TYPOGRAPHY.CAPTION,
+    marginLeft: 4,
   },
 });
 
