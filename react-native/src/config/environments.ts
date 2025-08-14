@@ -9,8 +9,7 @@ interface EnvironmentConfig {
 // Environment configurations
 const ENVIRONMENTS: Record<string, EnvironmentConfig> = {
   development: {
-    API_BASE_URL: 'https://staging.gurasuniverse.com', // Your local development server
-    // API_BASE_URL: 'http://localhost:5053', // Your local development server
+    API_BASE_URL: 'http://localhost:5053', // Your local development server
     ENVIRONMENT: 'development',
     DEBUG_MODE: true,
     LOG_LEVEL: 'debug',

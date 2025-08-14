@@ -4,7 +4,8 @@ export { default as SectionHeader } from './layout/SectionHeader';
 
 // Card Components
 export { default as BaseCard } from './cards/BaseCard';
-export { default as DailyQuoteCard } from './cards/DailyQuoteCard';
+export { default as QuotesView } from './cards/QuotesView';
+export { default as Quote } from './cards/Quote';
 export { default as ProgressCard } from './cards/ProgressCard';
 export { default as QuickActionCard } from './cards/QuickActionCard';
 export { default as QuickStartCard } from './cards/QuickStartCard';
@@ -19,6 +20,7 @@ export { default as MoreOptionsButton } from './ui/MoreOptionsButton';
 export { default as PrimaryButton } from './ui/PrimaryButton';
 export { default as ProgressRow } from './ui/ProgressRow';
 export { default as ProfileAvatar } from './ui/ProfileAvatar';
+export { default as HorizontalSeparator } from './ui/HorizontalSeparator';
 
 // Export ProgressData type for external use
 export type { ProgressData } from './cards/ProgressCard'; 
