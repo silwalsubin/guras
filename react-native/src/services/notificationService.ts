@@ -2,7 +2,8 @@ import { Alert, Platform, PermissionsAndroid } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import { getAuth } from '@react-native-firebase/auth';
 import { API_CONFIG } from '@/config/api';
-import quotesService, { Quote, NotificationPreferences } from './quotesService';
+import quotesService, { Quote } from './quotesService';
+import { NotificationPreferences } from '@/store/quotesSlice';
 
 // In-memory storage for notifications - no AsyncStorage dependency
 const fallbackNotificationStorage: { [key: string]: string } = {};
@@ -235,7 +236,7 @@ class NotificationService {
       }
 
       // Get notification preferences
-      const preferences = await quotesService.getNotificationPreferences();
+      const preferences = await this.getNotificationPreferences();
       
       if (!preferences.enabled) {
         console.log('⚠️ Push notifications disabled by user');
@@ -285,7 +286,7 @@ class NotificationService {
   // Check and send quote notification if needed
   private async checkAndSendQuoteNotification(): Promise<void> {
     try {
-      const preferences = await quotesService.getNotificationPreferences();
+      const preferences = await this.getNotificationPreferences();
       
       if (!preferences.enabled) return;
 
@@ -303,7 +304,7 @@ class NotificationService {
       }
 
       // Check if it's quiet hours
-      if (quotesService.isQuietHours(preferences)) {
+      if (this.isQuietHours(preferences)) {
         console.log('🌙 Skipping notification: quiet hours');
         return;
       }
@@ -550,7 +551,7 @@ class NotificationService {
           }
         };
         
-        await quotesService.setNotificationPreferences(updatedLocalPreferences);
+        await this.setNotificationPreferences(updatedLocalPreferences);
       } else {
         console.warn('⚠️ Failed to sync preferences with server');
       }
@@ -584,7 +585,7 @@ class NotificationService {
         };
         
         // Update local storage
-        await quotesService.setNotificationPreferences(localPreferences);
+        await this.setNotificationPreferences(localPreferences);
         
         return localPreferences;
       } else {
@@ -620,7 +621,7 @@ class NotificationService {
   // Update notification preferences and restart scheduler
   async updatePreferences(preferences: NotificationPreferences): Promise<void> {
     try {
-      await quotesService.setNotificationPreferences(preferences);
+      await this.setNotificationPreferences(preferences);
       
       // Sync with server
       await this.syncPreferencesWithServer();
@@ -643,7 +644,7 @@ class NotificationService {
   }> {
     try {
       const hasPermission = await this.hasPermission();
-      const preferences = await quotesService.getNotificationPreferences();
+      const preferences = await this.getNotificationPreferences();
       const lastNotificationTime = await safeNotificationGetItem(NOTIFICATION_STORAGE_KEYS.LAST_NOTIFICATION_TIME);
 
       return {
@@ -872,6 +873,73 @@ class NotificationService {
         `Failed to send test notification:\n\n${errorMessage}\n\nThis might be due to:\n• Network connectivity issue\n• Server not responding\n• Authentication problem\n• FCM configuration issue`,
         [{ text: 'OK' }]
       );
+    }
+  }
+
+  // Get notification preferences from local storage
+  async getNotificationPreferences(): Promise<NotificationPreferences> {
+    try {
+      const storedPreferences = await safeNotificationGetItem('notification_preferences');
+      if (storedPreferences) {
+        return JSON.parse(storedPreferences);
+      }
+      
+      // Return default preferences if none stored
+      return {
+        enabled: true,
+        frequency: 'daily',
+        quietHours: {
+          start: '22:00',
+          end: '08:00'
+        }
+      };
+    } catch (error) {
+      console.error('Error getting notification preferences:', error);
+      // Return default preferences on error
+      return {
+        enabled: true,
+        frequency: 'daily',
+        quietHours: {
+          start: '22:00',
+          end: '08:00'
+        }
+      };
+    }
+  }
+
+  // Set notification preferences to local storage
+  async setNotificationPreferences(preferences: NotificationPreferences): Promise<void> {
+    try {
+      await safeNotificationSetItem('notification_preferences', JSON.stringify(preferences));
+      console.log('✅ Notification preferences saved:', preferences);
+    } catch (error) {
+      console.error('Error saving notification preferences:', error);
+    }
+  }
+
+  // Check if current time is within quiet hours
+  isQuietHours(preferences: NotificationPreferences): boolean {
+    try {
+      const now = new Date();
+      const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert to minutes since midnight
+      
+      const [startHour, startMinute] = preferences.quietHours.start.split(':').map(Number);
+      const [endHour, endMinute] = preferences.quietHours.end.split(':').map(Number);
+      
+      const startTime = startHour * 60 + startMinute;
+      const endTime = endHour * 60 + endMinute;
+      
+      // Handle quiet hours that span midnight (e.g., 22:00 to 08:00)
+      if (startTime > endTime) {
+        // Quiet hours span midnight, so current time should be >= start OR <= end
+        return currentTime >= startTime || currentTime <= endTime;
+      } else {
+        // Quiet hours within same day, so current time should be >= start AND <= end
+        return currentTime >= startTime && currentTime <= endTime;
+      }
+    } catch (error) {
+      console.error('Error checking quiet hours:', error);
+      return false; // Default to not quiet hours on error
     }
   }
 

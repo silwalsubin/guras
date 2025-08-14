@@ -80,7 +80,7 @@ export class RefreshUtils {
     
     try {
       // Refresh notification preferences
-      await quotesService.getNotificationPreferences();
+      await notificationService.getNotificationPreferences();
       console.log('✅ Notification preferences refreshed');
     } catch (error) {
       console.error('Error refreshing notification preferences:', error);
@@ -116,7 +116,7 @@ export class RefreshUtils {
     
     try {
       // Reload preferences and check permission
-      await quotesService.getNotificationPreferences();
+      await notificationService.getNotificationPreferences();
       await notificationService.hasPermission();
       console.log('✅ Notification settings refreshed');
     } catch (error) {
@@ -149,7 +149,7 @@ export class RefreshUtils {
 
     if (options.refreshNotifications) {
       try {
-        await quotesService.getNotificationPreferences();
+        await notificationService.getNotificationPreferences();
         await notificationService.hasPermission();
         console.log('✅ Notifications refreshed');
       } catch (error) {

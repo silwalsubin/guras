@@ -105,18 +105,7 @@ const LearnScreen = () => {
         </View>
       </View>
 
-      {/* Daily Wisdom */}
-      <View style={styles.wisdomSection}>
-        <SectionHeader title="Daily Wisdom" />
-        <BaseCard style={styles.wisdomCard}>
-          <Text style={[styles.wisdomQuote, { color: themeColors.textPrimary }]}>
-            "The mind is everything. What you think you become."
-          </Text>
-          <Text style={[styles.wisdomAuthor, { color: themeColors.textSecondary }]}>
-            - Buddha
-          </Text>
-        </BaseCard>
-      </View>
+
 
       {/* Featured Content */}
       <View style={styles.featuredSection}>
@@ -198,25 +187,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-  },
-  wisdomSection: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
-  },
-  wisdomCard: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  wisdomQuote: {
-    ...TYPOGRAPHY.BODY_LARGE,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: 12,
-    lineHeight: 24,
-  },
-  wisdomAuthor: {
-    ...TYPOGRAPHY.BODY_SMALL,
-    fontWeight: '600',
   },
   featuredSection: {
     paddingHorizontal: 20,

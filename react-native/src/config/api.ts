@@ -8,6 +8,9 @@ export const API_CONFIG = {
   // API endpoints
   ENDPOINTS: {
     PROFILE: '/api/auth/profile',
+    QUOTES: '/api/quotes',
+    QUOTES_RANDOM: '/api/quotes/random',
+    QUOTES_BY_CATEGORY: '/api/quotes/category',
   },
   
   // Request timeout in milliseconds

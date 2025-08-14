@@ -18,7 +18,9 @@ import { RefreshUtils } from '@/utils/refreshUtils';
 import { ProfileAvatar } from '@/components/shared';
 import NotificationSettings from './components/NotificationSettings';
 import SignOutButton from './components/SignOutButton';
-import quotesService, { NotificationPreferences } from '@/services/quotesService';
+import quotesService from '@/services/quotesService';
+import notificationService from '@/services/notificationService';
+import { NotificationPreferences } from '@/store/quotesSlice';
 import { useAuth } from '@/contexts/AuthContext';
 
 const ProfileScreen: React.FC = () => {
@@ -42,7 +44,7 @@ const ProfileScreen: React.FC = () => {
 
   const loadNotificationPreferences = async () => {
     try {
-      const preferences = await quotesService.getNotificationPreferences();
+      const preferences = await notificationService.getNotificationPreferences();
       setNotificationPreferences(preferences);
     } catch (error) {
       console.error('Error loading notification preferences:', error);
@@ -60,7 +62,7 @@ const ProfileScreen: React.FC = () => {
   const handleNotificationPreferenceChange = async (preferences: NotificationPreferences) => {
     try {
       setNotificationPreferences(preferences);
-      await quotesService.setNotificationPreferences(preferences);
+      await notificationService.setNotificationPreferences(preferences);
     } catch (error) {
       console.error('Error updating notification preferences:', error);
       Alert.alert('Error', 'Failed to update notification preferences');

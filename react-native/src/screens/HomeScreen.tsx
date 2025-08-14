@@ -4,6 +4,7 @@ import {
   StyleSheet,
   View,
   RefreshControl,
+  Text,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
@@ -12,7 +13,7 @@ import { RefreshUtils } from '@/utils/refreshUtils';
 import { COLORS } from '@/config/colors';
 import {
   AppHeader,
-  DailyQuoteCard,
+  QuotesView,
 } from '@/components/shared';
 
 const HomeScreen: React.FC = () => {
@@ -58,7 +59,7 @@ const HomeScreen: React.FC = () => {
 
       {/* Daily Wisdom */}
       <View style={styles.quoteSection}>
-        <DailyQuoteCard />
+        <QuotesView />
       </View>
 
       {/* Future home content can be added here */}

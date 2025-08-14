@@ -1,5 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { NotificationPreferences, Quote } from '@/services/quotesService';
+import { Quote } from '@/services/quotesService';
+
+// Define notification preferences interface here since it was removed from quotesService
+export interface NotificationPreferences {
+  enabled: boolean;
+  frequency: '5min' | 'hourly' | 'daily' | 'twice-daily';
+  quietHours: {
+    start: string; // HH:MM format
+    end: string;   // HH:MM format
+  };
+}
 
 export interface QuotesState {
   notificationPreferences: NotificationPreferences;

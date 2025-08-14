@@ -14,7 +14,7 @@ import { RootState } from '@/store';
 import { setNotificationPreferences } from '@/store/quotesSlice';
 import { getThemeColors, getBrandColors, COLORS } from '@/config/colors';
 import { RefreshUtils } from '@/utils/refreshUtils';
-import quotesService, { NotificationPreferences } from '@/services/quotesService';
+import { NotificationPreferences } from '@/store/quotesSlice';
 import notificationService from '@/services/notificationService';
 
 const NotificationSettings: React.FC = () => {
@@ -47,13 +47,13 @@ const NotificationSettings: React.FC = () => {
         dispatch(setNotificationPreferences(serverPreferences));
       } else {
         // Fallback to local preferences
-        const localPreferences = await quotesService.getNotificationPreferences();
+        const localPreferences = await notificationService.getNotificationPreferences();
         setPreferences(localPreferences);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
       // Fallback to local preferences
-      const localPreferences = await quotesService.getNotificationPreferences();
+      const localPreferences = await notificationService.getNotificationPreferences();
       setPreferences(localPreferences);
     }
   };
@@ -99,7 +99,7 @@ const NotificationSettings: React.FC = () => {
       setPreferences(updatedPreferences);
       
       // Update local storage
-      await quotesService.setNotificationPreferences(updatedPreferences);
+      await notificationService.setNotificationPreferences(updatedPreferences);
       
       // Update Redux store
       dispatch(setNotificationPreferences(updatedPreferences));
@@ -139,7 +139,7 @@ const NotificationSettings: React.FC = () => {
       setPreferences(updatedPreferences);
       
       // Update local storage
-      await quotesService.setNotificationPreferences(updatedPreferences);
+      await notificationService.setNotificationPreferences(updatedPreferences);
       
       // Update Redux store
       dispatch(setNotificationPreferences(updatedPreferences));
@@ -171,7 +171,7 @@ const NotificationSettings: React.FC = () => {
       setPreferences(updatedPreferences);
       
       // Update local storage
-      await quotesService.setNotificationPreferences(updatedPreferences);
+      await notificationService.setNotificationPreferences(updatedPreferences);
       
       // Update Redux store
       dispatch(setNotificationPreferences(updatedPreferences));
