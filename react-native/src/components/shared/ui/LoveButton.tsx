@@ -48,7 +48,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   likeCount: {
-    ...TYPOGRAPHY.CAPTION,
+    fontSize: 10,
+    fontWeight: '400',
     marginLeft: 4,
   },
 });
