@@ -5,8 +5,8 @@ import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { BaseCard } from '@/components/shared';
-import { LoveButton } from '@/components/shared';
-import { CommentButton } from '@/components/shared';
+import { QuoteCardBottomControls } from '@/components/shared';
+import { MoreOptionsButton } from '@/components/shared';
 import quotesService, { Quote } from '@/services/quotesService';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
@@ -138,6 +138,13 @@ const DailyQuoteCard: React.FC = () => {
           <Text style={styles.followButtonText}>Follow</Text>
         </TouchableOpacity>
         
+        <TouchableOpacity style={styles.moreOptionsButton}>
+          <MoreOptionsButton 
+            onPress={() => console.log('More options pressed')}
+            isDarkMode={isDarkMode}
+          />
+        </TouchableOpacity>
+        
         <View style={styles.titleContainer}>
           <Image 
             source={require('../../../../assets/app-logo.png')} 
@@ -160,21 +167,16 @@ const DailyQuoteCard: React.FC = () => {
         </View>
       </BaseCard>
 
-      {/* Like button positioned below the card */}
-      <View style={styles.likeButtonContainer}>
-        <LoveButton 
-          isLiked={isCurrentQuoteLiked} 
-          onPress={toggleLike} 
-          likeCount={likeCount} 
-          isDarkMode={isDarkMode}
-        />
-        
-        <CommentButton 
-          commentCount={commentCount}
-          onPress={() => console.log('Comment pressed')}
-          isDarkMode={isDarkMode}
-        />
-      </View>
+      {/* Interaction buttons positioned below the card */}
+      <QuoteCardBottomControls 
+        isLiked={isCurrentQuoteLiked} 
+        onLikePress={toggleLike} 
+        likeCount={likeCount} 
+        commentCount={commentCount}
+        onCommentPress={() => console.log('Comment pressed')}
+        onSharePress={() => console.log('Share pressed')}
+        isDarkMode={isDarkMode}
+      />
     </View>
   );
 };
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.BODY_SMALL,
-    marginBottom: 3,
+    marginBottom: 1,
     textAlign: 'left',
     fontWeight: '600',
     letterSpacing: 0.3,
@@ -244,13 +246,6 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
     fontWeight: '500',
   },
-  likeButtonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 16,
-    marginBottom: 0,
-    gap: 6,
-  },
   loadingText: {
     ...TYPOGRAPHY.BODY,
     textAlign: 'center',
@@ -284,6 +279,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.3,
+  },
+  moreOptionsButton: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    zIndex: 1,
   },
 });
 
