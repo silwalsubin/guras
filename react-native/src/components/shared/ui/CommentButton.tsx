@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getThemeColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 
@@ -24,11 +24,10 @@ const CommentButton: React.FC<CommentButtonProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={onPress}>
-        <FontAwesome 
-          name="comment-o" 
+        <MaterialIcons 
+          name="chat-bubble-outline" 
           size={size} 
           color={themeColors.textSecondary}
-          style={{ transform: [{ scaleX: -1 }] }}
         />
       </TouchableOpacity>
       

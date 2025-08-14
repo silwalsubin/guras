@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getThemeColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 
@@ -26,8 +26,8 @@ const LoveButton: React.FC<LoveButtonProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={onPress}>
-        <FontAwesome 
-          name="heart" 
+        <MaterialIcons 
+          name={isLiked ? "favorite" : "favorite-border"} 
           size={size} 
           color={isLiked ? "red" : themeColors.textSecondary} 
         />
