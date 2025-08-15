@@ -359,7 +359,6 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     borderWidth: 8,
     borderColor: 'transparent',
-    borderTopColor: brandColors.primary,
     position: 'absolute',
     transform: [{ rotate: '-90deg' }], // Start from top
   },
