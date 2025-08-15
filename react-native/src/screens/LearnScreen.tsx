@@ -51,8 +51,9 @@ const LearnScreen = () => {
   }, []);
 
   return (
-    <ScrollView 
-      style={styles.scrollView} 
+        <ScrollView 
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -164,10 +165,14 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    // Don't center all content - let individual sections handle their own alignment
+  },
   titleSection: {
     paddingHorizontal: 20,
     marginBottom: 32,
     alignItems: 'center',
+    width: '100%',
   },
   mainTitle: {
     ...TYPOGRAPHY.H4,
@@ -187,6 +192,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    width: '100%',
   },
   featuredSection: {
     paddingHorizontal: 20,
@@ -217,6 +223,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+    width: '100%',
   },
   progressLabel: {
     ...TYPOGRAPHY.BODY,

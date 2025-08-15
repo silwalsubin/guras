@@ -92,6 +92,7 @@ const ProfileScreen: React.FC = () => {
   return (
     <ScrollView 
       style={[styles.container, { backgroundColor: themeColors.background }]}
+      contentContainerStyle={styles.scrollContent}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -250,10 +251,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  scrollContent: {
+    // Don't center all content - let individual sections handle their own alignment
+  },
   header: {
     alignItems: 'center',
     paddingVertical: 32,
     marginBottom: 24,
+    width: '100%',
   },
 
   titleRow: {
@@ -286,6 +291,7 @@ const styles = StyleSheet.create({
   },
   userInfoSection: {
     marginBottom: 24,
+    width: '100%',
   },
   userInfoCard: {
     backgroundColor: colorUtils.withOpacity(COLORS.GRAY_500, 0.05),
@@ -324,11 +330,14 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 24,
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 16,
+    textAlign: 'center',
+    width: '100%',
   },
   settingRow: {
     flexDirection: 'row',

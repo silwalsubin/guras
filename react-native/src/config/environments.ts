@@ -1,4 +1,6 @@
 // Environment-specific configurations
+// ⚠️  TEMPORARY OVERRIDE: App is currently forced to use STAGING environment
+//     Remove the override in detectEnvironment() function when done testing
 interface EnvironmentConfig {
   API_BASE_URL: string;
   ENVIRONMENT: 'development' | 'staging' | 'production';
@@ -30,24 +32,28 @@ const ENVIRONMENTS: Record<string, EnvironmentConfig> = {
 
 // Environment detection logic
 const detectEnvironment = (): EnvironmentConfig => {
+  // TEMPORARY OVERRIDE: Force staging environment for testing
+  // TODO: Remove this override when done testing
+  return ENVIRONMENTS.staging;
+  
   // Method 1: Use __DEV__ flag (React Native built-in)
-  if (__DEV__) {
-    return ENVIRONMENTS.development;
-  }
+  // if (__DEV__) {
+  //   return ENVIRONMENTS.development;
+  // }
 
   // Method 2: Check for environment variables (if you set them in build process)
   // You can set these in your CI/CD pipeline or build scripts
-  const envFromBuild = process.env.REACT_NATIVE_ENV || process.env.NODE_ENV;
+  // const envFromBuild = process.env.REACT_NATIVE_ENV || process.env.NODE_ENV;
   
-  if (envFromBuild && ENVIRONMENTS[envFromBuild]) {
-    return ENVIRONMENTS[envFromBuild];
-  }
+  // if (envFromBuild && ENVIRONMENTS[envFromBuild]) {
+  //   return ENVIRONMENTS[envFromBuild];
+  // }
 
   // Method 3: Check for specific build configurations
   // You can add custom logic here based on your build setup
   
   // Default to production for release builds
-  return ENVIRONMENTS.production;
+  // return ENVIRONMENTS.production;
 };
 
 export const ENV_CONFIG = detectEnvironment();

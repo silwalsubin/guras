@@ -23,7 +23,7 @@ const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
   return (
     <View style={styles.header}>
       <View style={styles.logoContainer}>
-        <Text style={[styles.appName, { color: themeColors.textPrimary }]}>
+        <Text style={[styles.appName, { color: themeColors.textPrimary, textAlign: 'left' }]}>
           guras
         </Text>
       </View>
@@ -48,14 +48,15 @@ const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between', // Logo on left, profile on right
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 16,
   },
   logoContainer: {
-    alignItems: 'center',
+    alignItems: 'flex-start', // Left-align the logo text
+    flex: 1, // Take up available space on the left
   },
   appName: {
     ...TYPOGRAPHY.LOGO,
@@ -67,6 +68,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    marginLeft: 'auto',
   },
   profileButtonText: {
     fontSize: 20,
