@@ -62,6 +62,7 @@ const ActivityScreen: React.FC = () => {
   return (
     <ScrollView 
       style={styles.scrollView} 
+      contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -108,16 +109,22 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    // Don't center all content - let individual sections handle their own alignment
+  },
   meditationSection: {
     marginBottom: 20,
+    width: '100%',
   },
   progressSection: {
     paddingHorizontal: 20,
     marginBottom: 32,
+    width: '100%',
   },
   recentSection: {
     paddingHorizontal: 20,
     marginBottom: 32,
+    width: '100%',
   },
   // Add bottom padding to account for the footer
   bottomPadding: {

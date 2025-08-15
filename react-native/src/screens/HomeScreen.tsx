@@ -42,6 +42,7 @@ const HomeScreen: React.FC = () => {
   return (
     <ScrollView 
       style={styles.scrollView} 
+      contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -75,9 +76,13 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    // Don't center all content - let individual sections handle their own alignment
+  },
   quoteSection: {
     paddingHorizontal: 20,
     marginBottom: 20,
+    width: '100%',
   },
   bottomPadding: {
     height: 100, // Account for bottom navigation + safe area

@@ -1,17 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import MusicPlayer from './components/MusicPlayer';
-import { MeditationTimer } from '@/components/shared';
 
 const MusicPlayerScreen: React.FC = () => {
-  const handleSessionComplete = (duration: number) => {
-    // TODO: Track meditation session completion
-    console.log(`Meditation session completed: ${duration} minutes`);
-  };
-
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <MeditationTimer onSessionComplete={handleSessionComplete} />
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <MusicPlayer />
     </ScrollView>
   );
@@ -20,9 +13,11 @@ const MusicPlayerScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 20,
+  },
+  scrollContent: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
 });
 

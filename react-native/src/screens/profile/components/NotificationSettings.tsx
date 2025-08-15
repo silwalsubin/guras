@@ -297,6 +297,7 @@ const NotificationSettings: React.FC = () => {
   return (
     <ScrollView 
       style={[styles.container, { backgroundColor: themeColors.background }]}
+      contentContainerStyle={styles.scrollContent}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -431,8 +432,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  scrollContent: {
+    // Don't center all content - let individual sections handle their own alignment
+  },
   section: {
     marginBottom: 24,
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 18,

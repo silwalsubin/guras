@@ -50,6 +50,7 @@ const MusicPlayer: React.FC = () => {
       marginTop: 32,
       marginBottom: 100, // Account for footer height
       flex: 1,
+      justifyContent: 'space-between', // Distribute content evenly
     },
     background: {
       position: 'absolute',
@@ -96,9 +97,6 @@ const MusicPlayer: React.FC = () => {
       fontSize: 14,
       marginBottom: 12,
       textAlign: 'center',
-    },
-    spacer: {
-      flex: 2,
     },
     progressContainer: {
       alignItems: 'center',
@@ -175,6 +173,7 @@ const MusicPlayer: React.FC = () => {
       justifyContent: 'center',
       gap: 32,
       marginTop: 20,
+      marginBottom: 40, // Add more space below controls
     },
     playPauseButton: {
       padding: 12,
@@ -448,8 +447,6 @@ const MusicPlayer: React.FC = () => {
           </View>
         </View>
       )}
-
-      <View style={styles.spacer} />
       
       {/* Playback Controls - Only show when there are audio files */}
       {audioFiles.length > 0 && (
