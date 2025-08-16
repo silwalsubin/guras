@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import TrackPlayer, { State, useProgress, Capability, Event } from 'react-native-track-player';
+import { useDispatch } from 'react-redux';
+import { setIsPlaying } from '@/store/musicPlayerSlice';
 
 interface MusicPlayerContextType {
   isSetup: boolean;
-  isPlaying: boolean;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   togglePlayback: () => Promise<void>;
@@ -20,13 +21,23 @@ export const useMusicPlayer = () => {
 
 export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSetup, setIsSetup] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const dispatch = useDispatch();
   const progress = useProgress();
+
+  // Debug progress updates
+  useEffect(() => {
+    console.log('🎵 MusicPlayerContext Progress Update:', {
+      position: progress.position,
+      duration: progress.duration,
+      buffered: progress.buffered
+    });
+  }, [progress.position, progress.duration, progress.buffered]);
 
   useEffect(() => {
     let isMounted = true;
     async function setup() {
       try {
+        console.log('🎵 Setting up TrackPlayer...');
         await TrackPlayer.setupPlayer();
         await TrackPlayer.updateOptions({
           capabilities: [
@@ -38,6 +49,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
             Capability.Pause,
           ],
         });
+        console.log('✅ TrackPlayer setup completed');
       } catch (error: unknown) {
         let message = '';
         if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
@@ -47,16 +59,20 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
       // Initialize with empty queue - tracks will be added dynamically from API
       await TrackPlayer.reset();
-      if (isMounted) setIsSetup(true);
+      if (isMounted) {
+        setIsSetup(true);
+        console.log('✅ TrackPlayer is ready');
+      }
     }
     setup();
 
     // Listen for playback state changes
     const onPlaybackState = TrackPlayer.addEventListener(Event.PlaybackState, (data) => {
+      console.log('🎵 Playback state changed:', data.state);
       if (data.state === State.Playing) {
-        setIsPlaying(true);
+        dispatch(setIsPlaying(true));
       } else {
-        setIsPlaying(false);
+        dispatch(setIsPlaying(false));
       }
     });
     return () => {
@@ -66,15 +82,18 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, []);
 
   const play = useCallback(async () => {
+    console.log('🎵 Play called');
     await TrackPlayer.play();
   }, []);
 
   const pause = useCallback(async () => {
+    console.log('🎵 Pause called');
     await TrackPlayer.pause();
   }, []);
 
   const togglePlayback = useCallback(async () => {
     const state = await TrackPlayer.getState();
+    console.log('🎵 Toggle playback, current state:', state);
     if (state === State.Playing) {
       await pause();
     } else {
@@ -83,7 +102,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [play, pause]);
 
   return (
-    <MusicPlayerContext.Provider value={{ isSetup, isPlaying, play, pause, togglePlayback, progress }}>
+    <MusicPlayerContext.Provider value={{ isSetup, play, pause, togglePlayback, progress }}>
       {children}
     </MusicPlayerContext.Provider>
   );

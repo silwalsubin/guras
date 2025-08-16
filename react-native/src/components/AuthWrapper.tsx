@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDispatch } from 'react-redux';
 import { resetToHomeTab } from '@/store/navigationSlice';
 import SignInScreen from '@/screens/sign-in';
-import SignUpScreen from '@/screens/SignUpScreen';
+import SignUpScreen from '@/screens/sign-up';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { COLORS } from '@/config/colors';
 

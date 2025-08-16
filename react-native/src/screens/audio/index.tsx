@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import MusicPlayer from './components/MusicPlayer';
+import MusicPlayer from './music-player';
 
-const MusicPlayerScreen: React.FC = () => {
+const AudioScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <MusicPlayer />
@@ -21,4 +21,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MusicPlayerScreen; 
+export default AudioScreen; 
