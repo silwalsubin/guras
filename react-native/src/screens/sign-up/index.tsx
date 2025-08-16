@@ -96,7 +96,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           {/* Header */}
           <View style={styles.header}>
             <Image 
-              source={require('../../assets/app-logo.png')} 
+              source={require('../../../assets/app-logo.png')} 
               style={styles.logo}
               resizeMode="contain"
             />

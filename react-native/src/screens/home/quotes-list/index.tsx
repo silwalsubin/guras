@@ -4,7 +4,9 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
-import { BaseCard, Quote, HorizontalSeparator } from '@/components/shared';
+import { BaseCard, HorizontalSeparator } from '../../../components/shared';
+import Quote from './quote-card';
+import QuoteCardBottomControls from './quote-card/bottom-controls';
 import quotesService, { Quote as QuoteType } from '@/services/quotesService';
 
 

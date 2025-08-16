@@ -37,7 +37,7 @@ const BottomNavigation = () => {
         solid
       />
       <FooterMenuItem
-        tabKey={TAB_KEYS.ACTIVITY}
+        tabKey={TAB_KEYS.MEDITATION}
         iconName="activity"
         iconType="feather"
       />

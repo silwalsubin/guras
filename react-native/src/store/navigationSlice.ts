@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export const TAB_KEYS = {
   HOME: 'home',
-  ACTIVITY: 'activity',
+  MEDITATION: 'meditation',
   AUDIO: 'audio',
   LEARN: 'learn',
   PROFILE: 'profile',

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { BaseCard } from '@/components/shared';
-import { QuoteCardBottomControls } from '@/components/shared';
+import QuoteCardBottomControls from './bottom-controls';
 import { MoreOptionsButton } from '@/components/shared';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
@@ -47,7 +47,7 @@ const Quote: React.FC<QuoteProps> = ({
         
         <View style={styles.titleContainer}>
           <Image 
-            source={require('../../../../assets/app-logo.png')} 
+            source={require('../../../../../assets/app-logo.png')} 
             style={styles.titleIcon}
           />
           <View style={styles.titleTextContainer}>
