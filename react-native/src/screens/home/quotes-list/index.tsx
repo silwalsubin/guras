@@ -1,84 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Image, RefreshControl, ScrollView } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
-import { getThemeColors, getBrandColors } from '@/config/colors';
+import { getThemeColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { BaseCard, HorizontalSeparator } from '../../../components/shared';
 import Quote from './quote-card';
-import QuoteCardBottomControls from './quote-card/bottom-controls';
-import quotesService, { Quote as QuoteType } from '@/services/quotesService';
-
+import { fetchQuotes } from '@/store/quotesSlice';
+import { AppDispatch } from '@/store';
 
 const QuotesView: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
-  const [quotes, setQuotes] = useState<QuoteType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [likedQuotes, setLikedQuotes] = useState<Set<string>>(new Set());
-  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
-  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  
+  // Get all quotes state from Redux
+  const {
+    allQuotes: quotes,
+    isLoading: loading,
+    isRefreshing: refreshing,
+    error
+  } = useSelector((state: RootState) => state.quotes);
 
   const themeColors = getThemeColors(isDarkMode);
-  const brandColors = getBrandColors();
 
   useEffect(() => {
-    loadQuotes();
-  }, []);
+    // Fetch quotes when component mounts
+    console.log('🎯 QuotesView: Dispatching fetchQuotes action');
+    dispatch(fetchQuotes());
+  }, [dispatch]);
 
-  const loadQuotes = async () => {
+  // Debug Redux state
+  useEffect(() => {
+    console.log('🎯 QuotesView Redux State:', {
+      quotesCount: quotes?.length || 0,
+      loading,
+      refreshing,
+      error
+    });
+  }, [quotes, loading, refreshing, error]);
+
+  const onRefresh = async () => {
+    console.log('🔄 Pull-to-refresh triggered');
+    
     try {
-      setLoading(true);
-      
-      // Load all quotes from API
-      const allQuotes = await quotesService.getAllQuotes();
-      
-      setQuotes(allQuotes);
-      
-      // Initialize like and comment counts for each quote
-      const initialLikeCounts: Record<string, number> = {};
-      const initialCommentCounts: Record<string, number> = {};
-      
-      allQuotes.forEach(quote => {
-        const quoteKey = `${quote.text}-${quote.author}`;
-        initialLikeCounts[quoteKey] = Math.floor(Math.random() * 50) + 10; // Random like count between 10-60
-        initialCommentCounts[quoteKey] = Math.floor(Math.random() * 20) + 1; // Random comment count between 1-21
-      });
-      
-      setLikeCounts(initialLikeCounts);
-      setCommentCounts(initialCommentCounts);
-      
-      console.log('✅ Loaded quotes from API:', allQuotes.length);
+      // Dispatch the fetchQuotes action to refresh the store
+      await dispatch(fetchQuotes()).unwrap();
+      console.log('✅ Quotes refreshed successfully');
     } catch (error) {
-      console.error('Error loading quotes:', error);
-      // Fallback to local quotes
-      const fallbackQuotes = await quotesService.getAllQuotes();
-      setQuotes(fallbackQuotes);
-    } finally {
-      setLoading(false);
+      console.error('❌ Error refreshing quotes:', error);
     }
   };
 
-
-
-  const toggleLike = (quote: QuoteType) => {
-    const quoteKey = `${quote.text}-${quote.author}`;
-    setLikedQuotes(prev => {
-      const newLikedQuotes = new Set(prev);
-      if (newLikedQuotes.has(quoteKey)) {
-        newLikedQuotes.delete(quoteKey);
-        setLikeCounts(prev => ({ ...prev, [quoteKey]: (prev[quoteKey] || 42) - 1 }));
-      } else {
-        newLikedQuotes.add(quoteKey);
-        setLikeCounts(prev => ({ ...prev, [quoteKey]: (prev[quoteKey] || 42) + 1 }));
-      }
-      return newLikedQuotes;
-    });
-  };
-
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <BaseCard style={styles.card}>
-                <View style={styles.titleContainer}>
+        <View style={styles.titleContainer}>
           <Image 
             source={require('../../../../assets/app-logo.png')} 
             style={styles.titleIcon}
@@ -99,109 +75,114 @@ const QuotesView: React.FC = () => {
     );
   }
 
-  if (quotes.length === 0) {
+  if (error) {
     return (
       <BaseCard style={styles.card}>
         <View style={styles.titleContainer}>
           <Image 
             source={require('../../../../assets/app-logo.png')} 
-            style={styles.titleTextContainer}
+            style={styles.titleIcon}
           />
           <View style={styles.titleTextContainer}>
             <Text style={[styles.title, { color: themeColors.textPrimary }]}>
-              No quotes available
+              Error
+            </Text>
+            <Text style={[styles.authorText, { color: themeColors.textSecondary }]}>
+              Something went wrong
+            </Text>
+          </View>
+        </View>
+        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+          {error}
+        </Text>
+      </BaseCard>
+    );
+  }
+
+  if (!quotes || quotes.length === 0) {
+    return (
+      <BaseCard style={styles.card}>
+        <View style={styles.titleContainer}>
+          <Image 
+            source={require('../../../../assets/app-logo.png')} 
+            style={styles.titleIcon}
+          />
+          <View style={styles.titleTextContainer}>
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+              No Quotes Available
             </Text>
             <Text style={[styles.authorText, { color: themeColors.textSecondary }]}>
               Try again later
             </Text>
           </View>
         </View>
-        <Text style={[styles.errorText, { color: themeColors.textSecondary }]}>
-          No quotes available
+        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+          No inspirational quotes found
         </Text>
       </BaseCard>
     );
   }
 
   return (
-    <View style={styles.cardContainer}>
-      {quotes.map((quote, index) => {
-        const quoteKey = `${quote.text}-${quote.author}`;
-        const isLiked = likedQuotes.has(quoteKey);
-        const likeCount = likeCounts[quoteKey] || 42;
-        const commentCount = commentCounts[quoteKey] || 7;
-        
-        return (
-          <View key={quoteKey}>
-            <Quote
-              quote={quote}
-              isLiked={isLiked}
-              likeCount={likeCount}
-              commentCount={commentCount}
-              onLikePress={() => toggleLike(quote)}
-              onCommentPress={() => console.log('Comment pressed')}
-              onSharePress={() => console.log('Share pressed')}
-              isDarkMode={isDarkMode}
-            />
-            {index < quotes.length - 1 && (
-              <HorizontalSeparator />
-            )}
-          </View>
-        );
-      })}
-    </View>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[themeColors.textPrimary]}
+          tintColor={themeColors.textPrimary}
+          title="Pull to refresh quotes"
+          titleColor={themeColors.textSecondary}
+        />
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      {quotes.map((quote, index) => (
+        <View key={`${quote.text}-${quote.author}`}>
+          <Quote quote={quote} />
+          {index < quotes.length - 1 && <HorizontalSeparator />}
+        </View>
+      ))}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
+  container: {
     width: '100%',
+    flex: 1,
   },
-
   card: {
-    marginBottom: 8,
+    margin: 16,
+    padding: 16,
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-    marginTop: -8,
-    marginLeft: -8,
   },
   titleIcon: {
     width: 24,
     height: 24,
+    marginRight: 12,
     borderRadius: 12,
-    marginRight: 8,
   },
   titleTextContainer: {
-    flexDirection: 'column',
+    flex: 1,
   },
   title: {
-    ...TYPOGRAPHY.BODY_SMALL,
-    marginBottom: 1,
-    textAlign: 'left',
-    fontWeight: '600',
-    letterSpacing: 0.3,
+    ...TYPOGRAPHY.H2,
+    marginBottom: 4,
   },
   authorText: {
-    ...TYPOGRAPHY.CAPTION,
-    textAlign: 'left',
-    marginBottom: 0,
-    textTransform: 'capitalize',
-    fontWeight: '400',
-    letterSpacing: 0.2,
-    opacity: 0.8,
+    ...TYPOGRAPHY.BODY_SMALL,
+    opacity: 0.7,
   },
   loadingText: {
     ...TYPOGRAPHY.BODY,
     textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  errorText: {
-    ...TYPOGRAPHY.BODY,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    marginTop: 16,
   },
 });
 

@@ -6,30 +6,39 @@ import { MoreOptionsButton } from '@/components/shared';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { Quote as QuoteType } from '@/services/quotesService';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/store';
+import { toggleLike } from '@/store/quotesSlice';
+import { AppDispatch } from '@/store';
 
 interface QuoteProps {
   quote: QuoteType;
-  isLiked: boolean;
-  likeCount: number;
-  commentCount: number;
-  onLikePress: () => void;
-  onCommentPress: () => void;
-  onSharePress: () => void;
-  isDarkMode: boolean;
 }
 
-const Quote: React.FC<QuoteProps> = ({
-  quote,
-  isLiked,
-  likeCount,
-  commentCount,
-  onLikePress,
-  onCommentPress,
-  onSharePress,
-  isDarkMode,
-}) => {
+const Quote: React.FC<QuoteProps> = ({ quote }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
+
+  // Get like and comment data from Redux
+  const { likedQuotes, likeCounts, commentCounts } = useSelector((state: RootState) => state.quotes);
+  const quoteKey = `${quote.text}-${quote.author}`;
+  const isLiked = likedQuotes.includes(quoteKey);
+  const likeCount = likeCounts[quoteKey] || 0;
+  const commentCount = commentCounts[quoteKey] || 0;
+
+  const handleLikePress = () => {
+    dispatch(toggleLike(quote));
+  };
+
+  const handleCommentPress = () => {
+    console.log('Comment pressed for quote:', quote.text);
+  };
+
+  const handleSharePress = () => {
+    console.log('Share pressed for quote:', quote.text);
+  };
 
   return (
     <View style={styles.quoteCardWrapper}>
@@ -69,13 +78,11 @@ const Quote: React.FC<QuoteProps> = ({
 
       {/* Interaction buttons positioned below the card */}
       <QuoteCardBottomControls 
+        quote={quote}
         isLiked={isLiked} 
-        onLikePress={onLikePress} 
         likeCount={likeCount} 
         commentCount={commentCount}
-        onCommentPress={onCommentPress}
-        onSharePress={onSharePress}
-        isDarkMode={isDarkMode}
+        onToggleLike={handleLikePress}
       />
     </View>
   );
