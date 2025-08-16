@@ -3,6 +3,9 @@ import navigationReducer from './navigationSlice';
 import musicPlayerReducer from './musicPlayerSlice';
 import themeReducer from './themeSlice';
 import quotesReducer from './quotesSlice';
+import meditationReducer from './meditationSliceNew';
+
+
 
 const store = configureStore({
   reducer: {
@@ -10,6 +13,7 @@ const store = configureStore({
     musicPlayer: musicPlayerReducer,
     theme: themeReducer,
     quotes: quotesReducer,
+    meditation: meditationReducer,
   },
 });
 
