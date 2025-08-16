@@ -3,43 +3,52 @@ import { View, StyleSheet } from 'react-native';
 import { LoveButton } from '@/components/shared';
 import { CommentButton } from '@/components/shared';
 import { ShareButton } from '@/components/shared';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
+import { Quote } from '@/services/quotesService';
 
 interface QuoteCardBottomControlsProps {
+  quote: Quote;
   isLiked: boolean;
   likeCount: number;
   commentCount: number;
-  onLikePress: () => void;
-  onCommentPress: () => void;
-  onSharePress: () => void;
-  isDarkMode?: boolean;
+  onToggleLike: () => void;
 }
 
 const QuoteCardBottomControls: React.FC<QuoteCardBottomControlsProps> = ({
+  quote,
   isLiked,
   likeCount,
   commentCount,
-  onLikePress,
-  onCommentPress,
-  onSharePress,
-  isDarkMode = false,
+  onToggleLike,
 }) => {
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+
+  const handleCommentPress = () => {
+    console.log('Comment pressed for quote:', quote.text);
+  };
+
+  const handleSharePress = () => {
+    console.log('Share pressed for quote:', quote.text);
+  };
+
   return (
     <View style={styles.container}>
       <LoveButton 
         isLiked={isLiked} 
-        onPress={onLikePress} 
+        onPress={onToggleLike} 
         likeCount={likeCount} 
         isDarkMode={isDarkMode}
       />
       
       <CommentButton 
         commentCount={commentCount}
-        onPress={onCommentPress}
+        onPress={handleCommentPress}
         isDarkMode={isDarkMode}
       />
       
       <ShareButton 
-        onPress={onSharePress}
+        onPress={handleSharePress}
         isDarkMode={isDarkMode}
       />
     </View>
