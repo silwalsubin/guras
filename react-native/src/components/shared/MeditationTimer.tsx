@@ -5,65 +5,105 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Platform,
   Animated,
+  Dimensions,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
-import { getThemeColors, getBrandColors, getSemanticColors } from '@/config/colors';
+import { 
+  startTimer, 
+  pauseTimer, 
+  resumeTimer, 
+  stopTimer, 
+  updateTimeLeft, 
+  skipTime, 
+  setSelectedMinutes, 
+  completeSession,
+  syncTimerState
+} from '@/store/meditationSliceNew';
+import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { BaseCard } from '@/components/shared';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import meditationAudioService from '@/services/meditationAudioService';
 
 interface MeditationTimerProps {
   onSessionComplete?: (duration: number) => void;
 }
 
+const { width: screenWidth } = Dimensions.get('window');
+
 const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) => {
+  const dispatch = useDispatch();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
-  const semanticColors = getSemanticColors();
 
-  const [isActive, setIsActive] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [selectedMinutes, setSelectedMinutes] = useState(10);
-  const [isPaused, setIsPaused] = useState(false);
+  // Get meditation state from Redux
+  const meditationState = useSelector((state: RootState) => state.meditation);
+  const { 
+    isActive, 
+    timeLeft, 
+    selectedMinutes, 
+    isPaused, 
+    totalSessions, 
+    totalMinutes 
+  } = meditationState;
+
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<any>(null);
   const progressAnimation = useRef(new Animated.Value(0)).current;
+  const pulseAnimation = useRef(new Animated.Value(1)).current;
 
   // Predefined timer options
-  const timerOptions = [5, 10, 15, 20, 30, 45, 60];
+  const timerOptions = [
+    { minutes: 5, label: '5m', description: 'Quick Focus' },
+    { minutes: 10, label: '10m', description: 'Daily Practice' },
+    { minutes: 15, label: '15m', description: 'Deep Relaxation' },
+    { minutes: 20, label: '20m', description: 'Extended Session' },
+    { minutes: 30, label: '30m', description: 'Full Practice' },
+    { minutes: 45, label: '45m', description: 'Intensive' },
+    { minutes: 60, label: '60m', description: 'Complete Session' }
+  ];
 
+  // Sync timer state when component mounts and when returning to tab
+  useEffect(() => {
+    dispatch(syncTimerState());
+    
+    // Set up periodic sync every 5 seconds to handle tab switches
+    const syncInterval = setInterval(() => {
+      if (isActive && !isPaused) {
+        dispatch(syncTimerState());
+      }
+    }, 5000);
+    
+    return () => clearInterval(syncInterval);
+  }, [dispatch, isActive, isPaused]);
+
+  // Timer logic
   useEffect(() => {
     if (isActive && timeLeft > 0 && !isPaused && !showStopConfirmation) {
       intervalRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
-            // Timer finished
-            clearInterval(intervalRef.current!);
-            setIsActive(false);
-            setIsPaused(false);
-            playEndSound();
-            if (onSessionComplete) {
-              onSessionComplete(selectedMinutes);
-            }
-            Alert.alert(
-              'Meditation Complete',
-              `Great job! You've completed your ${selectedMinutes}-minute meditation session.`,
-              [{ text: 'OK' }]
-            );
-            return 0;
+        const newTime = timeLeft - 1;
+        
+        if (newTime <= 0) {
+          // Timer finished
+          clearInterval(intervalRef.current!);
+          dispatch(completeSession());
+          
+          if (onSessionComplete) {
+            onSessionComplete(selectedMinutes);
           }
-          const newTime = prevTime - 1;
-          // Update progress animation
-          setTimeout(() => updateProgressAnimation(), 0);
-          return newTime;
-        });
+          
+          Alert.alert(
+            'Meditation Complete',
+            `Great job! You've completed your ${selectedMinutes}-minute meditation session!\n\nTotal sessions: ${totalSessions + 1}\nTotal minutes: ${totalMinutes + selectedMinutes}`,
+            [{ text: 'OK' }]
+          );
+        } else {
+          dispatch(updateTimeLeft(newTime));
+          updateProgressAnimation();
+        }
       }, 1000);
     }
 
@@ -72,7 +112,29 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
         clearInterval(intervalRef.current);
       }
     };
-  }, [isActive, timeLeft, isPaused, showStopConfirmation, selectedMinutes, onSessionComplete]);
+  }, [isActive, timeLeft, isPaused, showStopConfirmation, selectedMinutes, onSessionComplete, totalSessions, totalMinutes, dispatch]);
+
+  // Pulsing animation
+  useEffect(() => {
+    if (isActive && !isPaused) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnimation, {
+            toValue: 1.05,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnimation, {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      pulseAnimation.setValue(1);
+    }
+  }, [isActive, isPaused]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -80,12 +142,12 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getProgressRotation = (): number => {
+  const getSessionProgress = (): number => {
     if (selectedMinutes <= 0) return 0;
     const totalSeconds = selectedMinutes * 60;
     const elapsed = totalSeconds - timeLeft;
     const progress = elapsed / totalSeconds;
-    return progress * 360; // Convert to degrees (0-360)
+    return progress * 100;
   };
 
   const updateProgressAnimation = () => {
@@ -96,12 +158,12 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
     
     Animated.timing(progressAnimation, {
       toValue: progress,
-      duration: 1000, // Smooth animation over 1 second
+      duration: 1000,
       useNativeDriver: false,
     }).start();
   };
 
-  const startTimer = () => {
+  const handleStartTimer = () => {
     if (selectedMinutes <= 0) return;
     
     Alert.alert(
@@ -116,113 +178,115 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
           text: 'Start',
           style: 'default',
           onPress: () => {
-            setTimeLeft(selectedMinutes * 60);
-            setIsActive(true);
-            setIsPaused(false);
-            progressAnimation.setValue(0); // Reset progress to 0
-            playStartSound();
+            dispatch(startTimer(selectedMinutes));
+            progressAnimation.setValue(0);
           },
         },
       ]
     );
   };
 
-  const pauseTimer = () => {
-    setIsPaused(true);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
+  const handlePauseTimer = () => {
+    dispatch(pauseTimer());
   };
 
-  const resumeTimer = () => {
-    setIsPaused(false);
+  const handleResumeTimer = () => {
+    dispatch(resumeTimer());
   };
 
-  const stopTimer = () => {
-    setShowStopConfirmation(true);
+  const handleStopTimer = () => {
     Alert.alert(
-      'Stop Meditation?',
-      'Are you sure you want to stop your current meditation session? This action cannot be undone.',
+      'Stop Meditation',
+      'Are you sure you want to stop your meditation session?',
       [
         {
           text: 'Cancel',
           style: 'cancel',
-          onPress: () => setShowStopConfirmation(false),
         },
         {
           text: 'Stop',
           style: 'destructive',
           onPress: () => {
+            dispatch(stopTimer());
             setShowStopConfirmation(false);
-            setIsActive(false);
-            setIsPaused(false);
-            setTimeLeft(0);
-            if (intervalRef.current) {
-              clearInterval(intervalRef.current);
-            }
           },
         },
       ]
     );
   };
 
-  const playStartSound = async () => {
-    try {
-      await meditationAudioService.playStartCue();
-    } catch (error) {
-      console.error('Failed to play start sound:', error);
-    }
-  };
-
-  const playEndSound = async () => {
-    try {
-      await meditationAudioService.playEndCue();
-    } catch (error) {
-      console.error('Failed to play end sound:', error);
-    }
+  const handleSkipTime = (seconds: number) => {
+    if (!isActive) return;
+    dispatch(skipTime(seconds));
   };
 
   const handleTimeOptionSelect = (minutes: number) => {
-    if (isActive) {
-      Alert.alert(
-        'Timer Active',
-        'Please stop the current timer before selecting a new duration.',
-        [{ text: 'OK' }]
-      );
-      return;
+    if (!isActive) {
+      dispatch(setSelectedMinutes(minutes));
     }
-    setSelectedMinutes(minutes);
   };
 
   return (
     <BaseCard style={styles.container}>
+      {/* Session Stats Header */}
+      <View style={styles.statsHeader}>
+        <View style={styles.statItem}>
+          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
+            {totalSessions}
+          </Text>
+          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
+            Sessions
+          </Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
+            {totalMinutes}
+          </Text>
+          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
+            Minutes
+          </Text>
+        </View>
+      </View>
+
       {/* Timer Display - Only show when meditation is active */}
       {isActive && (
         <View style={styles.timerDisplay}>
           <View style={styles.timerContainer}>
-            <View style={styles.progressCircle}>
+            <Animated.View style={[styles.progressCircle, { transform: [{ scale: pulseAnimation }] }]}>
               <View style={styles.progressBackground} />
               <Animated.View 
-                style={[
-                  styles.progressFill, 
-                  { 
-                    borderTopColor: brandColors.primary,
-                    transform: [{
-                      rotate: progressAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '360deg']
-                      })
-                    }]
-                  }
-                ]} 
+                                  style={[
+                    styles.progressFill,
+                    {
+                      width: 180,
+                      height: 180,
+                      borderRadius: 90,
+                      borderWidth: 6,
+                      borderColor: 'transparent',
+                      borderTopColor: brandColors.primary,
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      transform: [{
+                        rotate: progressAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['-90deg', '270deg']
+                        })
+                      }]
+                    }
+                  ]} 
               />
-            </View>
+            </Animated.View>
             <View style={styles.timerOverlay}>
               <Text style={[styles.timerText, { color: themeColors.textPrimary }]}>
                 {formatTime(timeLeft)}
               </Text>
               <Text style={[styles.timerLabel, { color: themeColors.textSecondary }]}>
                 {isPaused ? 'Paused' : 'Meditating'}
+              </Text>
+              <Text style={[styles.progressText, { color: themeColors.textSecondary }]}>
+                {getSessionProgress().toFixed(0)}% Complete
               </Text>
             </View>
           </View>
@@ -236,33 +300,45 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
             Choose Duration:
           </Text>
           <View style={styles.optionsGrid}>
-            {timerOptions.map((minutes) => (
+            {timerOptions.map((option) => (
               <TouchableOpacity
-                key={minutes}
+                key={option.minutes}
                 style={[
                   styles.timeOption,
                   {
-                    backgroundColor: selectedMinutes === minutes 
+                    backgroundColor: selectedMinutes === option.minutes 
                       ? brandColors.primary 
-                      : themeColors.surface,
-                    borderColor: selectedMinutes === minutes 
+                      : themeColors.card,
+                    borderColor: selectedMinutes === option.minutes 
                       ? brandColors.primary 
                       : themeColors.border,
                   }
                 ]}
-                onPress={() => handleTimeOptionSelect(minutes)}
+                onPress={() => handleTimeOptionSelect(option.minutes)}
               >
                 <Text
                   style={[
                     styles.timeOptionText,
                     {
-                      color: selectedMinutes === minutes 
+                      color: selectedMinutes === option.minutes 
                         ? 'white' 
                         : themeColors.textPrimary,
                     }
                   ]}
                 >
-                  {minutes}m
+                  {option.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.timeOptionDescription,
+                    {
+                      color: selectedMinutes === option.minutes 
+                        ? 'rgba(255, 255, 255, 0.8)' 
+                        : themeColors.textSecondary,
+                    }
+                  ]}
+                >
+                  {option.description}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -270,56 +346,84 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
         </View>
       )}
 
-      {/* Control Buttons */}
-      <View style={styles.controls}>
-        {!isActive ? (
-          <TouchableOpacity
-            style={[styles.startButton, { backgroundColor: brandColors.primary }]}
-            onPress={startTimer}
-            disabled={selectedMinutes <= 0}
-          >
-            <Text style={styles.startButtonText}>Start Meditation</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.activeControls}>
+      {/* Active Controls */}
+      {isActive && (
+        <>
+          {/* Main Controls */}
+          <View style={styles.controlsContainer}>
             {isPaused ? (
               <TouchableOpacity
-                style={[styles.controlButton, { backgroundColor: brandColors.primary }]}
-                onPress={resumeTimer}
+                style={[styles.startButton, { backgroundColor: brandColors.primary }]}
+                onPress={handleResumeTimer}
               >
-                <Icon name="play" size={24} color="white" />
+                <Icon name="play" size={24} color="white" style={styles.buttonIcon} />
+                <Text style={[styles.startButtonText, { color: 'white' }]}>
+                  Resume
+                </Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={[styles.controlButton, { 
-                  backgroundColor: themeColors.surface,
-                  borderWidth: 2,
-                  borderColor: themeColors.border 
-                }]}
-                onPress={pauseTimer}
+                style={[styles.controlButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+                onPress={handlePauseTimer}
               >
                 <Icon name="pause" size={24} color={themeColors.textPrimary} />
               </TouchableOpacity>
             )}
-            
+
+            {/* Skip Controls */}
+            <View style={styles.skipControls}>
+              <TouchableOpacity
+                style={[styles.skipButton, { backgroundColor: themeColors.card, borderWidth: 2, borderColor: themeColors.border }]}
+                onPress={() => handleSkipTime(-60)}
+              >
+                <View style={styles.skipButtonContent}>
+                  <Icon name="minus" size={20} color={themeColors.textSecondary} />
+                  <Text style={[styles.skipButtonText, { color: themeColors.textSecondary }]}>
+                    -1m
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.skipButton, { backgroundColor: themeColors.card, borderWidth: 2, borderColor: themeColors.border }]}
+                onPress={() => handleSkipTime(60)}
+              >
+                <View style={styles.skipButtonContent}>
+                  <Icon name="plus" size={18} color={themeColors.textSecondary} />
+                  <Text style={[styles.skipButtonText, { color: themeColors.textSecondary }]}>
+                    +1m
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Stop Section */}
+          <View style={styles.stopSection}>
             <TouchableOpacity
-              style={[styles.controlButton, { backgroundColor: themeColors.surface, borderWidth: 2, borderColor: themeColors.border }]}
-              onPress={stopTimer}
+              style={[styles.stopButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+              onPress={handleStopTimer}
             >
-              <Icon name="stop" size={24} color={themeColors.textPrimary} />
+              <Icon name="stop" size={20} color={themeColors.textSecondary} style={styles.buttonIcon} />
+              <Text style={[styles.stopButtonText, { color: themeColors.textSecondary }]}>
+                Stop Session
+              </Text>
             </TouchableOpacity>
           </View>
-        )}
-      </View>
+        </>
+      )}
 
-      {/* Instructions */}
+      {/* Start Button - Only show when not active */}
       {!isActive && (
-        <View style={styles.instructions}>
-          <Text style={[styles.instructionsText, { color: themeColors.textSecondary }]}>
-            Choose your meditation duration and find a comfortable position. 
-            The timer will play gentle sounds to mark the beginning and end of your session.
+        <TouchableOpacity
+          style={[styles.startButton, { backgroundColor: brandColors.primary }]}
+          onPress={handleStartTimer}
+        >
+          <Icon name="play" size={24} color="white" style={styles.buttonIcon} />
+          <Text style={[styles.startButtonText, { color: 'white' }]}>
+            Start Meditation
           </Text>
-        </View>
+        </TouchableOpacity>
       )}
     </BaseCard>
   );
@@ -329,9 +433,37 @@ const styles = StyleSheet.create({
   container: {
     margin: 20,
   },
+  statsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderRadius: 8,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    marginHorizontal: 16,
+  },
   timerDisplay: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   timerContainer: {
     position: 'relative',
@@ -339,28 +471,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   progressCircle: {
-    width: 200,
-    height: 200,
-    position: 'relative',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
     alignItems: 'center',
     justifyContent: 'center',
   },
   progressBackground: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 8,
-    borderColor: 'rgba(128, 128, 128, 0.3)',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 6,
+    borderColor: '#E5E7EB',
     position: 'absolute',
   },
   progressFill: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 8,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 6,
     borderColor: 'transparent',
+    borderTopColor: '#10B981',
     position: 'absolute',
-    transform: [{ rotate: '-90deg' }], // Start from top
+    top: 0,
+    left: 0,
   },
   timerOverlay: {
     position: 'absolute',
@@ -368,49 +502,68 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   timerText: {
-    fontSize: 48,
-    fontWeight: '300',
-    fontFamily: 'System',
-    marginBottom: 8,
+    fontSize: 42,
+    fontWeight: 'bold',
+    marginBottom: 6,
   },
   timerLabel: {
-    ...TYPOGRAPHY.BODY_SMALL,
-    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  progressText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: 6,
   },
   timerOptions: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   optionsLabel: {
-    ...TYPOGRAPHY.BODY_SMALL,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
     textAlign: 'center',
-    marginBottom: 16,
   },
   optionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 12,
+    gap: 8,
   },
   timeOption: {
-    paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    minWidth: 60,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1.5,
     alignItems: 'center',
+    minWidth: 70,
   },
   timeOptionText: {
-    ...TYPOGRAPHY.BUTTON_SMALL,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
   },
-  controls: {
-    marginBottom: 24,
+  timeOptionDescription: {
+    fontSize: 11,
+    textAlign: 'center',
   },
   startButton: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    marginBottom: 16,
+  },
+  controlButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 1.5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -421,16 +574,30 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   startButtonText: {
-    ...TYPOGRAPHY.BUTTON,
-    color: 'white',
+    fontSize: 16,
     fontWeight: '600',
+    marginLeft: 6,
   },
-  controlButton: {
+  buttonIcon: {
+    marginRight: 6,
+  },
+  controlsContainer: {
+    alignItems: 'center',
+    gap: 24,
+    marginTop: 16,
+    marginBottom: 32,
+  },
+  skipControls: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  skipButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -440,20 +607,35 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  activeControls: {
-    flexDirection: 'row',
-    gap: 20,
+  skipButtonContent: {
+    alignItems: 'center',
     justifyContent: 'center',
   },
-
-  instructions: {
-    paddingHorizontal: 16,
-  },
-  instructionsText: {
-    ...TYPOGRAPHY.BODY_SMALL,
+  skipButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
     textAlign: 'center',
-    lineHeight: 20,
+  },
+  stopSection: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  stopButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+  },
+  stopButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 6,
   },
 });
 
 export default MeditationTimer;
+
