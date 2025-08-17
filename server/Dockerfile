@@ -11,6 +11,7 @@ COPY utilities.aws/utilities.aws.csproj utilities.aws/
 COPY utilities/utilities.csproj utilities/
 COPY services.quotes/services.quotes.csproj services.quotes/
 COPY services.notifications/services.notifications.csproj services.notifications/
+COPY services.audio/services.audio.csproj services.audio/
 COPY orchestration.backgroundServices/orchestration.backgroundServices.csproj orchestration.backgroundServices/
 COPY tests/tests.csproj tests/
 RUN dotnet restore
@@ -23,6 +24,7 @@ COPY utilities/ utilities/
 COPY utilities.aws/ utilities.aws/
 COPY services.quotes/ services.quotes/
 COPY services.notifications/ services.notifications/
+COPY services.audio/ services.audio/
 COPY orchestration.backgroundServices/ orchestration.backgroundServices/
 COPY tests/ tests/
 
