@@ -32,9 +32,8 @@ const BottomNavigation = () => {
       />
       <FooterMenuItem
         tabKey={TAB_KEYS.AUDIO}
-        iconName="compact-disc"
-        iconType="fontawesome"
-        solid
+        iconName="headphones"
+        iconType="feather"
       />
       <FooterMenuItem
         tabKey={TAB_KEYS.MEDITATION}

@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Animated, AppState } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { getBrandColors, getThemeColors } from '@/config/colors';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import MiniPlayPauseButton from './mini-music-controls/MiniPlayPauseButton';
 import MiniNextButton from './mini-music-controls/MiniNextButton';
 import MiniPreviousButton from './mini-music-controls/MiniPreviousButton';
@@ -26,8 +27,31 @@ const AudioVisualization: React.FC<{ isPlaying: boolean; isDarkMode: boolean }> 
   const bar4 = useRef(new Animated.Value(0.4)).current;
   const bar5 = useRef(new Animated.Value(0.6)).current;
 
+  // Track app state to pause animations when app goes to background
+  const appState = useRef(AppState.currentState);
+  const [appStateVisible, setAppStateVisible] = React.useState(appState.current);
+
+  // Keep track of running animations so we can stop them
+  const animationsRef = useRef<Animated.CompositeAnimation[]>([]);
+
   useEffect(() => {
-    if (isPlaying) {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      appState.current = nextAppState;
+      setAppStateVisible(nextAppState);
+    });
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    // Stop any existing animations first
+    animationsRef.current.forEach(animation => animation.stop());
+    animationsRef.current = [];
+
+    // Only animate if music is playing AND app is in foreground
+    if (isPlaying && appStateVisible === 'active') {
       // Create staggered animations for each bar
       const createBarAnimation = (animatedValue: Animated.Value) => {
         return Animated.loop(
@@ -46,12 +70,22 @@ const AudioVisualization: React.FC<{ isPlaying: boolean; isDarkMode: boolean }> 
         );
       };
 
-      // Start animations with different delays for natural effect
-      setTimeout(() => createBarAnimation(bar1).start(), 0);
-      setTimeout(() => createBarAnimation(bar2).start(), 100);
-      setTimeout(() => createBarAnimation(bar3).start(), 200);
-      setTimeout(() => createBarAnimation(bar4).start(), 300);
-      setTimeout(() => createBarAnimation(bar5).start(), 400);
+      // Start animations with different delays for natural effect and track them
+      const animations = [
+        createBarAnimation(bar1),
+        createBarAnimation(bar2),
+        createBarAnimation(bar3),
+        createBarAnimation(bar4),
+        createBarAnimation(bar5),
+      ];
+
+      animationsRef.current = animations;
+
+      setTimeout(() => animations[0].start(), 0);
+      setTimeout(() => animations[1].start(), 100);
+      setTimeout(() => animations[2].start(), 200);
+      setTimeout(() => animations[3].start(), 300);
+      setTimeout(() => animations[4].start(), 400);
     } else {
       // Stop animations and reset to default heights
       bar1.setValue(0.3);
@@ -60,7 +94,13 @@ const AudioVisualization: React.FC<{ isPlaying: boolean; isDarkMode: boolean }> 
       bar4.setValue(0.4);
       bar5.setValue(0.6);
     }
-  }, [isPlaying, bar1, bar2, bar3, bar4, bar5]);
+
+    // Cleanup function to stop animations when component unmounts
+    return () => {
+      animationsRef.current.forEach(animation => animation.stop());
+      animationsRef.current = [];
+    };
+  }, [isPlaying, appStateVisible, bar1, bar2, bar3, bar4, bar5]);
 
   const barColor = brandColors.primary;
   const maxHeight = 16;
@@ -139,8 +179,20 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
   const { currentTrack, audioFiles, isFullPlayerVisible, isPlaying } = useSelector((state: RootState) => state.musicPlayer);
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const { activeTab } = useSelector((state: RootState) => state.navigation);
+  const { progress } = useMusicPlayer(); // Get progress from context instead of Redux
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);
+
+  // Debug progress updates
+  useEffect(() => {
+    if (progress.duration > 0) {
+      console.log('🎵 Mini Player Progress:', {
+        position: progress.position,
+        duration: progress.duration,
+        percentage: (progress.position / progress.duration) * 100
+      });
+    }
+  }, [progress.position, progress.duration]);
 
   // Don't render if no track is loaded, full player is visible, or not on Audio tab
   if (!currentTrack || audioFiles.length === 0 || isFullPlayerVisible || activeTab !== 'audio') {
@@ -227,17 +279,34 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
         <MiniPlayPauseButton />
         <MiniNextButton />
       </View>
+
+      {/* Progress Bar - Full width at bottom of mini player */}
+      <View style={styles.progressContainer}>
+        <View style={[
+          styles.progressBackground,
+          { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
+        ]}>
+          <View style={[
+            styles.progressFill,
+            {
+              backgroundColor: brandColors.primary,
+              width: progress.duration > 0 ? `${Math.min(100, Math.max(0, (progress.position / progress.duration) * 100))}%` : '0%'
+            }
+          ]} />
+        </View>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    position: 'relative', // Enable absolute positioning for progress bar
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 8, // Restore some padding for better touch targets
+    paddingBottom: 11, // Extra padding to account for progress bar height (8 + 3)
     borderTopWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
@@ -312,6 +381,20 @@ const styles = StyleSheet.create({
     marginHorizontal: 1,
     borderRadius: 1.5,
     minHeight: 2,
+  },
+  progressContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3, // Slightly taller for better visibility
+  },
+  progressBackground: {
+    height: '100%',
+    backgroundColor: 'transparent', // Background will be set inline
+  },
+  progressFill: {
+    height: '100%',
   },
 });
 

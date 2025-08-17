@@ -8,6 +8,7 @@ A compact, reusable music player component that shares state with your main musi
 - 🎮 **Full Controls**: Play/pause, next, previous buttons
 - 🖼️ **Album Artwork**: Optional artwork display
 - 🎶 **Audio Visualization**: Animated equalizer bars when music is playing
+- 📊 **Progress Indicator**: Subtle progress line showing playback position
 - 📱 **Responsive**: Adapts to different screen sizes
 - 🎨 **Customizable**: Flexible styling options
 - 🔄 **Auto-sync**: Automatically updates when music state changes
@@ -100,6 +101,15 @@ The mini player includes an animated audio equalizer that:
 - ⚡ **Smooth animations** with staggered timing for natural effect
 - 🔄 **Responsive to playback state** - animates only when music is playing
 - 📱 **Optimized performance** using React Native's Animated API
+
+## Progress Indicator
+
+The mini player shows a progress line at the bottom that:
+- 📊 **Visual feedback** - Shows current playback position across full width
+- 🎨 **Theme integration** - Uses brand colors for the progress fill
+- 📍 **Real-time updates** - Syncs with actual playback position from TrackPlayer
+- 👁️ **Full-width design** - Spans the entire bottom of the mini player
+- 📱 **Read-only** - Shows progress without seeking functionality
 
 ## Styling
 
