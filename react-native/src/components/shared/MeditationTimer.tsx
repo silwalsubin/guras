@@ -130,7 +130,7 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
                 }
               ]}
             >
-              {item}
+              {item} min
             </Text>
           </View>
         ))}
@@ -381,9 +381,6 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
       {/* Timer Selection */}
       {!isActive && (
         <View style={styles.timerSelection}>
-          <Text style={[styles.timerSelectorLabel, { color: themeColors.textPrimary }]}>
-            Select Duration (Minutes)
-          </Text>
           <View style={[
             styles.wheelPickerContainer,
             {

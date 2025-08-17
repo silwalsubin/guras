@@ -43,11 +43,17 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           capabilities: [
             Capability.Play,
             Capability.Pause,
+            Capability.SkipToNext,
+            Capability.SkipToPrevious,
           ],
           compactCapabilities: [
             Capability.Play,
             Capability.Pause,
           ],
+          // Enable background playback
+          android: {
+            appKilledPlaybackBehavior: 'StopPlaybackAndRemoveNotification',
+          },
         });
         console.log('✅ TrackPlayer setup completed');
       } catch (error: unknown) {
