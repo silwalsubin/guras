@@ -19,19 +19,19 @@ export const MiniPlayPauseButton: React.FC = () => {
   // Load track into TrackPlayer
   const loadTrack = async (audioFile: any, index: number) => {
     try {
-      console.log('🎵 Mini Player: Loading track:', audioFile.title || audioFile.fileName);
+      console.log('🎵 Mini Player: Loading track:', audioFile.name || audioFile.title || audioFile.fileName);
 
       // Create track object for TrackPlayer
       const track = {
-        id: audioFile.fileName,
-        url: audioFile.downloadUrl,
-        title: audioFile.title ?? audioFile.fileName.replace(/\.[^/.]+$/, ""),
-        artist: audioFile.artist ?? 'Guras',
+        id: audioFile.id || audioFile.fileName || audioFile.name,
+        url: audioFile.audioDownloadUrl || audioFile.downloadUrl,
+        title: audioFile.name || audioFile.title || (audioFile.fileName ? audioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
+        artist: audioFile.author || audioFile.artist || 'Guras',
       };
 
       console.log('🎵 Mini Player: Track object created:', track);
 
-      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.artworkUrl ?? null }));
+      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.thumbnailDownloadUrl || audioFile.artworkUrl || null }));
       dispatch(setCurrentTrackIndex(index));
 
       // Stop current playback and load new track

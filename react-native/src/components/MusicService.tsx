@@ -71,18 +71,20 @@ const MusicService: React.FC = () => {
   const loadTrack = async (audioFile: AudioFile, index: number) => {
     try {
       console.log('🎵 MusicService: Loading track:', audioFile.title || audioFile.fileName);
-      
-      // Create track object for TrackPlayer
+      console.log('🎵 MusicService: AudioFile object:', audioFile);
+
+      // Create track object for TrackPlayer (handle both old and new API formats)
       const track = {
-        id: audioFile.fileName,
-        url: audioFile.downloadUrl,
-        title: audioFile.title ?? audioFile.fileName.replace(/\.[^/.]+$/, ""),
-        artist: audioFile.artist ?? 'Guras',
+        id: audioFile.id || audioFile.fileName || audioFile.name,
+        url: audioFile.audioDownloadUrl || audioFile.downloadUrl,
+        title: audioFile.name || audioFile.title || (audioFile.fileName ? audioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
+        artist: audioFile.author || audioFile.artist || 'Guras',
       };
 
       console.log('🎵 MusicService: Track object created:', track);
+      console.log('🎵 MusicService: Audio URL:', track.url);
 
-      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.artworkUrl ?? null }));
+      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.thumbnailDownloadUrl || audioFile.artworkUrl || null }));
       dispatch(setCurrentTrackIndex(index));
 
       // Stop current playback and load new track
@@ -133,14 +135,14 @@ const MusicService: React.FC = () => {
         // Load the next track into TrackPlayer
         try {
           const track = {
-            id: nextAudioFile.fileName,
-            url: nextAudioFile.downloadUrl,
-            title: nextAudioFile.title ?? nextAudioFile.fileName.replace(/\.[^/.]+$/, ""),
-            artist: nextAudioFile.artist ?? 'Guras',
+            id: nextAudioFile.id || nextAudioFile.fileName || nextAudioFile.name,
+            url: nextAudioFile.audioDownloadUrl || nextAudioFile.downloadUrl,
+            title: nextAudioFile.name || nextAudioFile.title || (nextAudioFile.fileName ? nextAudioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
+            artist: nextAudioFile.author || nextAudioFile.artist || 'Guras',
           };
 
           // Update Redux state
-          dispatch(setCurrentTrack({ ...track, artworkUrl: nextAudioFile.artworkUrl ?? null }));
+          dispatch(setCurrentTrack({ ...track, artworkUrl: nextAudioFile.thumbnailDownloadUrl || nextAudioFile.artworkUrl || null }));
           dispatch(setCurrentTrackIndex(nextIndex));
           
           await TrackPlayer.reset();
