@@ -7,6 +7,7 @@ A compact, reusable music player component that shares state with your main musi
 - 🎵 **Shared State**: Uses the same Redux store as your main music player
 - 🎮 **Full Controls**: Play/pause, next, previous buttons
 - 🖼️ **Album Artwork**: Optional artwork display
+- 🎶 **Audio Visualization**: Animated equalizer bars when music is playing
 - 📱 **Responsive**: Adapts to different screen sizes
 - 🎨 **Customizable**: Flexible styling options
 - 🔄 **Auto-sync**: Automatically updates when music state changes
@@ -89,6 +90,16 @@ The mini player automatically:
 - ✅ Updates track info when songs change
 - ✅ Reflects play/pause state
 - ✅ Syncs with main music player controls
+- ✅ Shows animated audio visualization when music is playing
+
+## Audio Visualization
+
+The mini player includes an animated audio equalizer that:
+- 🎵 **Appears automatically** when music starts playing
+- 🎨 **Matches your brand colors** using the primary color from your theme
+- ⚡ **Smooth animations** with staggered timing for natural effect
+- 🔄 **Responsive to playback state** - animates only when music is playing
+- 📱 **Optimized performance** using React Native's Animated API
 
 ## Styling
 
