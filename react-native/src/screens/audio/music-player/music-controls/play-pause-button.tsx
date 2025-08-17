@@ -4,14 +4,16 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { getBrandColors } from '@/config/colors';
+import { getBrandColors, getThemeColors, COLORS } from '@/config/colors';
 import TrackPlayer, { State } from 'react-native-track-player';
 import { apiService, AudioFile } from '@/services/api';
 
 const PlayPauseButton: React.FC = () => {
   const { togglePlayback, isSetup } = useMusicPlayer();
   const { isPlaying, audioFiles, currentTrack, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
+  const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const brandColors = getBrandColors();
+  const themeColors = getThemeColors(isDarkMode);
 
   const loadTrackManually = async (audioFile: AudioFile, index: number) => {
     try {
@@ -105,17 +107,40 @@ const PlayPauseButton: React.FC = () => {
   };
 
   return (
-    <TouchableOpacity style={styles.playPauseButton} onPress={handlePress}>
-      <FontAwesome name={isPlaying ? 'pause' : 'play'} size={32} color={brandColors.primary} />
+    <TouchableOpacity
+      style={[
+        styles.playPauseButton,
+        {
+          backgroundColor: brandColors.primary,
+          shadowColor: COLORS.SHADOW,
+        }
+      ]}
+      onPress={handlePress}
+    >
+      <FontAwesome
+        name={isPlaying ? 'pause' : 'play'}
+        size={28}
+        color={isDarkMode ? '#000' : '#fff'}
+        style={!isPlaying && { marginLeft: 2 }} // Adjust play icon position
+      />
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   playPauseButton: {
-    padding: 16,
-    borderRadius: 12,
-    // Removed background to match other control buttons styling
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });
 

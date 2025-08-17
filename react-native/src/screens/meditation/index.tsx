@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
 import { RootState } from '@/store';
 import { RefreshUtils } from '@/utils/refreshUtils';
-import { COLORS } from '@/config/colors';
+import { COLORS, getThemeColors, getBrandColors } from '@/config/colors';
 import {
   AppHeader,
   SectionHeader,
@@ -24,11 +24,15 @@ const MeditationScreen: React.FC = () => {
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Sample progress data
+  const themeColors = getThemeColors(isDarkMode);
+  const brandColors = getBrandColors();
+
+  // Get meditation state for real progress data
+  const meditationState = useSelector((state: RootState) => state.meditation);
   const progressData: ProgressData = {
-    minutes: 0,
-    sessions: 0,
-    streak: 0,
+    minutes: meditationState.totalMinutes,
+    sessions: meditationState.totalSessions,
+    streak: 0, // TODO: Calculate streak from session history
   };
 
 
@@ -60,44 +64,45 @@ const MeditationScreen: React.FC = () => {
   }, []);
 
   return (
-    <ScrollView 
-      style={styles.scrollView} 
+    <ScrollView
+      style={[styles.scrollView, { backgroundColor: themeColors.background }]}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={isDarkMode ? COLORS.WHITE : COLORS.BLACK}
-          colors={[COLORS.PRIMARY]} // Primary brand color
+          tintColor={brandColors.primary}
+          colors={[brandColors.primary]}
         />
       }
     >
-      {/* Header */}
-      <AppHeader 
-        onProfilePress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))} 
-      />
-
-      {/* Meditation Timer */}
-      <View style={styles.meditationSection}>
-        <MeditationTimer onSessionComplete={handleMeditationComplete} />
-      </View>
-
-      {/* Daily Progress */}
-      <View style={styles.progressSection}>
-        <SectionHeader title="Today's Progress" />
-        <ProgressCard 
-          data={progressData}
+        {/* Header */}
+        <AppHeader
+          onProfilePress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))}
         />
-      </View>
 
+        {/* Meditation Timer - Hero Section */}
+        <View style={styles.heroSection}>
+          <MeditationTimer onSessionComplete={handleMeditationComplete} />
+        </View>
 
+        {/* Content Sections */}
+        <View style={styles.contentContainer}>
+          {/* Daily Progress */}
+          <View style={styles.progressSection}>
+            <SectionHeader title="Today's Progress" />
+            <ProgressCard
+              data={progressData}
+            />
+          </View>
 
-      {/* Recent Sessions */}
-      <View style={styles.recentSection}>
-        <SectionHeader title="Recent Sessions" />
-        <RecentSessionsCard />
-      </View>
+          {/* Recent Sessions */}
+          <View style={styles.recentSection}>
+            <SectionHeader title="Recent Sessions" />
+            <RecentSessionsCard />
+          </View>
+        </View>
 
       {/* Bottom padding to prevent content from being hidden by footer */}
       <View style={styles.bottomPadding} />
@@ -112,23 +117,26 @@ const styles = StyleSheet.create({
   scrollContent: {
     // Don't center all content - let individual sections handle their own alignment
   },
-  meditationSection: {
-    marginBottom: 20,
-    width: '100%',
+  heroSection: {
+    marginBottom: 32,
+    paddingBottom: 16,
+  },
+  contentContainer: {
+    backgroundColor: 'transparent',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 8,
   },
   progressSection: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     marginBottom: 32,
-    width: '100%',
   },
   recentSection: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
-    width: '100%',
+    paddingHorizontal: 24,
+    marginBottom: 24,
   },
-  // Add bottom padding to account for the footer
   bottomPadding: {
-    height: 100, // Account for bottom navigation + safe area
+    height: 120, // Account for bottom navigation + safe area (same as home screen)
   },
 });
 
