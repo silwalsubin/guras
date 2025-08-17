@@ -17,13 +17,13 @@ const PlayPauseButton: React.FC = () => {
 
   const loadTrackManually = async (audioFile: AudioFile, index: number) => {
     try {
-      console.log('🎵 Manually loading track:', audioFile.title || audioFile.fileName);
-      
+      console.log('🎵 Manually loading track:', audioFile.name || audioFile.title || audioFile.fileName);
+
       const track = {
-        id: audioFile.fileName,
-        url: audioFile.downloadUrl,
-        title: audioFile.title ?? audioFile.fileName.replace(/\.[^/.]+$/, ""),
-        artist: audioFile.artist ?? 'Guras',
+        id: audioFile.id || audioFile.fileName || audioFile.name,
+        url: audioFile.audioDownloadUrl || audioFile.downloadUrl,
+        title: audioFile.name || audioFile.title || (audioFile.fileName ? audioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
+        artist: audioFile.author || audioFile.artist || 'Guras',
       };
 
       await TrackPlayer.reset();

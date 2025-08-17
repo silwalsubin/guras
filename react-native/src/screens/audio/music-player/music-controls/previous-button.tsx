@@ -15,18 +15,18 @@ const PreviousButton: React.FC = () => {
 
   const loadTrack = async (audioFile: AudioFile, index: number, wasPlaying: boolean) => {
     try {
-      console.log('🎵 Loading previous track:', audioFile.title || audioFile.fileName);
+      console.log('🎵 Loading previous track:', audioFile.name || audioFile.title || audioFile.fileName);
       console.log('🎵 Previous track was playing:', wasPlaying);
-      
+
       const track = {
-        id: audioFile.fileName,
-        url: audioFile.downloadUrl,
-        title: audioFile.title ?? audioFile.fileName.replace(/\.[^/.]+$/, ""),
-        artist: audioFile.artist ?? 'Guras',
+        id: audioFile.id || audioFile.fileName || audioFile.name,
+        url: audioFile.audioDownloadUrl || audioFile.downloadUrl,
+        title: audioFile.name || audioFile.title || (audioFile.fileName ? audioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
+        artist: audioFile.author || audioFile.artist || 'Guras',
       };
 
       // Update Redux state
-      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.artworkUrl ?? null }));
+      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.thumbnailDownloadUrl || audioFile.artworkUrl || null }));
       dispatch(setCurrentTrackIndex(index));
 
       // Load track into TrackPlayer

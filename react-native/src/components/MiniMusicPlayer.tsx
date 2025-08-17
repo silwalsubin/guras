@@ -176,10 +176,9 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
   showArtwork = true,
   style
 }) => {
-  const { currentTrack, audioFiles, isFullPlayerVisible, isPlaying } = useSelector((state: RootState) => state.musicPlayer);
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const { activeTab } = useSelector((state: RootState) => state.navigation);
-  const { progress } = useMusicPlayer(); // Get progress from context instead of Redux
+  const { currentTrack, isPlaying, progress, togglePlayback } = useMusicPlayer();
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);
 
@@ -194,8 +193,8 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
     }
   }, [progress.position, progress.duration]);
 
-  // Don't render if no track is loaded, full player is visible, or not on Audio tab
-  if (!currentTrack || audioFiles.length === 0 || isFullPlayerVisible || activeTab !== 'audio') {
+  // Don't render if no track is loaded or not on Audio tab
+  if (!currentTrack || activeTab !== 'audio') {
     return null;
   }
 
@@ -222,9 +221,9 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
         {/* Album Artwork */}
         {showArtwork && (
           <View style={styles.artworkContainer}>
-            {currentTrack.artworkUrl ? (
+            {currentTrack.artwork ? (
               <Image
-                source={{ uri: currentTrack.artworkUrl }}
+                source={{ uri: currentTrack.artwork }}
                 style={styles.artwork}
                 resizeMode="cover"
               />

@@ -32,9 +32,9 @@ const ENVIRONMENTS: Record<string, EnvironmentConfig> = {
 
 // Environment detection logic
 const detectEnvironment = (): EnvironmentConfig => {
-  // TEMPORARY OVERRIDE: Force staging environment for testing
-  // TODO: Remove this override when done testing
-  return ENVIRONMENTS.staging;
+  // TEMPORARY OVERRIDE: Force development environment for testing new audio features
+  // TODO: Remove this override when audio features are deployed to staging
+  return ENVIRONMENTS.development;
   
   // Method 1: Use __DEV__ flag (React Native built-in)
   // if (__DEV__) {

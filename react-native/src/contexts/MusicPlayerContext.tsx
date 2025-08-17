@@ -1,13 +1,25 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import TrackPlayer, { State, useProgress, Capability, Event } from 'react-native-track-player';
+import TrackPlayer, { State, useProgress, Capability, Event, Track } from 'react-native-track-player';
 import { useDispatch } from 'react-redux';
 import { setIsPlaying } from '@/store/musicPlayerSlice';
 
+export interface TrackInfo {
+  id: string;
+  title: string;
+  artist: string;
+  url: string;
+  artwork?: string;
+  duration?: number;
+}
+
 interface MusicPlayerContextType {
   isSetup: boolean;
+  isPlaying: boolean;
+  currentTrack: TrackInfo | null;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   togglePlayback: () => Promise<void>;
+  playTrack: (track: TrackInfo) => Promise<void>;
   progress: ReturnType<typeof useProgress>;
 }
 
@@ -21,6 +33,8 @@ export const useMusicPlayer = () => {
 
 export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSetup, setIsSetup] = useState(false);
+  const [isPlaying, setIsPlayingState] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState<TrackInfo | null>(null);
   const dispatch = useDispatch();
   const progress = useProgress();
 
@@ -107,8 +121,72 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [play, pause]);
 
+  const playTrack = useCallback(async (track: TrackInfo) => {
+    try {
+      console.log('🎵 Playing track:', track.title);
+      console.log('🎵 Track URL:', track.url);
+      console.log('🎵 Track artwork:', track.artwork);
+
+      // Test if the URL is accessible
+      try {
+        console.log('🎵 Testing URL accessibility...');
+        const response = await fetch(track.url, { method: 'HEAD' });
+        console.log('🎵 URL test response status:', response.status);
+        console.log('🎵 URL test response headers:', response.headers);
+      } catch (urlError) {
+        console.error('🎵 URL accessibility test failed:', urlError);
+      }
+
+      // Convert TrackInfo to Track format for TrackPlayer
+      const trackPlayerTrack: Track = {
+        id: track.id,
+        url: track.url, // Use the actual S3 URL
+        title: track.title,
+        artist: track.artist,
+        artwork: track.artwork,
+        duration: track.duration,
+      };
+
+      console.log('🎵 TrackPlayer track object:', trackPlayerTrack);
+
+      // Clear current queue and add new track
+      await TrackPlayer.reset();
+      await TrackPlayer.add(trackPlayerTrack);
+
+      // Update current track state
+      setCurrentTrack(track);
+
+      // Start playing
+      await TrackPlayer.play();
+      setIsPlayingState(true);
+    } catch (error) {
+      console.error('🎵 Error playing track:', error);
+    }
+  }, []);
+
+  // Update isPlaying state based on TrackPlayer state
+  useEffect(() => {
+    const updatePlayingState = async () => {
+      const state = await TrackPlayer.getState();
+      const playing = state === State.Playing;
+      setIsPlayingState(playing);
+      dispatch(setIsPlaying(playing));
+    };
+
+    updatePlayingState();
+  }, [dispatch]);
+
   return (
-    <MusicPlayerContext.Provider value={{ isSetup, play, pause, togglePlayback, progress }}>
+    <MusicPlayerContext.Provider value={{
+      isSetup,
+      isPlaying,
+      currentTrack,
+      play,
+      pause,
+      togglePlayback,
+      playTrack,
+      progress
+    }}>
       {children}
     </MusicPlayerContext.Provider>
   );

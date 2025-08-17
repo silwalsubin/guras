@@ -4,13 +4,17 @@ import { API_CONFIG } from '@/config/api';
 
 // Audio file types
 export interface AudioFile {
-  fileName: string;
-  downloadUrl: string;
-  expiresAt: string;
-  // Optional metadata from server
-  title?: string;
-  artist?: string;
-  artworkUrl?: string | null;
+  id: string;
+  name: string;
+  author: string;
+  description?: string;
+  durationSeconds?: number;
+  fileSizeBytes?: number;
+  audioDownloadUrl: string;
+  thumbnailDownloadUrl?: string;
+  uploadedByUserId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AudioFilesResponse {
@@ -89,18 +93,20 @@ class ApiService {
     );
   }
 
-  async getUploadUrl(fileName: string, expirationMinutes: number = 15): Promise<ApiResponse<UploadUrlResponse>> {
-    return this.makeRequest<UploadUrlResponse>('/api/audio/upload-url', {
-      method: 'POST',
-      body: JSON.stringify({
-        fileName,
-        expirationMinutes
-      })
-    });
+  async getMyAudioFiles(expirationMinutes: number = 60): Promise<ApiResponse<AudioFilesResponse>> {
+    return this.makeRequest<AudioFilesResponse>(
+      `/api/audio/my-audio-files?expirationMinutes=${expirationMinutes}`
+    );
   }
 
-  async deleteAudioFile(fileName: string): Promise<ApiResponse<{ message: string }>> {
-    return this.makeRequest<{ message: string }>(`/api/audio/${encodeURIComponent(fileName)}`, {
+  async getAudioFile(id: string, expirationMinutes: number = 60): Promise<ApiResponse<AudioFile>> {
+    return this.makeRequest<AudioFile>(
+      `/api/audio/${id}?expirationMinutes=${expirationMinutes}`
+    );
+  }
+
+  async deleteAudioFile(audioFileId: string): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest<{ message: string }>(`/api/audio/${audioFileId}`, {
       method: 'DELETE'
     });
   }

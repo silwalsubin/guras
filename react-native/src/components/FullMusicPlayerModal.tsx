@@ -8,12 +8,14 @@ import {
   SafeAreaView,
   StatusBar,
   ImageBackground,
-  Animated
+  Animated,
+  Image
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setFullPlayerVisible } from '@/store/musicPlayerSlice';
 import { getThemeColors, getBrandColors, COLORS } from '@/config/colors';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 
@@ -27,12 +29,9 @@ import ProgressBar from '@/screens/audio/music-player/progress-bar';
 const FullMusicPlayerModal: React.FC = () => {
   const dispatch = useDispatch();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
-  const { 
-    isFullPlayerVisible, 
-    currentTrack, 
-    audioFiles 
-  } = useSelector((state: RootState) => state.musicPlayer);
-  
+  const { isFullPlayerVisible } = useSelector((state: RootState) => state.musicPlayer);
+  const { currentTrack } = useMusicPlayer();
+
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
 
@@ -40,8 +39,8 @@ const FullMusicPlayerModal: React.FC = () => {
     dispatch(setFullPlayerVisible(false));
   };
 
-  // Background image source
-  const bgSource = currentTrack?.artworkUrl ? { uri: currentTrack.artworkUrl } : null;
+  // Background image source - use the thumbnail from context
+  const bgSource = currentTrack?.artwork ? { uri: currentTrack.artwork } : null;
 
   return (
     <Modal
@@ -77,20 +76,28 @@ const FullMusicPlayerModal: React.FC = () => {
           {/* Album Artwork Section */}
           <View style={styles.artworkSection}>
             <View style={styles.artworkContainer}>
-              <View style={[
-                styles.artworkFallback,
-                {
-                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                  borderWidth: 1,
-                  borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
-                }
-              ]}>
-                <FontAwesome
-                  name="music"
-                  size={64}
-                  color={brandColors.primary}
+              {currentTrack?.artwork ? (
+                <Image
+                  source={{ uri: currentTrack.artwork }}
+                  style={styles.artwork}
+                  resizeMode="cover"
                 />
-              </View>
+              ) : (
+                <View style={[
+                  styles.artworkFallback,
+                  {
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                    borderWidth: 1,
+                    borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                  }
+                ]}>
+                  <FontAwesome
+                    name="music"
+                    size={64}
+                    color={brandColors.primary}
+                  />
+                </View>
+              )}
             </View>
           </View>
 
@@ -99,8 +106,8 @@ const FullMusicPlayerModal: React.FC = () => {
             <TrackName />
           </View>
 
-          {/* Playback Controls - Only show when there are audio files */}
-          {audioFiles.length > 0 && (
+          {/* Playback Controls - Only show when there's a current track */}
+          {currentTrack && (
             <View style={styles.playerSection}>
               <View style={styles.controlsContainer}>
                 <PreviousButton />
@@ -177,6 +184,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 16,
     elevation: 8,
+  },
+  artwork: {
+    width: 280,
+    height: 280,
+    borderRadius: 24,
   },
   artworkFallback: {
     width: 280,

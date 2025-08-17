@@ -3,54 +3,33 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors } from '@/config/colors';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const TrackName: React.FC = () => {
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
-  const { loading, currentTrack, currentTrackIndex, audioFiles } = useSelector((state: RootState) => state.musicPlayer);
+  const { currentTrack } = useMusicPlayer();
   const themeColors = getThemeColors(isDarkMode);
-
-  // Get current track info for display
-  const getCurrentTrackInfo = () => {
-    if (loading) {
-      return { title: '', position: '' };
-    }
-    if (!currentTrack || audioFiles.length === 0) {
-      return { title: 'No tracks available', position: '0 / 0' };
-    }
-    return {
-      title: currentTrack.title,
-      position: `${currentTrackIndex + 1} / ${audioFiles.length}`
-    };
-  };
-
-  const trackInfo = getCurrentTrackInfo();
 
   return (
     <View style={styles.titleContainer}>
-      {!loading && trackInfo.title ? (
+      {currentTrack ? (
         <>
           <Text style={[styles.title, { color: themeColors.textPrimary }]}>
-            {trackInfo.title}
+            {currentTrack.title}
           </Text>
 
           {/* Artist Name */}
-          {currentTrack?.artist && (
+          {currentTrack.artist && (
             <Text style={[styles.artist, { color: themeColors.textSecondary }]}>
               {currentTrack.artist}
             </Text>
           )}
-
-          {/* Track Position */}
-          <Text style={[styles.trackPosition, { color: themeColors.textSecondary }]}>
-            {trackInfo.position}
-          </Text>
         </>
       ) : (
         // Invisible placeholders to maintain exact layout during loading
         <>
           <View style={[styles.titlePlaceholder, { marginBottom: 8 }]} />
           <View style={[styles.artistPlaceholder, { marginBottom: 6 }]} />
-          <View style={[styles.positionPlaceholder, { marginBottom: 12 }]} />
         </>
       )}
     </View>
