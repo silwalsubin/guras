@@ -16,7 +16,6 @@ const formatTime = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-const SLIDER_WIDTH = 320;
 const SLIDER_HEIGHT = 40;
 const THUMB_SIZE = 16; // Static size for the custom thumb
 const TRACK_OFFSET = 8; // Offset to align thumb with slider track
@@ -64,10 +63,8 @@ const ProgressBar: React.FC = () => {
     }
   }, [contextProgress.position, contextProgress.duration, isSliding, pendingSeek, dispatch]);
 
-  // Calculate thumb position
-  const effectiveWidth = SLIDER_WIDTH - 2 * TRACK_OFFSET;
+  // Calculate current value for slider
   const currentValue = isSliding ? sliderValue : (pendingSeek !== null ? pendingSeek : contextProgress.position);
-  const thumbPosition = TRACK_OFFSET + ((currentValue / (contextProgress.duration || 1)) * effectiveWidth);
 
   const handleSlidingStart = () => {
     console.log('🎵 Slider sliding started');
@@ -101,79 +98,32 @@ const ProgressBar: React.FC = () => {
   return (
     <View style={styles.progressContainer}>
       <View style={styles.timeRow}>
-        <Text style={[styles.timeText, { color: themeColors.textSecondary }]}> 
+        <Text style={[styles.timeText, { color: themeColors.textSecondary }]}>
           {formatTime(contextProgress.position)}
         </Text>
-        <Text style={[styles.timeText, { color: themeColors.textSecondary }]}> 
+        <Text style={[styles.timeText, { color: themeColors.textSecondary }]}>
           {formatTime(contextProgress.duration)}
         </Text>
       </View>
-      <View style={{ width: SLIDER_WIDTH, height: SLIDER_HEIGHT, position: 'relative', justifyContent: 'center' }}>
+      <View style={styles.sliderContainer}>
         <Slider
-          style={{ width: SLIDER_WIDTH, height: SLIDER_HEIGHT, position: 'absolute', left: 0, top: 0 }}
+          style={styles.slider}
           minimumValue={0}
           maximumValue={contextProgress.duration || 1}
           value={currentValue}
           minimumTrackTintColor={brandColors.primary}
-          maximumTrackTintColor={themeColors.textSecondary}
-          thumbTintColor="transparent" // Hide default thumb
+          maximumTrackTintColor={isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)'}
+          thumbTintColor={brandColors.primary}
           onSlidingStart={handleSlidingStart}
           onSlidingComplete={handleSlidingComplete}
           onValueChange={handleValueChange}
           disabled={!isSetup || contextProgress.duration === 0}
         />
-        {/* Static custom thumb overlay */}
-        <View
-          pointerEvents="none"
-          style={[
-            styles.customThumb,
-            {
-              left: Math.max(
-                TRACK_OFFSET,
-                Math.min(
-                  SLIDER_WIDTH - THUMB_SIZE - TRACK_OFFSET,
-                  thumbPosition - (THUMB_SIZE / 2)
-                )
-              ),
-            },
-          ]}
-        />
         {/* Floating time label above thumb while sliding */}
         {isSliding && (
-          <View
-            style={{
-              position: 'absolute',
-              left: Math.max(
-                TRACK_OFFSET,
-                Math.min(
-                  SLIDER_WIDTH - THUMB_SIZE - TRACK_OFFSET,
-                  thumbPosition - (THUMB_SIZE / 2)
-                )
-              ),
-              top: -32, // 32px above the slider
-              width: 72,
-              alignItems: 'center',
-              zIndex: 20,
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: themeColors.card,
-                borderRadius: 8,
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                shadowColor: shadowColor,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 2,
-              }}
-            >
-              <Text
-                style={{ color: themeColors.textPrimary, fontWeight: '600', fontSize: 12, textAlign: 'center' }}
-                numberOfLines={1}
-                ellipsizeMode="clip"
-              >
+          <View style={styles.timeTooltip}>
+            <View style={[styles.timeTooltipContent, { backgroundColor: themeColors.card }]}>
+              <Text style={[styles.timeTooltipText, { color: themeColors.textPrimary }]}>
                 {formatTime(sliderValue)}
               </Text>
             </View>
@@ -187,33 +137,52 @@ const ProgressBar: React.FC = () => {
 const styles = StyleSheet.create({
   progressContainer: {
     alignItems: 'center',
-    width: '90%',
-    marginBottom: 0, // More space from bottom
-    marginTop: 20, // Add some space above progress bar
+    width: '100%',
+    paddingHorizontal: 0,
   },
   timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 8,
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
   timeText: {
     fontSize: 12,
     fontWeight: '500',
+    opacity: 0.8,
   },
-  customThumb: {
+  sliderContainer: {
+    width: '100%',
+    height: SLIDER_HEIGHT,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  slider: {
+    width: '100%',
+    height: SLIDER_HEIGHT,
+  },
+  timeTooltip: {
     position: 'absolute',
-    zIndex: 10,
-    backgroundColor: COLORS.PRIMARY,
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: THUMB_SIZE / 2,
-    top: (SLIDER_HEIGHT - THUMB_SIZE) / 2,
+    top: -40,
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  timeTooltipContent: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     shadowColor: COLORS.SHADOW,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 4,
+  },
+  timeTooltipText: {
+    fontWeight: '600',
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
 

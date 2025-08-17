@@ -124,34 +124,20 @@ const QuotesView: React.FC = () => {
   }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[themeColors.textPrimary]}
-          tintColor={themeColors.textPrimary}
-          title="Pull to refresh quotes"
-          titleColor={themeColors.textSecondary}
-        />
-      }
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.container}>
       {quotes.map((quote, index) => (
         <View key={`${quote.text}-${quote.author}`}>
           <Quote quote={quote} />
           {index < quotes.length - 1 && <HorizontalSeparator />}
         </View>
       ))}
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    flex: 1,
   },
   card: {
     margin: 16,

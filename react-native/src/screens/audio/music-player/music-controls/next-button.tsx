@@ -85,20 +85,23 @@ const NextButton: React.FC = () => {
   const hasMultipleTracks = audioFiles.length > 1;
 
   return (
-    <TouchableOpacity 
-      style={[styles.navButton, { opacity: hasMultipleTracks ? 1 : 0.3 }]} 
+    <TouchableOpacity
+      style={[styles.navButton, { opacity: hasMultipleTracks ? 1 : 0.3 }]}
       onPress={handleNextTrack}
       disabled={!hasMultipleTracks}
     >
-      <FontAwesome name="step-forward" size={24} color={brandColors.primary} />
+      <FontAwesome name="step-forward" size={28} color={brandColors.primary} />
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   navButton: {
-    padding: 12,
-    borderRadius: 8,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

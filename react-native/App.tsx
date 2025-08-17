@@ -59,7 +59,8 @@ const MainApp: React.FC = () => {
     if (activeTab === TAB_KEYS.AUDIO) {
       return [baseStyle, { paddingBottom: 140 }]; // 60px mini player + 80px footer
     }
-    return baseStyle; // No extra padding - let individual screens handle their own bottom padding
+    // For all other tabs, add bottom padding to account for bottom navigation
+    return [baseStyle, { paddingBottom: 0 }]; // Let individual screens handle their own bottom padding
   };
 
   const renderActiveTab = () => {
