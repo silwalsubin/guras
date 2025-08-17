@@ -46,12 +46,15 @@ const AudioVisualization: React.FC<{ isPlaying: boolean; isDarkMode: boolean }> 
   }, []);
 
   useEffect(() => {
+    console.log('🎵 AudioVisualization effect triggered:', { isPlaying, appStateVisible });
+
     // Stop any existing animations first
     animationsRef.current.forEach(animation => animation.stop());
     animationsRef.current = [];
 
     // Only animate if music is playing AND app is in foreground
     if (isPlaying && appStateVisible === 'active') {
+      console.log('🎵 Starting wave animations');
       // Create staggered animations for each bar
       const createBarAnimation = (animatedValue: Animated.Value) => {
         return Animated.loop(
@@ -87,6 +90,7 @@ const AudioVisualization: React.FC<{ isPlaying: boolean; isDarkMode: boolean }> 
       setTimeout(() => animations[3].start(), 300);
       setTimeout(() => animations[4].start(), 400);
     } else {
+      console.log('🎵 Stopping wave animations');
       // Stop animations and reset to default heights
       bar1.setValue(0.3);
       bar2.setValue(0.5);

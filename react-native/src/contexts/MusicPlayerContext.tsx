@@ -169,11 +169,25 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const updatePlayingState = async () => {
       const state = await TrackPlayer.getState();
       const playing = state === State.Playing;
+      console.log('🎵 TrackPlayer state changed:', state, 'isPlaying:', playing);
       setIsPlayingState(playing);
       dispatch(setIsPlaying(playing));
     };
 
+    // Initial state check
     updatePlayingState();
+
+    // Set up event listeners for state changes
+    const stateListener = TrackPlayer.addEventListener(Event.PlaybackState, (data) => {
+      console.log('🎵 PlaybackState event:', data.state);
+      const playing = data.state === State.Playing;
+      setIsPlayingState(playing);
+      dispatch(setIsPlaying(playing));
+    });
+
+    return () => {
+      stateListener.remove();
+    };
   }, [dispatch]);
 
   return (
