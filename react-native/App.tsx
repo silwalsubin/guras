@@ -15,8 +15,9 @@ import FontLoader from './src/components/app/FontLoader';
 import { getThemeColors } from './src/config/colors';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import store, { RootState } from './src/store';
-import { TAB_KEYS } from './src/store/navigationSlice';
+import { setActiveTab, TAB_KEYS } from './src/store/navigationSlice';
 import { setDarkMode } from './src/store/themeSlice';
+import { setFullPlayerVisible } from './src/store/musicPlayerSlice';
 import { MusicPlayerProvider } from './src/contexts/MusicPlayerContext';
 import MeditationScreen from './src/screens/meditation';
 import LearnScreen from './src/screens/learn';
@@ -24,6 +25,9 @@ import AudioScreen from './src/screens/audio';
 import HomeScreen from './src/screens/home';
 import BottomNavigation from './src/components/app/navigation/BottomNavigation';
 import notificationService from './src/services/notificationService';
+import MiniMusicPlayer from './src/components/MiniMusicPlayer';
+import FullMusicPlayerModal from './src/components/FullMusicPlayerModal';
+import MusicService from './src/components/MusicService';
 
 // Move MainApp outside of App function to fix Redux connection
 const MainApp: React.FC = () => {
@@ -31,6 +35,11 @@ const MainApp: React.FC = () => {
   const activeTab = useSelector((state: RootState) => state.navigation.activeTab);
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const dispatch = useDispatch();
+
+  // Handler for when mini music player is tapped
+  const handleMiniPlayerPress = () => {
+    dispatch(setFullPlayerVisible(true));
+  };
 
   useEffect(() => {
     dispatch(setDarkMode(systemColorScheme === 'dark'));
@@ -42,6 +51,16 @@ const MainApp: React.FC = () => {
   }, []);
 
   const themeColors = getThemeColors(isDarkMode);
+
+  // Dynamic styles based on active tab
+  const getMainContentStyle = () => {
+    const baseStyle = styles.mainContent;
+    // Only add extra padding for mini player when on Audio tab
+    if (activeTab === TAB_KEYS.AUDIO) {
+      return [baseStyle, { paddingBottom: 140 }]; // 60px mini player + 80px footer
+    }
+    return baseStyle; // No extra padding - let individual screens handle their own bottom padding
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -67,12 +86,24 @@ const MainApp: React.FC = () => {
         backgroundColor="transparent"
         translucent
       />
-      
-      <View style={styles.mainContent}>
-        <MusicPlayerProvider>
+
+      <MusicPlayerProvider>
+        {/* Background Music Service - Handles music loading and management */}
+        <MusicService />
+
+        <View style={getMainContentStyle()}>
           {renderActiveTab()}
-        </MusicPlayerProvider>
-      </View>
+        </View>
+
+        {/* Mini Music Player - Shows above bottom navigation when music is playing */}
+        <MiniMusicPlayer
+          onPress={handleMiniPlayerPress}
+          style={styles.miniPlayer}
+        />
+
+        {/* Full Music Player Modal */}
+        <FullMusicPlayerModal />
+      </MusicPlayerProvider>
 
       <BottomNavigation />
     </SafeAreaView>
@@ -107,6 +138,14 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1,
+    // Padding is now dynamic based on active tab
+  },
+  miniPlayer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 100, // Position above the footer, not overlapping it
+    zIndex: 100,
   },
 });
 

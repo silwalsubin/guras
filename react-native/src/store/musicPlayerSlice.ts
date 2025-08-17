@@ -26,6 +26,7 @@ interface MusicPlayerState {
   currentTrackIndex: number;
   currentTrack: CurrentTrack | null;
   loading: boolean;
+  isFullPlayerVisible: boolean;
 }
 
 const initialState: MusicPlayerState = {
@@ -39,6 +40,7 @@ const initialState: MusicPlayerState = {
   currentTrackIndex: 0,
   currentTrack: null,
   loading: false,
+  isFullPlayerVisible: false,
 };
 
 const musicPlayerSlice = createSlice({
@@ -87,13 +89,16 @@ const musicPlayerSlice = createSlice({
         state.currentTrackIndex = prevIndex;
       }
     },
+    setFullPlayerVisible(state, action: PayloadAction<boolean>) {
+      state.isFullPlayerVisible = action.payload;
+    },
   },
 });
 
-export const { 
-  setIsPlaying, 
-  setProgress, 
-  setSliderPosition, 
+export const {
+  setIsPlaying,
+  setProgress,
+  setSliderPosition,
   setSliderValue,
   setPendingSeek,
   setIsSliding,
@@ -102,7 +107,8 @@ export const {
   setCurrentTrack,
   setLoading,
   nextTrack,
-  previousTrack
+  previousTrack,
+  setFullPlayerVisible
 } = musicPlayerSlice.actions;
 
 export default musicPlayerSlice.reducer; 

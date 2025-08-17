@@ -52,26 +52,35 @@ const TrackName: React.FC = () => {
 const styles = StyleSheet.create({
   titleContainer: {
     alignItems: 'center',
-    marginBottom: 8,
+    paddingHorizontal: 16,
+    width: '100%',
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: '700',
     marginBottom: 8,
     textAlign: 'center',
+    lineHeight: 32,
+    letterSpacing: 0.5,
   },
   trackPosition: {
-    fontSize: 14,
-    marginBottom: 12,
+    fontSize: 16,
+    fontWeight: '500',
     textAlign: 'center',
+    opacity: 0.7,
+    letterSpacing: 0.3,
   },
   titlePlaceholder: {
-    width: 200,
-    height: 22, // Match title fontSize (18) + some padding
+    width: 240,
+    height: 32, // Match title fontSize (24) + line height
+    backgroundColor: 'rgba(128, 128, 128, 0.2)',
+    borderRadius: 8,
   },
   positionPlaceholder: {
-    width: 100,
-    height: 18, // Match trackPosition fontSize (14) + some padding
+    width: 80,
+    height: 20, // Match trackPosition fontSize (16) + some padding
+    backgroundColor: 'rgba(128, 128, 128, 0.15)',
+    borderRadius: 6,
   },
 });
 
