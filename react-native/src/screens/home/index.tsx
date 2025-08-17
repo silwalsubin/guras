@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   bottomPadding: {
-    height: 100, // Account for bottom navigation + safe area
+    height: 120, // Account for bottom navigation + safe area
   },
 });
 

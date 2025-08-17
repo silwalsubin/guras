@@ -115,9 +115,7 @@ const styles = StyleSheet.create({
   playPauseButton: {
     padding: 16,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    // Removed background to match other control buttons styling
   },
 });
 
