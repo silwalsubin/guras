@@ -45,13 +45,38 @@ public class S3Service(IAmazonS3 s3Client, ILogger<S3Service> logger) : IS3Servi
 
             var presignedUrl = await s3Client.GetPreSignedURLAsync(request);
             logger.LogInformation("Generated pre-signed download URL for file: {FileName}", fileName);
-            
+
             return presignedUrl;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error generating pre-signed download URL for file: {FileName}", fileName);
             throw;
+        }
+    }
+
+    public async Task<bool> UploadFileAsync(string bucketName, string fileName, Stream fileStream, string? contentType = null)
+    {
+        try
+        {
+            var request = new PutObjectRequest
+            {
+                BucketName = bucketName,
+                Key = fileName,
+                InputStream = fileStream,
+                ContentType = contentType ?? GetContentType(fileName),
+                ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256
+            };
+
+            await s3Client.PutObjectAsync(request);
+            logger.LogInformation("Successfully uploaded file: {FileName} to bucket: {BucketName}", fileName, bucketName);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error uploading file: {FileName} to bucket: {BucketName}", fileName, bucketName);
+            return false;
         }
     }
 

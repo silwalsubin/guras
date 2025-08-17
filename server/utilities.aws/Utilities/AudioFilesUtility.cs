@@ -8,9 +8,9 @@ public class AudioFilesUtility
     public AudioFilesUtility(IS3Service s3Service)
     {
         _s3Service = s3Service;
-        // Get bucket name from environment or configuration
+        // Use staging bucket for both development and staging
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.ToLower() ?? "development";
-        _bucketName = $"{environment}-guras-audio-files";
+        _bucketName = environment == "production" ? "production-guras-audio-files" : "staging-guras-audio-files";
     }
 
     public async Task<string> GeneratePreSignedUploadUrlAsync(string fileName, TimeSpan expiration)
@@ -21,6 +21,11 @@ public class AudioFilesUtility
     public async Task<string> GeneratePreSignedDownloadUrlAsync(string fileName, TimeSpan expiration)
     {
         return await _s3Service.GeneratePreSignedDownloadUrlAsync(_bucketName, fileName, expiration);
+    }
+
+    public async Task<bool> UploadFileAsync(string fileName, Stream fileStream, string? contentType = null)
+    {
+        return await _s3Service.UploadFileAsync(_bucketName, fileName, fileStream, contentType);
     }
 
     public async Task<bool> DeleteFileAsync(string fileName)
