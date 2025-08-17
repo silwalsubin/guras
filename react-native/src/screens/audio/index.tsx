@@ -10,8 +10,9 @@ import {
   RefreshControl,
   Alert
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
+import * as musicPlayerActions from '@/store/musicPlayerSlice';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -20,7 +21,9 @@ import { apiService, AudioFile } from '@/services/api';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const AudioScreen: React.FC = () => {
+  const dispatch = useDispatch();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
+  const { audioFiles: reduxAudioFiles } = useSelector((state: RootState) => state.musicPlayer);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
   const { playTrack, currentTrack, isPlaying } = useMusicPlayer();
@@ -46,6 +49,8 @@ const AudioScreen: React.FC = () => {
 
       if (response.data) {
         setAudioFiles(response.data.files);
+        // Also update Redux state for music controls
+        dispatch(musicPlayerActions.setAudioFiles(response.data.files));
       } else {
         Alert.alert('Error', response.error || 'Failed to load audio files');
       }
@@ -63,8 +68,13 @@ const AudioScreen: React.FC = () => {
     loadAudioFiles();
   }, [showMyFiles]);
 
+  // Update Redux whenever local audioFiles state changes
+  useEffect(() => {
+    dispatch(musicPlayerActions.setAudioFiles(audioFiles));
+  }, [audioFiles, dispatch]);
+
   // Handle track selection
-  const handleTrackPress = (audioFile: AudioFile) => {
+  const handleTrackPress = (audioFile: AudioFile, index: number) => {
     const track = {
       id: audioFile.id,
       title: audioFile.name,
@@ -73,6 +83,10 @@ const AudioScreen: React.FC = () => {
       artwork: audioFile.thumbnailDownloadUrl || undefined,
       duration: audioFile.durationSeconds || 0,
     };
+
+    // Update Redux state with current track index
+    dispatch(musicPlayerActions.setCurrentTrackIndex(index));
+
     playTrack(track);
   };
 
@@ -154,7 +168,7 @@ const AudioScreen: React.FC = () => {
         </View>
       ) : (
         <View style={styles.audioList}>
-          {audioFiles.map((audioFile) => (
+          {audioFiles.map((audioFile, index) => (
             <TouchableOpacity
               key={audioFile.id}
               style={[
@@ -164,7 +178,7 @@ const AudioScreen: React.FC = () => {
                   borderColor: currentTrack?.id === audioFile.id ? brandColors.primary : themeColors.border
                 }
               ]}
-              onPress={() => handleTrackPress(audioFile)}
+              onPress={() => handleTrackPress(audioFile, index)}
             >
               {/* Thumbnail */}
               <View style={styles.thumbnailContainer}>

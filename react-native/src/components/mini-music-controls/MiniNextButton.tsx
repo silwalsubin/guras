@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -7,42 +7,19 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { getBrandColors, getThemeColors } from '@/config/colors';
 import TrackPlayer, { State } from 'react-native-track-player';
 import { AudioFile } from '@/services/api';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 export const MiniNextButton: React.FC = () => {
   const dispatch = useDispatch();
   const { audioFiles, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
+  const { playTrack } = useMusicPlayer();
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);
 
-  const loadTrack = async (audioFile: AudioFile, index: number, wasPlaying: boolean) => {
-    try {
-      const track = {
-        id: audioFile.id || audioFile.fileName || audioFile.name,
-        url: audioFile.audioDownloadUrl || audioFile.downloadUrl,
-        title: audioFile.name || audioFile.title || (audioFile.fileName ? audioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
-        artist: audioFile.author || audioFile.artist || 'Guras',
-      };
 
-      // Update Redux state
-      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.thumbnailDownloadUrl || audioFile.artworkUrl || null }));
-      dispatch(setCurrentTrackIndex(index));
 
-      // Load track into TrackPlayer
-      await TrackPlayer.reset();
-      await TrackPlayer.add(track);
-      
-      // Auto-play based on previous state
-      if (wasPlaying) {
-        await TrackPlayer.play();
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Failed to load next track:', error);
-      return false;
-    }
-  };
+
 
   const handleNextTrack = async () => {
     try {
@@ -50,19 +27,27 @@ export const MiniNextButton: React.FC = () => {
         return; // Silently do nothing for mini player
       }
 
-      // Check current playback state BEFORE resetting
-      const currentState = await TrackPlayer.getState();
-      const wasPlaying = currentState === State.Playing;
-
       // Calculate next track index
       const nextIndex = (currentTrackIndex + 1) % audioFiles.length;
-      const nextTrack = audioFiles[nextIndex];
-      
-      // Load the actual track
-      const success = await loadTrack(nextTrack, nextIndex, wasPlaying);
-      if (!success) {
-        Alert.alert('Error', 'Failed to load next track.');
-      }
+      const nextAudioFile = audioFiles[nextIndex];
+
+      // Convert to TrackInfo format for context
+      const track = {
+        id: nextAudioFile.id,
+        title: nextAudioFile.name,
+        artist: nextAudioFile.author,
+        url: nextAudioFile.audioDownloadUrl,
+        artwork: nextAudioFile.thumbnailDownloadUrl || undefined,
+        duration: nextAudioFile.durationSeconds || 0,
+      };
+
+      // Update Redux state
+      dispatch(setCurrentTrackIndex(nextIndex));
+
+      // Use context to play track (this will update UI properly)
+      await playTrack(track);
+
+      console.log('🎵 Next track loaded:', track.title);
     } catch (error) {
       console.error('❌ Error in MiniNextButton:', error);
     }

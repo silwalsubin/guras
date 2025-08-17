@@ -20,12 +20,12 @@ builder.Services.AddSwaggerGen();
 // Add MVC services for controllers
 builder.Services.AddControllers();
 
-// Add CORS services
+// Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueClient", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // Vue.js dev server
+        policy.WithOrigins("http://localhost:5174", "http://localhost:3000") // Vue.js and React Native dev servers
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -50,10 +50,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors("AllowVueClient");
 }
 
 app.UseHttpsRedirection();
+
+// Enable CORS
+app.UseCors("AllowVueClient");
 
 // Add authentication and authorization middleware
 app.UseAuthentication();

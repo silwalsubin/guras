@@ -8,50 +8,15 @@ import { getBrandColors } from '@/config/colors';
 import TrackPlayer from 'react-native-track-player';
 import { apiService, AudioFile } from '@/services/api';
 import { State } from 'react-native-track-player';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const NextButton: React.FC = () => {
   const dispatch = useDispatch();
   const { audioFiles, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
+  const { playTrack } = useMusicPlayer();
   const brandColors = getBrandColors();
 
-  const loadTrack = async (audioFile: AudioFile, index: number, wasPlaying: boolean) => {
-    try {
-      console.log('🎵 Loading next track:', audioFile.name || audioFile.title || audioFile.fileName);
-      console.log('🎵 Previous track was playing:', wasPlaying);
 
-      const track = {
-        id: audioFile.id || audioFile.fileName || audioFile.name,
-        url: audioFile.audioDownloadUrl || audioFile.downloadUrl,
-        title: audioFile.name || audioFile.title || (audioFile.fileName ? audioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
-        artist: audioFile.author || audioFile.artist || 'Guras',
-      };
-
-      // Update Redux state
-      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.thumbnailDownloadUrl || audioFile.artworkUrl || null }));
-      dispatch(setCurrentTrackIndex(index));
-
-      // Load track into TrackPlayer
-      await TrackPlayer.reset();
-      await TrackPlayer.add(track);
-      
-      const queue = await TrackPlayer.getQueue();
-      console.log('✅ Next track loaded successfully. Queue length:', queue.length);
-      
-      // Auto-play based on previous state
-      if (wasPlaying) {
-        // Auto-play the new track if previous was playing
-        await TrackPlayer.play();
-        console.log('🎵 Auto-playing next track (was playing)');
-      } else {
-        console.log('🎵 Next track loaded in paused state (was paused)');
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Failed to load next track:', error);
-      return false;
-    }
-  };
 
   const handleNextTrack = async () => {
     try {
@@ -60,22 +25,29 @@ const NextButton: React.FC = () => {
         return;
       }
 
-      // Check current playback state BEFORE resetting
-      const currentState = await TrackPlayer.getState();
-      const wasPlaying = currentState === State.Playing;
-      console.log('🎵 Current TrackPlayer state before navigation:', currentState, 'wasPlaying:', wasPlaying);
-
       // Calculate next track index
       const nextIndex = (currentTrackIndex + 1) % audioFiles.length;
-      const nextTrack = audioFiles[nextIndex];
-      
-      console.log('🎵 Navigating to next track:', nextIndex, nextTrack.title || nextTrack.fileName);
-      
-      // Load the actual track (this will update Redux state)
-      const success = await loadTrack(nextTrack, nextIndex, wasPlaying);
-      if (!success) {
-        Alert.alert('Error', 'Failed to load next track.');
-      }
+      const nextAudioFile = audioFiles[nextIndex];
+
+      console.log('🎵 Navigating to next track:', nextIndex, nextAudioFile.name);
+
+      // Convert to TrackInfo format for context
+      const track = {
+        id: nextAudioFile.id,
+        title: nextAudioFile.name,
+        artist: nextAudioFile.author,
+        url: nextAudioFile.audioDownloadUrl,
+        artwork: nextAudioFile.thumbnailDownloadUrl || undefined,
+        duration: nextAudioFile.durationSeconds || 0,
+      };
+
+      // Update Redux state
+      dispatch(setCurrentTrackIndex(nextIndex));
+
+      // Use context to play track (this will update UI properly)
+      await playTrack(track);
+
+      console.log('🎵 Next track loaded:', track.title);
     } catch (error) {
       console.error('❌ Error in NextButton:', error);
       Alert.alert('Error', 'Failed to navigate to next track.');
