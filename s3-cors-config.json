@@ -1,0 +1,27 @@
+{
+    "CORSRules": [
+        {
+            "AllowedHeaders": [
+                "*"
+            ],
+            "AllowedMethods": [
+                "GET",
+                "PUT",
+                "POST",
+                "DELETE",
+                "HEAD"
+            ],
+            "AllowedOrigins": [
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "https://guras.app",
+                "https://*.guras.app"
+            ],
+            "ExposeHeaders": [
+                "ETag",
+                "x-amz-meta-custom-header"
+            ],
+            "MaxAgeSeconds": 3000
+        }
+    ]
+}

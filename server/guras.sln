@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities", "utilities\util
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities.aws", "utilities.aws\utilities.aws.csproj", "{C9F0BA0D-E304-46C5-BBDB-AAA7CD41CFD0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.audio", "services.audio\services.audio.csproj", "{8A6D7C5F-4CDE-4159-BC12-DE88F3308C25}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests", "tests\tests.csproj", "{682B8A30-C3F0-411F-BAA1-FB7E9BC5927A}"
 EndProject
 Global
@@ -48,6 +50,10 @@ Global
 		{C9F0BA0D-E304-46C5-BBDB-AAA7CD41CFD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C9F0BA0D-E304-46C5-BBDB-AAA7CD41CFD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C9F0BA0D-E304-46C5-BBDB-AAA7CD41CFD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C25}.Release|Any CPU.Build.0 = Release|Any CPU
 		{682B8A30-C3F0-411F-BAA1-FB7E9BC5927A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{682B8A30-C3F0-411F-BAA1-FB7E9BC5927A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{682B8A30-C3F0-411F-BAA1-FB7E9BC5927A}.Release|Any CPU.ActiveCfg = Release|Any CPU

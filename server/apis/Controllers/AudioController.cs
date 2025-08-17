@@ -1,172 +1,223 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using utilities.aws.Utilities;
+using services.audio.Models;
+using services.audio.Services;
+using System.Security.Claims;
 
 namespace apis.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AudioController(AudioFilesUtility audioFilesUtility, ILogger<AudioController> logger) : ControllerBase
+public class AudioController(IAudioFileService audioFileService, ILogger<AudioController> logger, IWebHostEnvironment environment) : ControllerBase
 {
-    [HttpPost("upload-url")]
-    public async Task<IActionResult> GetUploadUrl([FromBody] GetUploadUrlRequest request)
+    [HttpPost("upload")]
+    public async Task<IActionResult> UploadAudio()
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(request.FileName))
+            // Get form data manually
+            var form = await Request.ReadFormAsync();
+
+            var name = form["Name"].ToString();
+            var author = form["Author"].ToString();
+            var description = form["Description"].ToString();
+
+            var audioFile = form.Files["AudioFile"];
+            var thumbnailFile = form.Files["ThumbnailFile"];
+
+            logger.LogInformation("Upload request received - Name: {Name}, Author: {Author}, AudioFile: {AudioFile}, ThumbnailFile: {ThumbnailFile}",
+                name, author, audioFile?.FileName, thumbnailFile?.FileName);
+
+            if (string.IsNullOrWhiteSpace(name))
             {
-                return BadRequest("File name is required");
+                return BadRequest("Name is required");
             }
 
-            // Generate a unique file name to prevent conflicts
-            var fileExtension = Path.GetExtension(request.FileName);
-            var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
-
-            var expiration = TimeSpan.FromMinutes(request.ExpirationMinutes ?? 15);
-            var presignedUrl = await audioFilesUtility.GeneratePreSignedUploadUrlAsync(uniqueFileName, expiration);
-
-            return Ok(new
+            if (string.IsNullOrWhiteSpace(author))
             {
-                UploadUrl = presignedUrl,
-                FileName = uniqueFileName,
-                ExpiresAt = DateTime.UtcNow.Add(expiration)
-            });
+                return BadRequest("Author is required");
+            }
+
+            if (audioFile == null)
+            {
+                return BadRequest("Audio file is required");
+            }
+
+            if (thumbnailFile == null)
+            {
+                return BadRequest("Thumbnail file is required");
+            }
+
+            var userIdClaim = User.FindFirst("application_user_id")?.Value;
+            if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized("Application user ID not found in token");
+            }
+
+            var metadata = new CreateAudioFileRequest
+            {
+                Name = name,
+                Author = author,
+                Description = description
+            };
+
+            // Convert IFormFile to FileUpload
+            using var audioStream = audioFile.OpenReadStream();
+            using var thumbnailStream = thumbnailFile.OpenReadStream();
+
+            var audioFileUpload = new services.audio.Models.FileUpload
+            {
+                FileName = audioFile.FileName,
+                ContentType = audioFile.ContentType,
+                Length = audioFile.Length,
+                Stream = audioStream
+            };
+
+            var thumbnailFileUpload = new services.audio.Models.FileUpload
+            {
+                FileName = thumbnailFile.FileName,
+                ContentType = thumbnailFile.ContentType,
+                Length = thumbnailFile.Length,
+                Stream = thumbnailStream
+            };
+
+            var response = await audioFileService.UploadAudioAsync(audioFileUpload, thumbnailFileUpload, metadata, userId);
+            return Ok(response);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error generating upload URL for file: {FileName}", request.FileName);
+            logger.LogError(ex, "Error uploading audio");
             return StatusCode(500, "Internal server error");
         }
     }
 
     [HttpGet("audio-files")]
-    public async Task<IActionResult> GetAudioFilesWithDownloadUrls([FromQuery] int? expirationMinutes = null)
+    public async Task<IActionResult> GetAudioFiles([FromQuery] int? expirationMinutes = null)
     {
         try
         {
-            var expiration = TimeSpan.FromMinutes(expirationMinutes ?? 60);
-            var files = await audioFilesUtility.ListFilesAsync();
-            
-            var audioFilesWithUrls = new List<object>();
-            
-            foreach (var fileName in files)
-            {
-                var downloadUrl = await audioFilesUtility.GeneratePreSignedDownloadUrlAsync(fileName, expiration);
-                // Basic metadata derivation
-                var title = Path.GetFileNameWithoutExtension(fileName) ?? string.Empty;
-                var artist = "Guras";
-
-                // Try find artwork/background image by convention
-                string? artworkKey = null;
-                var baseName = Path.GetFileNameWithoutExtension(fileName) ?? string.Empty;
-                var candidateKeys = new[]
-                {
-                    $"{baseName}.jpg",
-                    $"{baseName}.png",
-                    $"artwork/{baseName}.jpg",
-                    $"artwork/{baseName}.png",
-                };
-                foreach (var candidate in candidateKeys)
-                {
-                    if (await audioFilesUtility.FileExistsAsync(candidate))
-                    {
-                        artworkKey = candidate;
-                        break;
-                    }
-                }
-
-                string? artworkUrl = null;
-                if (!string.IsNullOrWhiteSpace(artworkKey))
-                {
-                    artworkUrl = await audioFilesUtility.GeneratePreSignedDownloadUrlAsync(artworkKey!, expiration);
-                }
-
-                audioFilesWithUrls.Add(new
-                {
-                    FileName = fileName,
-                    DownloadUrl = downloadUrl,
-                    ExpiresAt = DateTime.UtcNow.Add(expiration),
-                    Title = title,
-                    Artist = artist,
-                    ArtworkUrl = artworkUrl
-                });
-            }
+            var audioFiles = await audioFileService.GetAllAsync(expirationMinutes ?? 60);
 
             return Ok(new
             {
-                Files = audioFilesWithUrls,
-                TotalCount = audioFilesWithUrls.Count,
+                Files = audioFiles,
+                TotalCount = audioFiles.Count(),
                 ExpirationMinutes = expirationMinutes ?? 60
             });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting audio files with download URLs");
+            logger.LogError(ex, "Error getting audio files");
             return StatusCode(500, "Internal server error");
         }
     }
 
-    [HttpGet("files")]
-    public async Task<IActionResult> ListFiles([FromQuery] string? prefix = null)
+    [HttpGet("my-audio-files")]
+    public async Task<IActionResult> GetMyAudioFiles([FromQuery] int? expirationMinutes = null)
     {
         try
         {
-            var files = await audioFilesUtility.ListFilesAsync(prefix ?? "");
-            return Ok(new { Files = files });
+            var userIdClaim = User.FindFirst("application_user_id")?.Value;
+            if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized("Application user ID not found in token");
+            }
+
+            var audioFiles = await audioFileService.GetByUserIdAsync(userId, expirationMinutes ?? 60);
+
+            return Ok(new
+            {
+                Files = audioFiles,
+                TotalCount = audioFiles.Count(),
+                ExpirationMinutes = expirationMinutes ?? 60
+            });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error listing files with prefix: {Prefix}", prefix);
+            logger.LogError(ex, "Error getting user's audio files");
             return StatusCode(500, "Internal server error");
         }
     }
 
-    [HttpDelete("{fileName}")]
-    public async Task<IActionResult> DeleteFile(string fileName)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetAudioFile(Guid id, [FromQuery] int? expirationMinutes = null)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(fileName))
+            var audioFile = await audioFileService.GetByIdAsync(id, expirationMinutes ?? 60);
+            if (audioFile == null)
             {
-                return BadRequest("File name is required");
+                return NotFound("Audio file not found");
             }
 
-            var success = await audioFilesUtility.DeleteFileAsync(fileName);
+            return Ok(audioFile);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting audio file: {AudioFileId}", id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateAudioFile(Guid id, [FromBody] CreateAudioFileRequest request, [FromQuery] int? expirationMinutes = null)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return BadRequest("Name is required");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Author))
+            {
+                return BadRequest("Author is required");
+            }
+
+            var audioFile = await audioFileService.UpdateAsync(id, request, expirationMinutes ?? 60);
+            if (audioFile == null)
+            {
+                return NotFound("Audio file not found");
+            }
+
+            return Ok(audioFile);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating audio file: {AudioFileId}", id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteAudioFile(Guid id)
+    {
+        try
+        {
+            var success = await audioFileService.DeleteAsync(id);
             if (success)
             {
-                return Ok(new { Message = "File deleted successfully" });
+                return Ok(new { Message = "Audio file deleted successfully" });
             }
             else
             {
-                return StatusCode(500, "Failed to delete file");
+                return NotFound("Audio file not found");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error deleting file: {FileName}", fileName);
-            return StatusCode(500, "Internal server error");
-        }
-    }
-
-    [HttpGet("{fileName}/exists")]
-    public async Task<IActionResult> CheckFileExists(string fileName)
-    {
-        try
-        {
-            var exists = await audioFilesUtility.FileExistsAsync(fileName);
-            return Ok(new { Exists = exists });
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error checking if file exists: {FileName}", fileName);
+            logger.LogError(ex, "Error deleting audio file: {AudioFileId}", id);
             return StatusCode(500, "Internal server error");
         }
     }
 }
 
-public class GetUploadUrlRequest
+public class UploadAudioRequest
 {
-    public string FileName { get; set; } = string.Empty;
-    public int? ExpirationMinutes { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public IFormFile AudioFile { get; set; } = null!;
+    public IFormFile ThumbnailFile { get; set; } = null!;
 }
