@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Animated } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 
@@ -15,12 +15,128 @@ interface MiniMusicPlayerProps {
   style?: any; // Custom styling
 }
 
+// Audio Visualization Component
+const AudioVisualization: React.FC<{ isPlaying: boolean; isDarkMode: boolean }> = ({ isPlaying }) => {
+  const brandColors = getBrandColors();
+
+  // Create animated values for each bar
+  const bar1 = useRef(new Animated.Value(0.3)).current;
+  const bar2 = useRef(new Animated.Value(0.5)).current;
+  const bar3 = useRef(new Animated.Value(0.7)).current;
+  const bar4 = useRef(new Animated.Value(0.4)).current;
+  const bar5 = useRef(new Animated.Value(0.6)).current;
+
+  useEffect(() => {
+    if (isPlaying) {
+      // Create staggered animations for each bar
+      const createBarAnimation = (animatedValue: Animated.Value) => {
+        return Animated.loop(
+          Animated.sequence([
+            Animated.timing(animatedValue, {
+              toValue: Math.random() * 0.8 + 0.2, // Random height between 0.2 and 1
+              duration: 300 + Math.random() * 200, // Random duration between 300-500ms
+              useNativeDriver: false,
+            }),
+            Animated.timing(animatedValue, {
+              toValue: Math.random() * 0.8 + 0.2,
+              duration: 300 + Math.random() * 200,
+              useNativeDriver: false,
+            }),
+          ])
+        );
+      };
+
+      // Start animations with different delays for natural effect
+      setTimeout(() => createBarAnimation(bar1).start(), 0);
+      setTimeout(() => createBarAnimation(bar2).start(), 100);
+      setTimeout(() => createBarAnimation(bar3).start(), 200);
+      setTimeout(() => createBarAnimation(bar4).start(), 300);
+      setTimeout(() => createBarAnimation(bar5).start(), 400);
+    } else {
+      // Stop animations and reset to default heights
+      bar1.setValue(0.3);
+      bar2.setValue(0.5);
+      bar3.setValue(0.7);
+      bar4.setValue(0.4);
+      bar5.setValue(0.6);
+    }
+  }, [isPlaying, bar1, bar2, bar3, bar4, bar5]);
+
+  const barColor = brandColors.primary;
+  const maxHeight = 16;
+
+  return (
+    <View style={styles.audioVisualization}>
+      <Animated.View
+        style={[
+          styles.audioBar,
+          {
+            backgroundColor: barColor,
+            height: bar1.interpolate({
+              inputRange: [0, 1],
+              outputRange: [2, maxHeight],
+            }),
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.audioBar,
+          {
+            backgroundColor: barColor,
+            height: bar2.interpolate({
+              inputRange: [0, 1],
+              outputRange: [2, maxHeight],
+            }),
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.audioBar,
+          {
+            backgroundColor: barColor,
+            height: bar3.interpolate({
+              inputRange: [0, 1],
+              outputRange: [2, maxHeight],
+            }),
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.audioBar,
+          {
+            backgroundColor: barColor,
+            height: bar4.interpolate({
+              inputRange: [0, 1],
+              outputRange: [2, maxHeight],
+            }),
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.audioBar,
+          {
+            backgroundColor: barColor,
+            height: bar5.interpolate({
+              inputRange: [0, 1],
+              outputRange: [2, maxHeight],
+            }),
+          },
+        ]}
+      />
+    </View>
+  );
+};
+
 const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
   onPress,
   showArtwork = true,
   style
 }) => {
-  const { currentTrack, audioFiles, isFullPlayerVisible } = useSelector((state: RootState) => state.musicPlayer);
+  const { currentTrack, audioFiles, isFullPlayerVisible, isPlaying } = useSelector((state: RootState) => state.musicPlayer);
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const { activeTab } = useSelector((state: RootState) => state.navigation);
   const brandColors = getBrandColors();
@@ -73,6 +189,13 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
                 />
               </View>
             )}
+          </View>
+        )}
+
+        {/* Audio Visualization - Show when music is playing */}
+        {isPlaying && (
+          <View style={styles.visualizationContainer}>
+            <AudioVisualization isPlaying={isPlaying} isDarkMode={isDarkMode} />
           </View>
         )}
 
@@ -169,6 +292,26 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginRight: 4,
     opacity: 0.6,
+  },
+  visualizationContainer: {
+    marginLeft: 8,
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  audioVisualization: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    height: 20,
+    width: 30,
+  },
+  audioBar: {
+    width: 3,
+    backgroundColor: '#007AFF',
+    marginHorizontal: 1,
+    borderRadius: 1.5,
+    minHeight: 2,
   },
 });
 

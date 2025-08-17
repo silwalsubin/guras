@@ -135,7 +135,10 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
           </View>
         ))}
       </ScrollView>
-      <Text style={[styles.wheelLabel, { color: themeColors.textPrimary }]}>
+      <Text
+        style={[styles.wheelLabel, { color: themeColors.textPrimary }]}
+        numberOfLines={1}
+      >
         {label}
       </Text>
     </View>
@@ -160,9 +163,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
   } = meditationState;
 
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
-  const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(6);
-  const [seconds, setSeconds] = useState(0);
+  const [minutes, setMinutes] = useState(10);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const progressAnimation = useRef(new Animated.Value(0)).current;
@@ -268,15 +269,9 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
   };
 
   const handleStartTimer = () => {
-    const totalMinutes = hours * 60 + minutes + seconds / 60;
-    if (totalMinutes <= 0) return;
+    if (minutes <= 0) return;
 
-    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-    const displayTime = totalSeconds < 60
-      ? `${totalSeconds} second${totalSeconds !== 1 ? 's' : ''}`
-      : totalSeconds < 3600
-      ? `${Math.floor(totalSeconds / 60)} minute${Math.floor(totalSeconds / 60) !== 1 ? 's' : ''}`
-      : `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    const displayTime = `${minutes} minute${minutes !== 1 ? 's' : ''}`;
 
     Alert.alert(
       'Start Meditation Session',
@@ -290,8 +285,8 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
           text: 'Start',
           style: 'default',
           onPress: () => {
-            dispatch(setSelectedMinutes(Math.ceil(totalMinutes)));
-            dispatch(startTimer(Math.ceil(totalMinutes)));
+            dispatch(setSelectedMinutes(minutes));
+            dispatch(startTimer(minutes));
             progressAnimation.setValue(0);
           },
         },
@@ -386,6 +381,9 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
       {/* Timer Selection */}
       {!isActive && (
         <View style={styles.timerSelection}>
+          <Text style={[styles.timerSelectorLabel, { color: themeColors.textPrimary }]}>
+            Select Duration (Minutes)
+          </Text>
           <View style={[
             styles.wheelPickerContainer,
             {
@@ -394,26 +392,10 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
             }
           ]}>
             <WheelPicker
-              data={Array.from({ length: 24 }, (_, i) => i)}
-              selectedValue={hours}
-              onValueChange={setHours}
-              label="hours"
-              isDarkMode={isDarkMode}
-              themeColors={themeColors}
-            />
-            <WheelPicker
-              data={Array.from({ length: 60 }, (_, i) => i)}
+              data={Array.from({ length: 60 }, (_, i) => i + 1)} // 1-60 minutes
               selectedValue={minutes}
               onValueChange={setMinutes}
-              label="min"
-              isDarkMode={isDarkMode}
-              themeColors={themeColors}
-            />
-            <WheelPicker
-              data={Array.from({ length: 60 }, (_, i) => i)}
-              selectedValue={seconds}
-              onValueChange={setSeconds}
-              label="sec"
+              label=""
               isDarkMode={isDarkMode}
               themeColors={themeColors}
             />
@@ -595,6 +577,12 @@ const styles = StyleSheet.create({
   timerSelection: {
     marginBottom: 28,
   },
+  timerSelectorLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
   selectionLabel: {
     fontSize: 18,
     fontWeight: '700',
@@ -769,29 +757,35 @@ const styles = StyleSheet.create({
   },
   // Wheel Picker Styles
   wheelPickerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     alignItems: 'center',
     height: 220,
     marginVertical: 30,
-    paddingHorizontal: 20,
+    paddingHorizontal: 60, // More padding since it's just one picker
   },
   wheelContainer: {
     flex: 1,
     height: 220,
     position: 'relative',
-    marginHorizontal: 5,
   },
   wheelScrollView: {
     flex: 1,
   },
   wheelSelectionHighlight: {
     position: 'absolute',
-    left: 0,
-    right: 0,
+    left: -80, // Extend beyond the container to reach full width
+    right: -80, // Extend beyond the container to reach full width
     zIndex: 1,
     pointerEvents: 'none',
     borderRadius: 8,
+  },
+  wheelPickerSelectionHighlight: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    borderRadius: 8,
+    zIndex: 1,
+    pointerEvents: 'none',
   },
   wheelItem: {
     justifyContent: 'center',
@@ -803,12 +797,13 @@ const styles = StyleSheet.create({
   },
   wheelLabel: {
     position: 'absolute',
-    bottom: -30,
+    bottom: -40,
     left: 0,
     right: 0,
     textAlign: 'center',
     fontSize: 16,
     fontWeight: '600',
+    opacity: 0.7,
   },
   startButtonContainer: {
     marginTop: 40,
