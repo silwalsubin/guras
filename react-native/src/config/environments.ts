@@ -17,13 +17,13 @@ const ENVIRONMENTS: Record<string, EnvironmentConfig> = {
     LOG_LEVEL: 'debug',
   },
   staging: {
-    API_BASE_URL: 'https://staging.gurasuniverse.com', // Your staging server
+    API_BASE_URL: 'https://api.gurasuniverse.com', // Your staging/production server
     ENVIRONMENT: 'staging',
     DEBUG_MODE: true,
     LOG_LEVEL: 'info',
   },
   production: {
-    API_BASE_URL: 'https://staging.gurasuniverse.com', // Your production server
+    API_BASE_URL: 'https://api.gurasuniverse.com', // Your production server
     ENVIRONMENT: 'production',
     DEBUG_MODE: false,
     LOG_LEVEL: 'warn',
@@ -32,28 +32,25 @@ const ENVIRONMENTS: Record<string, EnvironmentConfig> = {
 
 // Environment detection logic
 const detectEnvironment = (): EnvironmentConfig => {
-  // TEMPORARY OVERRIDE: Force development environment for testing new audio features
-  // TODO: Remove this override when audio features are deployed to staging
-  return ENVIRONMENTS.development;
-  
   // Method 1: Use __DEV__ flag (React Native built-in)
-  // if (__DEV__) {
-  //   return ENVIRONMENTS.development;
-  // }
+  if (__DEV__) {
+    return ENVIRONMENTS.development;
+  }
 
   // Method 2: Check for environment variables (if you set them in build process)
   // You can set these in your CI/CD pipeline or build scripts
-  // const envFromBuild = process.env.REACT_NATIVE_ENV || process.env.NODE_ENV;
-  
-  // if (envFromBuild && ENVIRONMENTS[envFromBuild]) {
-  //   return ENVIRONMENTS[envFromBuild];
-  // }
+  const envFromBuild = process.env.REACT_NATIVE_ENV || process.env.NODE_ENV;
+
+  if (envFromBuild && ENVIRONMENTS[envFromBuild]) {
+    return ENVIRONMENTS[envFromBuild];
+  }
 
   // Method 3: Check for specific build configurations
   // You can add custom logic here based on your build setup
-  
-  // Default to production for release builds
-  // return ENVIRONMENTS.production;
+
+  // Default to staging for release builds (TestFlight, App Store)
+  // Change this to 'production' when you have a production server ready
+  return ENVIRONMENTS.staging;
 };
 
 export const ENV_CONFIG = detectEnvironment();
