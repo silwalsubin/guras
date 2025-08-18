@@ -54,13 +54,20 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    const fullUrl = `${API_CONFIG.BASE_URL}${endpoint}`;
+
     try {
+      console.log('🌐 Making API request to:', fullUrl);
+
       const token = await this.getAuthToken();
       if (!token) {
+        console.error('❌ No authentication token available');
         return { error: 'No authentication token available' };
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
+      console.log('🔑 Using auth token (first 20 chars):', token.substring(0, 20) + '...');
+
+      const response = await fetch(fullUrl, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
@@ -69,16 +76,35 @@ class ApiService {
         },
       });
 
+      console.log('📡 Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        url: fullUrl
+      });
+
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          url: fullUrl
+        });
         return { error: `HTTP ${response.status}: ${errorText}` };
       }
 
       const data = await response.json();
+      console.log('✅ API Success for:', fullUrl);
       return { data };
     } catch (error) {
-      console.error('API request failed:', error);
-      return { error: error instanceof Error ? error.message : 'Unknown error' };
+      console.error('❌ Network Error:', {
+        url: fullUrl,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        name: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      return { error: error instanceof Error ? error.message : 'Network request failed' };
     }
   }
 
