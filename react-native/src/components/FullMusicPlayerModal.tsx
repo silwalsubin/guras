@@ -29,8 +29,7 @@ import ProgressBar from '@/screens/audio/music-player/progress-bar';
 const FullMusicPlayerModal: React.FC = () => {
   const dispatch = useDispatch();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
-  const { isFullPlayerVisible } = useSelector((state: RootState) => state.musicPlayer);
-  const { currentTrack } = useMusicPlayer();
+  const { isFullPlayerVisible, currentTrack } = useSelector((state: RootState) => state.musicPlayer);
 
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
@@ -39,8 +38,8 @@ const FullMusicPlayerModal: React.FC = () => {
     dispatch(setFullPlayerVisible(false));
   };
 
-  // Background image source - use the thumbnail from context
-  const bgSource = currentTrack?.artwork ? { uri: currentTrack.artwork } : null;
+  // Background image source - use the thumbnail from Redux
+  const bgSource = currentTrack?.artworkUrl ? { uri: currentTrack.artworkUrl } : null;
 
   return (
     <Modal
@@ -76,9 +75,9 @@ const FullMusicPlayerModal: React.FC = () => {
           {/* Album Artwork Section */}
           <View style={styles.artworkSection}>
             <View style={styles.artworkContainer}>
-              {currentTrack?.artwork ? (
+              {currentTrack?.artworkUrl ? (
                 <Image
-                  source={{ uri: currentTrack.artwork }}
+                  source={{ uri: currentTrack.artworkUrl }}
                   style={styles.artwork}
                   resizeMode="cover"
                 />

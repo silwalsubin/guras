@@ -3,11 +3,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors } from '@/config/colors';
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const TrackName: React.FC = () => {
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
-  const { currentTrack } = useMusicPlayer();
+  const { currentTrack } = useSelector((state: RootState) => state.musicPlayer);
   const themeColors = getThemeColors(isDarkMode);
 
   return (

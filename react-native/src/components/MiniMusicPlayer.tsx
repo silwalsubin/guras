@@ -182,7 +182,8 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
 }) => {
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const { activeTab } = useSelector((state: RootState) => state.navigation);
-  const { currentTrack, isPlaying, progress, togglePlayback } = useMusicPlayer();
+  const { currentTrack, isPlaying } = useSelector((state: RootState) => state.musicPlayer);
+  const { progress } = useMusicPlayer();
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);
 
@@ -196,6 +197,15 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
       });
     }
   }, [progress.position, progress.duration]);
+
+  // Debug current track artwork
+  useEffect(() => {
+    console.log('🎵 Mini Player Current Track:', {
+      id: currentTrack?.id,
+      title: currentTrack?.title,
+      artworkUrl: currentTrack?.artworkUrl
+    });
+  }, [currentTrack]);
 
   // Don't render if no track is loaded or not on Audio tab
   if (!currentTrack || activeTab !== 'audio') {
@@ -225,9 +235,9 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
         {/* Album Artwork */}
         {showArtwork && (
           <View style={styles.artworkContainer}>
-            {currentTrack.artwork ? (
+            {currentTrack.artworkUrl ? (
               <Image
-                source={{ uri: currentTrack.artwork }}
+                source={{ uri: currentTrack.artworkUrl }}
                 style={styles.artwork}
                 resizeMode="cover"
               />

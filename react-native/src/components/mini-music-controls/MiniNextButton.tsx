@@ -41,7 +41,14 @@ export const MiniNextButton: React.FC = () => {
         duration: nextAudioFile.durationSeconds || 0,
       };
 
-      // Update Redux state
+      // Update Redux state with both track info and index
+      dispatch(setCurrentTrack({
+        id: nextAudioFile.id,
+        title: nextAudioFile.name,
+        artist: nextAudioFile.author,
+        url: nextAudioFile.audioDownloadUrl,
+        artworkUrl: nextAudioFile.thumbnailDownloadUrl || null,
+      }));
       dispatch(setCurrentTrackIndex(nextIndex));
 
       // Use context to play track (this will update UI properly)

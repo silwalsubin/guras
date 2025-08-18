@@ -23,18 +23,17 @@ import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 const AudioScreen: React.FC = () => {
   const dispatch = useDispatch();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
-  const { audioFiles: reduxAudioFiles } = useSelector((state: RootState) => state.musicPlayer);
+  const { audioFiles: reduxAudioFiles, currentTrack, isPlaying } = useSelector((state: RootState) => state.musicPlayer);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
-  const { playTrack, currentTrack, isPlaying } = useMusicPlayer();
+  const { playTrack } = useMusicPlayer();
 
   // State
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showMyFiles, setShowMyFiles] = useState(true);
 
-  // Load audio files
+  // Load audio files - always load all files
   const loadAudioFiles = async (isRefresh = false) => {
     try {
       if (isRefresh) {
@@ -43,9 +42,7 @@ const AudioScreen: React.FC = () => {
         setLoading(true);
       }
 
-      const response = showMyFiles
-        ? await apiService.getMyAudioFiles()
-        : await apiService.getAudioFiles();
+      const response = await apiService.getAudioFiles();
 
       if (response.data) {
         setAudioFiles(response.data.files);
@@ -63,10 +60,10 @@ const AudioScreen: React.FC = () => {
     }
   };
 
-  // Load files on mount and when view changes
+  // Load files on mount
   useEffect(() => {
     loadAudioFiles();
-  }, [showMyFiles]);
+  }, []);
 
   // Update Redux whenever local audioFiles state changes
   useEffect(() => {
@@ -84,7 +81,14 @@ const AudioScreen: React.FC = () => {
       duration: audioFile.durationSeconds || 0,
     };
 
-    // Update Redux state with current track index
+    // Update Redux state with current track info and index
+    dispatch(musicPlayerActions.setCurrentTrack({
+      id: audioFile.id,
+      title: audioFile.name,
+      artist: audioFile.author,
+      url: audioFile.audioDownloadUrl,
+      artworkUrl: audioFile.thumbnailDownloadUrl || null,
+    }));
     dispatch(musicPlayerActions.setCurrentTrackIndex(index));
 
     playTrack(track);
@@ -114,40 +118,6 @@ const AudioScreen: React.FC = () => {
         </Text>
       </View>
 
-      {/* View Toggle */}
-      <View style={styles.toggleContainer}>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            showMyFiles && { backgroundColor: brandColors.primary },
-            { borderColor: brandColors.primary }
-          ]}
-          onPress={() => setShowMyFiles(true)}
-        >
-          <Text style={[
-            styles.toggleText,
-            { color: showMyFiles ? '#fff' : brandColors.primary }
-          ]}>
-            My Files
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            !showMyFiles && { backgroundColor: brandColors.primary },
-            { borderColor: brandColors.primary }
-          ]}
-          onPress={() => setShowMyFiles(false)}
-        >
-          <Text style={[
-            styles.toggleText,
-            { color: !showMyFiles ? '#fff' : brandColors.primary }
-          ]}>
-            All Files
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Audio Files List */}
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -163,7 +133,7 @@ const AudioScreen: React.FC = () => {
             No Audio Files
           </Text>
           <Text style={[styles.emptySubtitle, { color: themeColors.textSecondary }]}>
-            {showMyFiles ? 'You haven\'t uploaded any audio files yet' : 'No audio files available'}
+            No audio files available
           </Text>
         </View>
       ) : (
@@ -190,7 +160,7 @@ const AudioScreen: React.FC = () => {
                   />
                 ) : (
                   <View style={[styles.thumbnailPlaceholder, { backgroundColor: brandColors.primary }]}>
-                    <FontAwesome name="music" size={24} color="#fff" />
+                    <FontAwesome name="music" size={12} color="#fff" />
                   </View>
                 )}
 
@@ -199,7 +169,7 @@ const AudioScreen: React.FC = () => {
                   <View style={styles.playIndicator}>
                     <FontAwesome
                       name={isPlaying ? "pause" : "play"}
-                      size={16}
+                      size={10}
                       color="#fff"
                     />
                   </View>
@@ -220,14 +190,6 @@ const AudioScreen: React.FC = () => {
                 >
                   {audioFile.author}
                 </Text>
-                {audioFile.description && (
-                  <Text
-                    style={[styles.trackDescription, { color: themeColors.textSecondary }]}
-                    numberOfLines={1}
-                  >
-                    {audioFile.description}
-                  </Text>
-                )}
               </View>
 
               {/* Duration */}
@@ -276,26 +238,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
-  toggleContainer: {
-    flexDirection: 'row',
-    marginBottom: 24,
-    backgroundColor: 'transparent',
-    borderRadius: 8,
-    padding: 2,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    borderWidth: 1,
-    alignItems: 'center',
-    marginHorizontal: 2,
-  },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -329,23 +272,23 @@ const styles = StyleSheet.create({
   audioItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 10,
     borderWidth: 2,
   },
   thumbnailContainer: {
     position: 'relative',
-    marginRight: 16,
+    marginRight: 12,
   },
   thumbnail: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 6,
   },
   thumbnailPlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -356,7 +299,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 8,
+    borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -365,17 +308,13 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   trackTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: 4,
-  },
-  trackArtist: {
-    fontSize: 14,
     marginBottom: 2,
   },
-  trackDescription: {
-    fontSize: 12,
-    fontStyle: 'italic',
+  trackArtist: {
+    fontSize: 13,
+    marginBottom: 0,
   },
   duration: {
     fontSize: 12,
