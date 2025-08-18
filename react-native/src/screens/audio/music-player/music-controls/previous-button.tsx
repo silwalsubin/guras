@@ -40,7 +40,14 @@ const PreviousButton: React.FC = () => {
         duration: prevAudioFile.durationSeconds || 0,
       };
 
-      // Update Redux state
+      // Update Redux state with both track info and index
+      dispatch(setCurrentTrack({
+        id: prevAudioFile.id,
+        title: prevAudioFile.name,
+        artist: prevAudioFile.author,
+        url: prevAudioFile.audioDownloadUrl,
+        artworkUrl: prevAudioFile.thumbnailDownloadUrl || null,
+      }));
       dispatch(setCurrentTrackIndex(prevIndex));
 
       // Use context to play track (this will update UI properly)

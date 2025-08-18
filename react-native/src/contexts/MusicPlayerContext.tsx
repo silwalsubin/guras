@@ -63,6 +63,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           compactCapabilities: [
             Capability.Play,
             Capability.Pause,
+            Capability.SkipToNext,
+            Capability.SkipToPrevious,
           ],
           // Enable background playback
           android: {
