@@ -21,6 +21,7 @@ export { default as HorizontalSeparator } from './ui/HorizontalSeparator';
 
 // Meditation Components
 export { default as MeditationTimer } from './MeditationTimer';
+export { default as MeditationMusicSelector } from './MeditationMusicSelector';
 
 // Export ProgressData type for external use
 export type { ProgressData } from './cards/ProgressCard'; 
