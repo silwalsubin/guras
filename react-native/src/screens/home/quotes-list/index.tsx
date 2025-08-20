@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, RefreshControl, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors } from '@/config/colors';
@@ -24,32 +24,14 @@ const QuotesView: React.FC = () => {
   const themeColors = getThemeColors(isDarkMode);
 
   useEffect(() => {
-    // Fetch quotes when component mounts
-    console.log('🎯 QuotesView: Dispatching fetchQuotes action');
-    dispatch(fetchQuotes());
-  }, [dispatch]);
-
-  // Debug Redux state
-  useEffect(() => {
-    console.log('🎯 QuotesView Redux State:', {
-      quotesCount: quotes?.length || 0,
-      loading,
-      refreshing,
-      error
-    });
-  }, [quotes, loading, refreshing, error]);
-
-  const onRefresh = async () => {
-    console.log('🔄 Pull-to-refresh triggered');
-    
-    try {
-      // Dispatch the fetchQuotes action to refresh the store
-      await dispatch(fetchQuotes()).unwrap();
-      console.log('✅ Quotes refreshed successfully');
-    } catch (error) {
-      console.error('❌ Error refreshing quotes:', error);
+    // Only fetch quotes if we don't have any and we're not already loading
+    if (!quotes || quotes.length === 0 && !loading && !refreshing) {
+      console.log('🎯 QuotesView: Dispatching fetchQuotes action');
+      dispatch(fetchQuotes());
     }
-  };
+  }, [dispatch, quotes, loading, refreshing]);
+
+
 
   if (loading && !refreshing) {
     return (

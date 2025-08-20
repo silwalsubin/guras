@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { BaseCard } from '@/components/shared';
 import QuoteCardBottomControls from './bottom-controls';
@@ -18,27 +18,25 @@ interface QuoteProps {
 const Quote: React.FC<QuoteProps> = ({ quote }) => {
   const dispatch = useDispatch<AppDispatch>();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
-  const themeColors = getThemeColors(isDarkMode);
-  const brandColors = getBrandColors();
+
+  // Memoize theme colors to prevent recalculation
+  const themeColors = useMemo(() => getThemeColors(isDarkMode), [isDarkMode]);
+  const brandColors = useMemo(() => getBrandColors(), []);
 
   // Get like and comment data from Redux
   const { likedQuotes, likeCounts, commentCounts } = useSelector((state: RootState) => state.quotes);
-  const quoteKey = `${quote.text}-${quote.author}`;
-  const isLiked = likedQuotes.includes(quoteKey);
-  const likeCount = likeCounts[quoteKey] || 0;
-  const commentCount = commentCounts[quoteKey] || 0;
 
-  const handleLikePress = () => {
+  // Memoize quote key and derived values
+  const quoteKey = useMemo(() => `${quote.text}-${quote.author}`, [quote.text, quote.author]);
+  const isLiked = useMemo(() => likedQuotes.includes(quoteKey), [likedQuotes, quoteKey]);
+  const likeCount = useMemo(() => likeCounts[quoteKey] || 0, [likeCounts, quoteKey]);
+  const commentCount = useMemo(() => commentCounts[quoteKey] || 0, [commentCounts, quoteKey]);
+
+  const handleLikePress = useCallback(() => {
     dispatch(toggleLike(quote));
-  };
+  }, [dispatch, quote]);
 
-  const handleCommentPress = () => {
-    console.log('Comment pressed for quote:', quote.text);
-  };
 
-  const handleSharePress = () => {
-    console.log('Share pressed for quote:', quote.text);
-  };
 
   return (
     <View style={styles.quoteCardWrapper}>
