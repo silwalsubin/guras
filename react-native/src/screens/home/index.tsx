@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -23,19 +23,23 @@ const HomeScreen: React.FC = () => {
     setRefreshing(true);
     try {
       const result = await RefreshUtils.refreshHomeScreen();
-      
+
       if (result.success) {
         // Home screen refreshed successfully
       } else {
         console.warn('⚠️ Some items failed to refresh:', result.errors);
       }
-      
+
     } catch (error) {
       console.error('Error refreshing home screen:', error);
     } finally {
       setRefreshing(false);
     }
   }, []);
+
+  const handleProfilePress = useCallback(() => {
+    dispatch(setActiveTab(TAB_KEYS.PROFILE));
+  }, [dispatch]);
 
   return (
     <ScrollView 
@@ -52,8 +56,8 @@ const HomeScreen: React.FC = () => {
       }
     >
       {/* Header */}
-      <AppHeader 
-        onProfilePress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))} 
+      <AppHeader
+        onProfilePress={handleProfilePress}
       />
 
       {/* Daily Wisdom */}
