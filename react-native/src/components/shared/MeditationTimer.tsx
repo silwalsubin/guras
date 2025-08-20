@@ -11,14 +11,14 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
-import { 
-  startTimer, 
-  pauseTimer, 
-  resumeTimer, 
-  stopTimer, 
-  updateTimeLeft, 
-  skipTime, 
-  setSelectedMinutes, 
+import {
+  startTimer,
+  pauseTimer,
+  resumeTimer,
+  stopTimer,
+  updateTimeLeft,
+  skipTime,
+  setSelectedMinutes,
   completeSession,
   syncTimerState
 } from '@/store/meditationSliceNew';
@@ -26,6 +26,9 @@ import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { BaseCard } from '@/components/shared';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import MeditationMusicSelector, { MeditationTrack } from '@/components/shared/MeditationMusicSelector';
+import { setCurrentTrack, setIsPlaying } from '@/store/musicPlayerSlice';
 
 interface MeditationTimerProps {
   onSessionComplete?: (duration: number) => void;
@@ -164,10 +167,14 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
 
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
   const [minutes, setMinutes] = useState(10);
+  const [selectedMeditationTrack, setSelectedMeditationTrack] = useState<MeditationTrack | null>(null);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const progressAnimation = useRef(new Animated.Value(0)).current;
   const pulseAnimation = useRef(new Animated.Value(1)).current;
+
+  // Music player context
+  const { playTrack, pause, isPlaying } = useMusicPlayer();
 
 
 
@@ -195,11 +202,17 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
           // Timer finished
           clearInterval(intervalRef.current!);
           dispatch(completeSession());
-          
+
+          // Stop meditation music and update Redux state
+          if (isPlaying) {
+            pause();
+            dispatch(setIsPlaying(false));
+          }
+
           if (onSessionComplete) {
             onSessionComplete(selectedMinutes);
           }
-          
+
           Alert.alert(
             'Meditation Complete',
             `Great job! You've completed your ${selectedMinutes}-minute meditation session!\n\nTotal sessions: ${totalSessions + 1}\nTotal minutes: ${totalMinutes + selectedMinutes}`,
@@ -273,6 +286,9 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
 
     const displayTime = `${minutes} minute${minutes !== 1 ? 's' : ''}`;
 
+    // Debug: Check what meditation track is selected
+    console.log('🎵 DEBUG: Starting meditation with track:', selectedMeditationTrack);
+
     Alert.alert(
       'Start Meditation Session',
       `Are you ready to begin your ${displayTime} meditation session?\n\nFind a comfortable position and focus on your breath.`,
@@ -284,22 +300,81 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
         {
           text: 'Start',
           style: 'default',
-          onPress: () => {
+          onPress: async () => {
+            console.log('🎵 DEBUG: Start button pressed, selectedMeditationTrack:', selectedMeditationTrack);
+
             dispatch(setSelectedMinutes(minutes));
             dispatch(startTimer(minutes));
             progressAnimation.setValue(0);
+
+            // Start meditation music if selected
+            if (selectedMeditationTrack) {
+              try {
+                console.log('🎵 Attempting to play meditation music:', {
+                  title: selectedMeditationTrack.title,
+                  url: selectedMeditationTrack.url,
+                  category: selectedMeditationTrack.category
+                });
+
+                // Update Redux state to show this track in Audio tab
+                dispatch(setCurrentTrack({
+                  id: selectedMeditationTrack.id,
+                  title: selectedMeditationTrack.title,
+                  artist: selectedMeditationTrack.artist,
+                  url: selectedMeditationTrack.url,
+                  artworkUrl: selectedMeditationTrack.artwork || null,
+                }));
+                dispatch(setIsPlaying(true));
+
+                // Play the track
+                await playTrack(selectedMeditationTrack);
+                console.log('🎵 Successfully started meditation music:', selectedMeditationTrack.title);
+              } catch (error) {
+                console.error('🎵 Failed to start meditation music:', error);
+                // Continue with meditation even if music fails
+                Alert.alert(
+                  'Audio Notice',
+                  'Meditation music could not be played, but your session will continue in silence.',
+                  [{ text: 'OK' }]
+                );
+              }
+            } else {
+              console.log('🎵 No meditation music selected - silent meditation');
+            }
           },
         },
       ]
     );
   };
 
-  const handlePauseTimer = () => {
+  const handlePauseTimer = async () => {
     dispatch(pauseTimer());
+
+    // Pause meditation music and update Redux state
+    if (isPlaying) {
+      try {
+        await pause();
+        dispatch(setIsPlaying(false));
+        console.log('🎵 Paused meditation music');
+      } catch (error) {
+        console.error('🎵 Failed to pause meditation music:', error);
+      }
+    }
   };
 
-  const handleResumeTimer = () => {
+  const handleResumeTimer = async () => {
     dispatch(resumeTimer());
+
+    // Resume meditation music if it was playing and update Redux state
+    if (selectedMeditationTrack && !isPlaying) {
+      try {
+        await playTrack(selectedMeditationTrack);
+        dispatch(setIsPlaying(true));
+        console.log('🎵 Resumed meditation music');
+      } catch (error) {
+        console.error('🎵 Failed to resume meditation music:', error);
+      }
+    }
   };
 
   const handleStopTimer = () => {
@@ -314,9 +389,20 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
         {
           text: 'Stop',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             dispatch(stopTimer());
             setShowStopConfirmation(false);
+
+            // Stop meditation music and update Redux state
+            if (isPlaying) {
+              try {
+                await pause();
+                dispatch(setIsPlaying(false));
+                console.log('🎵 Stopped meditation music');
+              } catch (error) {
+                console.error('🎵 Failed to stop meditation music:', error);
+              }
+            }
           },
         },
       ]
@@ -395,6 +481,15 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
               label=""
               isDarkMode={isDarkMode}
               themeColors={themeColors}
+            />
+          </View>
+
+          {/* Music Selection */}
+          <View style={styles.musicSelectionContainer}>
+            <MeditationMusicSelector
+              selectedTrack={selectedMeditationTrack}
+              onTrackSelect={setSelectedMeditationTrack}
+              disabled={false}
             />
           </View>
 
@@ -801,6 +896,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     opacity: 0.7,
+  },
+  musicSelectionContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
   },
   startButtonContainer: {
     marginTop: 40,

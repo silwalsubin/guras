@@ -97,6 +97,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         dispatch(setIsPlaying(false));
       }
     });
+
     return () => {
       isMounted = false;
       onPlaybackState.remove();
@@ -149,17 +150,27 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         duration: track.duration,
       };
 
+      // Check if this is a meditation track that should loop
+      const isMeditationTrack = track.id.includes('meditation') || track.id.includes('long-meditation');
+      console.log('🎵 Is meditation track:', isMeditationTrack);
+
       console.log('🎵 TrackPlayer track object:', trackPlayerTrack);
 
       // Clear current queue and add new track
+      console.log('🎵 Resetting TrackPlayer...');
       await TrackPlayer.reset();
+
+      console.log('🎵 Adding track to TrackPlayer...');
       await TrackPlayer.add(trackPlayerTrack);
 
       // Update current track state
+      console.log('🎵 Updating current track state...');
       setCurrentTrack(track);
 
       // Start playing
+      console.log('🎵 Starting playback...');
       await TrackPlayer.play();
+      console.log('🎵 Playback started successfully!');
       setIsPlayingState(true);
     } catch (error) {
       console.error('🎵 Error playing track:', error);
