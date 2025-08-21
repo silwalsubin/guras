@@ -9,6 +9,7 @@ export interface MeditationState {
   totalSessions: number;
   totalMinutes: number;
   lastActiveTime: number; // timestamp for sync
+  isFullScreen: boolean; // For hiding header/footer during meditation
 }
 
 const initialState: MeditationState = {
@@ -20,6 +21,7 @@ const initialState: MeditationState = {
   totalSessions: 0,
   totalMinutes: 0,
   lastActiveTime: 0,
+  isFullScreen: false,
 };
 
 const meditationSlice = createSlice({
@@ -33,6 +35,7 @@ const meditationSlice = createSlice({
       state.isPaused = false;
       state.sessionStartTime = new Date().toISOString();
       state.lastActiveTime = Date.now();
+      state.isFullScreen = true; // Enter full-screen when starting meditation
     },
     pauseTimer: (state) => {
       state.isPaused = true;
@@ -48,6 +51,7 @@ const meditationSlice = createSlice({
       state.isPaused = false;
       state.sessionStartTime = null;
       state.lastActiveTime = 0;
+      state.isFullScreen = false; // Exit full-screen when stopping meditation
     },
     updateTimeLeft: (state, action: PayloadAction<number>) => {
       state.timeLeft = action.payload;
@@ -78,6 +82,7 @@ const meditationSlice = createSlice({
       state.isPaused = false;
       state.sessionStartTime = null;
       state.lastActiveTime = 0;
+      state.isFullScreen = false; // Exit full-screen when session completes
       state.totalSessions += 1;
       state.totalMinutes += state.selectedMinutes;
     },

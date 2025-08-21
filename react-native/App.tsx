@@ -34,6 +34,7 @@ const MainApp: React.FC = () => {
   const systemColorScheme = useColorScheme();
   const activeTab = useSelector((state: RootState) => state.navigation.activeTab);
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  const isFullScreenMeditation = useSelector((state: RootState) => state.meditation.isFullScreen);
   const dispatch = useDispatch();
 
   // Handler for when mini music player is tapped
@@ -97,16 +98,19 @@ const MainApp: React.FC = () => {
         </View>
 
         {/* Mini Music Player - Shows above bottom navigation when music is playing */}
-        <MiniMusicPlayer
-          onPress={handleMiniPlayerPress}
-          style={styles.miniPlayer}
-        />
+        {!isFullScreenMeditation && (
+          <MiniMusicPlayer
+            onPress={handleMiniPlayerPress}
+            style={styles.miniPlayer}
+          />
+        )}
 
         {/* Full Music Player Modal */}
         <FullMusicPlayerModal />
       </MusicPlayerProvider>
 
-      <BottomNavigation />
+      {/* Bottom Navigation - Hidden during full-screen meditation */}
+      {!isFullScreenMeditation && <BottomNavigation />}
     </SafeAreaView>
   );
 };

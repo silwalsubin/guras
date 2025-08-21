@@ -4,6 +4,10 @@ import {
   StyleSheet,
   View,
   RefreshControl,
+  StatusBar,
+  SafeAreaView,
+  Dimensions,
+  Modal,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
@@ -29,6 +33,7 @@ const MeditationScreen: React.FC = () => {
 
   // Get meditation state for real progress data
   const meditationState = useSelector((state: RootState) => state.meditation);
+  const { isFullScreen } = meditationState;
   const progressData: ProgressData = {
     minutes: meditationState.totalMinutes,
     sessions: meditationState.totalSessions,
@@ -63,6 +68,27 @@ const MeditationScreen: React.FC = () => {
     }
   }, []);
 
+  // If in full-screen mode, render only the timer with black background
+  if (isFullScreen) {
+    return (
+      <Modal
+        visible={true}
+        animationType="none"
+        presentationStyle="fullScreen"
+        statusBarTranslucent={true}
+      >
+        <View style={styles.fullScreenModal}>
+          <StatusBar
+            hidden={true}
+            backgroundColor="#000000"
+          />
+          <MeditationTimer onSessionComplete={handleMeditationComplete} />
+        </View>
+      </Modal>
+    );
+  }
+
+  // Normal mode with header and content sections
   return (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: themeColors.background }]}
@@ -116,6 +142,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     // Don't center all content - let individual sections handle their own alignment
+  },
+  fullScreenModal: {
+    flex: 1,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   heroSection: {
     marginBottom: 32,
