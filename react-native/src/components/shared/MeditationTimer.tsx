@@ -17,18 +17,18 @@ import {
   resumeTimer,
   stopTimer,
   updateTimeLeft,
-  skipTime,
   setSelectedMinutes,
   completeSession,
   syncTimerState
 } from '@/store/meditationSliceNew';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
-import { BaseCard } from '@/components/shared';
+
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import MeditationMusicSelector, { MeditationTrack } from '@/components/shared/MeditationMusicSelector';
 import { setCurrentTrack, setIsPlaying } from '@/store/musicPlayerSlice';
+import DurationSelector from '@/components/shared/DurationSelector';
 
 interface MeditationTimerProps {
   onSessionComplete?: (duration: number) => void;
@@ -36,117 +36,7 @@ interface MeditationTimerProps {
 
 const { width: screenWidth } = Dimensions.get('window');
 
-// Wheel Picker Component
-interface WheelPickerProps {
-  data: number[];
-  selectedValue: number;
-  onValueChange: (value: number) => void;
-  label: string;
-  isDarkMode: boolean;
-  themeColors: any;
-}
 
-const WheelPicker: React.FC<WheelPickerProps> = ({
-  data,
-  selectedValue,
-  onValueChange,
-  label,
-  isDarkMode,
-  themeColors,
-}) => {
-  const scrollViewRef = useRef<ScrollView>(null);
-  const itemHeight = 44;
-  const visibleItems = 5; // Show 5 items at a time
-  const containerHeight = itemHeight * visibleItems;
-
-  useEffect(() => {
-    // Scroll to selected value on mount
-    const index = data.indexOf(selectedValue);
-    if (index !== -1 && scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({
-        y: index * itemHeight,
-        animated: false,
-      });
-    }
-  }, [selectedValue, data]);
-
-  const handleScroll = (event: any) => {
-    const y = event.nativeEvent.contentOffset.y;
-    const index = Math.round(y / itemHeight);
-    const value = data[index];
-    if (value !== undefined && value !== selectedValue) {
-      onValueChange(value);
-    }
-  };
-
-  const getItemOpacity = (item: number, index: number) => {
-    const selectedIndex = data.indexOf(selectedValue);
-    const distance = Math.abs(index - selectedIndex);
-    if (distance === 0) return 1;
-    if (distance === 1) return 0.6;
-    if (distance === 2) return 0.3;
-    return 0.1;
-  };
-
-  const getItemScale = (item: number, index: number) => {
-    const selectedIndex = data.indexOf(selectedValue);
-    const distance = Math.abs(index - selectedIndex);
-    if (distance === 0) return 1;
-    if (distance === 1) return 0.8;
-    return 0.6;
-  };
-
-  return (
-    <View style={styles.wheelContainer}>
-      {/* Selection highlight background */}
-      <View style={[
-        styles.wheelSelectionHighlight,
-        {
-          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-          top: itemHeight * 2,
-          height: itemHeight,
-        }
-      ]} />
-
-      <ScrollView
-        ref={scrollViewRef}
-        style={[styles.wheelScrollView, { height: containerHeight }]}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={itemHeight}
-        decelerationRate="fast"
-        onMomentumScrollEnd={handleScroll}
-        contentContainerStyle={{
-          paddingVertical: itemHeight * 2,
-        }}
-      >
-        {data.map((item, index) => (
-          <View key={index} style={[styles.wheelItem, { height: itemHeight }]}>
-            <Text
-              style={[
-                styles.wheelItemText,
-                {
-                  color: themeColors.textPrimary,
-                  opacity: getItemOpacity(item, index),
-                  fontSize: 24,
-                  fontWeight: item === selectedValue ? '600' : '400',
-                  transform: [{ scale: getItemScale(item, index) }],
-                }
-              ]}
-            >
-              {item} min
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
-      <Text
-        style={[styles.wheelLabel, { color: themeColors.textPrimary }]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-};
 
 const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) => {
   const dispatch = useDispatch();
@@ -156,13 +46,14 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
 
   // Get meditation state from Redux
   const meditationState = useSelector((state: RootState) => state.meditation);
-  const { 
-    isActive, 
-    timeLeft, 
-    selectedMinutes, 
-    isPaused, 
-    totalSessions, 
-    totalMinutes 
+  const {
+    isActive,
+    timeLeft,
+    selectedMinutes,
+    isPaused,
+    totalSessions,
+    totalMinutes,
+    isFullScreen
   } = meditationState;
 
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
@@ -204,10 +95,19 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
           dispatch(completeSession());
 
           // Stop meditation music and update Redux state
-          if (isPlaying) {
-            pause();
-            dispatch(setIsPlaying(false));
-          }
+          const stopAudio = async () => {
+            if (isPlaying) {
+              try {
+                await pause();
+                dispatch(setIsPlaying(false));
+                console.log('🎵 Stopped meditation music - session complete');
+              } catch (error) {
+                console.error('🎵 Failed to stop meditation music:', error);
+              }
+            }
+          };
+
+          stopAudio();
 
           if (onSessionComplete) {
             onSessionComplete(selectedMinutes);
@@ -231,6 +131,20 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
       }
     };
   }, [isActive, timeLeft, isPaused, showStopConfirmation, selectedMinutes, onSessionComplete, totalSessions, totalMinutes, dispatch]);
+
+  // Sync local minutes state with Redux selectedMinutes
+  useEffect(() => {
+    setMinutes(selectedMinutes);
+  }, [selectedMinutes]);
+
+  // Sync progress animation when meditation state changes
+  useEffect(() => {
+    if (isActive) {
+      updateProgressAnimation();
+    } else {
+      progressAnimation.setValue(0);
+    }
+  }, [isActive, timeLeft, selectedMinutes]);
 
   // Pulsing animation
   useEffect(() => {
@@ -273,7 +187,16 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
     const totalSeconds = selectedMinutes * 60;
     const elapsed = totalSeconds - timeLeft;
     const progress = elapsed / totalSeconds;
-    
+
+    console.log('🎯 Progress Debug:', {
+      selectedMinutes,
+      totalSeconds,
+      timeLeft,
+      elapsed,
+      progress: (progress * 100).toFixed(1) + '%',
+      animationValue: progress
+    });
+
     Animated.timing(progressAnimation, {
       toValue: progress,
       duration: 1000,
@@ -281,70 +204,56 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
     }).start();
   };
 
-  const handleStartTimer = () => {
+  const handleStartTimer = async () => {
     if (minutes <= 0) return;
-
-    const displayTime = `${minutes} minute${minutes !== 1 ? 's' : ''}`;
 
     // Debug: Check what meditation track is selected
     console.log('🎵 DEBUG: Starting meditation with track:', selectedMeditationTrack);
+    console.log('🎵 DEBUG: Start button pressed, selectedMeditationTrack:', selectedMeditationTrack);
 
-    Alert.alert(
-      'Start Meditation Session',
-      `Are you ready to begin your ${displayTime} meditation session?\n\nFind a comfortable position and focus on your breath.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Start',
-          style: 'default',
-          onPress: async () => {
-            console.log('🎵 DEBUG: Start button pressed, selectedMeditationTrack:', selectedMeditationTrack);
+    dispatch(setSelectedMinutes(minutes));
+    dispatch(startTimer(minutes));
+    progressAnimation.setValue(0);
 
-            dispatch(setSelectedMinutes(minutes));
-            dispatch(startTimer(minutes));
-            progressAnimation.setValue(0);
+    // Initial progress update
+    setTimeout(() => {
+      updateProgressAnimation();
+    }, 100);
 
-            // Start meditation music if selected
-            if (selectedMeditationTrack) {
-              try {
-                console.log('🎵 Attempting to play meditation music:', {
-                  title: selectedMeditationTrack.title,
-                  url: selectedMeditationTrack.url,
-                  category: selectedMeditationTrack.category
-                });
+    // Start meditation music if selected
+    if (selectedMeditationTrack) {
+      try {
+        console.log('🎵 Attempting to play meditation music:', {
+          title: selectedMeditationTrack.title,
+          url: selectedMeditationTrack.url,
+          category: selectedMeditationTrack.category
+        });
 
-                // Update Redux state to show this track in Audio tab
-                dispatch(setCurrentTrack({
-                  id: selectedMeditationTrack.id,
-                  title: selectedMeditationTrack.title,
-                  artist: selectedMeditationTrack.artist,
-                  url: selectedMeditationTrack.url,
-                  artworkUrl: selectedMeditationTrack.artwork || null,
-                }));
-                dispatch(setIsPlaying(true));
+        // Update Redux state to show this track in Audio tab
+        dispatch(setCurrentTrack({
+          id: selectedMeditationTrack.id,
+          title: selectedMeditationTrack.title,
+          artist: selectedMeditationTrack.artist,
+          url: selectedMeditationTrack.url,
+          artworkUrl: selectedMeditationTrack.artwork || null,
+        }));
+        dispatch(setIsPlaying(true));
 
-                // Play the track
-                await playTrack(selectedMeditationTrack);
-                console.log('🎵 Successfully started meditation music:', selectedMeditationTrack.title);
-              } catch (error) {
-                console.error('🎵 Failed to start meditation music:', error);
-                // Continue with meditation even if music fails
-                Alert.alert(
-                  'Audio Notice',
-                  'Meditation music could not be played, but your session will continue in silence.',
-                  [{ text: 'OK' }]
-                );
-              }
-            } else {
-              console.log('🎵 No meditation music selected - silent meditation');
-            }
-          },
-        },
-      ]
-    );
+        // Play the track
+        await playTrack(selectedMeditationTrack);
+        console.log('🎵 Successfully started meditation music:', selectedMeditationTrack.title);
+      } catch (error) {
+        console.error('🎵 Failed to start meditation music:', error);
+        // Continue with meditation even if music fails
+        Alert.alert(
+          'Audio Notice',
+          'Meditation music could not be played, but your session will continue in silence.',
+          [{ text: 'OK' }]
+        );
+      }
+    } else {
+      console.log('🎵 No meditation music selected - silent meditation');
+    }
   };
 
   const handlePauseTimer = async () => {
@@ -409,54 +318,84 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
     );
   };
 
-  const handleSkipTime = (seconds: number) => {
-    if (!isActive) return;
-    dispatch(skipTime(seconds));
-  };
+
+
 
 
 
   return (
-    <BaseCard style={styles.container}>
+    <View style={isFullScreen ? styles.fullScreenContainer : styles.container}>
 
 
       {/* Timer Display - Only show when meditation is active */}
       {isActive && (
         <View style={styles.timerDisplay}>
           <View style={styles.timerContainer}>
-            <Animated.View style={[styles.progressCircle, { transform: [{ scale: pulseAnimation }] }]}>
-              <View style={styles.progressBackground} />
-              <Animated.View 
-                                  style={[
-                    styles.progressFill,
-                    {
-                      width: 180,
-                      height: 180,
-                      borderRadius: 90,
-                      borderWidth: 6,
-                      borderColor: 'transparent',
-                      borderTopColor: brandColors.primary,
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      transform: [{
-                        rotate: progressAnimation.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['-90deg', '270deg']
-                        })
-                      }]
-                    }
-                  ]} 
+            <Animated.View style={[
+              isFullScreen ? styles.progressCircleFullScreen : styles.progressCircle,
+              { transform: [{ scale: pulseAnimation }] }
+            ]}>
+              {/* Background circle */}
+              <View style={isFullScreen ? styles.progressBackgroundFullScreen : styles.progressBackground} />
+
+              {/* Simple progress circle - fixed approach */}
+              <Animated.View
+                style={[
+                  isFullScreen ? styles.progressFillFullScreen : styles.progressFill,
+                  {
+                    borderColor: 'transparent',
+                    borderTopColor: brandColors.primary,
+                    borderRightColor: progressAnimation.interpolate({
+                      inputRange: [0, 0.25, 1],
+                      outputRange: ['transparent', brandColors.primary, brandColors.primary],
+                      extrapolate: 'clamp'
+                    }),
+                    borderBottomColor: progressAnimation.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: ['transparent', 'transparent', brandColors.primary],
+                      extrapolate: 'clamp'
+                    }),
+                    borderLeftColor: progressAnimation.interpolate({
+                      inputRange: [0, 0.75, 1],
+                      outputRange: ['transparent', 'transparent', brandColors.primary],
+                      extrapolate: 'clamp'
+                    }),
+                    transform: [{
+                      rotate: progressAnimation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['-90deg', '270deg']
+                      })
+                    }]
+                  }
+                ]}
               />
             </Animated.View>
             <View style={styles.timerOverlay}>
-              <Text style={[styles.timerText, { color: themeColors.textPrimary }]}>
+              <Text style={[
+                styles.timerText,
+                {
+                  color: themeColors.textPrimary,
+                  fontSize: isFullScreen ? 56 : 42
+                }
+              ]}>
                 {formatTime(timeLeft)}
               </Text>
-              <Text style={[styles.timerLabel, { color: themeColors.textSecondary }]}>
+              <Text style={[
+                styles.timerLabel,
+                {
+                  color: themeColors.textSecondary,
+                  fontSize: isFullScreen ? 20 : 16
+                }
+              ]}>
                 {isPaused ? 'Paused' : 'Meditating'}
               </Text>
-              <Text style={[styles.progressText, { color: themeColors.textSecondary }]}>
+              <Text style={[
+                styles.progressText,
+                {
+                  color: themeColors.textSecondary,
+                  fontSize: isFullScreen ? 18 : 14
+                }
+              ]}>
                 {getSessionProgress().toFixed(0)}% Complete
               </Text>
             </View>
@@ -464,25 +403,15 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
         </View>
       )}
 
-      {/* Timer Selection */}
+      {/* Duration and Music Selection */}
       {!isActive && (
         <View style={styles.timerSelection}>
-          <View style={[
-            styles.wheelPickerContainer,
-            {
-              backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)',
-              borderRadius: 16,
-            }
-          ]}>
-            <WheelPicker
-              data={Array.from({ length: 60 }, (_, i) => i + 1)} // 1-60 minutes
-              selectedValue={minutes}
-              onValueChange={setMinutes}
-              label=""
-              isDarkMode={isDarkMode}
-              themeColors={themeColors}
-            />
-          </View>
+          {/* Duration Selector */}
+          <DurationSelector
+            selectedDuration={minutes}
+            onDurationSelect={(selectedMinutes) => setMinutes(selectedMinutes)}
+            disabled={false}
+          />
 
           {/* Music Selection */}
           <View style={styles.musicSelectionContainer}>
@@ -544,42 +473,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
             )}
           </View>
 
-          {/* Skip Controls */}
-          <View style={styles.skipControlsContainer}>
-            <TouchableOpacity
-              style={[
-                styles.enhancedSkipButton,
-                {
-                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
-                }
-              ]}
-              onPress={() => handleSkipTime(-60)}
-            >
-              <Icon name="minus" size={16} color={themeColors.textSecondary} />
-              <Text style={[styles.enhancedSkipButtonText, { color: themeColors.textSecondary }]}>
-                1m
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.enhancedSkipButton,
-                {
-                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
-                }
-              ]}
-              onPress={() => handleSkipTime(60)}
-            >
-              <Icon name="plus" size={16} color={themeColors.textSecondary} />
-              <Text style={[styles.enhancedSkipButtonText, { color: themeColors.textSecondary }]}>
-                1m
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Stop Section */}
+          {/* Discard Session - Always reserve space, but only show when paused */}
           <View style={styles.stopSection}>
             <TouchableOpacity
               style={[
@@ -587,13 +481,14 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
                 {
                   backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
                   borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                  opacity: isPaused ? 1 : 0, // Hide when not paused, but keep space
                 }
               ]}
-              onPress={handleStopTimer}
+              onPress={isPaused ? handleStopTimer : undefined}
+              disabled={!isPaused}
             >
-              <Icon name="stop" size={18} color={themeColors.textSecondary} style={styles.stopIcon} />
               <Text style={[styles.enhancedStopButtonText, { color: themeColors.textSecondary }]}>
-                Stop Session
+                Discard Session
               </Text>
             </TouchableOpacity>
           </View>
@@ -601,15 +496,25 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
       )}
 
 
-    </BaseCard>
+
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 24,
-    marginVertical: 16,
-    padding: 28,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  fullScreenContainer: {
+    flex: 1,
+    margin: 0,
+    padding: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#000000',
   },
 
   timerDisplay: {
@@ -628,11 +533,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  progressCircleFullScreen: {
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   progressBackground: {
     width: 180,
     height: 180,
     borderRadius: 90,
     borderWidth: 6,
+    borderColor: '#E5E7EB',
+    position: 'absolute',
+  },
+  progressBackgroundFullScreen: {
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 8,
     borderColor: '#E5E7EB',
     position: 'absolute',
   },
@@ -647,6 +567,18 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
   },
+  progressFillFullScreen: {
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 8,
+    borderColor: 'transparent',
+    borderTopColor: '#10B981',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+
   timerOverlay: {
     position: 'absolute',
     alignItems: 'center',
@@ -668,6 +600,7 @@ const styles = StyleSheet.create({
   },
   timerSelection: {
     marginBottom: 28,
+    paddingHorizontal: 24,
   },
   timerSelectorLabel: {
     fontSize: 18,
@@ -774,7 +707,7 @@ const styles = StyleSheet.create({
   // Enhanced Control Styles
   mainControlContainer: {
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 80, // Increased from 32 to move buttons down for thumb accessibility
     marginBottom: 24,
   },
   circularControlButton: {
@@ -792,39 +725,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   resumeButton: {
-    // No border for resume button
+    borderWidth: 1,
+    borderColor: 'transparent', // Invisible border to maintain same dimensions
   },
   playIconOffset: {
     marginLeft: 3, // Slight offset to center play icon visually
   },
-  skipControlsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 32,
-  },
-  enhancedSkipButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  enhancedSkipButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 4,
-    textAlign: 'center',
-  },
+
   stopSection: {
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 16, // Increased from 8 to maintain good spacing with the moved main control
   },
   enhancedStopButton: {
     flexDirection: 'row',
@@ -840,63 +750,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  stopIcon: {
-    marginRight: 8,
-  },
+
   enhancedStopButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },
-  // Wheel Picker Styles
-  wheelPickerContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 220,
-    marginVertical: 30,
-    paddingHorizontal: 60, // More padding since it's just one picker
-  },
-  wheelContainer: {
-    flex: 1,
-    height: 220,
-    position: 'relative',
-  },
-  wheelScrollView: {
-    flex: 1,
-  },
-  wheelSelectionHighlight: {
-    position: 'absolute',
-    left: -80, // Extend beyond the container to reach full width
-    right: -80, // Extend beyond the container to reach full width
-    zIndex: 1,
-    pointerEvents: 'none',
-    borderRadius: 8,
-  },
-  wheelPickerSelectionHighlight: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    borderRadius: 8,
-    zIndex: 1,
-    pointerEvents: 'none',
-  },
-  wheelItem: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  wheelItemText: {
-    textAlign: 'center',
-    fontFamily: 'System',
-  },
-  wheelLabel: {
-    position: 'absolute',
-    bottom: -40,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '600',
-    opacity: 0.7,
-  },
+
+
   musicSelectionContainer: {
     paddingHorizontal: 24,
     marginBottom: 24,
