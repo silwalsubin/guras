@@ -11,9 +11,8 @@ import {
   Animated,
   Image
 } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { setFullPlayerVisible } from '@/store/musicPlayerSlice';
 import { getThemeColors, getBrandColors, COLORS } from '@/config/colors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -27,19 +26,18 @@ import NextButton from '@/screens/audio/music-player/music-controls/next-button'
 import ProgressBar from '@/screens/audio/music-player/progress-bar';
 
 const FullMusicPlayerModal: React.FC = () => {
-  const dispatch = useDispatch();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
-  const { isFullPlayerVisible, currentTrack } = useSelector((state: RootState) => state.musicPlayer);
+  const { isFullPlayerVisible, currentTrack, setFullPlayerVisible } = useMusicPlayer();
 
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
 
   const handleClose = () => {
-    dispatch(setFullPlayerVisible(false));
+    setFullPlayerVisible(false);
   };
 
-  // Background image source - use the thumbnail from Redux
-  const bgSource = currentTrack?.artworkUrl ? { uri: currentTrack.artworkUrl } : null;
+  // Background image source - use the artwork from context
+  const bgSource = currentTrack?.artwork ? { uri: currentTrack.artwork } : null;
 
   return (
     <Modal
@@ -75,9 +73,9 @@ const FullMusicPlayerModal: React.FC = () => {
           {/* Album Artwork Section */}
           <View style={styles.artworkSection}>
             <View style={styles.artworkContainer}>
-              {currentTrack?.artworkUrl ? (
+              {currentTrack?.artwork ? (
                 <Image
-                  source={{ uri: currentTrack.artworkUrl }}
+                  source={{ uri: currentTrack.artwork }}
                   style={styles.artwork}
                   resizeMode="cover"
                 />

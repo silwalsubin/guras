@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { setSliderValue, setPendingSeek, setIsSliding } from '@/store/musicPlayerSlice';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import Slider from '@react-native-community/slider';
 import TrackPlayer from 'react-native-track-player';
@@ -21,17 +20,13 @@ const THUMB_SIZE = 16; // Static size for the custom thumb
 const TRACK_OFFSET = 8; // Offset to align thumb with slider track
 
 const ProgressBar: React.FC = () => {
-  const dispatch = useDispatch();
+  const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const { isSetup, progress: contextProgress } = useMusicPlayer();
-  
-  const {
-    progress: reduxProgress,
-    sliderValue,
-    pendingSeek,
-    isSliding
-  } = useSelector((state: RootState) => state.musicPlayer);
-  
-  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+
+  // Local state for slider management (no Redux needed)
+  const [sliderValue, setSliderValue] = useState(0);
+  const [pendingSeek, setPendingSeek] = useState<number | null>(null);
+  const [isSliding, setIsSliding] = useState(false);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
   const shadowColor = COLORS.SHADOW;
@@ -44,55 +39,50 @@ const ProgressBar: React.FC = () => {
         duration: contextProgress.duration,
         buffered: contextProgress.buffered
       },
-      reduxProgress: {
-        position: reduxProgress.position,
-        duration: reduxProgress.duration,
-        buffered: reduxProgress.buffered
-      },
       sliderValue,
       pendingSeek,
       isSliding
     });
-  }, [contextProgress, reduxProgress, sliderValue, pendingSeek, isSliding]);
+  }, [contextProgress, sliderValue, pendingSeek, isSliding]);
 
   // Update slider value when progress changes (but not when sliding)
   useEffect(() => {
     if (!isSliding && pendingSeek === null && contextProgress.duration > 0) {
       console.log('🎵 Updating slider value from context progress:', contextProgress.position);
-      dispatch(setSliderValue(contextProgress.position));
+      setSliderValue(contextProgress.position);
     }
-  }, [contextProgress.position, contextProgress.duration, isSliding, pendingSeek, dispatch]);
+  }, [contextProgress.position, contextProgress.duration, isSliding, pendingSeek]);
 
   // Calculate current value for slider
   const currentValue = isSliding ? sliderValue : (pendingSeek !== null ? pendingSeek : contextProgress.position);
 
   const handleSlidingStart = () => {
     console.log('🎵 Slider sliding started');
-    dispatch(setIsSliding(true));
+    setIsSliding(true);
   };
 
   const handleSlidingComplete = async (value: number) => {
     try {
       console.log('🎵 Slider sliding completed, seeking to:', value);
-      dispatch(setPendingSeek(value));
-      
+      setPendingSeek(value);
+
       if (isSetup && contextProgress.duration > 0) {
         await TrackPlayer.seekTo(value);
         console.log('✅ Seek completed');
       }
-      
-      dispatch(setIsSliding(false));
-      dispatch(setPendingSeek(null));
+
+      setIsSliding(false);
+      setPendingSeek(null);
     } catch (error) {
       console.error('❌ Seek failed:', error);
-      dispatch(setIsSliding(false));
-      dispatch(setPendingSeek(null));
+      setIsSliding(false);
+      setPendingSeek(null);
     }
   };
 
   const handleValueChange = (value: number) => {
     console.log('🎵 Slider value changed:', value);
-    dispatch(setSliderValue(value));
+    setSliderValue(value);
   };
 
   return (

@@ -1,18 +1,24 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { getBrandColors, getThemeColors } from '@/config/colors';
-import TrackPlayer, { State } from 'react-native-track-player';
-import { setCurrentTrack, setCurrentTrackIndex } from '@/store/musicPlayerSlice';
+import TrackPlayer from 'react-native-track-player';
 
 export const MiniPlayPauseButton: React.FC = () => {
-  const { togglePlayback, isSetup, isPlaying, currentTrack } = useMusicPlayer();
+  const {
+    togglePlayback,
+    isSetup,
+    isPlaying,
+    currentTrack,
+    audioFiles,
+    currentTrackIndex,
+    setCurrentTrackIndex,
+    setCurrentTrack
+  } = useMusicPlayer();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
-  const { audioFiles, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
-  const dispatch = useDispatch();
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);
 
@@ -31,8 +37,8 @@ export const MiniPlayPauseButton: React.FC = () => {
 
       console.log('🎵 Mini Player: Track object created:', track);
 
-      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.thumbnailDownloadUrl || audioFile.artworkUrl || null }));
-      dispatch(setCurrentTrackIndex(index));
+      setCurrentTrack({ ...track, artwork: audioFile.thumbnailDownloadUrl || undefined });
+      setCurrentTrackIndex(index);
 
       // Stop current playback and load new track
       console.log('🎵 Mini Player: Resetting TrackPlayer...');

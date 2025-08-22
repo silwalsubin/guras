@@ -9,7 +9,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import MiniMusicPlayer from './MiniMusicPlayer';
 import navigationReducer from '../store/navigationSlice';
-import musicPlayerReducer from '../store/musicPlayerSlice';
+// musicPlayerSlice removed - using MusicPlayerContext instead
 import themeReducer from '../store/themeSlice';
 
 // Create a test store with controllable state

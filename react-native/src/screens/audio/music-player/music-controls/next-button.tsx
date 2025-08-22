@@ -1,8 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store';
-import { setCurrentTrack, setCurrentTrackIndex } from '@/store/musicPlayerSlice';
+// No Redux imports - using only MusicPlayerContext
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { getBrandColors } from '@/config/colors';
 import TrackPlayer from 'react-native-track-player';
@@ -11,9 +9,7 @@ import { State } from 'react-native-track-player';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const NextButton: React.FC = () => {
-  const dispatch = useDispatch();
-  const { audioFiles, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
-  const { playTrack } = useMusicPlayer();
+  const { playTrack, audioFiles, currentTrackIndex, setCurrentTrackIndex } = useMusicPlayer();
   const brandColors = getBrandColors();
 
 
@@ -41,15 +37,8 @@ const NextButton: React.FC = () => {
         duration: nextAudioFile.durationSeconds || 0,
       };
 
-      // Update Redux state with both track info and index
-      dispatch(setCurrentTrack({
-        id: nextAudioFile.id,
-        title: nextAudioFile.name,
-        artist: nextAudioFile.author,
-        url: nextAudioFile.audioDownloadUrl,
-        artworkUrl: nextAudioFile.thumbnailDownloadUrl || null,
-      }));
-      dispatch(setCurrentTrackIndex(nextIndex));
+      // Update context state with track index
+      setCurrentTrackIndex(nextIndex);
 
       // Use context to play track (this will update UI properly)
       await playTrack(track);

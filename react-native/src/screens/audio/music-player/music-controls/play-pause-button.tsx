@@ -9,8 +9,14 @@ import TrackPlayer, { State } from 'react-native-track-player';
 import { apiService, AudioFile } from '@/services/api';
 
 const PlayPauseButton: React.FC = () => {
-  const { togglePlayback, isSetup } = useMusicPlayer();
-  const { isPlaying, audioFiles, currentTrack, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
+  const {
+    togglePlayback,
+    isSetup,
+    isPlaying,
+    audioFiles,
+    currentTrack,
+    currentTrackIndex
+  } = useMusicPlayer();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);

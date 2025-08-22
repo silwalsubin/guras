@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import TrackPlayer, { State, Event } from 'react-native-track-player';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { apiService, AudioFile } from '@/services/api';
@@ -27,7 +27,7 @@ const MusicService: React.FC = () => {
   } = useMusicPlayer();
 
   // Load audio files from API
-  const loadAudioFiles = async () => {
+  const loadAudioFiles = useCallback(async () => {
     console.log('🎵 MusicService: Starting to load audio files...');
     setLoading(true);
     try {
@@ -58,7 +58,7 @@ const MusicService: React.FC = () => {
       setLoading(false);
       console.log('🎵 MusicService: Audio files loading completed');
     }
-  };
+  }, [setAudioFiles, setLoading, currentTrack]);
 
   // Load track into player
   const loadTrack = async (audioFile: AudioFile, index: number) => {
@@ -97,11 +97,15 @@ const MusicService: React.FC = () => {
     }
   };
 
-  // Load audio files on component mount
+  // Load audio files only after TrackPlayer is set up
   useEffect(() => {
-    console.log('🎵 MusicService: Component mounted, loading audio files...');
-    loadAudioFiles();
-  }, []);
+    if (isSetup) {
+      console.log('🎵 MusicService: TrackPlayer is ready, loading audio files...');
+      loadAudioFiles();
+    } else {
+      console.log('🎵 MusicService: Waiting for TrackPlayer setup...');
+    }
+  }, [isSetup, loadAudioFiles]);
 
   // Ensure track is loaded when audioFiles change and TrackPlayer is ready
   useEffect(() => {
