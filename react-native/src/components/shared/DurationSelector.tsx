@@ -236,10 +236,10 @@ const styles = StyleSheet.create({
   selectorButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   selectorContent: {
     flexDirection: 'row',
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 12,
     fontSize: 16,
   },
   modalContainer: {

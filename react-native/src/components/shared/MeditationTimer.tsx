@@ -71,7 +71,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
     playMeditationTrack,
     play,
     pause,
-    stopAndClear,
+    stopAndClearWithFadeOut,
     isPlaying,
     selectedMeditationTrack,
     activeMeditationTrack,
@@ -112,14 +112,14 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
           dispatch(completeSession());
           console.log('🎯 MEDITATION COMPLETED - Stopping music...');
 
-          // Handle music stopping asynchronously but don't wait for it
+          // Handle music stopping with fade-out asynchronously but don't wait for it
           const stopMusic = async () => {
             try {
-              await stopAndClear();
+              await stopAndClearWithFadeOut(2000); // 2 second fade-out
               clearMeditationTracks();
-              console.log('✅ Music stopped and cleared');
+              console.log('✅ Music faded out and cleared');
             } catch (error) {
-              console.error('❌ Failed to stop music:', error);
+              console.error('❌ Failed to fade out music:', error);
             }
           };
 
@@ -328,36 +328,20 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
     }
   };
 
-  const handleStopTimer = () => {
-    Alert.alert(
-      'Stop Meditation',
-      'Are you sure you want to stop your meditation session?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Stop',
-          style: 'destructive',
-          onPress: async () => {
-            dispatch(stopTimer());
-            setShowStopConfirmation(false);
+  const handleStopTimer = async () => {
+    dispatch(stopTimer());
+    setShowStopConfirmation(false);
 
-            // Stop and clear meditation music completely
-            try {
-              await stopAndClear();
-              console.log('🎵 Stopped and cleared meditation music');
-            } catch (error) {
-              console.error('🎵 Failed to stop meditation music:', error);
-            }
+    // Stop and clear meditation music with fade-out
+    try {
+      await stopAndClearWithFadeOut(1500); // 1.5 second fade-out for manual stop
+      console.log('🎵 Faded out and cleared meditation music');
+    } catch (error) {
+      console.error('🎵 Failed to fade out meditation music:', error);
+    }
 
-            // Clear meditation tracks from context
-            clearMeditationTracks();
-          },
-        },
-      ]
-    );
+    // Clear meditation tracks from context
+    clearMeditationTracks();
   };
 
 
@@ -803,8 +787,7 @@ const styles = StyleSheet.create({
 
 
   musicSelectionContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
+    marginBottom: 0,
   },
   startButtonContainer: {
     marginTop: 40,
