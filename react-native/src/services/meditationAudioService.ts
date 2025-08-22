@@ -31,14 +31,9 @@ class MeditationAudioService {
     if (this.isInitialized) return;
 
     try {
-      // Check if TrackPlayer is already set up
-      const state = await TrackPlayer.getState();
-      if (state === State.None) {
-        await TrackPlayer.setupPlayer();
-      }
-      
+      // TrackPlayer is initialized by MusicPlayerContext - just mark as ready
       this.isInitialized = true;
-      console.log('✅ Meditation audio service initialized');
+      console.log('✅ Meditation audio service initialized (TrackPlayer managed by MusicPlayerContext)');
     } catch (error) {
       console.error('❌ Failed to initialize meditation audio service:', error);
       throw error;

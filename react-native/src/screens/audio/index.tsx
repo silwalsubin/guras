@@ -10,9 +10,8 @@ import {
   RefreshControl,
   Alert
 } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import * as musicPlayerActions from '@/store/musicPlayerSlice';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -21,16 +20,21 @@ import { apiService, AudioFile } from '@/services/api';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const AudioScreen: React.FC = () => {
-  const dispatch = useDispatch();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
-  const { audioFiles: reduxAudioFiles, currentTrack, isPlaying } = useSelector((state: RootState) => state.musicPlayer);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
-  const { playTrack } = useMusicPlayer();
+  const {
+    playTrack,
+    currentTrack,
+    isPlaying,
+    audioFiles: contextAudioFiles,
+    setAudioFiles: setContextAudioFiles,
+    setCurrentTrackIndex,
+    loading: contextLoading,
+    setLoading: setContextLoading
+  } = useMusicPlayer();
 
   // State
-  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Load audio files - always load all files
@@ -39,15 +43,13 @@ const AudioScreen: React.FC = () => {
       if (isRefresh) {
         setRefreshing(true);
       } else {
-        setLoading(true);
+        setContextLoading(true);
       }
 
       const response = await apiService.getAudioFiles();
 
       if (response.data) {
-        setAudioFiles(response.data.files);
-        // Also update Redux state for music controls
-        dispatch(musicPlayerActions.setAudioFiles(response.data.files));
+        setContextAudioFiles(response.data.files);
       } else {
         Alert.alert('Error', response.error || 'Failed to load audio files');
       }
@@ -55,7 +57,7 @@ const AudioScreen: React.FC = () => {
       console.error('Error loading audio files:', error);
       Alert.alert('Error', 'Failed to load audio files');
     } finally {
-      setLoading(false);
+      setContextLoading(false);
       setRefreshing(false);
     }
   };
@@ -65,10 +67,7 @@ const AudioScreen: React.FC = () => {
     loadAudioFiles();
   }, []);
 
-  // Update Redux whenever local audioFiles state changes
-  useEffect(() => {
-    dispatch(musicPlayerActions.setAudioFiles(audioFiles));
-  }, [audioFiles, dispatch]);
+  // No longer needed - context manages audioFiles directly
 
   // Handle track selection
   const handleTrackPress = (audioFile: AudioFile, index: number) => {
@@ -81,15 +80,8 @@ const AudioScreen: React.FC = () => {
       duration: audioFile.durationSeconds || 0,
     };
 
-    // Update Redux state with current track info and index
-    dispatch(musicPlayerActions.setCurrentTrack({
-      id: audioFile.id,
-      title: audioFile.name,
-      artist: audioFile.author,
-      url: audioFile.audioDownloadUrl,
-      artworkUrl: audioFile.thumbnailDownloadUrl || null,
-    }));
-    dispatch(musicPlayerActions.setCurrentTrackIndex(index));
+    // Update context state with current track index
+    setCurrentTrackIndex(index);
 
     playTrack(track);
   };
@@ -119,14 +111,14 @@ const AudioScreen: React.FC = () => {
       </View>
 
       {/* Audio Files List */}
-      {loading ? (
+      {contextLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={brandColors.primary} />
           <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
             Loading audio files...
           </Text>
         </View>
-      ) : audioFiles.length === 0 ? (
+      ) : contextAudioFiles.length === 0 ? (
         <View style={styles.emptyContainer}>
           <FontAwesome name="music" size={48} color={themeColors.textSecondary} />
           <Text style={[styles.emptyTitle, { color: themeColors.textPrimary }]}>
@@ -138,7 +130,7 @@ const AudioScreen: React.FC = () => {
         </View>
       ) : (
         <View style={styles.audioList}>
-          {audioFiles.map((audioFile, index) => (
+          {contextAudioFiles.map((audioFile, index) => (
             <TouchableOpacity
               key={audioFile.id}
               style={[

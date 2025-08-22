@@ -92,6 +92,12 @@ const musicPlayerSlice = createSlice({
     setFullPlayerVisible(state, action: PayloadAction<boolean>) {
       state.isFullPlayerVisible = action.payload;
     },
+    clearCurrentTrack(state) {
+      state.currentTrack = null;
+      state.currentTrackIndex = 0;
+      state.isPlaying = false;
+      state.progress = { position: 0, duration: 0, buffered: 0 };
+    },
   },
 });
 
@@ -108,7 +114,8 @@ export const {
   setLoading,
   nextTrack,
   previousTrack,
-  setFullPlayerVisible
+  setFullPlayerVisible,
+  clearCurrentTrack
 } = musicPlayerSlice.actions;
 
 export default musicPlayerSlice.reducer; 
