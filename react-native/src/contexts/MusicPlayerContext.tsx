@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import TrackPlayer, { State, useProgress, Capability, Event, Track, AppKilledPlaybackBehavior } from 'react-native-track-player';
-// No Redux - MusicPlayerContext manages everything
-// No Redux imports - MusicPlayerContext is the single source of truth
+import { AudioFile } from '@/services/api';
+// No Redux - MusicPlayerContext is the single source of truth
 
 export interface TrackInfo {
   id: string;
@@ -29,6 +29,10 @@ interface MusicPlayerContextType {
   currentTrack: TrackInfo | null;
   selectedMeditationTrack: MeditationTrack | null;
   activeMeditationTrack: MeditationTrack | null;
+  audioFiles: AudioFile[];
+  currentTrackIndex: number;
+  loading: boolean;
+  isFullPlayerVisible: boolean;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stopAndClear: () => Promise<void>;
@@ -38,6 +42,13 @@ interface MusicPlayerContextType {
   playMeditationTrack: (track: MeditationTrack) => Promise<void>;
   setSelectedMeditationTrack: (track: MeditationTrack | null) => void;
   clearMeditationTracks: () => void;
+  setAudioFiles: (files: AudioFile[]) => void;
+  setCurrentTrackIndex: (index: number) => void;
+  setCurrentTrack: (track: TrackInfo | null) => void;
+  setLoading: (loading: boolean) => void;
+  setFullPlayerVisible: (visible: boolean) => void;
+  nextTrack: () => void;
+  previousTrack: () => void;
   progress: ReturnType<typeof useProgress>;
 }
 
@@ -55,6 +66,10 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [currentTrack, setCurrentTrack] = useState<TrackInfo | null>(null);
   const [selectedMeditationTrack, setSelectedMeditationTrack] = useState<MeditationTrack | null>(null);
   const [activeMeditationTrack, setActiveMeditationTrack] = useState<MeditationTrack | null>(null);
+  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [isFullPlayerVisible, setFullPlayerVisible] = useState(false);
   const progress = useProgress();
 
   // Debug progress updates
@@ -72,10 +87,29 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       try {
         console.log('🎵 Setting up TrackPlayer...');
 
-        // Add timeout to TrackPlayer.setupPlayer()
+        // Check if TrackPlayer is already initialized
+        try {
+          const state = await TrackPlayer.getPlaybackState();
+          console.log('🎵 TrackPlayer current state:', state);
+
+          // If we can get state, TrackPlayer is already initialized
+          if (state && state.state !== undefined) {
+            console.log('🎵 TrackPlayer already initialized, skipping setup');
+            await TrackPlayer.reset();
+            if (isMounted) {
+              setIsSetup(true);
+              console.log('✅ TrackPlayer is ready (already initialized)');
+            }
+            return;
+          }
+        } catch (stateError) {
+          console.log('🎵 TrackPlayer not initialized yet, proceeding with setup...');
+        }
+
+        // Setup TrackPlayer with shorter timeout
         const setupPromise = TrackPlayer.setupPlayer();
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('TrackPlayer.setupPlayer() timeout after 10 seconds')), 10000);
+          setTimeout(() => reject(new Error('TrackPlayer setup timeout')), 5000);
         });
 
         await Promise.race([setupPromise, timeoutPromise]);
@@ -116,18 +150,24 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           message = (error as { message: string }).message;
         }
 
-        // Only ignore "already initialized" errors, throw everything else
-        if (!message.includes('already been initialized')) {
-          console.error('🎵 TrackPlayer setup failed with error:', message);
-          // Don't throw - let the app continue but TrackPlayer won't work
-          // throw error;
-        } else {
+        // Handle "already initialized" errors gracefully
+        if (message.includes('already been initialized') || message.includes('already initialized')) {
           console.log('🎵 TrackPlayer already initialized, continuing...');
-          // Initialize with empty queue - tracks will be added dynamically from API
-          await TrackPlayer.reset();
+          try {
+            await TrackPlayer.reset();
+            if (isMounted) {
+              setIsSetup(true);
+              console.log('✅ TrackPlayer is ready (already initialized)');
+            }
+          } catch (resetError) {
+            console.error('🎵 Failed to reset TrackPlayer:', resetError);
+          }
+        } else {
+          console.error('🎵 TrackPlayer setup failed with error:', message);
+          // Set setup to true anyway to prevent infinite waiting
           if (isMounted) {
             setIsSetup(true);
-            console.log('✅ TrackPlayer is ready (already initialized)');
+            console.log('⚠️ TrackPlayer setup failed but continuing...');
           }
         }
       }
@@ -265,7 +305,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (!isSetup) {
         console.log('🎵 TrackPlayer not ready yet, waiting for setup...');
         let attempts = 0;
-        const maxAttempts = 50; // 5 seconds max wait
+        const maxAttempts = 30; // 3 seconds max wait
 
         while (!isSetup && attempts < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -273,11 +313,11 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
 
         if (!isSetup) {
-          console.error('🎵 TrackPlayer setup timeout after 5 seconds');
-          throw new Error('TrackPlayer setup timeout');
+          console.error('🎵 TrackPlayer setup timeout, attempting to play anyway...');
+          // Don't throw error, try to play anyway
+        } else {
+          console.log('✅ TrackPlayer is now ready after waiting');
         }
-
-        console.log('✅ TrackPlayer is now ready after waiting');
       }
 
       // Convert MeditationTrack to TrackPlayer format
@@ -310,7 +350,23 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     console.log('🎵 Clearing meditation tracks');
     setSelectedMeditationTrack(null);
     setActiveMeditationTrack(null);
+    // Also clear the current track to prevent audio tab from showing it as selected
+    setCurrentTrack(null);
   }, []);
+
+  const nextTrack = useCallback(() => {
+    if (audioFiles.length > 0) {
+      const nextIndex = (currentTrackIndex + 1) % audioFiles.length;
+      setCurrentTrackIndex(nextIndex);
+    }
+  }, [audioFiles.length, currentTrackIndex]);
+
+  const previousTrack = useCallback(() => {
+    if (audioFiles.length > 0) {
+      const prevIndex = currentTrackIndex === 0 ? audioFiles.length - 1 : currentTrackIndex - 1;
+      setCurrentTrackIndex(prevIndex);
+    }
+  }, [audioFiles.length, currentTrackIndex]);
 
   const playTrack = useCallback(async (track: TrackInfo) => {
     try {
@@ -322,7 +378,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (!isSetup) {
         console.log('🎵 TrackPlayer not ready yet, waiting for setup...');
         let attempts = 0;
-        const maxAttempts = 50; // 5 seconds max wait
+        const maxAttempts = 30; // 3 seconds max wait
 
         while (!isSetup && attempts < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -330,11 +386,11 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
 
         if (!isSetup) {
-          console.error('🎵 TrackPlayer setup timeout after 5 seconds');
-          throw new Error('TrackPlayer setup timeout');
+          console.error('🎵 TrackPlayer setup timeout, attempting to play anyway...');
+          // Don't throw error, try to play anyway
+        } else {
+          console.log('✅ TrackPlayer is now ready after waiting');
         }
-
-        console.log('✅ TrackPlayer is now ready after waiting');
       }
 
       // Test if the URL is accessible
@@ -421,6 +477,10 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       currentTrack,
       selectedMeditationTrack,
       activeMeditationTrack,
+      audioFiles,
+      currentTrackIndex,
+      loading,
+      isFullPlayerVisible,
       play,
       pause,
       stopAndClear,
@@ -430,6 +490,13 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       playMeditationTrack,
       setSelectedMeditationTrack,
       clearMeditationTracks,
+      setAudioFiles,
+      setCurrentTrackIndex,
+      setCurrentTrack,
+      setLoading,
+      setFullPlayerVisible,
+      nextTrack,
+      previousTrack,
       progress
     }}>
       {children}

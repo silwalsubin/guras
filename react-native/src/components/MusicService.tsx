@@ -2,16 +2,7 @@ import React, { useEffect } from 'react';
 import TrackPlayer, { State, Event } from 'react-native-track-player';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { apiService, AudioFile } from '@/services/api';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store';
-import { 
-  setAudioFiles, 
-  setCurrentTrackIndex, 
-  setCurrentTrack, 
-  setLoading,
-  setProgress,
-  nextTrack
-} from '@/store/musicPlayerSlice';
+// No Redux imports - using MusicPlayerContext only
 import { Alert } from 'react-native';
 
 /**
@@ -24,33 +15,35 @@ import { Alert } from 'react-native';
  * This component has no UI and runs in the background
  */
 const MusicService: React.FC = () => {
-  const { isSetup } = useMusicPlayer();
-  const dispatch = useDispatch();
-  
-  // Get all music player state from Redux
   const {
+    isSetup,
     audioFiles,
     currentTrackIndex,
     currentTrack,
-  } = useSelector((state: RootState) => state.musicPlayer);
+    setAudioFiles,
+    setCurrentTrackIndex,
+    setCurrentTrack,
+    setLoading
+  } = useMusicPlayer();
 
   // Load audio files from API
   const loadAudioFiles = async () => {
     console.log('🎵 MusicService: Starting to load audio files...');
-    dispatch(setLoading(true));
+    setLoading(true);
     try {
       const response = await apiService.getAudioFiles();
       console.log('🎵 MusicService: API response received:', response.data ? `${response.data.files.length} files` : 'No data');
-      
+
       if (response.data) {
-        dispatch(setAudioFiles(response.data.files));
-        console.log('🎵 MusicService: Audio files dispatched to Redux:', response.data.files.length);
+        setAudioFiles(response.data.files);
+        console.log('🎵 MusicService: Audio files set in context:', response.data.files.length);
 
         // Load first track if no current track
         if (response.data.files.length > 0 && !currentTrack) {
           console.log('🎵 MusicService: Loading first track...');
+          const files = response.data.files;
           setTimeout(() => {
-            loadTrack(response.data.files[0], 0);
+            loadTrack(files[0], 0);
           }, 100);
         } else {
           console.log('🎵 MusicService: Skipping track load:', { hasFiles: response.data.files.length > 0, hasCurrentTrack: !!currentTrack });
@@ -62,7 +55,7 @@ const MusicService: React.FC = () => {
     } catch (error) {
       console.error('❌ MusicService: Error loading audio files:', error);
     } finally {
-      dispatch(setLoading(false));
+      setLoading(false);
       console.log('🎵 MusicService: Audio files loading completed');
     }
   };
@@ -70,22 +63,22 @@ const MusicService: React.FC = () => {
   // Load track into player
   const loadTrack = async (audioFile: AudioFile, index: number) => {
     try {
-      console.log('🎵 MusicService: Loading track:', audioFile.title || audioFile.fileName);
+      console.log('🎵 MusicService: Loading track:', audioFile.name);
       console.log('🎵 MusicService: AudioFile object:', audioFile);
 
-      // Create track object for TrackPlayer (handle both old and new API formats)
+      // Create track object for TrackPlayer
       const track = {
-        id: audioFile.id || audioFile.fileName || audioFile.name,
-        url: audioFile.audioDownloadUrl || audioFile.downloadUrl,
-        title: audioFile.name || audioFile.title || (audioFile.fileName ? audioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
-        artist: audioFile.author || audioFile.artist || 'Guras',
+        id: audioFile.id,
+        url: audioFile.audioDownloadUrl,
+        title: audioFile.name,
+        artist: audioFile.author,
       };
 
       console.log('🎵 MusicService: Track object created:', track);
       console.log('🎵 MusicService: Audio URL:', track.url);
 
-      dispatch(setCurrentTrack({ ...track, artworkUrl: audioFile.thumbnailDownloadUrl || audioFile.artworkUrl || null }));
-      dispatch(setCurrentTrackIndex(index));
+      setCurrentTrack({ ...track, artwork: audioFile.thumbnailDownloadUrl || undefined });
+      setCurrentTrackIndex(index);
 
       // Stop current playback and load new track
       console.log('🎵 MusicService: Resetting TrackPlayer...');
@@ -130,20 +123,20 @@ const MusicService: React.FC = () => {
         const nextIndex = (currentTrackIndex + 1) % audioFiles.length;
         const nextAudioFile = audioFiles[nextIndex];
         
-        console.log('🎵 MusicService: Auto-advancing to:', nextAudioFile.title || nextAudioFile.fileName);
-        
+        console.log('🎵 MusicService: Auto-advancing to:', nextAudioFile.name);
+
         // Load the next track into TrackPlayer
         try {
           const track = {
-            id: nextAudioFile.id || nextAudioFile.fileName || nextAudioFile.name,
-            url: nextAudioFile.audioDownloadUrl || nextAudioFile.downloadUrl,
-            title: nextAudioFile.name || nextAudioFile.title || (nextAudioFile.fileName ? nextAudioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
-            artist: nextAudioFile.author || nextAudioFile.artist || 'Guras',
+            id: nextAudioFile.id,
+            url: nextAudioFile.audioDownloadUrl,
+            title: nextAudioFile.name,
+            artist: nextAudioFile.author,
           };
 
-          // Update Redux state
-          dispatch(setCurrentTrack({ ...track, artworkUrl: nextAudioFile.thumbnailDownloadUrl || nextAudioFile.artworkUrl || null }));
-          dispatch(setCurrentTrackIndex(nextIndex));
+          // Update context state
+          setCurrentTrack({ ...track, artwork: nextAudioFile.thumbnailDownloadUrl || undefined });
+          setCurrentTrackIndex(nextIndex);
           
           await TrackPlayer.reset();
           await TrackPlayer.add(track);
@@ -159,7 +152,7 @@ const MusicService: React.FC = () => {
     return () => {
       sub.remove();
     };
-  }, [audioFiles, currentTrackIndex, dispatch]);
+  }, [audioFiles, currentTrackIndex, setCurrentTrack, setCurrentTrackIndex]);
 
   // This component renders nothing - it's a background service
   return null;
