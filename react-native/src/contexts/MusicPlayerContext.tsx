@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import TrackPlayer, { State, useProgress, Capability, Event, Track } from 'react-native-track-player';
-import { useDispatch } from 'react-redux';
-import { setIsPlaying } from '@/store/musicPlayerSlice';
+import TrackPlayer, { State, useProgress, Capability, Event, Track, AppKilledPlaybackBehavior } from 'react-native-track-player';
+// No Redux - MusicPlayerContext manages everything
+// No Redux imports - MusicPlayerContext is the single source of truth
 
 export interface TrackInfo {
   id: string;
@@ -12,14 +12,31 @@ export interface TrackInfo {
   duration?: number;
 }
 
+export interface MeditationTrack {
+  id: string;
+  title: string;
+  artist: string;
+  url: string;
+  artwork?: string;
+  duration?: number;
+  category: 'ambient' | 'nature' | 'meditation' | 'binaural';
+  isLoop: boolean;
+}
+
 interface MusicPlayerContextType {
   isSetup: boolean;
   isPlaying: boolean;
   currentTrack: TrackInfo | null;
+  selectedMeditationTrack: MeditationTrack | null;
+  activeMeditationTrack: MeditationTrack | null;
   play: () => Promise<void>;
   pause: () => Promise<void>;
+  stopAndClear: () => Promise<void>;
   togglePlayback: () => Promise<void>;
   playTrack: (track: TrackInfo) => Promise<void>;
+  playMeditationTrack: (track: MeditationTrack) => Promise<void>;
+  setSelectedMeditationTrack: (track: MeditationTrack | null) => void;
+  clearMeditationTracks: () => void;
   progress: ReturnType<typeof useProgress>;
 }
 
@@ -35,7 +52,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isSetup, setIsSetup] = useState(false);
   const [isPlaying, setIsPlayingState] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<TrackInfo | null>(null);
-  const dispatch = useDispatch();
+  const [selectedMeditationTrack, setSelectedMeditationTrack] = useState<MeditationTrack | null>(null);
+  const [activeMeditationTrack, setActiveMeditationTrack] = useState<MeditationTrack | null>(null);
   const progress = useProgress();
 
   // Debug progress updates
@@ -68,7 +86,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           ],
           // Enable background playback
           android: {
-            appKilledPlaybackBehavior: 'StopPlaybackAndRemoveNotification',
+            appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
           },
         });
         console.log('✅ TrackPlayer setup completed');
@@ -91,11 +109,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Listen for playback state changes
     const onPlaybackState = TrackPlayer.addEventListener(Event.PlaybackState, (data) => {
       console.log('🎵 Playback state changed:', data.state);
-      if (data.state === State.Playing) {
-        dispatch(setIsPlaying(true));
-      } else {
-        dispatch(setIsPlaying(false));
-      }
+      const playing = data.state === State.Playing;
+      setIsPlayingState(playing);
     });
 
     return () => {
@@ -114,21 +129,108 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     await TrackPlayer.pause();
   }, []);
 
+  const stopAndClear = useCallback(async () => {
+    try {
+      await TrackPlayer.pause();
+      await TrackPlayer.reset();
+      setCurrentTrack(null);
+      setIsPlayingState(false);
+      console.log('🎵 stopAndClear completed');
+    } catch (error) {
+      console.error('❌ stopAndClear failed:', error);
+      throw error;
+    }
+  }, []);
+
   const togglePlayback = useCallback(async () => {
-    const state = await TrackPlayer.getState();
-    console.log('🎵 Toggle playback, current state:', state);
-    if (state === State.Playing) {
+    const playbackState = await TrackPlayer.getPlaybackState();
+    console.log('🎵 Toggle playback, current state:', playbackState.state);
+    if (playbackState.state === State.Playing) {
       await pause();
     } else {
       await play();
     }
   }, [play, pause]);
 
+  const playMeditationTrack = useCallback(async (track: MeditationTrack) => {
+    try {
+      console.log('🎵 Playing meditation track:', track.title);
+
+      // Wait for TrackPlayer to be set up if it's not ready yet
+      if (!isSetup) {
+        console.log('🎵 TrackPlayer not ready yet, waiting for setup...');
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds max wait
+
+        while (!isSetup && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+
+        if (!isSetup) {
+          console.error('🎵 TrackPlayer setup timeout after 5 seconds');
+          throw new Error('TrackPlayer setup timeout');
+        }
+
+        console.log('✅ TrackPlayer is now ready after waiting');
+      }
+
+      // Convert MeditationTrack to TrackPlayer format
+      const trackPlayerTrack = {
+        id: track.id,
+        url: track.url,
+        title: track.title,
+        artist: track.artist,
+        artwork: track.artwork,
+        duration: track.duration,
+      };
+
+      // Set as active meditation track
+      setActiveMeditationTrack(track);
+      setCurrentTrack(trackPlayerTrack);
+
+      // Clear queue and add new track
+      await TrackPlayer.reset();
+      await TrackPlayer.add(trackPlayerTrack);
+      await TrackPlayer.play();
+
+      console.log('✅ Meditation track playing successfully');
+    } catch (error) {
+      console.error('🎵 Error playing meditation track:', error);
+      throw error;
+    }
+  }, [isSetup]);
+
+  const clearMeditationTracks = useCallback(() => {
+    console.log('🎵 Clearing meditation tracks');
+    setSelectedMeditationTrack(null);
+    setActiveMeditationTrack(null);
+  }, []);
+
   const playTrack = useCallback(async (track: TrackInfo) => {
     try {
       console.log('🎵 Playing track:', track.title);
       console.log('🎵 Track URL:', track.url);
       console.log('🎵 Track artwork:', track.artwork);
+
+      // Wait for TrackPlayer to be set up if it's not ready yet
+      if (!isSetup) {
+        console.log('🎵 TrackPlayer not ready yet, waiting for setup...');
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds max wait
+
+        while (!isSetup && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+
+        if (!isSetup) {
+          console.error('🎵 TrackPlayer setup timeout after 5 seconds');
+          throw new Error('TrackPlayer setup timeout');
+        }
+
+        console.log('✅ TrackPlayer is now ready after waiting');
+      }
 
       // Test if the URL is accessible
       try {
@@ -158,12 +260,18 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       // Clear current queue and add new track
       console.log('🎵 Resetting TrackPlayer...');
-      await TrackPlayer.reset();
+      try {
+        await TrackPlayer.reset();
+        console.log('🎵 TrackPlayer reset successful');
+      } catch (resetError) {
+        console.error('🎵 TrackPlayer reset failed:', resetError);
+        // Continue anyway, might still work
+      }
 
       console.log('🎵 Adding track to TrackPlayer...');
       await TrackPlayer.add(trackPlayerTrack);
 
-      // Update current track state
+      // Update current track state in context only
       console.log('🎵 Updating current track state...');
       setCurrentTrack(track);
 
@@ -180,11 +288,10 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Update isPlaying state based on TrackPlayer state
   useEffect(() => {
     const updatePlayingState = async () => {
-      const state = await TrackPlayer.getState();
-      const playing = state === State.Playing;
-      console.log('🎵 TrackPlayer state changed:', state, 'isPlaying:', playing);
+      const playbackState = await TrackPlayer.getPlaybackState();
+      const playing = playbackState.state === State.Playing;
+      console.log('🎵 TrackPlayer state changed:', playbackState.state, 'isPlaying:', playing);
       setIsPlayingState(playing);
-      dispatch(setIsPlaying(playing));
     };
 
     // Initial state check
@@ -195,26 +302,31 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log('🎵 PlaybackState event:', data.state);
       const playing = data.state === State.Playing;
       setIsPlayingState(playing);
-      dispatch(setIsPlaying(playing));
     });
 
     return () => {
       stateListener.remove();
     };
-  }, [dispatch]);
+  }, []);
 
   return (
     <MusicPlayerContext.Provider value={{
       isSetup,
       isPlaying,
       currentTrack,
+      selectedMeditationTrack,
+      activeMeditationTrack,
       play,
       pause,
+      stopAndClear,
       togglePlayback,
       playTrack,
+      playMeditationTrack,
+      setSelectedMeditationTrack,
+      clearMeditationTracks,
       progress
     }}>
       {children}
     </MusicPlayerContext.Provider>
   );
-}; 
+};

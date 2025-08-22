@@ -34,6 +34,9 @@ const MeditationScreen: React.FC = () => {
   // Get meditation state for real progress data
   const meditationState = useSelector((state: RootState) => state.meditation);
   const { isFullScreen } = meditationState;
+
+  // Debug: Log state changes
+  console.log('🧘 MeditationScreen render - isFullScreen:', isFullScreen, 'isActive:', meditationState.isActive);
   const progressData: ProgressData = {
     minutes: meditationState.totalMinutes,
     sessions: meditationState.totalSessions,
@@ -68,39 +71,13 @@ const MeditationScreen: React.FC = () => {
     }
   }, []);
 
-  // If in full-screen mode, render only the timer with black background
-  if (isFullScreen) {
-    return (
-      <Modal
-        visible={true}
-        animationType="none"
-        presentationStyle="fullScreen"
-        statusBarTranslucent={true}
-      >
-        <View style={styles.fullScreenModal}>
-          <StatusBar
-            hidden={true}
-            backgroundColor="#000000"
-          />
-          <MeditationTimer onSessionComplete={handleMeditationComplete} />
-        </View>
-      </Modal>
-    );
-  }
-
-  // Normal mode with header and content sections
-  return (
+  // Render the normal meditation screen
+  const normalScreen = (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: themeColors.background }]}
       contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={brandColors.primary}
-          colors={[brandColors.primary]}
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
         {/* Header */}
@@ -110,7 +87,7 @@ const MeditationScreen: React.FC = () => {
 
         {/* Meditation Timer - Hero Section */}
         <View style={styles.heroSection}>
-          <MeditationTimer onSessionComplete={handleMeditationComplete} />
+          <MeditationTimer onSessionComplete={handleMeditationComplete} forceFullScreen={false} />
         </View>
 
         {/* Content Sections */}
@@ -134,6 +111,32 @@ const MeditationScreen: React.FC = () => {
       <View style={styles.bottomPadding} />
     </ScrollView>
   );
+
+  // If in full-screen mode AND meditation is active, render modal with timer
+  if (isFullScreen && meditationState.isActive) {
+    return (
+      <>
+        {normalScreen}
+        <Modal
+          visible={isFullScreen && meditationState.isActive}
+          animationType="none"
+          presentationStyle="fullScreen"
+          statusBarTranslucent={true}
+        >
+          <View style={styles.fullScreenModal}>
+            <StatusBar
+              hidden={true}
+              backgroundColor="#000000"
+            />
+            <MeditationTimer onSessionComplete={handleMeditationComplete} forceFullScreen={true} />
+          </View>
+        </Modal>
+      </>
+    );
+  }
+
+  // Return normal screen when not in full-screen mode
+  return normalScreen;
 };
 
 const styles = StyleSheet.create({

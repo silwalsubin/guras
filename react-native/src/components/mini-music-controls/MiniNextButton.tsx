@@ -10,10 +10,8 @@ import { AudioFile } from '@/services/api';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 export const MiniNextButton: React.FC = () => {
-  const dispatch = useDispatch();
-  const { audioFiles, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
-  const { playTrack } = useMusicPlayer();
+  // Disabled for now - focusing on single track meditation music
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);
 
@@ -22,45 +20,11 @@ export const MiniNextButton: React.FC = () => {
 
 
   const handleNextTrack = async () => {
-    try {
-      if (audioFiles.length <= 1) {
-        return; // Silently do nothing for mini player
-      }
-
-      // Calculate next track index
-      const nextIndex = (currentTrackIndex + 1) % audioFiles.length;
-      const nextAudioFile = audioFiles[nextIndex];
-
-      // Convert to TrackInfo format for context
-      const track = {
-        id: nextAudioFile.id,
-        title: nextAudioFile.name,
-        artist: nextAudioFile.author,
-        url: nextAudioFile.audioDownloadUrl,
-        artwork: nextAudioFile.thumbnailDownloadUrl || undefined,
-        duration: nextAudioFile.durationSeconds || 0,
-      };
-
-      // Update Redux state with both track info and index
-      dispatch(setCurrentTrack({
-        id: nextAudioFile.id,
-        title: nextAudioFile.name,
-        artist: nextAudioFile.author,
-        url: nextAudioFile.audioDownloadUrl,
-        artworkUrl: nextAudioFile.thumbnailDownloadUrl || null,
-      }));
-      dispatch(setCurrentTrackIndex(nextIndex));
-
-      // Use context to play track (this will update UI properly)
-      await playTrack(track);
-
-      console.log('🎵 Next track loaded:', track.title);
-    } catch (error) {
-      console.error('❌ Error in MiniNextButton:', error);
-    }
+    // Disabled for now - focusing on single track meditation music
+    console.log('🎵 Next track disabled for meditation music');
   };
 
-  const hasMultipleTracks = audioFiles.length > 1;
+  const hasMultipleTracks = false; // Disabled for meditation music
 
   return (
     <TouchableOpacity

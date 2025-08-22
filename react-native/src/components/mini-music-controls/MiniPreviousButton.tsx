@@ -10,22 +10,20 @@ import { AudioFile } from '@/services/api';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 export const MiniPreviousButton: React.FC = () => {
-  const dispatch = useDispatch();
-  const { audioFiles, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
+  const { currentTrackIndex, audioFiles } = useSelector((state: RootState) => state.musicPlayer);
+  const dispatch = useDispatch();
   const { playTrack } = useMusicPlayer();
+
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);
 
-
-
   const handlePreviousTrack = async () => {
-    try {
-      if (audioFiles.length <= 1) {
-        return; // Silently do nothing for mini player
-      }
+    // Disabled for now - focusing on single track meditation music
+    console.log('🎵 Previous track disabled for meditation music');
+    return;
 
-      // Calculate previous track index
+    try {
       const prevIndex = currentTrackIndex === 0 ? audioFiles.length - 1 : currentTrackIndex - 1;
       const prevAudioFile = audioFiles[prevIndex];
 
@@ -58,7 +56,7 @@ export const MiniPreviousButton: React.FC = () => {
     }
   };
 
-  const hasMultipleTracks = audioFiles.length > 1;
+  const hasMultipleTracks = audioFiles?.length > 1;
 
   return (
     <TouchableOpacity

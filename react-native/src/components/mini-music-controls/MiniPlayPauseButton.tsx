@@ -9,9 +9,9 @@ import TrackPlayer, { State } from 'react-native-track-player';
 import { setCurrentTrack, setCurrentTrackIndex } from '@/store/musicPlayerSlice';
 
 export const MiniPlayPauseButton: React.FC = () => {
-  const { togglePlayback, isSetup } = useMusicPlayer();
-  const { isPlaying, audioFiles, currentTrack, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
+  const { togglePlayback, isSetup, isPlaying, currentTrack } = useMusicPlayer();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
+  const { audioFiles, currentTrackIndex } = useSelector((state: RootState) => state.musicPlayer);
   const dispatch = useDispatch();
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);

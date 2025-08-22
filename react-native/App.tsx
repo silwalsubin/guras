@@ -18,6 +18,7 @@ import store, { RootState } from './src/store';
 import { setActiveTab, TAB_KEYS } from './src/store/navigationSlice';
 import { setDarkMode } from './src/store/themeSlice';
 import { setFullPlayerVisible } from './src/store/musicPlayerSlice';
+import { stopTimer } from './src/store/meditationSliceNew';
 import { MusicPlayerProvider } from './src/contexts/MusicPlayerContext';
 import MeditationScreen from './src/screens/meditation';
 import LearnScreen from './src/screens/learn';
@@ -35,7 +36,11 @@ const MainApp: React.FC = () => {
   const activeTab = useSelector((state: RootState) => state.navigation.activeTab);
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const isFullScreenMeditation = useSelector((state: RootState) => state.meditation.isFullScreen);
+  const isMeditationActive = useSelector((state: RootState) => state.meditation.isActive);
   const dispatch = useDispatch();
+
+  // Debug: Log the meditation state to see why footer might be hidden
+  console.log('🔍 App Debug - isFullScreenMeditation:', isFullScreenMeditation, 'isMeditationActive:', isMeditationActive, 'activeTab:', activeTab);
 
   // Handler for when mini music player is tapped
   const handleMiniPlayerPress = () => {
@@ -45,6 +50,15 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     dispatch(setDarkMode(systemColorScheme === 'dark'));
   }, [systemColorScheme, dispatch]);
+
+  // Reset meditation state only when it's stuck (full-screen but not active)
+  // TEMPORARILY DISABLED to fix natural completion
+  // useEffect(() => {
+  //   if (isFullScreenMeditation && !isMeditationActive) {
+  //     console.log('🔧 Resetting stuck meditation state (full-screen but not active)');
+  //     dispatch(stopTimer());
+  //   }
+  // }, [isFullScreenMeditation, isMeditationActive, dispatch]);
 
   // Notification service initializes itself in constructor
   useEffect(() => {
