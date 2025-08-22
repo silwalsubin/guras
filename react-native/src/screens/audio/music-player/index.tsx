@@ -5,16 +5,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { COLORS, getThemeColors, getBrandColors } from '@/config/colors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { apiService, AudioFile } from '@/services/api';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store';
-import { 
-  setAudioFiles, 
-  setCurrentTrackIndex, 
-  setCurrentTrack, 
-  setLoading,
-  setProgress,
-  nextTrack
-} from '@/store/musicPlayerSlice';
+// No Redux imports - using only MusicPlayerContext
 import TrackName from './track-name';
 import PreviousButton from './music-controls/previous-button';
 import PlayPauseButton from './music-controls/play-pause-button';
@@ -24,21 +15,19 @@ import ProgressBar from './progress-bar';
 
 
 const MusicPlayer: React.FC = () => {
-  const { isSetup, togglePlayback } = useMusicPlayer();
-  const dispatch = useDispatch();
-  
-  // Get all music player state from Redux
   const {
+    isSetup,
+    togglePlayback,
     isPlaying,
     progress,
     audioFiles,
     currentTrackIndex,
     currentTrack,
     loading
-  } = useSelector((state: RootState) => state.musicPlayer);
-  
-  // Get the actual theme state from Redux
-  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  } = useMusicPlayer();
+
+  // Simple theme - can be enhanced later
+  const isDarkMode = false;
   
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
@@ -283,67 +272,20 @@ const MusicPlayer: React.FC = () => {
 
 
 
-  // Sync progress with Redux state
-  useEffect(() => {
-    console.log('🎵 Progress update:', { position: progress.position, duration: progress.duration, buffered: progress.buffered });
-    
-    if (progress.duration > 0) {
-      dispatch(setProgress({
-        position: progress.position,
-        duration: progress.duration,
-        buffered: progress.buffered || 0
-      }));
-    }
-  }, [progress.position, progress.duration, progress.buffered, dispatch]);
+  // Progress is now managed directly by MusicPlayerContext via useProgress hook
+  // No need to sync with Redux anymore
 
-  // Update progress when track is loaded
-  useEffect(() => {
-    if (currentTrack && progress.duration === 0) {
-      // When a track is loaded but progress is still 0, try to get track info
-      const getTrackInfo = async () => {
-        try {
-          const queue = await TrackPlayer.getQueue();
-          if (queue.length > 0) {
-            const track = queue[0];
-            // Set initial progress state
-            dispatch(setProgress({
-              position: 0,
-              duration: track.duration || 0,
-              buffered: 0
-            }));
-            console.log('🎵 Initial progress set for track:', track.title);
-          }
-        } catch (error) {
-          console.log('⚠️ Could not get initial track info:', error);
-        }
-      };
-      getTrackInfo();
-    }
-  }, [currentTrack, progress.duration, dispatch]);
+  // Progress is automatically updated by TrackPlayer's useProgress hook
+  // No manual progress setting needed
 
-  // Periodic progress update for smoother slider updates
-  useEffect(() => {
-    if (!isPlaying || progress.duration === 0) return;
-
-    const interval = setInterval(() => {
-      // Force a progress update to ensure slider stays in sync
-      if (progress.position > 0) {
-        dispatch(setProgress({
-          position: progress.position,
-          duration: progress.duration,
-          buffered: progress.buffered || 0
-        }));
-      }
-    }, 100); // Update every 100ms for smooth progress
-
-    return () => clearInterval(interval);
-  }, [isPlaying, progress.duration, progress.position, progress.buffered, dispatch]);
+  // TrackPlayer's useProgress hook provides real-time progress updates
+  // No manual interval needed
 
 
 
   
 
-  const bgSource = currentTrack?.artworkUrl ? { uri: currentTrack.artworkUrl } : undefined;
+  const bgSource = currentTrack?.artwork ? { uri: currentTrack.artwork } : undefined;
 
   return (
     <View style={styles.container}>
@@ -357,9 +299,9 @@ const MusicPlayer: React.FC = () => {
         {/* Album Artwork Section */}
         <View style={styles.artworkSection}>
           <View style={styles.artworkContainer}>
-            {currentTrack?.artworkUrl ? (
+            {currentTrack?.artwork ? (
               <Image
-                source={{ uri: currentTrack.artworkUrl }}
+                source={{ uri: currentTrack.artwork }}
                 style={styles.albumArtwork}
                 resizeMode="cover"
               />

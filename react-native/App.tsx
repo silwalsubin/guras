@@ -17,9 +17,8 @@ import { Provider, useSelector, useDispatch } from 'react-redux';
 import store, { RootState } from './src/store';
 import { setActiveTab, TAB_KEYS } from './src/store/navigationSlice';
 import { setDarkMode } from './src/store/themeSlice';
-import { setFullPlayerVisible } from './src/store/musicPlayerSlice';
 import { stopTimer } from './src/store/meditationSliceNew';
-import { MusicPlayerProvider } from './src/contexts/MusicPlayerContext';
+import { MusicPlayerProvider, useMusicPlayer } from './src/contexts/MusicPlayerContext';
 import MeditationScreen from './src/screens/meditation';
 import LearnScreen from './src/screens/learn';
 import AudioScreen from './src/screens/audio';
@@ -39,12 +38,16 @@ const MainApp: React.FC = () => {
   const isMeditationActive = useSelector((state: RootState) => state.meditation.isActive);
   const dispatch = useDispatch();
 
+  // Access MusicPlayerContext
+  const { setFullPlayerVisible } = useMusicPlayer();
+
   // Debug: Log the meditation state to see why footer might be hidden
   console.log('🔍 App Debug - isFullScreenMeditation:', isFullScreenMeditation, 'isMeditationActive:', isMeditationActive, 'activeTab:', activeTab);
 
   // Handler for when mini music player is tapped
   const handleMiniPlayerPress = () => {
-    dispatch(setFullPlayerVisible(true));
+    console.log('Mini player pressed - opening full player');
+    setFullPlayerVisible(true);
   };
 
   useEffect(() => {
@@ -103,25 +106,23 @@ const MainApp: React.FC = () => {
         translucent
       />
 
-      <MusicPlayerProvider>
-        {/* Background Music Service - Handles music loading and management */}
-        <MusicService />
+      {/* Background Music Service - Handles music loading and management */}
+      <MusicService />
 
-        <View style={getMainContentStyle()}>
-          {renderActiveTab()}
-        </View>
+      <View style={getMainContentStyle()}>
+        {renderActiveTab()}
+      </View>
 
-        {/* Mini Music Player - Shows above bottom navigation when music is playing */}
-        {!isFullScreenMeditation && (
-          <MiniMusicPlayer
-            onPress={handleMiniPlayerPress}
-            style={styles.miniPlayer}
-          />
-        )}
+      {/* Mini Music Player - Shows above bottom navigation when music is playing */}
+      {!isFullScreenMeditation && (
+        <MiniMusicPlayer
+          onPress={handleMiniPlayerPress}
+          style={styles.miniPlayer}
+        />
+      )}
 
-        {/* Full Music Player Modal */}
-        <FullMusicPlayerModal />
-      </MusicPlayerProvider>
+      {/* Full Music Player Modal */}
+      <FullMusicPlayerModal />
 
       {/* Bottom Navigation - Hidden during full-screen meditation */}
       {!isFullScreenMeditation && <BottomNavigation />}
@@ -142,7 +143,9 @@ function App(): React.JSX.Element {
         <FontLoader>
           <AuthProvider>
             <AuthWrapper>
-              <MainApp />
+              <MusicPlayerProvider>
+                <MainApp />
+              </MusicPlayerProvider>
             </AuthWrapper>
           </AuthProvider>
         </FontLoader>
