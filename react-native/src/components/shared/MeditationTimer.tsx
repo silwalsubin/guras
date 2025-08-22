@@ -25,20 +25,22 @@ import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import MeditationMusicSelector, { MeditationTrack } from '@/components/shared/MeditationMusicSelector';
-import { setCurrentTrack, setIsPlaying } from '@/store/musicPlayerSlice';
+import { useMusicPlayer, MeditationTrack } from '@/contexts/MusicPlayerContext';
+import MeditationMusicSelector from '@/components/shared/MeditationMusicSelector';
+// No Redux music control - MusicPlayerContext handles everything
 import DurationSelector from '@/components/shared/DurationSelector';
+import TrackPlayer from 'react-native-track-player';
 
 interface MeditationTimerProps {
   onSessionComplete?: (duration: number) => void;
+  forceFullScreen?: boolean; // Override Redux isFullScreen state
 }
 
 const { width: screenWidth } = Dimensions.get('window');
 
 
 
-const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) => {
+const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, forceFullScreen }) => {
   const dispatch = useDispatch();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
@@ -58,56 +60,70 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
 
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
   const [minutes, setMinutes] = useState(10);
-  const [selectedMeditationTrack, setSelectedMeditationTrack] = useState<MeditationTrack | null>(null);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const progressAnimation = useRef(new Animated.Value(0)).current;
   const pulseAnimation = useRef(new Animated.Value(1)).current;
 
-  // Music player context
-  const { playTrack, pause, isPlaying } = useMusicPlayer();
+  // Music player context - single source of truth for music control
+  const {
+    playTrack,
+    playMeditationTrack,
+    play,
+    pause,
+    stopAndClear,
+    isPlaying,
+    selectedMeditationTrack,
+    activeMeditationTrack,
+    setSelectedMeditationTrack,
+    clearMeditationTracks
+  } = useMusicPlayer();
 
 
 
   // Sync timer state when component mounts and when returning to tab
-  useEffect(() => {
-    dispatch(syncTimerState());
-    
-    // Set up periodic sync every 5 seconds to handle tab switches
-    const syncInterval = setInterval(() => {
-      if (isActive && !isPaused) {
-        dispatch(syncTimerState());
-      }
-    }, 5000);
-    
-    return () => clearInterval(syncInterval);
-  }, [dispatch, isActive, isPaused]);
+  // TEMPORARILY DISABLED to fix natural completion
+  // useEffect(() => {
+  //   dispatch(syncTimerState());
+
+  //   // Set up periodic sync every 5 seconds to handle tab switches
+  //   const syncInterval = setInterval(() => {
+  //     if (isActive && !isPaused) {
+  //       dispatch(syncTimerState());
+  //     }
+  //   }, 5000);
+
+  //   return () => clearInterval(syncInterval);
+  // }, [dispatch, isActive, isPaused]);
 
   // Timer logic
   useEffect(() => {
     if (isActive && timeLeft > 0 && !isPaused && !showStopConfirmation) {
       intervalRef.current = setInterval(() => {
         const newTime = timeLeft - 1;
-        
-        if (newTime <= 0) {
-          // Timer finished
-          clearInterval(intervalRef.current!);
-          dispatch(completeSession());
+        console.log('⏰ Timer tick:', { timeLeft, newTime, isActive, isPaused });
 
-          // Stop meditation music and update Redux state
-          const stopAudio = async () => {
-            if (isPlaying) {
-              try {
-                await pause();
-                dispatch(setIsPlaying(false));
-                console.log('🎵 Stopped meditation music - session complete');
-              } catch (error) {
-                console.error('🎵 Failed to stop meditation music:', error);
-              }
+        if (newTime <= 0) {
+          // Timer finished - handle completion immediately
+          console.log('🎯 TIMER REACHED ZERO - Starting completion...');
+          clearInterval(intervalRef.current!);
+
+          // Dispatch completion immediately to prevent other logic from interfering
+          dispatch(completeSession());
+          console.log('🎯 MEDITATION COMPLETED - Stopping music...');
+
+          // Handle music stopping asynchronously but don't wait for it
+          const stopMusic = async () => {
+            try {
+              await stopAndClear();
+              clearMeditationTracks();
+              console.log('✅ Music stopped and cleared');
+            } catch (error) {
+              console.error('❌ Failed to stop music:', error);
             }
           };
 
-          stopAudio();
+          stopMusic(); // Don't await this
 
           if (onSessionComplete) {
             onSessionComplete(selectedMinutes);
@@ -130,7 +146,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
         clearInterval(intervalRef.current);
       }
     };
-  }, [isActive, timeLeft, isPaused, showStopConfirmation, selectedMinutes, onSessionComplete, totalSessions, totalMinutes, dispatch]);
+  }, [isActive, isPaused, showStopConfirmation, selectedMinutes, onSessionComplete, totalSessions, totalMinutes, dispatch]);
 
   // Sync local minutes state with Redux selectedMinutes
   useEffect(() => {
@@ -229,18 +245,8 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
           category: selectedMeditationTrack.category
         });
 
-        // Update Redux state to show this track in Audio tab
-        dispatch(setCurrentTrack({
-          id: selectedMeditationTrack.id,
-          title: selectedMeditationTrack.title,
-          artist: selectedMeditationTrack.artist,
-          url: selectedMeditationTrack.url,
-          artworkUrl: selectedMeditationTrack.artwork || null,
-        }));
-        dispatch(setIsPlaying(true));
-
-        // Play the track
-        await playTrack(selectedMeditationTrack);
+        // Use the centralized meditation track player
+        await playMeditationTrack(selectedMeditationTrack);
         console.log('🎵 Successfully started meditation music:', selectedMeditationTrack.title);
       } catch (error) {
         console.error('🎵 Failed to start meditation music:', error);
@@ -259,12 +265,12 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
   const handlePauseTimer = async () => {
     dispatch(pauseTimer());
 
-    // Pause meditation music and update Redux state
+    // Pause meditation music - let MusicPlayerContext handle the state
     if (isPlaying) {
       try {
         await pause();
-        dispatch(setIsPlaying(false));
         console.log('🎵 Paused meditation music');
+        console.log('🎵 Active meditation track preserved:', !!activeMeditationTrack);
       } catch (error) {
         console.error('🎵 Failed to pause meditation music:', error);
       }
@@ -272,17 +278,53 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
   };
 
   const handleResumeTimer = async () => {
+    console.log('🎵 RESUME BUTTON CLICKED!');
     dispatch(resumeTimer());
 
-    // Resume meditation music if it was playing and update Redux state
-    if (selectedMeditationTrack && !isPlaying) {
-      try {
-        await playTrack(selectedMeditationTrack);
-        dispatch(setIsPlaying(true));
-        console.log('🎵 Resumed meditation music');
-      } catch (error) {
-        console.error('🎵 Failed to resume meditation music:', error);
+    // Resume meditation music using centralized state
+    console.log('🎵 Resume - selectedMeditationTrack:', !!selectedMeditationTrack);
+    console.log('🎵 Resume - activeMeditationTrack:', !!activeMeditationTrack);
+    console.log('🎵 Resume - isPlaying:', isPlaying);
+
+    try {
+      if (activeMeditationTrack) {
+        // We have an active meditation track, try to resume
+        console.log('🎵 Resuming active meditation track...');
+
+        // Check if the track is still in the queue
+        const queue = await TrackPlayer.getQueue();
+        console.log('🎵 Current queue length:', queue.length);
+
+        if (queue.length === 0) {
+          // Re-add the track if the queue is empty
+          console.log('🎵 Queue is empty, restarting meditation track...');
+          await playMeditationTrack(activeMeditationTrack);
+        } else {
+          // Just resume playback
+          await play();
+        }
+
+        console.log('🎵 Resumed meditation music successfully');
+      } else if (selectedMeditationTrack) {
+        // No active track but we have a selected track, start it
+        console.log('🎵 No active track, starting selected meditation track...');
+        await playMeditationTrack(selectedMeditationTrack);
+        console.log('🎵 Started meditation music successfully');
+      } else {
+        // Last resort: check if there's a track in the TrackPlayer queue
+        console.log('🎵 No meditation tracks, checking TrackPlayer queue...');
+        const queue = await TrackPlayer.getQueue();
+        console.log('🎵 Queue length:', queue.length);
+        if (queue.length > 0) {
+          console.log('🎵 Found track in queue, attempting to resume...');
+          await play();
+          console.log('🎵 Successfully resumed from queue');
+        } else {
+          console.log('🎵 No track available to resume');
+        }
       }
+    } catch (error) {
+      console.error('🎵 Failed to resume meditation music:', error);
     }
   };
 
@@ -302,16 +344,16 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
             dispatch(stopTimer());
             setShowStopConfirmation(false);
 
-            // Stop meditation music and update Redux state
-            if (isPlaying) {
-              try {
-                await pause();
-                dispatch(setIsPlaying(false));
-                console.log('🎵 Stopped meditation music');
-              } catch (error) {
-                console.error('🎵 Failed to stop meditation music:', error);
-              }
+            // Stop and clear meditation music completely
+            try {
+              await stopAndClear();
+              console.log('🎵 Stopped and cleared meditation music');
+            } catch (error) {
+              console.error('🎵 Failed to stop meditation music:', error);
             }
+
+            // Clear meditation tracks from context
+            clearMeditationTracks();
           },
         },
       ]
@@ -323,8 +365,11 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
 
 
 
+  // Use forceFullScreen prop if provided, otherwise fall back to Redux state
+  const shouldUseFullScreen = forceFullScreen !== undefined ? forceFullScreen : isFullScreen;
+
   return (
-    <View style={isFullScreen ? styles.fullScreenContainer : styles.container}>
+    <View style={shouldUseFullScreen ? styles.fullScreenContainer : styles.container}>
 
 
       {/* Timer Display - Only show when meditation is active */}
@@ -374,7 +419,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
               <Text style={[
                 styles.timerText,
                 {
-                  color: themeColors.textPrimary,
+                  color: isFullScreen ? '#FFFFFF' : themeColors.textPrimary, // Always white in full-screen
                   fontSize: isFullScreen ? 56 : 42
                 }
               ]}>
@@ -383,7 +428,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
               <Text style={[
                 styles.timerLabel,
                 {
-                  color: themeColors.textSecondary,
+                  color: isFullScreen ? '#FFFFFF' : themeColors.textSecondary, // Always white in full-screen
                   fontSize: isFullScreen ? 20 : 16
                 }
               ]}>
@@ -392,7 +437,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
               <Text style={[
                 styles.progressText,
                 {
-                  color: themeColors.textSecondary,
+                  color: isFullScreen ? '#FFFFFF' : themeColors.textSecondary, // Always white in full-screen
                   fontSize: isFullScreen ? 18 : 14
                 }
               ]}>
@@ -462,13 +507,13 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
                   styles.circularControlButton,
                   styles.pauseButton,
                   {
-                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                    backgroundColor: isFullScreen ? 'rgba(255, 255, 255, 0.1)' : (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'),
+                    borderColor: isFullScreen ? 'rgba(255, 255, 255, 0.2)' : (isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'),
                   }
                 ]}
                 onPress={handlePauseTimer}
               >
-                <Icon name="pause" size={28} color={themeColors.textPrimary} />
+                <Icon name="pause" size={28} color={isFullScreen ? '#FFFFFF' : themeColors.textPrimary} />
               </TouchableOpacity>
             )}
           </View>
@@ -479,15 +524,15 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete }) 
               style={[
                 styles.enhancedStopButton,
                 {
-                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                  backgroundColor: isFullScreen ? 'rgba(255, 255, 255, 0.08)' : (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)'),
+                  borderColor: isFullScreen ? 'rgba(255, 255, 255, 0.15)' : (isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)'),
                   opacity: isPaused ? 1 : 0, // Hide when not paused, but keep space
                 }
               ]}
               onPress={isPaused ? handleStopTimer : undefined}
               disabled={!isPaused}
             >
-              <Text style={[styles.enhancedStopButtonText, { color: themeColors.textSecondary }]}>
+              <Text style={[styles.enhancedStopButtonText, { color: isFullScreen ? '#FFFFFF' : themeColors.textSecondary }]}>
                 Discard Session
               </Text>
             </TouchableOpacity>
