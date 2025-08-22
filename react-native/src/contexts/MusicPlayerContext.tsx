@@ -32,6 +32,7 @@ interface MusicPlayerContextType {
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stopAndClear: () => Promise<void>;
+  stopAndClearWithFadeOut: (fadeDurationMs?: number) => Promise<void>;
   togglePlayback: () => Promise<void>;
   playTrack: (track: TrackInfo) => Promise<void>;
   playMeditationTrack: (track: MeditationTrack) => Promise<void>;
@@ -70,7 +71,16 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     async function setup() {
       try {
         console.log('🎵 Setting up TrackPlayer...');
-        await TrackPlayer.setupPlayer();
+
+        // Add timeout to TrackPlayer.setupPlayer()
+        const setupPromise = TrackPlayer.setupPlayer();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('TrackPlayer.setupPlayer() timeout after 10 seconds')), 10000);
+        });
+
+        await Promise.race([setupPromise, timeoutPromise]);
+        console.log('✅ TrackPlayer.setupPlayer() completed');
+
         await TrackPlayer.updateOptions({
           capabilities: [
             Capability.Play,
@@ -89,19 +99,37 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
             appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
           },
         });
-        console.log('✅ TrackPlayer setup completed');
+        console.log('✅ TrackPlayer options updated');
+
+        // Initialize with empty queue - tracks will be added dynamically from API
+        await TrackPlayer.reset();
+        console.log('✅ TrackPlayer queue reset');
+
+        if (isMounted) {
+          setIsSetup(true);
+          console.log('✅ TrackPlayer is ready');
+        }
       } catch (error: unknown) {
+        console.error('🎵 TrackPlayer setup error:', error);
         let message = '';
         if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
           message = (error as { message: string }).message;
         }
-        if (!message.includes('already been initialized')) throw error;
-      }
-      // Initialize with empty queue - tracks will be added dynamically from API
-      await TrackPlayer.reset();
-      if (isMounted) {
-        setIsSetup(true);
-        console.log('✅ TrackPlayer is ready');
+
+        // Only ignore "already initialized" errors, throw everything else
+        if (!message.includes('already been initialized')) {
+          console.error('🎵 TrackPlayer setup failed with error:', message);
+          // Don't throw - let the app continue but TrackPlayer won't work
+          // throw error;
+        } else {
+          console.log('🎵 TrackPlayer already initialized, continuing...');
+          // Initialize with empty queue - tracks will be added dynamically from API
+          await TrackPlayer.reset();
+          if (isMounted) {
+            setIsSetup(true);
+            console.log('✅ TrackPlayer is ready (already initialized)');
+          }
+        }
       }
     }
     setup();
@@ -127,6 +155,83 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const pause = useCallback(async () => {
     console.log('🎵 Pause called');
     await TrackPlayer.pause();
+  }, []);
+
+  const stopAndClearWithFadeOut = useCallback(async (fadeDurationMs: number = 2000) => {
+    try {
+      // Check if music is actually playing before attempting fade-out
+      const playbackState = await TrackPlayer.getPlaybackState();
+      const isCurrentlyPlaying = playbackState.state === State.Playing;
+
+      if (!isCurrentlyPlaying) {
+        console.log('🎵 Music not playing, skipping fade-out and stopping immediately');
+        await TrackPlayer.pause();
+        await TrackPlayer.reset();
+        setCurrentTrack(null);
+        setIsPlayingState(false);
+        console.log('🎵 stopAndClearWithFadeOut completed (no fade needed)');
+        return;
+      }
+
+      console.log(`🎵 Starting fade-out over ${fadeDurationMs}ms...`);
+
+      // Get current volume (default to 1.0 if not available)
+      let currentVolume = 1.0;
+      try {
+        currentVolume = await TrackPlayer.getVolume();
+      } catch (volumeError) {
+        console.log('🎵 Could not get current volume, using default 1.0');
+      }
+
+      // Create fade-out effect by gradually reducing volume
+      const steps = 20; // Number of volume steps
+      const stepDuration = fadeDurationMs / steps;
+      const volumeStep = currentVolume / steps;
+
+      for (let i = 1; i <= steps; i++) {
+        const newVolume = Math.max(0, currentVolume - (volumeStep * i));
+        try {
+          await TrackPlayer.setVolume(newVolume);
+          console.log(`🎵 Fade step ${i}/${steps}: volume = ${newVolume.toFixed(2)}`);
+        } catch (volumeError) {
+          console.log(`🎵 Volume control not available, skipping fade step ${i}`);
+        }
+
+        // Wait for next step (except on last iteration)
+        if (i < steps) {
+          await new Promise(resolve => setTimeout(resolve, stepDuration));
+        }
+      }
+
+      console.log('🎵 Fade-out complete, stopping playback...');
+
+      // Now stop and clear the player
+      await TrackPlayer.pause();
+      await TrackPlayer.reset();
+
+      // Reset volume back to original level for next track
+      try {
+        await TrackPlayer.setVolume(currentVolume);
+      } catch (volumeError) {
+        console.log('🎵 Could not reset volume');
+      }
+
+      setCurrentTrack(null);
+      setIsPlayingState(false);
+      console.log('🎵 stopAndClearWithFadeOut completed');
+    } catch (error) {
+      console.error('❌ stopAndClearWithFadeOut failed:', error);
+      // Fallback to immediate stop if fade-out fails
+      try {
+        await TrackPlayer.pause();
+        await TrackPlayer.reset();
+        setCurrentTrack(null);
+        setIsPlayingState(false);
+      } catch (fallbackError) {
+        console.error('❌ Fallback stop also failed:', fallbackError);
+      }
+      throw error;
+    }
   }, []);
 
   const stopAndClear = useCallback(async () => {
@@ -319,6 +424,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       play,
       pause,
       stopAndClear,
+      stopAndClearWithFadeOut,
       togglePlayback,
       playTrack,
       playMeditationTrack,

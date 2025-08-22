@@ -1,27 +1,26 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setCurrentTrack, setCurrentTrackIndex } from '@/store/musicPlayerSlice';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { getBrandColors, getThemeColors } from '@/config/colors';
-import TrackPlayer, { State } from 'react-native-track-player';
-import { AudioFile } from '@/services/api';
+import { getBrandColors } from '@/config/colors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 export const MiniPreviousButton: React.FC = () => {
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const { currentTrackIndex, audioFiles } = useSelector((state: RootState) => state.musicPlayer);
   const dispatch = useDispatch();
-  const { playTrack } = useMusicPlayer();
+  const { playTrack, activeMeditationTrack } = useMusicPlayer();
 
   const brandColors = getBrandColors();
-  const themeColors = getThemeColors(isDarkMode);
 
   const handlePreviousTrack = async () => {
-    // Disabled for now - focusing on single track meditation music
-    console.log('🎵 Previous track disabled for meditation music');
-    return;
+    // Don't allow track navigation during meditation
+    if (activeMeditationTrack) {
+      console.log('🎵 Previous track disabled during meditation');
+      return;
+    }
 
     try {
       const prevIndex = currentTrackIndex === 0 ? audioFiles.length - 1 : currentTrackIndex - 1;
@@ -56,7 +55,7 @@ export const MiniPreviousButton: React.FC = () => {
     }
   };
 
-  const hasMultipleTracks = audioFiles?.length > 1;
+  const hasMultipleTracks = audioFiles?.length > 1 && !activeMeditationTrack;
 
   return (
     <TouchableOpacity

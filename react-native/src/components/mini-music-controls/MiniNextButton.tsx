@@ -1,30 +1,62 @@
-import React, { useEffect } from 'react';
-import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React from 'react';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { setCurrentTrack, setCurrentTrackIndex } from '@/store/musicPlayerSlice';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { getBrandColors, getThemeColors } from '@/config/colors';
-import TrackPlayer, { State } from 'react-native-track-player';
-import { AudioFile } from '@/services/api';
+import { getBrandColors } from '@/config/colors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 export const MiniNextButton: React.FC = () => {
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
-  // Disabled for now - focusing on single track meditation music
+  const { currentTrackIndex, audioFiles } = useSelector((state: RootState) => state.musicPlayer);
+  const dispatch = useDispatch();
+  const { playTrack, activeMeditationTrack } = useMusicPlayer();
+
   const brandColors = getBrandColors();
-  const themeColors = getThemeColors(isDarkMode);
-
-
-
-
 
   const handleNextTrack = async () => {
-    // Disabled for now - focusing on single track meditation music
-    console.log('🎵 Next track disabled for meditation music');
+    // Don't allow track navigation during meditation
+    if (activeMeditationTrack) {
+      console.log('🎵 Next track disabled during meditation');
+      return;
+    }
+
+    try {
+      const nextIndex = (currentTrackIndex + 1) % audioFiles.length;
+      const nextAudioFile = audioFiles[nextIndex];
+
+      // Convert to TrackInfo format for context
+      const track = {
+        id: nextAudioFile.id,
+        title: nextAudioFile.name,
+        artist: nextAudioFile.author,
+        url: nextAudioFile.audioDownloadUrl,
+        artwork: nextAudioFile.thumbnailDownloadUrl || undefined,
+        duration: nextAudioFile.durationSeconds || 0,
+      };
+
+      // Update Redux state with both track info and index
+      dispatch(setCurrentTrack({
+        id: nextAudioFile.id,
+        title: nextAudioFile.name,
+        artist: nextAudioFile.author,
+        url: nextAudioFile.audioDownloadUrl,
+        artworkUrl: nextAudioFile.thumbnailDownloadUrl || null,
+      }));
+      dispatch(setCurrentTrackIndex(nextIndex));
+
+      // Use context to play track (this will update UI properly)
+      await playTrack(track);
+
+      console.log('🎵 Next track loaded:', track.title);
+    } catch (error) {
+      console.error('❌ Error in MiniNextButton:', error);
+    }
   };
 
-  const hasMultipleTracks = false; // Disabled for meditation music
+  // Enable if we have multiple tracks and not in meditation
+  const hasMultipleTracks = audioFiles?.length > 1 && !activeMeditationTrack;
 
   return (
     <TouchableOpacity
