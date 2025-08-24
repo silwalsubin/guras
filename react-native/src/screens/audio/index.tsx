@@ -18,6 +18,8 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import { apiService, AudioFile } from '@/services/api';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { useDownload } from '@/contexts/DownloadContext';
+import { DownloadButton } from '@/components/shared';
 
 const AudioScreen: React.FC = () => {
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
@@ -25,6 +27,7 @@ const AudioScreen: React.FC = () => {
   const brandColors = getBrandColors();
   const {
     playTrack,
+    playLocalTrack,
     currentTrack,
     isPlaying,
     audioFiles: contextAudioFiles,
@@ -33,6 +36,8 @@ const AudioScreen: React.FC = () => {
     loading: contextLoading,
     setLoading: setContextLoading
   } = useMusicPlayer();
+
+  const { getLocalFile } = useDownload();
 
   // State
   const [refreshing, setRefreshing] = useState(false);
@@ -71,19 +76,27 @@ const AudioScreen: React.FC = () => {
 
   // Handle track selection
   const handleTrackPress = (audioFile: AudioFile, index: number) => {
-    const track = {
-      id: audioFile.id,
-      title: audioFile.name,
-      artist: audioFile.author,
-      url: audioFile.audioDownloadUrl,
-      artwork: audioFile.thumbnailDownloadUrl || undefined,
-      duration: audioFile.durationSeconds || 0,
-    };
+    // Check if we have a local version of this file
+    const localFile = getLocalFile(audioFile);
 
-    // Update context state with current track index
-    setCurrentTrackIndex(index);
+    if (localFile && localFile.isDownloaded) {
+      // Play local file for better performance and offline support
+      setCurrentTrackIndex(index);
+      playLocalTrack(localFile);
+    } else {
+      // Play remote file
+      const track = {
+        id: audioFile.id,
+        title: audioFile.name,
+        artist: audioFile.author,
+        url: audioFile.audioDownloadUrl,
+        artwork: audioFile.thumbnailDownloadUrl || undefined,
+        duration: audioFile.durationSeconds || 0,
+      };
 
-    playTrack(track);
+      setCurrentTrackIndex(index);
+      playTrack(track);
+    }
   };
 
   // Handle refresh
@@ -190,6 +203,18 @@ const AudioScreen: React.FC = () => {
                   {formatDuration(audioFile.durationSeconds)}
                 </Text>
               )}
+
+              {/* Download Button */}
+              <DownloadButton
+                audioFile={audioFile}
+                size="small"
+                onDownloadComplete={() => {
+                  // Optionally show success message
+                }}
+                onDownloadError={(error) => {
+                  Alert.alert('Download Failed', error.message);
+                }}
+              />
             </TouchableOpacity>
           ))}
         </View>
