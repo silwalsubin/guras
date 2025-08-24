@@ -27,7 +27,6 @@ import BottomNavigation from './src/components/app/navigation/BottomNavigation';
 import notificationService from './src/services/notificationService';
 import MiniMusicPlayer from './src/components/MiniMusicPlayer';
 import FullMusicPlayerModal from './src/components/FullMusicPlayerModal';
-import MusicService from './src/components/MusicService';
 
 // Move MainApp outside of App function to fix Redux connection
 const MainApp: React.FC = () => {
@@ -106,8 +105,7 @@ const MainApp: React.FC = () => {
         translucent
       />
 
-      {/* Background Music Service - Handles music loading and management */}
-      <MusicService />
+      {/* Music functionality is now handled by MusicPlayerContext */}
 
       <View style={getMainContentStyle()}>
         {renderActiveTab()}

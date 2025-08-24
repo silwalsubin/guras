@@ -29,7 +29,6 @@ import { useMusicPlayer, MeditationTrack } from '@/contexts/MusicPlayerContext';
 import MeditationMusicSelector from '@/components/shared/MeditationMusicSelector';
 // No Redux music control - MusicPlayerContext handles everything
 import DurationSelector from '@/components/shared/DurationSelector';
-import TrackPlayer from 'react-native-track-player';
 
 interface MeditationTimerProps {
   onSessionComplete?: (duration: number) => void;
@@ -334,18 +333,8 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
         // We have an active meditation track, try to resume
         console.log('🎵 Resuming active meditation track...');
 
-        // Check if the track is still in the queue
-        const queue = await TrackPlayer.getQueue();
-        console.log('🎵 Current queue length:', queue.length);
-
-        if (queue.length === 0) {
-          // Re-add the track if the queue is empty
-          console.log('🎵 Queue is empty, restarting meditation track...');
-          await playMeditationTrack(activeMeditationTrack);
-        } else {
-          // Just resume playback
-          await play();
-        }
+        // Use context's playMeditationTrack which handles queue management
+        await playMeditationTrack(activeMeditationTrack);
 
         console.log('🎵 Resumed meditation music successfully');
       } else if (selectedMeditationTrack) {
@@ -354,16 +343,13 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
         await playMeditationTrack(selectedMeditationTrack);
         console.log('🎵 Started meditation music successfully');
       } else {
-        // Last resort: check if there's a track in the TrackPlayer queue
-        console.log('🎵 No meditation tracks, checking TrackPlayer queue...');
-        const queue = await TrackPlayer.getQueue();
-        console.log('🎵 Queue length:', queue.length);
-        if (queue.length > 0) {
-          console.log('🎵 Found track in queue, attempting to resume...');
+        // Try to play any available track using context's play method
+        console.log('🎵 No meditation tracks, attempting to play any available track...');
+        try {
           await play();
-          console.log('🎵 Successfully resumed from queue');
-        } else {
-          console.log('🎵 No track available to resume');
+          console.log('🎵 Successfully started playback');
+        } catch (error) {
+          console.log('🎵 No tracks available to play');
         }
       }
     } catch (error) {

@@ -47,15 +47,7 @@ const PlayPauseButton: React.FC = () => {
 
   const handlePress = async () => {
     try {
-      // Debug: Check TrackPlayer state
-      const playerState = await TrackPlayer.getState();
-      const queue = await TrackPlayer.getQueue();
-      const currentTrackIndex = await TrackPlayer.getCurrentTrack();
-      
       console.log('🔍 Debug PlayPauseButton:', {
-        playerState,
-        queueLength: queue.length,
-        currentTrackIndex,
         isSetup,
         audioFilesLength: audioFiles.length,
         currentTrack: currentTrack?.title,
@@ -74,36 +66,16 @@ const PlayPauseButton: React.FC = () => {
         return;
       }
 
-      // Check if TrackPlayer has tracks in queue
-      if (queue.length === 0) {
-        console.log('⚠️ No tracks in queue, attempting to load manually...');
-        
-        // Try to manually load the current track
-        if (currentTrack && currentTrackIndex !== null && currentTrackIndex >= 0 && currentTrackIndex < audioFiles.length) {
-          const success = await loadTrackManually(audioFiles[currentTrackIndex], currentTrackIndex);
-          if (!success) {
-            Alert.alert('Load Failed', 'Failed to load track into player. Please try again.');
-            return;
-          }
-        } else {
-          Alert.alert('No Track Loaded', 'No track is currently loaded in the player.');
-          return;
-        }
-      }
-
       // Check if we have a current track
       if (!currentTrack) {
         Alert.alert('No Track Loaded', 'No track is currently loaded in the player.');
         return;
       }
 
-      // Try to toggle playback
+      // Toggle playback - the context will handle queue management
       console.log('🎵 Attempting to toggle playback...');
       await togglePlayback();
-      
-      // Debug: Check state after toggle
-      const newPlayerState = await TrackPlayer.getState();
-      console.log('✅ After toggle - Player state:', newPlayerState);
+      console.log('✅ Playback toggled successfully');
       
     } catch (error) {
       console.error('❌ Error in PlayPauseButton:', error);

@@ -4,8 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { getBrandColors, getThemeColors } from '@/config/colors';
-import TrackPlayer from 'react-native-track-player';
+import { getBrandColors } from '@/config/colors';
 
 export const MiniPlayPauseButton: React.FC = () => {
   const {
@@ -13,49 +12,12 @@ export const MiniPlayPauseButton: React.FC = () => {
     isSetup,
     isPlaying,
     currentTrack,
-    audioFiles,
-    currentTrackIndex,
-    setCurrentTrackIndex,
-    setCurrentTrack
+    audioFiles
   } = useMusicPlayer();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const brandColors = getBrandColors();
-  const themeColors = getThemeColors(isDarkMode);
 
-  // Load track into TrackPlayer
-  const loadTrack = async (audioFile: any, index: number) => {
-    try {
-      console.log('🎵 Mini Player: Loading track:', audioFile.name || audioFile.title || audioFile.fileName);
 
-      // Create track object for TrackPlayer
-      const track = {
-        id: audioFile.id || audioFile.fileName || audioFile.name,
-        url: audioFile.audioDownloadUrl || audioFile.downloadUrl,
-        title: audioFile.name || audioFile.title || (audioFile.fileName ? audioFile.fileName.replace(/\.[^/.]+$/, "") : 'Unknown Track'),
-        artist: audioFile.author || audioFile.artist || 'Guras',
-      };
-
-      console.log('🎵 Mini Player: Track object created:', track);
-
-      setCurrentTrack({ ...track, artwork: audioFile.thumbnailDownloadUrl || undefined });
-      setCurrentTrackIndex(index);
-
-      // Stop current playback and load new track
-      console.log('🎵 Mini Player: Resetting TrackPlayer...');
-      await TrackPlayer.reset();
-
-      console.log('🎵 Mini Player: Adding track to queue...');
-      await TrackPlayer.add(track);
-
-      // Verify track was added
-      const queue = await TrackPlayer.getQueue();
-      console.log('✅ Mini Player: Track added successfully. Queue length:', queue.length);
-
-    } catch (error) {
-      console.error('❌ Mini Player: Error loading audio file:', error);
-      Alert.alert('Error', 'Failed to load audio file');
-    }
-  };
 
   const handlePlayPause = async () => {
     try {
@@ -69,23 +31,7 @@ export const MiniPlayPauseButton: React.FC = () => {
         return;
       }
 
-      // Check if there's a track in the queue
-      const queue = await TrackPlayer.getQueue();
-      if (queue.length === 0) {
-        console.log('🎵 Mini Player: No track in queue, loading current track...');
-        // Load the current track from Redux state
-        const audioFile = audioFiles[currentTrackIndex];
-        if (audioFile) {
-          await loadTrack(audioFile, currentTrackIndex);
-          // After loading, start playback
-          await TrackPlayer.play();
-          return;
-        } else {
-          Alert.alert('No Track', 'No track is currently loaded in the player.');
-          return;
-        }
-      }
-
+      // Use context's togglePlayback - it will handle queue management
       await togglePlayback();
     } catch (error) {
       console.error('❌ Error in MiniPlayPauseButton:', error);
