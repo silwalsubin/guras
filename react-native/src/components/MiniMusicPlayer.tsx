@@ -186,25 +186,7 @@ const MiniMusicPlayer: React.FC<MiniMusicPlayerProps> = ({
   const brandColors = getBrandColors();
   const themeColors = getThemeColors(isDarkMode);
 
-  // Debug progress updates
-  useEffect(() => {
-    if (progress.duration > 0) {
-      console.log('🎵 Mini Player Progress:', {
-        position: progress.position,
-        duration: progress.duration,
-        percentage: (progress.position / progress.duration) * 100
-      });
-    }
-  }, [progress.position, progress.duration]);
 
-  // Debug current track artwork
-  useEffect(() => {
-    console.log('🎵 Mini Player Current Track:', {
-      id: currentTrack?.id,
-      title: currentTrack?.title,
-      artwork: currentTrack?.artwork
-    });
-  }, [currentTrack]);
 
   // Don't render if no track is loaded or not on Audio tab
   if (!currentTrack || activeTab !== 'audio') {

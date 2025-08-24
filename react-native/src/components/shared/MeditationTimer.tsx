@@ -19,7 +19,8 @@ import {
   updateTimeLeft,
   setSelectedMinutes,
   completeSession,
-  syncTimerState
+  syncTimerState,
+  setFadeOutStarted
 } from '@/store/meditationSliceNew';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
@@ -54,7 +55,8 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
     isPaused,
     totalSessions,
     totalMinutes,
-    isFullScreen
+    isFullScreen,
+    fadeOutStarted
   } = meditationState;
 
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
@@ -70,6 +72,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
     playMeditationTrack,
     play,
     pause,
+    stopAndClear,
     stopAndClearWithFadeOut,
     fadeOutOnly,
     isPlaying,
@@ -96,87 +99,73 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
   //   return () => clearInterval(syncInterval);
   // }, [dispatch, isActive, isPaused]);
 
-  // Timer logic - use callback ref to avoid recreating interval
-  const timerCallbackRef = useRef<() => void>(() => {});
-  const fadeOutStartedRef = useRef(false);
+  // Simple fade trigger - use a ref to prevent double triggering
+  const fadeTriggeredRef = useRef(false);
 
-  // Update the callback ref with current values
-  timerCallbackRef.current = () => {
-    const newTime = timeLeft - 1;
-    console.log('⏰ Timer tick:', { timeLeft, newTime, isActive, isPaused });
-
-    // Start fade-out when 5 seconds remain (but only once)
-    if (newTime === 5 && !fadeOutStartedRef.current) {
-      console.log('🎯 TIMER: 5 seconds remaining - STARTING FADE-OUT...');
-      console.log('🎯 TIMER: Current playing state:', isPlaying);
-      console.log('🎯 TIMER: Active meditation track:', activeMeditationTrack?.title);
-      fadeOutStartedRef.current = true;
-
-      // Start fade-out asynchronously (only fade volume, don't stop track yet)
-      const startFadeOut = async () => {
-        try {
-          console.log('🎯 TIMER: Calling fadeOutOnly with 5000ms duration...');
-          await fadeOutOnly(5000); // 5 second fade-out
-          console.log('✅ TIMER: Music fade-out completed successfully');
-        } catch (error) {
-          console.error('❌ TIMER: Failed to fade out music:', error);
-        }
-      };
-
-      startFadeOut(); // Don't await this
+  useEffect(() => {
+    if (timeLeft === 10 && isActive && !isPaused && !fadeTriggeredRef.current && !fadeOutStarted) {
+      fadeTriggeredRef.current = true;
+      dispatch(setFadeOutStarted(true));
+      fadeOutOnly(10000);
     }
 
+    // Reset when session starts
+    if (timeLeft === selectedMinutes * 60) {
+      fadeTriggeredRef.current = false;
+      dispatch(setFadeOutStarted(false));
+    }
+  }, [timeLeft, isActive, isPaused, selectedMinutes, fadeOutStarted, fadeOutOnly, dispatch]);
+
+  // Timer logic - use callback ref to avoid recreating interval
+  const timerCallbackRef = useRef<() => void>(() => {});
+
+  // Update the callback ref with current values
+  timerCallbackRef.current = async () => {
+    const newTime = timeLeft - 1;
+
     if (newTime <= 0) {
-      // Timer finished - handle completion immediately
-      console.log('🎯 TIMER REACHED ZERO - Completing session...');
+      // Timer finished - but wait for fade to complete if it's running
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
 
-      // Reset fade-out flag for next session
-      fadeOutStartedRef.current = false;
+      if (fadeOutStarted || fadeTriggeredRef.current) {
+        // Wait 1 second then complete (fade should be done by then)
+        setTimeout(() => {
+          dispatch(completeSession());
+          clearMeditationTracks();
 
-      // Dispatch completion immediately
-      dispatch(completeSession());
-      console.log('🎯 MEDITATION COMPLETED');
+          if (onSessionComplete) {
+            onSessionComplete(selectedMinutes);
+          }
+        }, 1000);
+      } else {
+        dispatch(completeSession());
+        clearMeditationTracks();
 
-      // Stop and clear the music (volume should already be at 0 from fade-out)
-      const stopMusic = async () => {
-        try {
-          await stopAndClearWithFadeOut(0); // No additional fade needed, just stop
-          console.log('✅ Music stopped and cleared');
-        } catch (error) {
-          console.error('❌ Failed to stop music:', error);
+        if (onSessionComplete) {
+          onSessionComplete(selectedMinutes);
         }
-      };
-
-      stopMusic(); // Don't await this
-
-      // Clear meditation tracks from context
-      clearMeditationTracks();
-
-      if (onSessionComplete) {
-        onSessionComplete(selectedMinutes);
       }
     } else {
+      // Continue timer countdown
       dispatch(updateTimeLeft(newTime));
       updateProgressAnimation();
     }
   };
 
   useEffect(() => {
+    // Clear any existing interval first to prevent duplicates
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
     if (isActive && timeLeft > 0 && !isPaused && !showStopConfirmation) {
-      if (!intervalRef.current) {
-        intervalRef.current = setInterval(() => {
-          timerCallbackRef.current?.();
-        }, 1000);
-      }
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      intervalRef.current = setInterval(async () => {
+        await timerCallbackRef.current?.();
+      }, 1000);
     }
 
     return () => {
@@ -185,7 +174,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
         intervalRef.current = null;
       }
     };
-  }, [isActive, isPaused, showStopConfirmation]);
+  }, [isActive, timeLeft, isPaused, showStopConfirmation]); // Added timeLeft dependency
 
   // Sync local minutes state with Redux selectedMinutes
   useEffect(() => {
@@ -243,14 +232,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
     const elapsed = totalSeconds - timeLeft;
     const progress = elapsed / totalSeconds;
 
-    console.log('🎯 Progress Debug:', {
-      selectedMinutes,
-      totalSeconds,
-      timeLeft,
-      elapsed,
-      progress: (progress * 100).toFixed(1) + '%',
-      animationValue: progress
-    });
+
 
     Animated.timing(progressAnimation, {
       toValue: progress,
@@ -263,7 +245,9 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
     if (minutes <= 0) return;
 
     // Reset fade-out flag for new session
-    fadeOutStartedRef.current = false;
+    const startTime = new Date().toISOString().substring(11, 23);
+    console.log(`🔍 [${startTime}] START TIMER: Resetting fadeOutStarted to false`);
+    dispatch(setFadeOutStarted(false));
 
     // Debug: Check what meditation track is selected
     console.log('🎵 DEBUG: Starting meditation with track:', selectedMeditationTrack);
@@ -364,9 +348,8 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
     // Stop and clear meditation music with fade-out
     try {
       await stopAndClearWithFadeOut(1500); // 1.5 second fade-out for manual stop
-      console.log('🎵 Faded out and cleared meditation music');
     } catch (error) {
-      console.error('🎵 Failed to fade out meditation music:', error);
+      // Failed to fade out meditation music
     }
 
     // Clear meditation tracks from context

@@ -35,8 +35,7 @@ const MeditationScreen: React.FC = () => {
   const meditationState = useSelector((state: RootState) => state.meditation);
   const { isFullScreen } = meditationState;
 
-  // Debug: Log state changes
-  console.log('🧘 MeditationScreen render - isFullScreen:', isFullScreen, 'isActive:', meditationState.isActive);
+
   const progressData: ProgressData = {
     minutes: meditationState.totalMinutes,
     sessions: meditationState.totalSessions,
