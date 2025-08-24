@@ -24,10 +24,11 @@ import PreviousButton from '@/screens/audio/music-player/music-controls/previous
 import PlayPauseButton from '@/screens/audio/music-player/music-controls/play-pause-button';
 import NextButton from '@/screens/audio/music-player/music-controls/next-button';
 import ProgressBar from '@/screens/audio/music-player/progress-bar';
+import DownloadButton from '@/components/shared/DownloadButton';
 
 const FullMusicPlayerModal: React.FC = () => {
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
-  const { isFullPlayerVisible, currentTrack, setFullPlayerVisible } = useMusicPlayer();
+  const { isFullPlayerVisible, currentTrack, setFullPlayerVisible, audioFiles, currentTrackIndex } = useMusicPlayer();
 
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
@@ -38,6 +39,11 @@ const FullMusicPlayerModal: React.FC = () => {
 
   // Background image source - use the artwork from context
   const bgSource = currentTrack?.artwork ? { uri: currentTrack.artwork } : null;
+
+  // Get the current AudioFile for download functionality
+  const currentAudioFile = audioFiles.length > 0 && currentTrackIndex >= 0 && currentTrackIndex < audioFiles.length
+    ? audioFiles[currentTrackIndex]
+    : null;
 
   return (
     <Modal
@@ -58,14 +64,22 @@ const FullMusicPlayerModal: React.FC = () => {
           <ImageBackground source={bgSource} blurRadius={16} style={styles.background} />
         )}
         
-        {/* Header with close button */}
+        {/* Header with close button and download button */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={[styles.closeButton, { backgroundColor: themeColors.card }]} 
+          <TouchableOpacity
+            style={[styles.closeButton, { backgroundColor: themeColors.card }]}
             onPress={handleClose}
           >
             <Feather name="chevron-down" size={24} color={themeColors.textPrimary} />
           </TouchableOpacity>
+
+          {/* Download Button */}
+          {currentAudioFile && (
+            <DownloadButton
+              audioFile={currentAudioFile}
+              size={24}
+            />
+          )}
         </View>
 
         {/* Main Content */}
@@ -137,7 +151,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 16,
@@ -158,6 +172,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 4,
+  },
+  downloadButtonHeader: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   content: {
     flex: 1,
@@ -200,6 +229,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 24,
   },
+
   playerSection: {
     flex: 1,
     justifyContent: 'flex-end',

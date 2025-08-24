@@ -18,6 +18,7 @@ export { default as PrimaryButton } from './ui/PrimaryButton';
 export { default as ProgressRow } from './ui/ProgressRow';
 export { default as ProfileAvatar } from './ui/ProfileAvatar';
 export { default as HorizontalSeparator } from './ui/HorizontalSeparator';
+export { default as DownloadButton } from './DownloadButton';
 
 // Meditation Components
 export { default as MeditationTimer } from './MeditationTimer';

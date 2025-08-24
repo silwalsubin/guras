@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import TrackPlayer, { State, useProgress, Capability, Event, Track, AppKilledPlaybackBehavior } from 'react-native-track-player';
 import { AudioFile, apiService } from '@/services/api';
+import { LocalAudioFile } from '@/services/downloadService';
 // No Redux - MusicPlayerContext is the single source of truth
 
 export interface TrackInfo {
@@ -45,6 +46,7 @@ interface MusicPlayerContextType {
   fadeOutOnly: (fadeDurationMs?: number) => Promise<void>;
   togglePlayback: () => Promise<void>;
   playTrack: (track: TrackInfo) => Promise<void>;
+  playLocalTrack: (localFile: LocalAudioFile) => Promise<void>;
   playMeditationTrack: (track: MeditationTrack) => Promise<void>;
   setSelectedMeditationTrack: (track: MeditationTrack | null) => void;
   clearMeditationTracks: () => void;
@@ -393,9 +395,32 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       setIsLoadingMeditationTrack(true);
 
-      // Check if TrackPlayer is ready - if not, throw error immediately
+      // If TrackPlayer isn't ready, wait and retry (keeps loading state active)
       if (!isSetup) {
-        throw new Error('TrackPlayer is not ready. Please wait for the music player to initialize.');
+        let retries = 0;
+        const maxRetries = 10;
+
+        while (!isSetup && retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          retries++;
+        }
+
+        if (!isSetup) {
+          throw new Error('Audio player is not ready. Please try again.');
+        }
+      }
+
+      // Verify TrackPlayer is actually responsive (with retry)
+      try {
+        await TrackPlayer.getPlaybackState();
+      } catch (stateError) {
+        // Keep loading state and retry once
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+          await TrackPlayer.getPlaybackState();
+        } catch (retryError) {
+          throw new Error('Audio player is not responding. Please try again.');
+        }
       }
 
       // Convert MeditationTrack to TrackPlayer format
@@ -408,16 +433,33 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         duration: track.duration,
       };
 
-      // Set as active meditation track
+      // Clear queue and add new track first - ensure operations succeed
+      await TrackPlayer.reset();
+      await TrackPlayer.add(trackPlayerTrack);
+
+      // Update states ONLY after successful queue operations
       setActiveMeditationTrack(track);
       setCurrentTrack(trackPlayerTrack);
 
-      // Clear queue and add new track
-      await TrackPlayer.reset();
-      await TrackPlayer.add(trackPlayerTrack);
+      // Start playing
       await TrackPlayer.play();
 
+      // Verify playback state after a brief delay
+      setTimeout(async () => {
+        try {
+          const state = await TrackPlayer.getPlaybackState();
+          setIsPlayingState(state.state === State.Playing);
+        } catch (verifyError) {
+          // State verification failed, but don't throw - playback might still work
+          setIsPlayingState(false);
+        }
+      }, 300);
+
     } catch (error) {
+      // Reset states on error to prevent stale UI state
+      setActiveMeditationTrack(null);
+      setCurrentTrack(null);
+      setIsPlayingState(false);
       throw error;
     } finally {
       setIsLoadingMeditationTrack(false);
@@ -469,9 +511,32 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       setIsLoadingTrack(true);
 
-      // Check if TrackPlayer is ready - if not, throw error immediately
+      // If TrackPlayer isn't ready, wait and retry (keeps loading state active)
       if (!isSetup) {
-        throw new Error('TrackPlayer is not ready. Please wait for the music player to initialize.');
+        let retries = 0;
+        const maxRetries = 10;
+
+        while (!isSetup && retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          retries++;
+        }
+
+        if (!isSetup) {
+          throw new Error('Audio player is not ready. Please try again.');
+        }
+      }
+
+      // Verify TrackPlayer is actually responsive (with retry)
+      try {
+        await TrackPlayer.getPlaybackState();
+      } catch (stateError) {
+        // Keep loading state and retry once
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+          await TrackPlayer.getPlaybackState();
+        } catch (retryError) {
+          throw new Error('Audio player is not responding. Please try again.');
+        }
       }
 
       // Convert TrackInfo to Track format for TrackPlayer
@@ -484,22 +549,114 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         duration: track.duration,
       };
 
-      // Clear current queue and add new track
-      try {
-        await TrackPlayer.reset();
-      } catch (resetError) {
-        // Continue anyway, might still work
-      }
-
+      // Clear current queue and add new track - ensure both operations succeed
+      await TrackPlayer.reset();
       await TrackPlayer.add(trackPlayerTrack);
 
-      // Update current track state in context only
+      // Update current track state ONLY after successful queue operations
       setCurrentTrack(track);
 
       // Start playing
       await TrackPlayer.play();
-      setIsPlayingState(true);
+
+      // Verify playback state after a brief delay to ensure it actually started
+      setTimeout(async () => {
+        try {
+          const state = await TrackPlayer.getPlaybackState();
+          setIsPlayingState(state.state === State.Playing);
+        } catch (verifyError) {
+          // State verification failed, but don't throw - playback might still work
+          setIsPlayingState(false);
+        }
+      }, 300);
+
     } catch (error) {
+      // Reset states on error to prevent stale UI state
+      setCurrentTrack(null);
+      setIsPlayingState(false);
+      throw error;
+    } finally {
+      setIsLoadingTrack(false);
+    }
+  }, [isSetup]);
+
+  const playLocalTrack = useCallback(async (localFile: LocalAudioFile) => {
+    try {
+      setIsLoadingTrack(true);
+
+      // Check if TrackPlayer is ready
+      if (!isSetup) {
+        let retries = 0;
+        const maxRetries = 10;
+
+        while (!isSetup && retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          retries++;
+        }
+
+        if (!isSetup) {
+          throw new Error('Audio player is not ready. Please try again.');
+        }
+      }
+
+      // Verify TrackPlayer is responsive
+      try {
+        await TrackPlayer.getPlaybackState();
+      } catch (stateError) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+          await TrackPlayer.getPlaybackState();
+        } catch (retryError) {
+          throw new Error('Audio player is not responding. Please try again.');
+        }
+      }
+
+      // Use local file path if available, otherwise fall back to remote URL
+      const audioUrl = localFile.localAudioPath || localFile.audioDownloadUrl;
+      const artworkUrl = localFile.localThumbnailPath || localFile.thumbnailDownloadUrl;
+
+      // Convert LocalAudioFile to Track format for TrackPlayer
+      const trackPlayerTrack: Track = {
+        id: localFile.id,
+        url: audioUrl,
+        title: localFile.name,
+        artist: localFile.author,
+        artwork: artworkUrl,
+        duration: localFile.durationSeconds,
+      };
+
+      // Clear current queue and add new track
+      await TrackPlayer.reset();
+      await TrackPlayer.add(trackPlayerTrack);
+
+      // Update current track state ONLY after successful queue operations
+      const trackInfo: TrackInfo = {
+        id: localFile.id,
+        title: localFile.name,
+        artist: localFile.author,
+        url: audioUrl,
+        artwork: artworkUrl,
+        duration: localFile.durationSeconds,
+      };
+      setCurrentTrack(trackInfo);
+
+      // Start playing
+      await TrackPlayer.play();
+
+      // Verify playback state after a brief delay
+      setTimeout(async () => {
+        try {
+          const state = await TrackPlayer.getPlaybackState();
+          setIsPlayingState(state.state === State.Playing);
+        } catch (verifyError) {
+          setIsPlayingState(false);
+        }
+      }, 300);
+
+    } catch (error) {
+      // Reset states on error to prevent stale UI state
+      setCurrentTrack(null);
+      setIsPlayingState(false);
       throw error;
     } finally {
       setIsLoadingTrack(false);
@@ -512,6 +669,19 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       loadAudioFiles().catch(() => {
         // Failed to load audio files
       });
+    }
+  }, [isSetup, audioFiles.length, loadAudioFiles]);
+
+  // Refresh audio files periodically to prevent stale URLs (every 30 minutes)
+  useEffect(() => {
+    if (isSetup && audioFiles.length > 0) {
+      const refreshInterval = setInterval(() => {
+        loadAudioFiles().catch(() => {
+          // Failed to refresh audio files, keep existing ones
+        });
+      }, 30 * 60 * 1000); // 30 minutes
+
+      return () => clearInterval(refreshInterval);
     }
   }, [isSetup, audioFiles.length, loadAudioFiles]);
 
@@ -592,6 +762,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       fadeOutOnly,
       togglePlayback,
       playTrack,
+      playLocalTrack,
       playMeditationTrack,
       setSelectedMeditationTrack,
       clearMeditationTracks,

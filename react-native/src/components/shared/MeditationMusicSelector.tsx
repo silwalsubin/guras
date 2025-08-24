@@ -12,7 +12,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
-import { BaseCard } from '@/components/shared';
+import { BaseCard, DownloadButton } from '@/components/shared';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { apiService, AudioFile } from '@/services/api';
 
@@ -26,6 +26,7 @@ export interface MeditationTrack {
   duration?: number;
   category: 'ambient' | 'nature' | 'meditation' | 'binaural';
   isLoop: boolean;
+  originalAudioFile?: AudioFile; // Add reference to original AudioFile for download functionality
 }
 
 // Helper functions for categorizing audio files
@@ -101,6 +102,7 @@ const MeditationMusicSelector: React.FC<MeditationMusicSelectorProps> = ({
             duration: audioFile.durationSeconds || 300,
             category: categorizeAudioFile(audioFile),
             isLoop: true,
+            originalAudioFile: audioFile, // Store original AudioFile for download functionality
           }));
 
           setAvailableTracks(tracks);
@@ -312,10 +314,10 @@ const MeditationMusicSelector: React.FC<MeditationMusicSelectorProps> = ({
                 onPress={() => handleTrackSelect(track)}
               >
                 <View style={styles.trackInfo}>
-                  <Icon 
-                    name={getCategoryIcon(track.category)} 
-                    size={16} 
-                    color={themeColors.textSecondary} 
+                  <Icon
+                    name={getCategoryIcon(track.category)}
+                    size={16}
+                    color={themeColors.textSecondary}
                   />
                   <View style={styles.trackDetails}>
                     <Text style={[styles.trackTitle, { color: themeColors.textPrimary }]}>
@@ -326,9 +328,24 @@ const MeditationMusicSelector: React.FC<MeditationMusicSelectorProps> = ({
                     </Text>
                   </View>
                 </View>
-                {selectedTrack?.id === track.id && (
-                  <Icon name="check" size={16} color={brandColors.primary} />
-                )}
+
+                <View style={styles.trackActions}>
+                  {/* Download Button */}
+                  {track.originalAudioFile && (
+                    <DownloadButton
+                      audioFile={track.originalAudioFile}
+                      size="small"
+                      onDownloadError={(error) => {
+                        console.error('Download failed:', error);
+                      }}
+                    />
+                  )}
+
+                  {/* Selection Check */}
+                  {selectedTrack?.id === track.id && (
+                    <Icon name="check" size={16} color={brandColors.primary} style={styles.checkIcon} />
+                  )}
+                </View>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -417,6 +434,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+  },
+  trackActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  checkIcon: {
+    marginLeft: 8,
   },
   trackDetails: {
     marginLeft: 12,

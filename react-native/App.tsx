@@ -19,6 +19,7 @@ import { setActiveTab, TAB_KEYS } from './src/store/navigationSlice';
 import { setDarkMode } from './src/store/themeSlice';
 import { stopTimer } from './src/store/meditationSliceNew';
 import { MusicPlayerProvider, useMusicPlayer } from './src/contexts/MusicPlayerContext';
+import { DownloadProvider } from './src/contexts/DownloadContext';
 import MeditationScreen from './src/screens/meditation';
 import LearnScreen from './src/screens/learn';
 import AudioScreen from './src/screens/audio';
@@ -141,7 +142,9 @@ function App(): React.JSX.Element {
           <AuthProvider>
             <AuthWrapper>
               <MusicPlayerProvider>
-                <MainApp />
+                <DownloadProvider>
+                  <MainApp />
+                </DownloadProvider>
               </MusicPlayerProvider>
             </AuthWrapper>
           </AuthProvider>
