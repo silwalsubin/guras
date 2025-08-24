@@ -134,7 +134,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
             Capability.SkipToNext,
             Capability.SkipToPrevious,
           ],
-          // Enable background playbook
+          // Enable background playback
           android: {
             appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
           },
@@ -270,34 +270,67 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return;
       }
 
-      // Get current volume (default to 1.0 if not available)
+      const startTime = new Date().toISOString().substring(11, 23);
+      console.log(`🎵 [${startTime}] Starting volume-based fade-out over ${fadeDurationMs}ms`);
+
+      // Get current volume
       let currentVolume = 1.0;
       try {
         currentVolume = await TrackPlayer.getVolume();
+        console.log(`🎵 [${startTime}] Current volume: ${currentVolume}`);
       } catch (volumeError) {
-        // Use default volume
+        console.log(`🎵 [${startTime}] Could not get current volume, using 1.0`);
+        currentVolume = 1.0;
       }
 
-      // Use more steps for smoother fade-out
-      const steps = 50;
-      const stepDuration = fadeDurationMs / steps;
-      const volumeStep = currentVolume / steps;
+      // Volume-based fade with more steps for smoother transition
+      const steps = 20; // 20 steps for smoother fade
+      const stepDuration = fadeDurationMs / steps; // e.g., 5000ms / 20 = 250ms per step
+      const volumeStep = currentVolume / steps; // e.g., 1.0 / 20 = 0.05 per step
 
-      for (let i = 1; i <= steps; i++) {
-        const newVolume = Math.max(0, currentVolume - (volumeStep * i));
+      console.log(`🎵 [${startTime}] Volume fade: ${steps} steps, ${stepDuration}ms per step, -${volumeStep.toFixed(3)} volume per step`);
 
-        try {
-          await TrackPlayer.setVolume(newVolume);
-        } catch (volumeError) {
-          // If volume control fails, we can't fade out properly
-          break;
-        }
+      return new Promise<void>((resolve) => {
+        let currentStep = 0;
 
-        // Wait for next step (except on last iteration)
-        if (i < steps) {
-          await new Promise(resolve => setTimeout(resolve, stepDuration));
-        }
-      }
+        // Exception to Augment rule: setInterval is necessary for smooth audio volume fading
+        const fadeInterval = setInterval(async () => {
+          currentStep++;
+          const newVolume = Math.max(0, currentVolume - (volumeStep * currentStep));
+
+          try {
+            await TrackPlayer.setVolume(newVolume);
+
+            // Log every few steps to avoid spam
+            if (currentStep % 4 === 0 || currentStep === steps || newVolume <= 0) {
+              const stepTime = new Date().toISOString().substring(11, 23);
+              console.log(`🎵 [${stepTime}] Volume step ${currentStep}/${steps}: ${newVolume.toFixed(3)}`);
+            }
+          } catch (volumeError) {
+            const errorTime = new Date().toISOString().substring(11, 23);
+            console.error(`🎵 [${errorTime}] Volume control failed:`, volumeError);
+            clearInterval(fadeInterval);
+            resolve();
+            return;
+          }
+
+          if (currentStep >= steps || newVolume <= 0) {
+            clearInterval(fadeInterval);
+
+            // Ensure final volume is 0
+            try {
+              await TrackPlayer.setVolume(0);
+              const completeTime = new Date().toISOString().substring(11, 23);
+              console.log(`🎵 [${completeTime}] Volume fade completed - final volume: 0`);
+            } catch (finalError) {
+              const errorTime = new Date().toISOString().substring(11, 23);
+              console.log(`🎵 [${errorTime}] Volume fade completed (final set failed)`);
+            }
+
+            resolve();
+          }
+        }, stepDuration);
+      });
 
     } catch (error) {
       throw error;

@@ -10,6 +10,7 @@ export interface MeditationState {
   totalMinutes: number;
   lastActiveTime: number; // timestamp for sync
   isFullScreen: boolean; // For hiding header/footer during meditation
+  fadeOutStarted: boolean; // Track if fade-out has been triggered
 }
 
 const initialState: MeditationState = {
@@ -22,6 +23,7 @@ const initialState: MeditationState = {
   totalMinutes: 0,
   lastActiveTime: 0,
   isFullScreen: false,
+  fadeOutStarted: false,
 };
 
 const meditationSlice = createSlice({
@@ -83,8 +85,12 @@ const meditationSlice = createSlice({
       state.sessionStartTime = null;
       state.lastActiveTime = 0;
       state.isFullScreen = false; // Exit full-screen when session completes
+      state.fadeOutStarted = false; // Reset fade-out flag
       state.totalSessions += 1;
       state.totalMinutes += state.selectedMinutes;
+    },
+    setFadeOutStarted: (state, action: PayloadAction<boolean>) => {
+      state.fadeOutStarted = action.payload;
     },
     syncTimerState: (state) => {
       // Sync timer state when returning to the tab
@@ -120,6 +126,7 @@ export const {
   setSelectedMinutes,
   completeSession,
   syncTimerState,
+  setFadeOutStarted,
 } = meditationSlice.actions;
 
 export default meditationSlice.reducer;

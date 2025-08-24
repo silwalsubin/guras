@@ -40,8 +40,7 @@ const MainApp: React.FC = () => {
   // Access MusicPlayerContext
   const { setFullPlayerVisible } = useMusicPlayer();
 
-  // Debug: Log the meditation state to see why footer might be hidden
-  console.log('🔍 App Debug - isFullScreenMeditation:', isFullScreenMeditation, 'isMeditationActive:', isMeditationActive, 'activeTab:', activeTab);
+
 
   // Handler for when mini music player is tapped
   const handleMiniPlayerPress = () => {
