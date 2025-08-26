@@ -143,8 +143,11 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           },
         });
 
-        // Initialize with empty queue
-        await TrackPlayer.reset();
+        // Only reset if there's no existing queue to preserve lock screen controls
+        const existingQueue = await TrackPlayer.getQueue();
+        if (existingQueue.length === 0) {
+          await TrackPlayer.reset();
+        }
 
         if (isMounted) {
           setIsSetup(true);
@@ -672,6 +675,28 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       });
     }
   }, [isSetup, audioFiles.length, loadAudioFiles]);
+
+  // Ensure capabilities are maintained even with empty queue
+  useEffect(() => {
+    if (isSetup) {
+      TrackPlayer.updateOptions({
+        capabilities: [
+          Capability.Play,
+          Capability.Pause,
+          Capability.SkipToNext,
+          Capability.SkipToPrevious,
+        ],
+        compactCapabilities: [
+          Capability.Play,
+          Capability.Pause,
+          Capability.SkipToNext,
+          Capability.SkipToPrevious,
+        ],
+      }).catch(() => {
+        // Failed to update options
+      });
+    }
+  }, [isSetup, currentTrack]);
 
   // Refresh audio files periodically to prevent stale URLs (every 30 minutes)
   useEffect(() => {
