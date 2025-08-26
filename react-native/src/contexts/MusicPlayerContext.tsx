@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import TrackPlayer, { State, useProgress, Capability, Event, Track, AppKilledPlaybackBehavior } from 'react-native-track-player';
 import { AudioFile, apiService } from '@/services/api';
 import { LocalAudioFile } from '@/services/downloadService';
+import { DeviceEventEmitter } from 'react-native';
 // No Redux - MusicPlayerContext is the single source of truth
 
 export interface TrackInfo {
@@ -739,6 +740,74 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       stateListener.remove();
     };
   }, []);
+
+  // Listen for remote commands from lock screen
+  useEffect(() => {
+    const playListener = DeviceEventEmitter.addListener('RemotePlay', () => {
+      console.log('🎵 Remote Play command received in context');
+      play().catch(error => {
+        console.error('❌ Error playing from remote:', error);
+      });
+    });
+
+    const pauseListener = DeviceEventEmitter.addListener('RemotePause', () => {
+      console.log('🎵 Remote Pause command received in context');
+      pause().catch(error => {
+        console.error('❌ Error pausing from remote:', error);
+      });
+    });
+
+    const nextListener = DeviceEventEmitter.addListener('RemoteNext', () => {
+      console.log('🎵 Remote Next command received in context');
+      if (audioFiles.length > 1) {
+        const nextIndex = (currentTrackIndex + 1) % audioFiles.length;
+        const nextAudioFile = audioFiles[nextIndex];
+
+        const track: TrackInfo = {
+          id: nextAudioFile.id,
+          title: nextAudioFile.name,
+          artist: nextAudioFile.author,
+          url: nextAudioFile.audioDownloadUrl,
+          artwork: nextAudioFile.thumbnailDownloadUrl || undefined,
+          duration: nextAudioFile.durationSeconds || 0,
+        };
+
+        setCurrentTrackIndex(nextIndex);
+        playTrack(track).catch(error => {
+          console.error('❌ Error playing next track from remote:', error);
+        });
+      }
+    });
+
+    const previousListener = DeviceEventEmitter.addListener('RemotePrevious', () => {
+      console.log('🎵 Remote Previous command received in context');
+      if (audioFiles.length > 1) {
+        const prevIndex = currentTrackIndex === 0 ? audioFiles.length - 1 : currentTrackIndex - 1;
+        const prevAudioFile = audioFiles[prevIndex];
+
+        const track: TrackInfo = {
+          id: prevAudioFile.id,
+          title: prevAudioFile.name,
+          artist: prevAudioFile.author,
+          url: prevAudioFile.audioDownloadUrl,
+          artwork: prevAudioFile.thumbnailDownloadUrl || undefined,
+          duration: prevAudioFile.durationSeconds || 0,
+        };
+
+        setCurrentTrackIndex(prevIndex);
+        playTrack(track).catch(error => {
+          console.error('❌ Error playing previous track from remote:', error);
+        });
+      }
+    });
+
+    return () => {
+      playListener.remove();
+      pauseListener.remove();
+      nextListener.remove();
+      previousListener.remove();
+    };
+  }, [audioFiles, currentTrackIndex, playTrack, play, pause]);
 
   return (
     <MusicPlayerContext.Provider value={{
