@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     // Don't center all content - let individual sections handle their own alignment
   },
   quoteSection: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
     marginBottom: 20,
     width: '100%',
   },

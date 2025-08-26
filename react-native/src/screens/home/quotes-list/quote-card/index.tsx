@@ -89,9 +89,11 @@ const Quote: React.FC<QuoteProps> = ({ quote }) => {
 const styles = StyleSheet.create({
   quoteCardWrapper: {
     marginBottom: 4,
+    marginHorizontal: 0,
   },
   card: {
     marginBottom: 8,
+    marginHorizontal: 0,
   },
   titleContainer: {
     flexDirection: 'row',

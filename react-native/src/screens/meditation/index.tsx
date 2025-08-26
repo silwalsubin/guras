@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -10,26 +10,18 @@ import {
   Text,
   TouchableOpacity,
   Dimensions,
+  Animated,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';
+import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {
-  AppHeader,
   MeditationTimer,
+  HorizontalSeparator,
 } from '@/components/shared';
-import {
-  getFeaturedSessions
-} from '@/data/mockMeditationData';
-import ProgramsList from '@/components/meditation/ProgramsList';
-import ThemedSessionsModal from '@/components/meditation/ThemedSessionsModal';
-import TeachersList from '@/components/meditation/TeachersList';
-import GuidedMeditationModal from '@/components/meditation/GuidedMeditationModal';
 import GuidedProgressDashboard from '@/components/meditation/GuidedProgressDashboard';
-import { MeditationTheme, GuidedMeditationSession } from '@/types/meditation';
 
 // Enhanced mock data for comprehensive meditation tracking
 const mockData = {
@@ -58,14 +50,14 @@ const mockData = {
 };
 
 const MeditationScreen: React.FC = () => {
-  const dispatch = useDispatch();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeSection, setActiveSection] = useState<'timer' | 'progress' | 'library'>('timer');
-  const [themedSessionsModalVisible, setThemedSessionsModalVisible] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState<MeditationTheme | undefined>();
-  const [guidedMeditationModalVisible, setGuidedMeditationModalVisible] = useState(false);
-  const [selectedGuidedSession, setSelectedGuidedSession] = useState<GuidedMeditationSession | null>(null);
+  const [activeSection, setActiveSection] = useState<'timer' | 'progress' | 'future'>('timer');
+
+  // Animated text for Now tab
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const nowTexts = ['Now', 'Here', 'Present'];
 
   // Slide functionality
   const screenWidth = Dimensions.get('window').width;
@@ -79,14 +71,14 @@ const MeditationScreen: React.FC = () => {
   const { isFullScreen } = meditationState;
 
   // Handle slide/swipe between sections
-  const handleSlideToSection = (section: 'timer' | 'progress' | 'library') => {
+  const handleSlideToSection = (section: 'timer' | 'progress' | 'future') => {
     let targetIndex: number;
-    if (section === 'timer') {
-      targetIndex = 0;
-    } else if (section === 'library') {
-      targetIndex = 1;
+    if (section === 'progress') {
+      targetIndex = 0; // past
+    } else if (section === 'timer') {
+      targetIndex = 1; // now
     } else {
-      targetIndex = 2; // progress
+      targetIndex = 2; // future
     }
 
     scrollViewRef.current?.scrollTo({
@@ -100,13 +92,13 @@ const MeditationScreen: React.FC = () => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const currentIndex = Math.round(offsetX / screenWidth);
 
-    let newSection: 'timer' | 'progress' | 'library';
+    let newSection: 'timer' | 'progress' | 'future';
     if (currentIndex === 0) {
-      newSection = 'timer';
+      newSection = 'progress'; // past
     } else if (currentIndex === 1) {
-      newSection = 'library';
+      newSection = 'timer'; // now
     } else {
-      newSection = 'progress';
+      newSection = 'future';
     }
 
     if (newSection !== activeSection) {
@@ -114,11 +106,40 @@ const MeditationScreen: React.FC = () => {
     }
   };
 
+  // Initialize scroll position to center (Now tab)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollViewRef.current?.scrollTo({
+        x: screenWidth, // Middle section (index 1)
+        animated: false,
+      });
+    }, 100); // Small delay to ensure ScrollView is mounted
 
+    return () => clearTimeout(timer);
+  }, [screenWidth]);
 
+  // Animation effect for Now tab text rotation
+  useEffect(() => {
+    const animateText = () => {
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
 
+      setCurrentTextIndex((prevIndex) => (prevIndex + 1) % nowTexts.length);
+    };
 
-
+    const interval = setInterval(animateText, 2000); // Change every 2 seconds
+    return () => clearInterval(interval);
+  }, [fadeAnim, nowTexts.length]);
 
   const handleMeditationComplete = (duration: number) => {
     // Track meditation session completion
@@ -126,16 +147,7 @@ const MeditationScreen: React.FC = () => {
     // TODO: Update progress data, save to storage, etc.
   };
 
-  const handleGuidedSessionSelect = (session: GuidedMeditationSession) => {
-    console.log('Selected guided session:', session.title);
-    setSelectedGuidedSession(session);
-    setGuidedMeditationModalVisible(true);
-  };
 
-  const handleGuidedSessionComplete = (session: GuidedMeditationSession) => {
-    console.log('Completed guided session:', session.title);
-    // TODO: Update user progress, save completion data, etc.
-  };
 
   const renderStreakCard = () => (
     <View style={[styles.card, { backgroundColor: themeColors.card }]}>
@@ -148,7 +160,7 @@ const MeditationScreen: React.FC = () => {
             Meditation Streak
           </Text>
           <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-            Keep the momentum going
+            Your dedication so far
           </Text>
         </View>
       </View>
@@ -185,7 +197,7 @@ const MeditationScreen: React.FC = () => {
             Your Statistics
           </Text>
           <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-            Track your progress
+            Your journey in numbers
           </Text>
         </View>
       </View>
@@ -274,24 +286,37 @@ const MeditationScreen: React.FC = () => {
   const renderSectionTabs = () => (
     <View style={styles.tabContainer}>
       {[
-        { key: 'timer', label: 'Meditate', icon: 'play-circle' },
-        { key: 'library', label: 'Guided', icon: 'book' },
-        { key: 'progress', label: 'Progress', icon: 'bar-chart' },
+        { key: 'progress', label: 'Past', icon: 'bar-chart' },
+        { key: 'timer', label: 'Now', icon: 'play-circle' },
+        { key: 'future', label: 'Future', icon: 'calendar-plus-o' },
       ].map((tab) => (
         <TouchableOpacity
           key={tab.key}
           style={styles.tab}
           onPress={() => handleSlideToSection(tab.key as any)}
         >
-          <Text style={[
-            styles.tabText,
-            {
-              color: activeSection === tab.key ? brandColors.primary : themeColors.textSecondary,
-              fontWeight: activeSection === tab.key ? '600' : '400',
-            }
-          ]}>
-            {tab.label}
-          </Text>
+          {tab.key === 'timer' ? (
+            <Animated.Text style={[
+              styles.tabText,
+              {
+                color: activeSection === tab.key ? brandColors.primary : themeColors.textSecondary,
+                fontWeight: activeSection === tab.key ? '600' : '400',
+                opacity: fadeAnim,
+              }
+            ]}>
+              {nowTexts[currentTextIndex]}
+            </Animated.Text>
+          ) : (
+            <Text style={[
+              styles.tabText,
+              {
+                color: activeSection === tab.key ? brandColors.primary : themeColors.textSecondary,
+                fontWeight: activeSection === tab.key ? '600' : '400',
+              }
+            ]}>
+              {tab.label}
+            </Text>
+          )}
           {activeSection === tab.key && (
             <View style={[styles.tabIndicator, { backgroundColor: brandColors.primary }]} />
           )}
@@ -324,8 +349,12 @@ const MeditationScreen: React.FC = () => {
       <View style={styles.heroSection}>
         <MeditationTimer onSessionComplete={handleMeditationComplete} forceFullScreen={false} />
       </View>
+    </>
+  );
 
-      {/* Quick Stats Summary for Meditate Tab */}
+  const renderProgressSection = () => (
+    <>
+      {/* Quick Stats Summary for Past Tab */}
       <View style={styles.quickStatsSection}>
         <Text style={[styles.quickStatsTitle, { color: themeColors.textPrimary }]}>
           Your Journey
@@ -358,25 +387,13 @@ const MeditationScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Quick Access to Guided Sessions */}
-      <TouchableOpacity
-        style={[styles.guidedSessionsButton, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
-        onPress={() => setActiveSection('library')}
-      >
-        <Icon name="book" size={16} color={brandColors.primary} />
-        <Text style={[styles.guidedSessionsButtonText, { color: themeColors.textPrimary }]}>
-          Try Guided Meditation
-        </Text>
-        <Icon name="chevron-right" size={12} color={themeColors.textSecondary} />
-      </TouchableOpacity>
-    </>
-  );
-
-  const renderProgressSection = () => (
-    <>
+      <HorizontalSeparator marginVertical={0} height={4} />
       {renderStreakCard()}
+      <HorizontalSeparator marginVertical={0} height={4} />
       {renderStatsCard()}
+      <HorizontalSeparator marginVertical={0} height={4} />
       {renderWeeklyProgress()}
+      <HorizontalSeparator marginVertical={0} height={4} />
 
       {/* Monthly Progress Chart */}
       <View style={[styles.card, { backgroundColor: themeColors.card }]}>
@@ -421,6 +438,7 @@ const MeditationScreen: React.FC = () => {
           })}
         </View>
       </View>
+      <HorizontalSeparator marginVertical={0} height={4} />
 
       {/* Meditation Event Log */}
       <View style={[styles.card, { backgroundColor: themeColors.card }]}>
@@ -433,7 +451,7 @@ const MeditationScreen: React.FC = () => {
               Meditation Log
             </Text>
             <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-              Complete journey history
+              Every step you've taken
             </Text>
           </View>
         </View>
@@ -527,111 +545,119 @@ const MeditationScreen: React.FC = () => {
     </>
   );
 
-  const renderLibrarySection = () => (
+  const renderFutureSection = () => (
     <>
-      {/* Featured Sessions */}
+      <HorizontalSeparator marginVertical={0} height={4} />
+
+      {/* Tomorrow's Plan Card */}
       <View style={[styles.card, { backgroundColor: themeColors.card }]}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
-            <Icon name="star" size={16} color={brandColors.primary} />
+            <Icon name="calendar-plus-o" size={16} color={brandColors.primary} />
           </View>
           <View style={styles.headerTextContainer}>
             <Text style={[styles.cardTitle, { color: themeColors.textPrimary }]}>
-              Featured Sessions
+              Tomorrow's Plan
             </Text>
             <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-              Recommended guided meditations
+              Set your intention for tomorrow
             </Text>
           </View>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-          {getFeaturedSessions().map((session) => (
-            <TouchableOpacity
-              key={session.id}
-              style={[styles.sessionCard, { backgroundColor: themeColors.card }]}
-              onPress={() => handleGuidedSessionSelect(session)}
-            >
-              <View style={[styles.sessionThumbnail, { backgroundColor: brandColors.primary + '20' }]}>
-                <Icon name="play" size={20} color={brandColors.primary} />
-              </View>
-              <Text style={[styles.sessionTitle, { color: themeColors.textPrimary }]} numberOfLines={2}>
-                {session.title}
-              </Text>
-              <Text style={[styles.sessionTeacher, { color: themeColors.textSecondary }]}>
-                {session.teacher.name}
-              </Text>
-              <Text style={[styles.sessionMeta, { color: themeColors.textSecondary }]}>
-                {session.duration} min • {session.theme}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <View style={styles.futureActionContainer}>
+          <TouchableOpacity style={[styles.futureActionButton, { backgroundColor: brandColors.primary + '10', borderColor: brandColors.primary + '30' }]}>
+            <Icon name="clock-o" size={16} color={brandColors.primary} />
+            <Text style={[styles.futureActionText, { color: brandColors.primary }]}>Schedule Session</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.futureActionButton, { backgroundColor: brandColors.primary + '10', borderColor: brandColors.primary + '30' }]}>
+            <Icon name="target" size={16} color={brandColors.primary} />
+            <Text style={[styles.futureActionText, { color: brandColors.primary }]}>Set Goal</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Programs */}
-      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
-        <ProgramsList
-          maxItems={3}
-          onProgramStart={(program, day) => {
-            // TODO: Navigate to guided meditation session
-            console.log('Starting program session:', program.title, 'Day:', day);
-          }}
-        />
-      </View>
+      <HorizontalSeparator marginVertical={0} height={4} />
 
-      {/* Browse by Theme */}
+      {/* Weekly Goals Card */}
       <View style={[styles.card, { backgroundColor: themeColors.card }]}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
-            <Icon name="tags" size={16} color={brandColors.primary} />
+          <View style={[styles.iconContainer, { backgroundColor: '#FF9500' + '20' }]}>
+            <Icon name="bullseye" size={16} color="#FF9500" />
           </View>
           <View style={styles.headerTextContainer}>
             <Text style={[styles.cardTitle, { color: themeColors.textPrimary }]}>
-              Browse by Theme
+              This Week's Goals
             </Text>
             <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-              Find sessions for your needs
+              Your meditation intentions
             </Text>
           </View>
         </View>
 
-        <View style={styles.themeGrid}>
-          {[
-            { theme: 'stress-relief', label: 'Stress Relief', icon: 'heart', count: 12 },
-            { theme: 'sleep', label: 'Sleep', icon: 'moon-o', count: 8 },
-            { theme: 'focus', label: 'Focus', icon: 'eye', count: 6 },
-            { theme: 'anxiety', label: 'Anxiety', icon: 'shield', count: 9 },
-            { theme: 'gratitude', label: 'Gratitude', icon: 'smile-o', count: 5 },
-            { theme: 'mindfulness', label: 'Mindfulness', icon: 'leaf', count: 15 },
-          ].map((item) => (
-            <TouchableOpacity
-              key={item.theme}
-              style={[styles.themeItem, { backgroundColor: themeColors.card }]}
-              onPress={() => {
-                setSelectedTheme(item.theme as MeditationTheme);
-                setThemedSessionsModalVisible(true);
-              }}
-            >
-              <Icon name={item.icon} size={24} color={brandColors.primary} />
-              <Text style={[styles.themeLabel, { color: themeColors.textPrimary }]}>
-                {item.label}
-              </Text>
-              <Text style={[styles.themeCount, { color: themeColors.textSecondary }]}>
-                {item.count} sessions
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.goalsList}>
+          <View style={styles.goalItem}>
+            <View style={[styles.goalIcon, { backgroundColor: '#4CAF50' + '20' }]}>
+              <Icon name="check" size={12} color="#4CAF50" />
+            </View>
+            <Text style={[styles.goalText, { color: themeColors.textPrimary }]}>Meditate 5 days this week</Text>
+            <Text style={[styles.goalProgress, { color: themeColors.textSecondary }]}>3/5</Text>
+          </View>
+
+          <View style={styles.goalItem}>
+            <View style={[styles.goalIcon, { backgroundColor: brandColors.primary + '20' }]}>
+              <Icon name="clock-o" size={12} color={brandColors.primary} />
+            </View>
+            <Text style={[styles.goalText, { color: themeColors.textPrimary }]}>Complete 100 minutes</Text>
+            <Text style={[styles.goalProgress, { color: themeColors.textSecondary }]}>67/100</Text>
+          </View>
+
+          <View style={styles.goalItem}>
+            <View style={[styles.goalIcon, { backgroundColor: '#FF9500' + '20' }]}>
+              <Icon name="fire" size={12} color="#FF9500" />
+            </View>
+            <Text style={[styles.goalText, { color: themeColors.textPrimary }]}>Maintain streak</Text>
+            <Text style={[styles.goalProgress, { color: themeColors.textSecondary }]}>7 days</Text>
+          </View>
         </View>
       </View>
 
-      {/* Teachers */}
+      <HorizontalSeparator marginVertical={0} height={4} />
+
+      {/* Upcoming Challenges Card */}
       <View style={[styles.card, { backgroundColor: themeColors.card }]}>
-        <TeachersList
-          compact={true}
-          maxItems={3}
-          onSessionSelect={handleGuidedSessionSelect}
-        />
+        <View style={styles.cardHeader}>
+          <View style={[styles.iconContainer, { backgroundColor: '#9C27B0' + '20' }]}>
+            <Icon name="trophy" size={16} color="#9C27B0" />
+          </View>
+          <View style={styles.headerTextContainer}>
+            <Text style={[styles.cardTitle, { color: themeColors.textPrimary }]}>
+              Upcoming Challenges
+            </Text>
+            <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
+              Join the community
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.challengesList}>
+          <View style={styles.challengeItem}>
+            <Text style={[styles.challengeTitle, { color: themeColors.textPrimary }]}>30-Day Mindfulness Challenge</Text>
+            <Text style={[styles.challengeDate, { color: themeColors.textSecondary }]}>Starts Feb 1st</Text>
+            <TouchableOpacity style={[styles.joinButton, { backgroundColor: '#9C27B0' + '10', borderColor: '#9C27B0' + '30' }]}>
+              <Text style={[styles.joinButtonText, { color: '#9C27B0' }]}>Join Challenge</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.challengeItem}>
+            <Text style={[styles.challengeTitle, { color: themeColors.textPrimary }]}>Morning Meditation Week</Text>
+            <Text style={[styles.challengeDate, { color: themeColors.textSecondary }]}>Starts Feb 15th</Text>
+            <TouchableOpacity style={[styles.joinButton, { backgroundColor: '#9C27B0' + '10', borderColor: '#9C27B0' + '30' }]}>
+              <Text style={[styles.joinButtonText, { color: '#9C27B0' }]}>Join Challenge</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </>
   );
@@ -639,11 +665,6 @@ const MeditationScreen: React.FC = () => {
   // Render the normal meditation screen
   const normalScreen = (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      {/* Header */}
-      <AppHeader
-        onProfilePress={() => dispatch(setActiveTab(TAB_KEYS.PROFILE))}
-      />
-
       {/* Section Tabs */}
       {renderSectionTabs()}
 
@@ -657,7 +678,27 @@ const MeditationScreen: React.FC = () => {
         style={styles.horizontalScrollView}
         contentContainerStyle={styles.horizontalScrollContent}
       >
-        {/* Timer Section */}
+        {/* Past Section */}
+        <View style={[styles.slideContainer, { width: screenWidth }]}>
+          <ScrollView
+            style={styles.verticalScrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                colors={[brandColors.primary]}
+              />
+            }
+          >
+            {renderProgressSection()}
+            <View style={styles.bottomPadding} />
+          </ScrollView>
+        </View>
+
+        {/* Now Section */}
         <View style={[styles.slideContainer, { width: screenWidth }]}>
           <ScrollView
             style={styles.verticalScrollView}
@@ -677,19 +718,7 @@ const MeditationScreen: React.FC = () => {
           </ScrollView>
         </View>
 
-        {/* Library Section */}
-        <View style={[styles.slideContainer, { width: screenWidth }]}>
-          <ScrollView
-            style={styles.verticalScrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {renderLibrarySection()}
-            <View style={styles.bottomPadding} />
-          </ScrollView>
-        </View>
-
-        {/* Progress Section */}
+        {/* Future Section */}
         <View style={[styles.slideContainer, { width: screenWidth }]}>
           <ScrollView
             style={styles.verticalScrollView}
@@ -704,7 +733,7 @@ const MeditationScreen: React.FC = () => {
               />
             }
           >
-            {renderProgressSection()}
+            {renderFutureSection()}
             <View style={styles.bottomPadding} />
           </ScrollView>
         </View>
@@ -736,24 +765,7 @@ const MeditationScreen: React.FC = () => {
   }
 
   // Return normal screen when not in full-screen mode
-  return (
-    <>
-      {normalScreen}
-      <ThemedSessionsModal
-        visible={themedSessionsModalVisible}
-        onClose={() => setThemedSessionsModalVisible(false)}
-        onSessionSelect={handleGuidedSessionSelect}
-        initialTheme={selectedTheme}
-        title="Browse Guided Sessions"
-      />
-      <GuidedMeditationModal
-        visible={guidedMeditationModalVisible}
-        session={selectedGuidedSession}
-        onClose={() => setGuidedMeditationModalVisible(false)}
-        onSessionComplete={handleGuidedSessionComplete}
-      />
-    </>
-  );
+  return normalScreen;
 };
 
 const styles = StyleSheet.create({
@@ -764,7 +776,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
     paddingTop: 4, // Very minimal spacing from tabs
     paddingBottom: 100, // Space for bottom navigation
   },
@@ -835,9 +847,10 @@ const styles = StyleSheet.create({
   },
   // Card Styles
   card: {
-    borderRadius: 16,
+    borderRadius: 0,
     padding: 12,
-    marginBottom: 16,
+    paddingTop: 10,
+    marginBottom: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -847,22 +860,23 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 18,
   },
   headerTextContainer: {
-    marginLeft: 10,
+    marginLeft: 8,
     flex: 1,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
+    lineHeight: 18,
   },
   // Streak Card Styles
   streakContainer: {
@@ -933,7 +947,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '500',
   },
-  // Quick Stats Styles (for Meditate tab)
+  // Quick Stats Styles (for Past tab)
   quickStatsSection: {
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -997,8 +1011,9 @@ const styles = StyleSheet.create({
   // Event Log Styles
   cardSubtitle: {
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 0,
     fontStyle: 'italic',
+    lineHeight: 13,
   },
   eventLogContainer: {
     paddingVertical: 8,
@@ -1092,84 +1107,82 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '500',
   },
-  // Guided Meditation Library Styles
-  horizontalScroll: {
-    paddingVertical: 16,
-  },
-  sessionCard: {
-    width: 160,
-    marginRight: 16,
-    padding: 12,
-    borderRadius: 12,
-    marginVertical: 4,
-  },
-  sessionThumbnail: {
-    width: '100%',
-    height: 80,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  sessionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-    lineHeight: 18,
-  },
-  sessionTeacher: {
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  sessionMeta: {
-    fontSize: 11,
-    textTransform: 'capitalize',
-  },
-
-  themeGrid: {
+  // Future Section Styles
+  futureActionContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-  },
-  themeItem: {
-    width: '48%',
-    margin: '1%',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 100,
-  },
-  themeLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 8,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  themeCount: {
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  // Navigation Integration Styles
-  guidedSessionsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 12,
-    borderWidth: 1,
+    gap: 12,
   },
-  guidedSessionsButtonText: {
+  futureActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+  },
+  futureActionText: {
     fontSize: 14,
     fontWeight: '500',
-    flex: 1,
-    marginLeft: 12,
   },
+  goalsList: {
+    gap: 12,
+  },
+  goalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  goalIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  goalText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  goalProgress: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  challengesList: {
+    gap: 16,
+  },
+  challengeItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  challengeTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  challengeDate: {
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  joinButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  joinButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+
+
 });
 
 export default MeditationScreen;

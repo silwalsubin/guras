@@ -11,6 +11,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { HorizontalSeparator } from '@/components/shared';
 
 const { width } = Dimensions.get('window');
 
@@ -127,19 +128,19 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
           </View>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.achievementsScroll}>
+        <View style={styles.achievementsGrid}>
           {/* Unlocked Achievements */}
           {unlockedAchievements.map((achievement) => (
             <TouchableOpacity
               key={achievement.id}
-              style={[styles.achievementCard, { backgroundColor: '#FFD700' + '20', borderColor: '#FFD700' }]}
+              style={[styles.achievementGridCard, { backgroundColor: '#FFD700' + '20', borderColor: '#FFD700' }]}
               onPress={() => onAchievementPress && onAchievementPress(achievement.id)}
             >
               <Icon name={achievement.icon} size={24} color="#FFD700" />
-              <Text style={[styles.achievementName, { color: themeColors.textPrimary }]} numberOfLines={2}>
+              <Text style={[styles.achievementGridName, { color: themeColors.textPrimary }]} numberOfLines={2}>
                 {achievement.name}
               </Text>
-              <Text style={[styles.achievementDescription, { color: themeColors.textSecondary }]} numberOfLines={2}>
+              <Text style={[styles.achievementGridDescription, { color: themeColors.textSecondary }]} numberOfLines={2}>
                 {achievement.description}
               </Text>
               <View style={[styles.unlockedBadge, { backgroundColor: '#FFD700' }]}>
@@ -152,14 +153,14 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
           {inProgressAchievements.map((achievement) => (
             <TouchableOpacity
               key={achievement.id}
-              style={[styles.achievementCard, { backgroundColor: themeColors.background, borderColor: brandColors.primary }]}
+              style={[styles.achievementGridCard, { backgroundColor: themeColors.background, borderColor: brandColors.primary }]}
               onPress={() => onAchievementPress && onAchievementPress(achievement.id)}
             >
               <Icon name={achievement.icon} size={24} color={brandColors.primary} />
-              <Text style={[styles.achievementName, { color: themeColors.textPrimary }]} numberOfLines={2}>
+              <Text style={[styles.achievementGridName, { color: themeColors.textPrimary }]} numberOfLines={2}>
                 {achievement.name}
               </Text>
-              <Text style={[styles.achievementDescription, { color: themeColors.textSecondary }]} numberOfLines={2}>
+              <Text style={[styles.achievementGridDescription, { color: themeColors.textSecondary }]} numberOfLines={2}>
                 {achievement.description}
               </Text>
               <View style={styles.progressContainer}>
@@ -182,22 +183,22 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
           ))}
 
           {/* Locked Achievements */}
-          {lockedAchievements.slice(0, 3).map((achievement) => (
+          {lockedAchievements.slice(0, 4).map((achievement) => (
             <TouchableOpacity
               key={achievement.id}
-              style={[styles.achievementCard, { backgroundColor: themeColors.background, borderColor: themeColors.border, opacity: 0.6 }]}
+              style={[styles.achievementGridCard, { backgroundColor: themeColors.background, borderColor: themeColors.border, opacity: 0.6 }]}
               onPress={() => onAchievementPress && onAchievementPress(achievement.id)}
             >
               <Icon name="lock" size={24} color={themeColors.textSecondary} />
-              <Text style={[styles.achievementName, { color: themeColors.textSecondary }]} numberOfLines={2}>
+              <Text style={[styles.achievementGridName, { color: themeColors.textSecondary }]} numberOfLines={2}>
                 ???
               </Text>
-              <Text style={[styles.achievementDescription, { color: themeColors.textSecondary }]} numberOfLines={2}>
+              <Text style={[styles.achievementGridDescription, { color: themeColors.textSecondary }]} numberOfLines={2}>
                 Complete more sessions to unlock
               </Text>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
       </View>
     );
   };
@@ -312,32 +313,41 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {renderStatsCard()}
+    <>
+      <HorizontalSeparator marginVertical={0} height={4} />
       {renderAchievements()}
-      {renderRecentActivity()}
-      {renderMilestones()}
-    </ScrollView>
+      {renderRecentActivity() && (
+        <>
+          <HorizontalSeparator marginVertical={0} height={4} />
+          {renderRecentActivity()}
+        </>
+      )}
+      {renderMilestones() && (
+        <>
+          <HorizontalSeparator marginVertical={0} height={4} />
+          {renderMilestones()}
+        </>
+      )}
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 16,
   },
   card: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 0,
+    padding: 20,
+    marginBottom: 0,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -405,6 +415,38 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
+  achievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  achievementGridCard: {
+    width: '48%',
+    padding: 8,
+    borderRadius: 12,
+    borderWidth: 2,
+    marginBottom: 12,
+    alignItems: 'flex-start',
+    position: 'relative',
+    minHeight: 100,
+  },
+  achievementGridName: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'left',
+    marginTop: 6,
+    marginBottom: 2,
+    lineHeight: 14,
+  },
+  achievementGridDescription: {
+    fontSize: 10,
+    textAlign: 'left',
+    marginBottom: 4,
+    flex: 1,
+    lineHeight: 12,
+  },
+  // Legacy styles for backward compatibility
   achievementsScroll: {
     marginTop: 8,
   },
@@ -431,30 +473,32 @@ const styles = StyleSheet.create({
   },
   unlockedBadge: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    top: 6,
+    right: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   progressContainer: {
     width: '100%',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginTop: 4,
   },
   progressBar: {
     width: '100%',
-    height: 4,
+    height: 3,
     borderRadius: 2,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   progressFill: {
     height: '100%',
     borderRadius: 2,
   },
   progressText: {
-    fontSize: 10,
+    fontSize: 9,
+    alignSelf: 'flex-start',
   },
   activityItem: {
     flexDirection: 'row',
