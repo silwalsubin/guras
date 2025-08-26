@@ -7,6 +7,10 @@ import {
   ScrollView,
   Modal,
   SafeAreaView,
+  Animated,
+  Easing,
+  Platform,
+  Vibration,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -20,6 +24,21 @@ interface DurationSelectorProps {
   onDurationSelect: (minutes: number) => void;
   disabled?: boolean;
 }
+
+// Haptic feedback helper
+const triggerHapticFeedback = () => {
+  try {
+    if (Platform.OS === 'ios') {
+      // Light vibration for iOS selection feedback
+      Vibration.vibrate(10);
+    } else if (Platform.OS === 'android') {
+      // Short vibration for Android
+      Vibration.vibrate(50);
+    }
+  } catch (error) {
+    // Silently fail if vibration not available
+  }
+};
 
 // Wheel Picker Component
 interface WheelPickerProps {
@@ -44,17 +63,48 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
   const visibleItems = 5; // Show 5 items at a time (2 above + 1 selected + 2 below)
   const containerHeight = itemHeight * visibleItems;
 
+  // Animation values for smooth transitions
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const highlightAnim = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
+    // Entrance animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.timing(highlightAnim, {
+        toValue: 1,
+        duration: 400,
+        delay: 100,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+    ]).start();
+
     // Scroll to selected value on mount
     const index = data.indexOf(selectedValue);
     if (index !== -1 && scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({
-        y: index * itemHeight,
-        animated: false,
-      });
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({
+          y: index * itemHeight,
+          animated: true,
+        });
+      }, 100);
     }
   }, [selectedValue, data]);
 
+  // Continuous scroll handler for immediate visual feedback
   const handleScroll = (event: any) => {
     const y = event.nativeEvent.contentOffset.y;
     const index = Math.round(y / itemHeight);
@@ -64,32 +114,93 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
     }
   };
 
+  // Momentum end handler for haptic feedback and final animations
+  const handleMomentumScrollEnd = (event: any) => {
+    const y = event.nativeEvent.contentOffset.y;
+    const index = Math.round(y / itemHeight);
+    const value = data[index];
+    if (value !== undefined) {
+      // Trigger haptic feedback on final selection
+      triggerHapticFeedback();
+
+      // Animate highlight pulse for final selection
+      Animated.sequence([
+        Animated.timing(highlightAnim, {
+          toValue: 0.8,
+          duration: 80,
+          useNativeDriver: false,
+        }),
+        Animated.timing(highlightAnim, {
+          toValue: 1,
+          duration: 120,
+          useNativeDriver: false,
+        }),
+      ]).start();
+
+      // Ensure final value is set
+      if (value !== selectedValue) {
+        onValueChange(value);
+      }
+    }
+  };
+
   const getItemOpacity = (item: number, index: number) => {
     const selectedIndex = data.indexOf(selectedValue);
     const distance = Math.abs(index - selectedIndex);
     if (distance === 0) return 1;
-    if (distance === 1) return 0.6;
-    if (distance === 2) return 0.3;
-    return 0.1;
+    if (distance === 1) return 0.7;
+    if (distance === 2) return 0.4;
+    return 0.15;
   };
 
   const getItemScale = (item: number, index: number) => {
     const selectedIndex = data.indexOf(selectedValue);
     const distance = Math.abs(index - selectedIndex);
-    if (distance === 0) return 1;
-    if (distance === 1) return 0.8;
-    return 0.6;
+    if (distance === 0) return 1.1;
+    if (distance === 1) return 0.9;
+    return 0.7;
+  };
+
+  const getItemFontWeight = (item: number, index: number) => {
+    const selectedIndex = data.indexOf(selectedValue);
+    const distance = Math.abs(index - selectedIndex);
+    if (distance === 0) return '700';
+    if (distance === 1) return '500';
+    return '400';
   };
 
   return (
-    <View style={styles.wheelContainer}>
-      {/* Selection highlight background - full screen width */}
-      <View style={[
+    <Animated.View
+      style={[
+        styles.wheelContainer,
+        {
+          opacity: fadeAnim,
+          transform: [{ scale: scaleAnim }],
+        }
+      ]}
+    >
+      {/* Selection highlight background with animation */}
+      <Animated.View style={[
         styles.wheelSelectionHighlight,
         {
-          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+          backgroundColor: highlightAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [
+              isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)'
+            ],
+          }),
           top: itemHeight * 2,
           height: itemHeight,
+          borderRadius: 12,
+          shadowColor: isDarkMode ? '#fff' : '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: highlightAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 0.1],
+          }),
+          shadowRadius: 4,
+          elevation: 2,
         }
       ]} />
 
@@ -99,29 +210,49 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
         showsVerticalScrollIndicator={false}
         snapToInterval={itemHeight}
         decelerationRate="fast"
-        onMomentumScrollEnd={handleScroll}
+        onScroll={handleScroll}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        scrollEventThrottle={16}
         contentContainerStyle={{
           paddingVertical: itemHeight * 2,
         }}
       >
-        {data.map((item, index) => (
-          <View key={index} style={[styles.wheelItem, { height: itemHeight }]}>
-            <Text
+        {data.map((item, index) => {
+          const isSelected = item === selectedValue;
+          return (
+            <Animated.View
+              key={index}
               style={[
-                styles.wheelItemText,
+                styles.wheelItem,
                 {
-                  color: themeColors.textPrimary,
-                  opacity: getItemOpacity(item, index),
-                  fontSize: 24,
-                  fontWeight: item === selectedValue ? '600' : '400',
+                  height: itemHeight,
                   transform: [{ scale: getItemScale(item, index) }],
                 }
               ]}
             >
-              {item} min
-            </Text>
-          </View>
-        ))}
+              <Animated.Text
+                style={[
+                  styles.wheelItemText,
+                  {
+                    color: isSelected
+                      ? (isDarkMode ? '#fff' : '#000')
+                      : themeColors.textPrimary,
+                    opacity: getItemOpacity(item, index),
+                    fontSize: isSelected ? 26 : 22,
+                    fontWeight: getItemFontWeight(item, index),
+                    textShadowColor: isSelected
+                      ? (isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)')
+                      : 'transparent',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: isSelected ? 2 : 0,
+                  }
+                ]}
+              >
+                {item} min
+              </Animated.Text>
+            </Animated.View>
+          );
+        })}
       </ScrollView>
       <Text
         style={[styles.wheelLabel, { color: themeColors.textPrimary }]}
@@ -129,7 +260,7 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
       >
         {label}
       </Text>
-    </View>
+    </Animated.View>
   );
 };
 
@@ -145,25 +276,74 @@ const DurationSelector: React.FC<DurationSelectorProps> = ({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentDuration, setCurrentDuration] = useState(selectedDuration);
 
+  // Animation values for button interactions
+  const buttonScale = useRef(new Animated.Value(1)).current;
+  const confirmButtonScale = useRef(new Animated.Value(1)).current;
+
+  const handleButtonPressIn = () => {
+    Animated.spring(buttonScale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleButtonPressOut = () => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleConfirmPressIn = () => {
+    Animated.spring(confirmButtonScale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleConfirmPressOut = () => {
+    Animated.spring(confirmButtonScale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleModalOpen = () => {
+    if (!disabled) {
+      triggerHapticFeedback();
+      setIsModalVisible(true);
+    }
+  };
+
   const handleDurationConfirm = () => {
+    triggerHapticFeedback();
     onDurationSelect(currentDuration);
     setIsModalVisible(false);
   };
 
   return (
     <>
-      <TouchableOpacity
-        style={[
-          styles.selectorButton,
-          {
-            backgroundColor: themeColors.cardBackground,
-            borderColor: themeColors.border,
-            opacity: disabled ? 0.6 : 1,
-          }
-        ]}
-        onPress={() => !disabled && setIsModalVisible(true)}
-        disabled={disabled}
-      >
+      <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+        <TouchableOpacity
+          style={[
+            styles.selectorButton,
+            {
+              backgroundColor: themeColors.cardBackground,
+              borderColor: themeColors.border,
+              opacity: disabled ? 0.6 : 1,
+              shadowColor: isDarkMode ? '#fff' : '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 3,
+            }
+          ]}
+          onPress={handleModalOpen}
+          onPressIn={handleButtonPressIn}
+          onPressOut={handleButtonPressOut}
+          disabled={disabled}
+          activeOpacity={0.8}
+        >
         <View style={styles.selectorContent}>
           <Icon
             name="clock-o"
@@ -185,13 +365,15 @@ const DurationSelector: React.FC<DurationSelectorProps> = ({
             color={themeColors.textSecondary}
           />
         </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </Animated.View>
 
       <Modal
         visible={isModalVisible}
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => setIsModalVisible(false)}
+        statusBarTranslucent={true}
       >
         <SafeAreaView style={[styles.modalContainer, { backgroundColor: themeColors.background }]}>
           {/* Header */}
@@ -219,12 +401,29 @@ const DurationSelector: React.FC<DurationSelectorProps> = ({
             />
 
             {/* Confirm Button */}
-            <TouchableOpacity
-              style={[styles.confirmButton, { backgroundColor: brandColors.primary }]}
-              onPress={handleDurationConfirm}
-            >
-              <Text style={styles.confirmButtonText}>Select Duration</Text>
-            </TouchableOpacity>
+            <Animated.View style={{ transform: [{ scale: confirmButtonScale }] }}>
+              <TouchableOpacity
+                style={[
+                  styles.confirmButton,
+                  {
+                    backgroundColor: brandColors.primary,
+                    shadowColor: brandColors.primary,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                    elevation: 6,
+                  }
+                ]}
+                onPress={handleDurationConfirm}
+                onPressIn={handleConfirmPressIn}
+                onPressOut={handleConfirmPressOut}
+                activeOpacity={0.9}
+              >
+                <Text style={styles.confirmButtonText}>
+                  Select Duration
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </SafeAreaView>
       </Modal>
@@ -276,9 +475,9 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
     alignItems: 'center',
     marginTop: 32,
     marginHorizontal: 20,
