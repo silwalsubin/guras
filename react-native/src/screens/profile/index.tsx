@@ -15,7 +15,7 @@ import { RootState } from '@/store';
 import { setDarkMode } from '@/store/themeSlice';
 import { getThemeColors, getBrandColors, COLORS, colorUtils } from '@/config/colors';
 import { RefreshUtils } from '@/utils/refreshUtils';
-import { ProfileAvatar } from '@/components/shared';
+import { ProfileAvatar, AchievementBadge } from '@/components/shared';
 import NotificationSettings from './components/NotificationSettings';
 import SignOutButton from './components/SignOutButton';
 import quotesService from '@/services/quotesService';
@@ -31,12 +31,65 @@ const ProfileScreen: React.FC = () => {
   const brandColors = getBrandColors();
   
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>({
     enabled: true,
     frequency: 'daily',
     quietHours: { start: '22:00', end: '08:00' }
   });
+
+  // Mock achievements data
+  const mockAchievements = [
+    {
+      id: 1,
+      name: 'First Steps',
+      description: 'Complete your first meditation session',
+      earned: true,
+      icon: 'star',
+    },
+    {
+      id: 2,
+      name: 'Week Warrior',
+      description: 'Meditate for 7 consecutive days',
+      earned: true,
+      icon: 'fire',
+    },
+    {
+      id: 3,
+      name: 'Mindful Minutes',
+      description: 'Complete 100 minutes of meditation',
+      earned: true,
+      icon: 'clock-o',
+    },
+    {
+      id: 4,
+      name: 'Consistency Champion',
+      description: 'Maintain a 30-day meditation streak',
+      earned: false,
+      icon: 'trophy',
+      progress: 21,
+      target: 30,
+    },
+    {
+      id: 5,
+      name: 'Zen Master',
+      description: 'Complete 1000 minutes of meditation',
+      earned: false,
+      icon: 'diamond',
+      progress: 892,
+      target: 1000,
+    },
+    {
+      id: 6,
+      name: 'Early Bird',
+      description: 'Complete 10 morning meditation sessions',
+      earned: false,
+      icon: 'sun-o',
+      progress: 3,
+      target: 10,
+    },
+  ];
 
   useEffect(() => {
     loadNotificationPreferences();
@@ -215,21 +268,51 @@ const ProfileScreen: React.FC = () => {
         </View>
       )}
 
+
+
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
-          About
+          Achievements
         </Text>
-        
-        <View style={styles.aboutItem}>
-          <Text style={[styles.aboutLabel, { color: themeColors.textPrimary }]}>App Version</Text>
-          <Text style={[styles.aboutValue, { color: themeColors.textSecondary }]}>1.0.0</Text>
-        </View>
-        
-        <View style={styles.aboutItem}>
-          <Text style={[styles.aboutLabel, { color: themeColors.textPrimary }]}>Build</Text>
-          <Text style={[styles.aboutValue, { color: themeColors.textSecondary }]}>2024.1</Text>
+
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
+              Meditation Achievements
+            </Text>
+            <Text style={[styles.settingDescription, { color: themeColors.textSecondary }]}>
+              View your earned badges and track progress toward new milestones
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.settingsButton, { backgroundColor: brandColors.primary }]}
+            onPress={() => setShowAchievements(!showAchievements)}
+          >
+            <Text style={styles.settingsButtonText}>
+              {showAchievements ? 'Hide' : 'View'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
+
+      {showAchievements && (
+        <View style={styles.achievementsContainer}>
+          <Text style={[styles.achievementsTitle, { color: themeColors.textPrimary }]}>
+            Your Achievements
+          </Text>
+          {mockAchievements.map((achievement) => (
+            <AchievementBadge
+              key={achievement.id}
+              achievement={achievement}
+              onPress={() => {
+                console.log('Achievement pressed:', achievement.name);
+              }}
+            />
+          ))}
+        </View>
+      )}
+
+
 
       {/* Account Section */}
       <View style={styles.section}>
@@ -377,22 +460,18 @@ const styles = StyleSheet.create({
     backgroundColor: colorUtils.withOpacity(COLORS.GRAY_500, 0.03),
     borderRadius: 12,
   },
-  aboutItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+
+
+  achievementsContainer: {
     backgroundColor: colorUtils.withOpacity(COLORS.GRAY_500, 0.05),
-    borderRadius: 8,
-    marginBottom: 8,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
   },
-  aboutLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  aboutValue: {
-    fontSize: 14,
+  achievementsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
   },
   // Add bottom padding to account for the footer
   bottomPadding: {

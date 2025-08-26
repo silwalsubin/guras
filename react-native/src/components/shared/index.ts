@@ -23,6 +23,9 @@ export { default as DownloadButton } from './DownloadButton';
 // Meditation Components
 export { default as MeditationTimer } from './MeditationTimer';
 export { default as MeditationMusicSelector } from './MeditationMusicSelector';
+export { default as MoodTracker } from './MoodTracker';
+export { default as ProgressChart } from './ProgressChart';
+export { default as AchievementBadge } from './AchievementBadge';
 
 // Export ProgressData type for external use
 export type { ProgressData } from './cards/ProgressCard'; 
