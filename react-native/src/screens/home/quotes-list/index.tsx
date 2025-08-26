@@ -109,8 +109,9 @@ const QuotesView: React.FC = () => {
     <View style={styles.container}>
       {quotes.map((quote, index) => (
         <View key={`${quote.text}-${quote.author}`}>
+          {index === 0 && <HorizontalSeparator marginVertical={0} height={4} />}
           <Quote quote={quote} />
-          {index < quotes.length - 1 && <HorizontalSeparator />}
+          {index < quotes.length - 1 && <HorizontalSeparator marginVertical={0} height={4} />}
         </View>
       ))}
     </View>

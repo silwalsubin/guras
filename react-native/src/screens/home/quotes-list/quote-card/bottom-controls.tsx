@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 16,
-    marginBottom: 0,
+    marginBottom: 16,
     gap: 16,
   },
 });

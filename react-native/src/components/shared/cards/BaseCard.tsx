@@ -34,7 +34,7 @@ const BaseCard: React.FC<BaseCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
+    borderRadius: 0,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -43,8 +43,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 0,
   },
 });
 
