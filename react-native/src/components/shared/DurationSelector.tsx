@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Easing,
   Platform,
   Vibration,
+  TextInput,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -40,228 +41,253 @@ const triggerHapticFeedback = () => {
   }
 };
 
-// Wheel Picker Component
-interface WheelPickerProps {
-  data: number[];
+// Popular meditation durations organized by category
+const getDurationCategories = () => {
+  return {
+    quick: [3, 5, 7, 10],
+    standard: [15, 20, 25, 30],
+    extended: [45, 60, 90, 120]
+  };
+};
+
+// Duration Grid Component
+interface DurationGridProps {
   selectedValue: number;
   onValueChange: (value: number) => void;
-  label: string;
+  onClose?: () => void;
   isDarkMode: boolean;
   themeColors: any;
+  brandColors: any;
 }
 
-const WheelPicker: React.FC<WheelPickerProps> = ({
-  data,
+const DurationGrid: React.FC<DurationGridProps> = ({
   selectedValue,
   onValueChange,
-  label,
+  onClose,
   isDarkMode,
   themeColors,
+  brandColors,
 }) => {
-  const scrollViewRef = useRef<ScrollView>(null);
-  const itemHeight = 44;
-  const visibleItems = 5; // Show 5 items at a time (2 above + 1 selected + 2 below)
-  const containerHeight = itemHeight * visibleItems;
+  const categories = getDurationCategories();
+  const [customDuration, setCustomDuration] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
 
-  // Animation values for smooth transitions
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
-  const highlightAnim = useRef(new Animated.Value(0)).current;
+  // Animation values for button interactions
+  const buttonAnimations = useRef<{ [key: number]: Animated.Value }>({}).current;
 
-  useEffect(() => {
-    // Entrance animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        easing: Easing.out(Easing.cubic),
+  // Initialize button animations
+  const getButtonAnimation = (duration: number) => {
+    if (!buttonAnimations[duration]) {
+      buttonAnimations[duration] = new Animated.Value(1);
+    }
+    return buttonAnimations[duration];
+  };
+
+  const handleButtonPress = (duration: number) => {
+    triggerHapticFeedback();
+
+    // Animate button press
+    const animation = getButtonAnimation(duration);
+    Animated.sequence([
+      Animated.timing(animation, {
+        toValue: 0.95,
+        duration: 100,
         useNativeDriver: true,
       }),
-      Animated.spring(scaleAnim, {
+      Animated.timing(animation, {
         toValue: 1,
-        tension: 100,
-        friction: 8,
+        duration: 150,
         useNativeDriver: true,
-      }),
-      Animated.timing(highlightAnim, {
-        toValue: 1,
-        duration: 400,
-        delay: 100,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
       }),
     ]).start();
 
-    // Scroll to selected value on mount
-    const index = data.indexOf(selectedValue);
-    if (index !== -1 && scrollViewRef.current) {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({
-          y: index * itemHeight,
-          animated: true,
-        });
-      }, 100);
-    }
-  }, [selectedValue, data]);
-
-  // Continuous scroll handler for immediate visual feedback
-  const handleScroll = (event: any) => {
-    const y = event.nativeEvent.contentOffset.y;
-    const index = Math.round(y / itemHeight);
-    const value = data[index];
-    if (value !== undefined && value !== selectedValue) {
-      onValueChange(value);
+    // Immediately select the duration and close modal
+    onValueChange(duration);
+    if (onClose) {
+      onClose();
     }
   };
 
-  // Momentum end handler for haptic feedback and final animations
-  const handleMomentumScrollEnd = (event: any) => {
-    const y = event.nativeEvent.contentOffset.y;
-    const index = Math.round(y / itemHeight);
-    const value = data[index];
-    if (value !== undefined) {
-      // Trigger haptic feedback on final selection
-      triggerHapticFeedback();
-
-      // Animate highlight pulse for final selection
-      Animated.sequence([
-        Animated.timing(highlightAnim, {
-          toValue: 0.8,
-          duration: 80,
-          useNativeDriver: false,
-        }),
-        Animated.timing(highlightAnim, {
-          toValue: 1,
-          duration: 120,
-          useNativeDriver: false,
-        }),
-      ]).start();
-
-      // Ensure final value is set
-      if (value !== selectedValue) {
-        onValueChange(value);
-      }
+  const handleCustomSubmit = () => {
+    const duration = parseInt(customDuration);
+    if (duration && duration > 0 && duration <= 999) {
+      handleButtonPress(duration);
+      setShowCustomInput(false);
+      setCustomDuration('');
     }
   };
 
-  const getItemOpacity = (item: number, index: number) => {
-    const selectedIndex = data.indexOf(selectedValue);
-    const distance = Math.abs(index - selectedIndex);
-    if (distance === 0) return 1;
-    if (distance === 1) return 0.7;
-    if (distance === 2) return 0.4;
-    return 0.15;
+  const handleRemoveCustomDuration = (duration: number) => {
+    triggerHapticFeedback();
+
+    // If the custom duration being removed is currently selected,
+    // switch to a default duration (10 minutes)
+    if (duration === selectedValue) {
+      onValueChange(10);
+    }
   };
 
-  const getItemScale = (item: number, index: number) => {
-    const selectedIndex = data.indexOf(selectedValue);
-    const distance = Math.abs(index - selectedIndex);
-    if (distance === 0) return 1.1;
-    if (distance === 1) return 0.9;
-    return 0.7;
+  const renderDurationButton = (duration: number, isCustom = false) => {
+    const isSelected = duration === selectedValue;
+    const animation = getButtonAnimation(duration);
+
+    return (
+      <Animated.View
+        key={duration}
+        style={[
+          styles.durationButton,
+          {
+            backgroundColor: isSelected ? brandColors.primary : themeColors.cardBackground,
+            borderColor: isSelected ? brandColors.primary : themeColors.border,
+            transform: [{ scale: animation }],
+          }
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.durationButtonInner}
+          onPress={() => handleButtonPress(duration)}
+          activeOpacity={0.8}
+        >
+          <Text style={[
+            styles.durationButtonText,
+            {
+              color: isSelected ? 'white' : themeColors.textPrimary,
+              fontWeight: isSelected ? '600' : '500',
+            }
+          ]}>
+            {duration}
+          </Text>
+          <Text style={[
+            styles.durationButtonLabel,
+            {
+              color: isSelected ? 'rgba(255,255,255,0.8)' : themeColors.textSecondary,
+            }
+          ]}>
+            min{duration !== 1 ? 's' : ''}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Remove button for custom durations */}
+        {isCustom && (
+          <TouchableOpacity
+            style={[
+              styles.removeButton,
+              { backgroundColor: isSelected ? 'rgba(255,255,255,0.9)' : '#ff4444' }
+            ]}
+            onPress={() => handleRemoveCustomDuration(duration)}
+            activeOpacity={0.7}
+          >
+            <Icon
+              name="times"
+              size={14}
+              color={isSelected ? brandColors.primary : 'white'}
+            />
+          </TouchableOpacity>
+        )}
+      </Animated.View>
+    );
   };
 
-  const getItemFontWeight = (item: number, index: number) => {
-    const selectedIndex = data.indexOf(selectedValue);
-    const distance = Math.abs(index - selectedIndex);
-    if (distance === 0) return '700';
-    if (distance === 1) return '500';
-    return '400';
-  };
+  const renderCategorySection = (title: string, durations: number[]) => (
+    <View key={title} style={styles.categorySection}>
+      <Text style={[styles.categoryTitle, { color: themeColors.textSecondary }]}>
+        {title}
+      </Text>
+      <View style={styles.durationGrid}>
+        {durations.map(duration => renderDurationButton(duration))}
+      </View>
+    </View>
+  );
+
+  // Check if current selection is a custom duration
+  const allStandardDurations = [
+    ...categories.quick,
+    ...categories.standard,
+    ...categories.extended
+  ];
+  const isCustomDuration = !allStandardDurations.includes(selectedValue);
 
   return (
-    <Animated.View
-      style={[
-        styles.wheelContainer,
-        {
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-        }
-      ]}
-    >
-      {/* Selection highlight background with animation */}
-      <Animated.View style={[
-        styles.wheelSelectionHighlight,
-        {
-          backgroundColor: highlightAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [
-              isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-              isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)'
-            ],
-          }),
-          top: itemHeight * 2,
-          height: itemHeight,
-          borderRadius: 12,
-          shadowColor: isDarkMode ? '#fff' : '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: highlightAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 0.1],
-          }),
-          shadowRadius: 4,
-          elevation: 2,
-        }
-      ]} />
+    <ScrollView style={styles.durationContainer} showsVerticalScrollIndicator={false}>
+      {/* Quick Sessions */}
+      {renderCategorySection('Quick Sessions', categories.quick)}
 
-      <ScrollView
-        ref={scrollViewRef}
-        style={[styles.wheelScrollView, { height: containerHeight }]}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={itemHeight}
-        decelerationRate="fast"
-        onScroll={handleScroll}
-        onMomentumScrollEnd={handleMomentumScrollEnd}
-        scrollEventThrottle={16}
-        contentContainerStyle={{
-          paddingVertical: itemHeight * 2,
-        }}
-      >
-        {data.map((item, index) => {
-          const isSelected = item === selectedValue;
-          return (
-            <Animated.View
-              key={index}
-              style={[
-                styles.wheelItem,
-                {
-                  height: itemHeight,
-                  transform: [{ scale: getItemScale(item, index) }],
-                }
-              ]}
-            >
-              <Animated.Text
-                style={[
-                  styles.wheelItemText,
-                  {
-                    color: isSelected
-                      ? (isDarkMode ? '#fff' : '#000')
-                      : themeColors.textPrimary,
-                    opacity: getItemOpacity(item, index),
-                    fontSize: isSelected ? 26 : 22,
-                    fontWeight: getItemFontWeight(item, index),
-                    textShadowColor: isSelected
-                      ? (isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)')
-                      : 'transparent',
-                    textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: isSelected ? 2 : 0,
-                  }
-                ]}
+      {/* Standard Sessions */}
+      {renderCategorySection('Standard Sessions', categories.standard)}
+
+      {/* Extended Sessions */}
+      {renderCategorySection('Extended Sessions', categories.extended)}
+
+      {/* Custom Duration Section */}
+      <View style={styles.categorySection}>
+        <Text style={[styles.categoryTitle, { color: themeColors.textSecondary }]}>
+          Custom Duration
+        </Text>
+
+        {isCustomDuration && renderDurationButton(selectedValue, true)}
+
+        {!showCustomInput ? (
+          <TouchableOpacity
+            style={[
+              styles.customButton,
+              {
+                backgroundColor: themeColors.cardBackground,
+                borderColor: themeColors.border,
+              }
+            ]}
+            onPress={() => setShowCustomInput(true)}
+          >
+            <Icon name="plus" size={16} color={brandColors.primary} />
+            <Text style={[styles.customButtonText, { color: themeColors.textPrimary }]}>
+              Add Custom Duration
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.customInputContainer}>
+            <View style={[
+              styles.customInput,
+              {
+                backgroundColor: themeColors.cardBackground,
+                borderColor: themeColors.border,
+              }
+            ]}>
+              <TextInput
+                style={[styles.customInputText, { color: themeColors.textPrimary }]}
+                value={customDuration}
+                onChangeText={setCustomDuration}
+                placeholder="Enter minutes"
+                placeholderTextColor={themeColors.textSecondary}
+                keyboardType="numeric"
+                maxLength={3}
+                autoFocus
+                onSubmitEditing={handleCustomSubmit}
+              />
+              <TouchableOpacity
+                style={[styles.customSubmitButton, { backgroundColor: brandColors.primary }]}
+                onPress={handleCustomSubmit}
               >
-                {item} min
-              </Animated.Text>
-            </Animated.View>
-          );
-        })}
-      </ScrollView>
-      <Text
-        style={[styles.wheelLabel, { color: themeColors.textPrimary }]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
-    </Animated.View>
+                <Icon name="check" size={16} color="white" />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={styles.customCancelButton}
+              onPress={() => {
+                setShowCustomInput(false);
+                setCustomDuration('');
+              }}
+            >
+              <Text style={[styles.customCancelText, { color: themeColors.textSecondary }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </ScrollView>
   );
+
+
+
 };
 
 const DurationSelector: React.FC<DurationSelectorProps> = ({
@@ -278,7 +304,11 @@ const DurationSelector: React.FC<DurationSelectorProps> = ({
 
   // Animation values for button interactions
   const buttonScale = useRef(new Animated.Value(1)).current;
-  const confirmButtonScale = useRef(new Animated.Value(1)).current;
+
+  // Update currentDuration when selectedDuration changes
+  useEffect(() => {
+    setCurrentDuration(selectedDuration);
+  }, [selectedDuration]);
 
   const handleButtonPressIn = () => {
     Animated.spring(buttonScale, {
@@ -294,31 +324,11 @@ const DurationSelector: React.FC<DurationSelectorProps> = ({
     }).start();
   };
 
-  const handleConfirmPressIn = () => {
-    Animated.spring(confirmButtonScale, {
-      toValue: 0.95,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handleConfirmPressOut = () => {
-    Animated.spring(confirmButtonScale, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
-
   const handleModalOpen = () => {
     if (!disabled) {
       triggerHapticFeedback();
       setIsModalVisible(true);
     }
-  };
-
-  const handleDurationConfirm = () => {
-    triggerHapticFeedback();
-    onDurationSelect(currentDuration);
-    setIsModalVisible(false);
   };
 
   return (
@@ -389,41 +399,20 @@ const DurationSelector: React.FC<DurationSelectorProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Duration Picker */}
+          {/* Duration Grid */}
           <View style={styles.pickerContainer}>
-            <WheelPicker
-              data={Array.from({ length: 60 }, (_, i) => i + 1)} // 1-60 minutes
+            <DurationGrid
               selectedValue={currentDuration}
-              onValueChange={setCurrentDuration}
-              label=""
+              onValueChange={(duration) => {
+                setCurrentDuration(duration);
+                onDurationSelect(duration);
+                setIsModalVisible(false);
+              }}
+              onClose={() => setIsModalVisible(false)}
               isDarkMode={isDarkMode}
               themeColors={themeColors}
+              brandColors={brandColors}
             />
-
-            {/* Confirm Button */}
-            <Animated.View style={{ transform: [{ scale: confirmButtonScale }] }}>
-              <TouchableOpacity
-                style={[
-                  styles.confirmButton,
-                  {
-                    backgroundColor: brandColors.primary,
-                    shadowColor: brandColors.primary,
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 6,
-                  }
-                ]}
-                onPress={handleDurationConfirm}
-                onPressIn={handleConfirmPressIn}
-                onPressOut={handleConfirmPressOut}
-                activeOpacity={0.9}
-              >
-                <Text style={styles.confirmButtonText}>
-                  Select Duration
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
           </View>
         </SafeAreaView>
       </Modal>
@@ -458,7 +447,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 24,
+    paddingBottom: 16,
     borderBottomWidth: 1,
   },
   modalTitle: {
@@ -470,57 +460,114 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
-  confirmButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+
+  // Duration Grid Styles
+  durationContainer: {
+    flex: 1,
+  },
+  categorySection: {
+    marginBottom: 24,
+  },
+  categoryTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  durationGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  durationButton: {
+    borderRadius: 12,
+    borderWidth: 2,
+    width: 80,
+    height: 80,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    position: 'relative',
+  },
+  durationButtonInner: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 32,
-    marginHorizontal: 20,
-  },
-  confirmButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  wheelContainer: {
-    height: 220, // Fixed height for exactly 5 items (44 * 5)
-    position: 'relative',
-    alignSelf: 'center',
-    width: '100%',
-  },
-  wheelScrollView: {
-    height: 220, // Match container height exactly
-  },
-  wheelSelectionHighlight: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 1,
-    pointerEvents: 'none',
-    borderRadius: 8,
-  },
-  wheelItem: {
     justifyContent: 'center',
-    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  wheelItemText: {
-    textAlign: 'center',
-    fontFamily: 'System',
-  },
-  wheelLabel: {
-    position: 'absolute',
-    bottom: -40,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 16,
+  durationButtonText: {
+    fontSize: 18,
     fontWeight: '600',
-    opacity: 0.7,
+    marginBottom: 2,
+  },
+  durationButtonLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  customButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    marginTop: 16,
+  },
+  customButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  customInputContainer: {
+    gap: 12,
+  },
+  customInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 2,
+    overflow: 'hidden',
+  },
+  customInputText: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  customSubmitButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customCancelButton: {
+    alignSelf: 'flex-start',
+  },
+  customCancelText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 
