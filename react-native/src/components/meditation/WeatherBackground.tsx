@@ -11,7 +11,7 @@ import { getThemeColors } from '@/config/colors';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
 
 interface WeatherData {
   condition: 'sunny' | 'cloudy' | 'rainy' | 'foggy' | 'clear';
@@ -229,12 +229,13 @@ const WeatherBackground: React.FC<WeatherBackgroundProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 0,
+    top: -100, // Extend well above the status bar
     left: 0,
     right: 0,
     bottom: 0,
     width: screenWidth,
-    height: screenHeight,
+    height: screenHeight + 100, // Add extra height to cover status bar
+    zIndex: -1, // Ensure it stays behind content
   },
   video: {
     position: 'absolute',
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: screenWidth,
-    height: screenHeight,
+    height: screenHeight + 100, // Add extra height to cover status bar
   },
   gradientFallback: {
     flex: 1,
@@ -256,6 +257,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    width: screenWidth,
+    height: screenHeight + 100,
   },
   overlay: {
     position: 'absolute',
@@ -263,6 +266,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    width: screenWidth,
+    height: screenHeight + 100,
   },
   weatherInfo: {
     position: 'absolute',
