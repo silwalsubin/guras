@@ -446,37 +446,49 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
 
       {/* Duration and Music Selection */}
       {!isActive && (
-        <View style={styles.timerSelection}>
-          {/* Duration Selector */}
-          <DurationSelector
-            selectedDuration={minutes}
-            onDurationSelect={(selectedMinutes) => setMinutes(selectedMinutes)}
-            disabled={false}
-          />
-
-          {/* Music Selection */}
-          <View style={styles.musicSelectionContainer}>
-            <MeditationMusicSelector
-              selectedTrack={selectedMeditationTrack}
-              onTrackSelect={setSelectedMeditationTrack}
+        <View style={[
+          styles.controlsCard,
+          {
+            backgroundColor: isDarkMode
+              ? 'rgba(0, 0, 0, 0.7)'
+              : 'rgba(255, 255, 255, 0.8)',
+            borderColor: isDarkMode
+              ? 'rgba(255, 255, 255, 0.15)'
+              : 'rgba(0, 0, 0, 0.1)',
+          }
+        ]}>
+          <View style={styles.timerSelection}>
+            {/* Duration Selector */}
+            <DurationSelector
+              selectedDuration={minutes}
+              onDurationSelect={(selectedMinutes) => setMinutes(selectedMinutes)}
               disabled={false}
             />
-          </View>
 
-          {/* Start Button */}
-          <View style={styles.startButtonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.circularStartButton,
-                {
-                  backgroundColor: brandColors.primary,
-                  shadowColor: brandColors.primary,
-                }
-              ]}
-              onPress={handleStartTimer}
-            >
-              <Text style={styles.startButtonText}>Start</Text>
-            </TouchableOpacity>
+            {/* Music Selection */}
+            <View style={styles.musicSelectionContainer}>
+              <MeditationMusicSelector
+                selectedTrack={selectedMeditationTrack}
+                onTrackSelect={setSelectedMeditationTrack}
+                disabled={false}
+              />
+            </View>
+
+            {/* Start Button */}
+            <View style={styles.startButtonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.circularStartButton,
+                  {
+                    backgroundColor: brandColors.primary,
+                    shadowColor: brandColors.primary,
+                  }
+                ]}
+                onPress={handleStartTimer}
+              >
+                <Text style={styles.startButtonText}>Start</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       )}
@@ -546,6 +558,22 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 24,
     paddingVertical: 16,
+  },
+  controlsCard: {
+    width: '100%',
+    alignSelf: 'center',
+    marginVertical: 20,
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   fullScreenContainer: {
     flex: 1,
@@ -737,6 +765,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   startButtonText: {
+    color: 'white',
     fontSize: 18,
     fontWeight: '700',
     marginLeft: 8,
@@ -816,11 +845,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
-  },
-  startButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
   },
 });
 

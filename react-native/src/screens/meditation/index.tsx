@@ -22,6 +22,7 @@ import {
   HorizontalSeparator,
 } from '@/components/shared';
 import GuidedProgressDashboard from '@/components/meditation/GuidedProgressDashboard';
+import VideoBackground from '@/components/meditation/VideoBackground';
 
 // Enhanced mock data for comprehensive meditation tracking
 const mockData = {
@@ -700,6 +701,9 @@ const MeditationScreen: React.FC = () => {
 
         {/* Now Section */}
         <View style={[styles.slideContainer, { width: screenWidth }]}>
+          {/* Video Background for Now/Here tab */}
+          <VideoBackground showOverlay={true} />
+
           <ScrollView
             style={styles.verticalScrollView}
             contentContainerStyle={styles.scrollContent}
