@@ -25,9 +25,9 @@ interface WeatherBackgroundProps {
   showOverlay?: boolean;
 }
 
-const WeatherBackground: React.FC<WeatherBackgroundProps> = ({ 
-  style, 
-  showOverlay = true 
+const WeatherBackground: React.FC<WeatherBackgroundProps> = ({
+  style,
+  showOverlay = true
 }) => {
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);

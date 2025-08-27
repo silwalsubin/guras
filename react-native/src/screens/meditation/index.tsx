@@ -293,15 +293,30 @@ const MeditationScreen: React.FC = () => {
       ].map((tab) => (
         <TouchableOpacity
           key={tab.key}
-          style={styles.tab}
+          style={[
+            styles.tab,
+            styles.pillTab,
+            {
+              backgroundColor: activeSection === tab.key
+                ? brandColors.primary + '40' // More prominent active background
+                : isDarkMode
+                  ? 'rgba(42, 42, 62, 0.8)' // Dark mode: semi-opaque dark background
+                  : 'rgba(255, 255, 255, 0.8)', // Light mode: semi-opaque white background
+              borderColor: activeSection === tab.key
+                ? brandColors.primary + '60'
+                : isDarkMode
+                  ? 'rgba(255, 255, 255, 0.3)' // Dark mode: subtle white border
+                  : 'rgba(0, 0, 0, 0.2)', // Light mode: subtle dark border
+            }
+          ]}
           onPress={() => handleSlideToSection(tab.key as any)}
         >
           {tab.key === 'timer' ? (
             <Animated.Text style={[
               styles.tabText,
               {
-                color: activeSection === tab.key ? brandColors.primary : themeColors.textSecondary,
-                fontWeight: activeSection === tab.key ? '600' : '400',
+                color: themeColors.textPrimary,
+                fontWeight: activeSection === tab.key ? '600' : '500',
                 opacity: fadeAnim,
               }
             ]}>
@@ -311,15 +326,12 @@ const MeditationScreen: React.FC = () => {
             <Text style={[
               styles.tabText,
               {
-                color: activeSection === tab.key ? brandColors.primary : themeColors.textSecondary,
-                fontWeight: activeSection === tab.key ? '600' : '400',
+                color: themeColors.textPrimary,
+                fontWeight: activeSection === tab.key ? '600' : '500',
               }
             ]}>
               {tab.label}
             </Text>
-          )}
-          {activeSection === tab.key && (
-            <View style={[styles.tabIndicator, { backgroundColor: brandColors.primary }]} />
           )}
         </TouchableOpacity>
       ))}
@@ -851,9 +863,18 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     position: 'relative',
   },
+  pillTab: {
+    marginHorizontal: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
   tabText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
+    textAlign: 'center',
   },
   tabIndicator: {
     position: 'absolute',
