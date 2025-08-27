@@ -665,9 +665,20 @@ const MeditationScreen: React.FC = () => {
 
   // Render the normal meditation screen
   const normalScreen = (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      {/* Section Tabs */}
-      {renderSectionTabs()}
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+      {/* Video Background for entire screen */}
+      <VideoBackground showOverlay={true} />
+
+      {/* Status Bar */}
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+
+      <SafeAreaView style={styles.safeAreaContent}>
+        {/* Section Tabs */}
+        {renderSectionTabs()}
 
       {/* Horizontal Sliding Container */}
       <ScrollView
@@ -701,9 +712,6 @@ const MeditationScreen: React.FC = () => {
 
         {/* Now Section */}
         <View style={[styles.slideContainer, { width: screenWidth }]}>
-          {/* Video Background for Now/Here tab */}
-          <VideoBackground showOverlay={true} />
-
           <ScrollView
             style={styles.verticalScrollView}
             contentContainerStyle={styles.scrollContent}
@@ -742,7 +750,8 @@ const MeditationScreen: React.FC = () => {
           </ScrollView>
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 
   // If in full-screen mode AND meditation is active, render modal with timer
@@ -774,6 +783,9 @@ const MeditationScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  safeAreaContent: {
     flex: 1,
   },
   scrollView: {
@@ -830,6 +842,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 16,
+    backgroundColor: 'transparent',
   },
   tab: {
     flex: 1,
