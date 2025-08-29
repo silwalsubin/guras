@@ -1,27 +1,54 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useSelector } from 'react-redux';
+import React, { useRef, useEffect } from 'react';
+import { View, StyleSheet, Animated } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getThemeColors, COLORS, colorUtils } from '@/config/colors';
 import { TAB_KEYS } from '@/store/navigationSlice';
 import { RootState } from '@/store';
+import { showBottomNav } from '@/store/bottomNavSlice';
 import FooterMenuItem from './components/FooterMenuItem';
 
-const BottomNavigation = () => {
+const BottomNavigation: React.FC = () => {
+  const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  const isHidden = useSelector((state: RootState) => state.bottomNav.isHidden);
+  const activeTab = useSelector((state: RootState) => state.navigation.activeTab);
   const themeColors = getThemeColors(isDarkMode);
 
+  // Animation for hiding/showing
+  const translateYAnim = useRef(new Animated.Value(0)).current;
+
+  // Only apply auto-hide behavior on meditation screen
+  const shouldHide = activeTab === TAB_KEYS.MEDITATION && isHidden;
+
+  // Reset bottom nav state when switching away from meditation
+  useEffect(() => {
+    if (activeTab !== TAB_KEYS.MEDITATION) {
+      dispatch(showBottomNav());
+    }
+  }, [activeTab, dispatch]);
+
+  // Animate when visibility changes
+  useEffect(() => {
+    Animated.timing(translateYAnim, {
+      toValue: shouldHide ? 100 : 0, // 100 = hidden, 0 = visible
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [shouldHide, translateYAnim]);
+
   return (
-    <View
+    <Animated.View
       style={[
         styles.bottomNav,
         {
-          backgroundColor: isDarkMode 
+          backgroundColor: isDarkMode
             ? colorUtils.withOpacity(COLORS.BLACK, 0.98) // Very blurry dark glass effect
             : colorUtils.withOpacity(COLORS.WHITE, 0.98), // Very blurry light glass effect
           borderTopColor: themeColors.border,
           paddingBottom: insets.bottom || 16,
+          transform: [{ translateY: translateYAnim }],
         },
       ]}
     >
@@ -51,7 +78,7 @@ const BottomNavigation = () => {
         iconName="user"
         iconType="feather"
       />
-    </View>
+    </Animated.View>
   );
 };
 

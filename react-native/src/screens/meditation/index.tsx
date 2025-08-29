@@ -12,8 +12,9 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
+import { setBottomNavVisibility } from '@/store/bottomNavSlice';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -51,7 +52,9 @@ const mockData = {
 };
 
 const MeditationScreen: React.FC = () => {
+  const dispatch = useDispatch();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  const bottomNavState = useSelector((state: RootState) => state.bottomNav);
   const [refreshing, setRefreshing] = useState(false);
   const [activeSection, setActiveSection] = useState<'timer' | 'progress' | 'future'>('timer');
 
@@ -64,8 +67,40 @@ const MeditationScreen: React.FC = () => {
   const screenWidth = Dimensions.get('window').width;
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Dynamic bottom padding based on navigation visibility
+  const dynamicBottomPadding = {
+    height: bottomNavState.isHidden ? 40 : 120, // Reduced padding when nav is hidden
+  };
+
+  // Bottom navigation auto-hide functionality
+  const lastScrollY = useRef(0);
+  const scrollDirection = useRef<'up' | 'down'>('down');
+
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
+
+  // Handle scroll for bottom navigation auto-hide
+  const handleScroll = useCallback((event: any) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const scrollDiff = currentScrollY - lastScrollY.current;
+
+    // Only trigger if scroll difference is significant (avoid micro-scrolls)
+    if (Math.abs(scrollDiff) > 5) {
+      const newDirection = scrollDiff > 0 ? 'up' : 'down';
+
+      // Only update if direction changed
+      if (newDirection !== scrollDirection.current) {
+        scrollDirection.current = newDirection;
+
+        // Update bottom navigation visibility via Redux
+        // scrolling UP (reading content) = hide navigation
+        // scrolling DOWN (likely wanting to navigate) = show navigation
+        dispatch(setBottomNavVisibility(newDirection === 'down')); // true = visible, false = hidden
+      }
+    }
+
+    lastScrollY.current = currentScrollY;
+  }, [dispatch]);
 
   // Get meditation state for real progress data
   const meditationState = useSelector((state: RootState) => state.meditation);
@@ -138,9 +173,21 @@ const MeditationScreen: React.FC = () => {
       setCurrentTextIndex((prevIndex) => (prevIndex + 1) % nowTexts.length);
     };
 
-    const interval = setInterval(animateText, 2000); // Change every 2 seconds
+    const interval = setInterval(animateText, 4000); // Change every 4 seconds
     return () => clearInterval(interval);
   }, [fadeAnim, nowTexts.length]);
+
+  // Ensure bottom navigation is visible when entering meditation screen
+  useEffect(() => {
+    dispatch(setBottomNavVisibility(true)); // Show bottom nav when mounting
+  }, [dispatch]);
+
+  // Cleanup: Show bottom navigation when leaving meditation screen
+  useEffect(() => {
+    return () => {
+      dispatch(setBottomNavVisibility(true)); // Show bottom nav when unmounting
+    };
+  }, [dispatch]);
 
   const handleMeditationComplete = (duration: number) => {
     // Track meditation session completion
@@ -286,55 +333,70 @@ const MeditationScreen: React.FC = () => {
 
   const renderSectionTabs = () => (
     <View style={styles.tabContainer}>
-      {[
-        { key: 'progress', label: 'Past', icon: 'bar-chart' },
-        { key: 'timer', label: 'Now', icon: 'play-circle' },
-        { key: 'future', label: 'Future', icon: 'calendar-plus-o' },
-      ].map((tab) => (
-        <TouchableOpacity
-          key={tab.key}
-          style={[
-            styles.tab,
-            styles.pillTab,
-            {
-              backgroundColor: activeSection === tab.key
-                ? brandColors.primary + '40' // More prominent active background
-                : isDarkMode
-                  ? 'rgba(42, 42, 62, 0.8)' // Dark mode: semi-opaque dark background
-                  : 'rgba(255, 255, 255, 0.8)', // Light mode: semi-opaque white background
-              borderColor: activeSection === tab.key
-                ? brandColors.primary + '60'
-                : isDarkMode
-                  ? 'rgba(255, 255, 255, 0.3)' // Dark mode: subtle white border
-                  : 'rgba(0, 0, 0, 0.2)', // Light mode: subtle dark border
-            }
-          ]}
-          onPress={() => handleSlideToSection(tab.key as any)}
-        >
-          {tab.key === 'timer' ? (
-            <Animated.Text style={[
-              styles.tabText,
+      {/* Active tab label above dots */}
+      <View style={styles.labelContainer}>
+        {[
+          { key: 'progress', label: 'Past', icon: 'bar-chart' },
+          { key: 'timer', label: 'Now', icon: 'play-circle' },
+          { key: 'future', label: 'Future', icon: 'calendar-plus-o' },
+        ].map((tab) => {
+          if (activeSection !== tab.key) return null;
+
+          return (
+            <View key={tab.key} style={styles.activeLabelWrapper}>
+              {tab.key === 'timer' ? (
+                <Animated.Text style={[
+                  styles.tabText,
+                  styles.enhancedTabText,
+                  {
+                    opacity: fadeAnim,
+                  }
+                ]}>
+                  {nowTexts[currentTextIndex]}
+                </Animated.Text>
+              ) : (
+                <Text style={[
+                  styles.tabText,
+                  styles.enhancedTabText,
+                ]}>
+                  {tab.label}
+                </Text>
+              )}
+            </View>
+          );
+        })}
+      </View>
+
+      {/* Three dots row */}
+      <View style={styles.dotsContainer}>
+        {[
+          { key: 'progress', label: 'Past', icon: 'bar-chart' },
+          { key: 'timer', label: 'Now', icon: 'play-circle' },
+          { key: 'future', label: 'Future', icon: 'calendar-plus-o' },
+        ].map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={styles.dotTab}
+            onPress={() => handleSlideToSection(tab.key as any)}
+          >
+            <View style={[
+              styles.tabDot,
+              activeSection === tab.key ? styles.activeDot : styles.inactiveDot,
               {
-                color: themeColors.textPrimary,
-                fontWeight: activeSection === tab.key ? '600' : '500',
-                opacity: fadeAnim,
+                backgroundColor: activeSection === tab.key
+                  ? '#FFFFFF' // Bright white for active dot
+                  : 'rgba(255, 255, 255, 0.3)', // Much more transparent for inactive dots
+                // Enhanced drop shadow for all dots
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: activeSection === tab.key ? 0.8 : 0.3,
+                shadowRadius: activeSection === tab.key ? 4 : 2,
+                elevation: activeSection === tab.key ? 6 : 2,
               }
-            ]}>
-              {nowTexts[currentTextIndex]}
-            </Animated.Text>
-          ) : (
-            <Text style={[
-              styles.tabText,
-              {
-                color: themeColors.textPrimary,
-                fontWeight: activeSection === tab.key ? '600' : '500',
-              }
-            ]}>
-              {tab.label}
-            </Text>
-          )}
-        </TouchableOpacity>
-      ))}
+            ]} />
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 
@@ -711,6 +773,8 @@ const MeditationScreen: React.FC = () => {
             style={styles.verticalScrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -721,7 +785,7 @@ const MeditationScreen: React.FC = () => {
             }
           >
             {renderProgressSection()}
-            <View style={styles.bottomPadding} />
+            <View style={dynamicBottomPadding} />
           </ScrollView>
         </View>
 
@@ -731,6 +795,8 @@ const MeditationScreen: React.FC = () => {
             style={styles.verticalScrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -741,7 +807,7 @@ const MeditationScreen: React.FC = () => {
             }
           >
             {renderTimerSection()}
-            <View style={styles.bottomPadding} />
+            <View style={dynamicBottomPadding} />
           </ScrollView>
         </View>
 
@@ -751,6 +817,8 @@ const MeditationScreen: React.FC = () => {
             style={styles.verticalScrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -761,7 +829,7 @@ const MeditationScreen: React.FC = () => {
             }
           >
             {renderFutureSection()}
-            <View style={styles.bottomPadding} />
+            <View style={dynamicBottomPadding} />
           </ScrollView>
         </View>
       </ScrollView>
@@ -842,29 +910,91 @@ const styles = StyleSheet.create({
   },
   progressSection: {
     paddingHorizontal: 24,
-    marginBottom: 32,
+    marginBottom: 16, // Reduced from 32 to 16
   },
   recentSection: {
     paddingHorizontal: 24,
-    marginBottom: 24,
+    marginBottom: 12, // Reduced from 24 to 12
   },
   bottomPadding: {
     height: 120, // Account for bottom navigation + safe area (same as home screen)
   },
   // Tab Navigation Styles
   tabContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
+    alignItems: 'center',
+    paddingTop: 20,
+    paddingBottom: 20,
     backgroundColor: 'transparent',
   },
-  tab: {
-    flex: 1,
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 12,
+  },
+  dotTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  activeDot: {
+    width: 12, // Bigger active dot
+    height: 12,
+    borderRadius: 6,
+    transform: [{ scale: 1 }], // Can add subtle animation later
+  },
+  inactiveDot: {
+    width: 6, // Smaller inactive dots
+    height: 6,
+    borderRadius: 3,
+    opacity: 0.6, // Additional opacity reduction
+  },
+  labelContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 24,
+  },
+  activeLabelWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tab: {
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 12,
-    paddingBottom: 16,
+    paddingHorizontal: 8,
     position: 'relative',
+  },
+  activeTab: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  inactiveTab: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  tabText: {
+    fontSize: 15,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  enhancedTabText: {
+    color: '#FFFFFF', // Always white for better contrast against dark background
+    fontWeight: '600',
+    // Enhanced drop shadow for text
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   pillTab: {
     marginHorizontal: 4,
@@ -873,11 +1003,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-  },
-  tabText: {
-    fontSize: 15,
-    fontWeight: '500',
-    textAlign: 'center',
   },
   tabIndicator: {
     position: 'absolute',
@@ -1225,7 +1350,7 @@ const styles = StyleSheet.create({
   // Past Card Wrapper for margins
   pastCardWrapper: {
     marginHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 4, // Reduced from 8 to 4
   },
 
 
