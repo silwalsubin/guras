@@ -4,6 +4,7 @@ export { default as SectionHeader } from './layout/SectionHeader';
 
 // Card Components
 export { default as BaseCard } from './cards/BaseCard';
+export { default as SemiTransparentCard } from './SemiTransparentCard';
 export { default as ProgressCard } from './cards/ProgressCard';
 export { default as QuickActionCard } from './cards/QuickActionCard';
 export { default as QuickStartCard } from './cards/QuickStartCard';
