@@ -19,7 +19,7 @@ import { getThemeColors, getBrandColors } from '@/config/colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {
   MeditationTimer,
-  HorizontalSeparator,
+  SemiTransparentCard,
 } from '@/components/shared';
 import GuidedProgressDashboard from '@/components/meditation/GuidedProgressDashboard';
 import VideoBackground from '@/components/meditation/VideoBackground';
@@ -151,7 +151,7 @@ const MeditationScreen: React.FC = () => {
 
 
   const renderStreakCard = () => (
-    <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+    <SemiTransparentCard>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="fire" size={16} color={brandColors.primary} />
@@ -184,11 +184,11 @@ const MeditationScreen: React.FC = () => {
           </Text>
         </View>
       </View>
-    </View>
+    </SemiTransparentCard>
   );
 
   const renderStatsCard = () => (
-    <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+    <SemiTransparentCard>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="bar-chart" size={16} color={brandColors.primary} />
@@ -236,11 +236,11 @@ const MeditationScreen: React.FC = () => {
           </Text>
         </View>
       </View>
-    </View>
+    </SemiTransparentCard>
   );
 
   const renderWeeklyProgress = () => (
-    <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+    <SemiTransparentCard>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="calendar" size={16} color={brandColors.primary} />
@@ -281,7 +281,7 @@ const MeditationScreen: React.FC = () => {
           );
         })}
       </View>
-    </View>
+    </SemiTransparentCard>
   );
 
   const renderSectionTabs = () => (
@@ -400,61 +400,65 @@ const MeditationScreen: React.FC = () => {
         </View>
       </View>
 
-      <HorizontalSeparator marginVertical={0} height={4} />
-      {renderStreakCard()}
-      <HorizontalSeparator marginVertical={0} height={4} />
-      {renderStatsCard()}
-      <HorizontalSeparator marginVertical={0} height={4} />
-      {renderWeeklyProgress()}
-      <HorizontalSeparator marginVertical={0} height={4} />
+      <View style={styles.pastCardWrapper}>
+        {renderStreakCard()}
+      </View>
+      <View style={styles.pastCardWrapper}>
+        {renderStatsCard()}
+      </View>
+      <View style={styles.pastCardWrapper}>
+        {renderWeeklyProgress()}
+      </View>
 
       {/* Monthly Progress Chart */}
-      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
-        <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
-            <Icon name="calendar" size={16} color={brandColors.primary} />
+      <View style={styles.pastCardWrapper}>
+        <SemiTransparentCard>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
+              <Icon name="calendar" size={16} color={brandColors.primary} />
+            </View>
+            <View style={styles.headerTextContainer}>
+              <Text style={[styles.cardTitle, { color: themeColors.textPrimary }]}>
+                This Year
+              </Text>
+              <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
+                Monthly meditation progress
+              </Text>
+            </View>
           </View>
-          <View style={styles.headerTextContainer}>
-            <Text style={[styles.cardTitle, { color: themeColors.textPrimary }]}>
-              This Year
-            </Text>
-            <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-              Monthly meditation progress
-            </Text>
-          </View>
-        </View>
-        <View style={styles.monthlyChart}>
-          {[15, 22, 18, 25, 30, 28, 35, 40, 32, 38, 45, 42].map((minutes, index) => {
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const maxMinutes = Math.max(...[15, 22, 18, 25, 30, 28, 35, 40, 32, 38, 45, 42]);
-            const height = minutes > 0 ? Math.max((minutes / maxMinutes) * 80, 8) : 4;
+          <View style={styles.monthlyChart}>
+            {[15, 22, 18, 25, 30, 28, 35, 40, 32, 38, 45, 42].map((minutes, index) => {
+              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+              const maxMinutes = Math.max(...[15, 22, 18, 25, 30, 28, 35, 40, 32, 38, 45, 42]);
+              const height = minutes > 0 ? Math.max((minutes / maxMinutes) * 80, 8) : 4;
 
-            return (
-              <View key={index} style={styles.monthColumn}>
-                <View
-                  style={[
-                    styles.monthBar,
-                    {
-                      height,
-                      backgroundColor: minutes > 0 ? brandColors.primary : themeColors.border,
-                    },
-                  ]}
-                />
-                <Text style={[styles.monthLabel, { color: themeColors.textSecondary }]}>
-                  {monthNames[index]}
-                </Text>
-                <Text style={[styles.monthMinutes, { color: themeColors.textPrimary }]}>
-                  {minutes}m
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+              return (
+                <View key={index} style={styles.monthColumn}>
+                  <View
+                    style={[
+                      styles.monthBar,
+                      {
+                        height,
+                        backgroundColor: minutes > 0 ? brandColors.primary : themeColors.border,
+                      },
+                    ]}
+                  />
+                  <Text style={[styles.monthLabel, { color: themeColors.textSecondary }]}>
+                    {monthNames[index]}
+                  </Text>
+                  <Text style={[styles.monthMinutes, { color: themeColors.textPrimary }]}>
+                    {minutes}m
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </SemiTransparentCard>
       </View>
-      <HorizontalSeparator marginVertical={0} height={4} />
 
       {/* Meditation Event Log */}
-      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+      <View style={styles.pastCardWrapper}>
+        <SemiTransparentCard>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
             <Icon name="list-alt" size={16} color={brandColors.primary} />
@@ -542,6 +546,7 @@ const MeditationScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
         </View>
+      </SemiTransparentCard>
       </View>
 
       {/* Guided Meditation Progress */}
@@ -560,10 +565,9 @@ const MeditationScreen: React.FC = () => {
 
   const renderFutureSection = () => (
     <>
-      <HorizontalSeparator marginVertical={0} height={4} />
-
       {/* Tomorrow's Plan Card */}
-      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+      <View style={styles.pastCardWrapper}>
+        <SemiTransparentCard>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
             <Icon name="calendar-plus-o" size={16} color={brandColors.primary} />
@@ -589,12 +593,12 @@ const MeditationScreen: React.FC = () => {
             <Text style={[styles.futureActionText, { color: brandColors.primary }]}>Set Goal</Text>
           </TouchableOpacity>
         </View>
+      </SemiTransparentCard>
       </View>
 
-      <HorizontalSeparator marginVertical={0} height={4} />
-
       {/* Weekly Goals Card */}
-      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+      <View style={styles.pastCardWrapper}>
+        <SemiTransparentCard>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: '#FF9500' + '20' }]}>
             <Icon name="bullseye" size={16} color="#FF9500" />
@@ -634,12 +638,10 @@ const MeditationScreen: React.FC = () => {
             <Text style={[styles.goalProgress, { color: themeColors.textSecondary }]}>7 days</Text>
           </View>
         </View>
-      </View>
-
-      <HorizontalSeparator marginVertical={0} height={4} />
+      </SemiTransparentCard>
 
       {/* Upcoming Challenges Card */}
-      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+      <SemiTransparentCard>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: '#9C27B0' + '20' }]}>
             <Icon name="trophy" size={16} color="#9C27B0" />
@@ -671,6 +673,7 @@ const MeditationScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
+      </SemiTransparentCard>
       </View>
     </>
   );
@@ -926,7 +929,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   streakNumber: {
-    fontSize: 32,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
   },
@@ -952,7 +955,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
   },
@@ -1007,7 +1010,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   quickStatNumber: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
   },
@@ -1218,6 +1221,11 @@ const styles = StyleSheet.create({
   joinButtonText: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  // Past Card Wrapper for margins
+  pastCardWrapper: {
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
 
 

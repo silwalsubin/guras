@@ -11,7 +11,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { HorizontalSeparator } from '@/components/shared';
+import { HorizontalSeparator, SemiTransparentCard } from '@/components/shared';
 
 const { width } = Dimensions.get('window');
 
@@ -30,7 +30,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
   const brandColors = getBrandColors();
 
   const renderStatsCard = () => (
-    <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+    <SemiTransparentCard>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="bar-chart" size={16} color={brandColors.primary} />
@@ -104,7 +104,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
           </View>
         </View>
       )}
-    </View>
+    </SemiTransparentCard>
   );
 
   const renderAchievements = () => {
@@ -113,7 +113,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
     const lockedAchievements = guidedMeditation.achievements.filter(a => !a.isUnlocked && a.progress === 0);
 
     return (
-      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+      <SemiTransparentCard>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: '#FFD700' + '20' }]}>
             <Icon name="trophy" size={16} color="#FFD700" />
@@ -199,7 +199,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
             </TouchableOpacity>
           ))}
         </View>
-      </View>
+      </SemiTransparentCard>
     );
   };
 
@@ -211,7 +211,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
     }
 
     return (
-      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+      <SemiTransparentCard>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
             <Icon name="clock-o" size={16} color={brandColors.primary} />
@@ -259,7 +259,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
             </View>
           </View>
         ))}
-      </View>
+      </SemiTransparentCard>
     );
   };
 
@@ -271,7 +271,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
     }
 
     return (
-      <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+      <SemiTransparentCard>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: '#FF6B6B' + '20' }]}>
             <Icon name="flag" size={16} color="#FF6B6B" />
@@ -308,25 +308,24 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
             </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </SemiTransparentCard>
     );
   };
 
   return (
     <>
-      <HorizontalSeparator marginVertical={0} height={4} />
-      {renderAchievements()}
+      <View style={styles.pastCardWrapper}>
+        {renderAchievements()}
+      </View>
       {renderRecentActivity() && (
-        <>
-          <HorizontalSeparator marginVertical={0} height={4} />
+        <View style={styles.pastCardWrapper}>
           {renderRecentActivity()}
-        </>
+        </View>
       )}
       {renderMilestones() && (
-        <>
-          <HorizontalSeparator marginVertical={0} height={4} />
+        <View style={styles.pastCardWrapper}>
           {renderMilestones()}
-        </>
+        </View>
       )}
     </>
   );
@@ -572,6 +571,11 @@ const styles = StyleSheet.create({
   },
   milestoneDate: {
     fontSize: 11,
+  },
+  // Past Card Wrapper for margins
+  pastCardWrapper: {
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
 });
 
