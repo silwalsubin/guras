@@ -4,6 +4,7 @@ import themeReducer from './themeSlice';
 import quotesReducer from './quotesSlice';
 import meditationReducer from './meditationSliceNew';
 import guidedMeditationReducer from './guidedMeditationSlice';
+import bottomNavReducer from './bottomNavSlice';
 
 const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
     quotes: quotesReducer,
     meditation: meditationReducer,
     guidedMeditation: guidedMeditationReducer,
+    bottomNav: bottomNavReducer,
   },
 });
 
