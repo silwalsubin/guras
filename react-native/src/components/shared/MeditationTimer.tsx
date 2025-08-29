@@ -27,9 +27,8 @@ import { TYPOGRAPHY } from '@/config/fonts';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useMusicPlayer, MeditationTrack } from '@/contexts/MusicPlayerContext';
-import MeditationMusicSelector from '@/components/shared/MeditationMusicSelector';
+import MeditationSetupCard from '@/components/shared/MeditationSetupCard';
 // No Redux music control - MusicPlayerContext handles everything
-import DurationSelector from '@/components/shared/DurationSelector';
 
 interface MeditationTimerProps {
   onSessionComplete?: (duration: number) => void;
@@ -446,51 +445,14 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
 
       {/* Duration and Music Selection */}
       {!isActive && (
-        <View style={[
-          styles.controlsCard,
-          {
-            backgroundColor: isDarkMode
-              ? 'rgba(0, 0, 0, 0.7)'
-              : 'rgba(255, 255, 255, 0.8)',
-            borderColor: isDarkMode
-              ? 'rgba(255, 255, 255, 0.15)'
-              : 'rgba(0, 0, 0, 0.1)',
-          }
-        ]}>
-          <View style={styles.timerSelection}>
-            {/* Duration Selector */}
-            <DurationSelector
-              selectedDuration={minutes}
-              onDurationSelect={(selectedMinutes) => setMinutes(selectedMinutes)}
-              disabled={false}
-            />
-
-            {/* Music Selection */}
-            <View style={styles.musicSelectionContainer}>
-              <MeditationMusicSelector
-                selectedTrack={selectedMeditationTrack}
-                onTrackSelect={setSelectedMeditationTrack}
-                disabled={false}
-              />
-            </View>
-
-            {/* Start Button */}
-            <View style={styles.startButtonContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.circularStartButton,
-                  {
-                    backgroundColor: brandColors.primary,
-                    shadowColor: brandColors.primary,
-                  }
-                ]}
-                onPress={handleStartTimer}
-              >
-                <Text style={styles.startButtonText}>Start</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+        <MeditationSetupCard
+          selectedDuration={minutes}
+          onDurationSelect={(selectedMinutes) => setMinutes(selectedMinutes)}
+          selectedTrack={selectedMeditationTrack}
+          onTrackSelect={setSelectedMeditationTrack}
+          onStartTimer={handleStartTimer}
+          disabled={false}
+        />
       )}
 
       {/* Active Controls */}
@@ -556,25 +518,10 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingVertical: 16,
   },
-  controlsCard: {
-    width: '100%',
-    alignSelf: 'center',
-    marginVertical: 20,
-    padding: 24,
-    borderRadius: 20,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
+
   fullScreenContainer: {
     flex: 1,
     margin: 0,
@@ -667,10 +614,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginTop: 6,
   },
-  timerSelection: {
-    marginBottom: 28,
-    paddingHorizontal: 24,
-  },
+
   timerSelectorLabel: {
     fontSize: 18,
     fontWeight: '600',
@@ -764,13 +708,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  startButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '700',
-    marginLeft: 8,
-    letterSpacing: 0.5,
-  },
+
   buttonIcon: {
     marginRight: 4,
   },
@@ -827,25 +765,7 @@ const styles = StyleSheet.create({
   },
 
 
-  musicSelectionContainer: {
-    marginBottom: 0,
-  },
-  startButtonContainer: {
-    marginTop: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  circularStartButton: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
+
 });
 
 export default MeditationTimer;
