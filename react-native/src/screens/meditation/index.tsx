@@ -899,7 +899,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroSection: {
-    marginBottom: 8,
+    marginHorizontal: 8,
+    marginBottom: 4,
     paddingBottom: 16,
   },
   contentContainer: {
@@ -1349,7 +1350,7 @@ const styles = StyleSheet.create({
   },
   // Past Card Wrapper for margins
   pastCardWrapper: {
-    marginHorizontal: 16,
+    marginHorizontal: 8, // Reduced from 16 to 8 for wider cards
     marginBottom: 4, // Reduced from 8 to 4
   },
 

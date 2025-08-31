@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
   },
   // Past Card Wrapper for margins
   pastCardWrapper: {
-    marginHorizontal: 16,
+    marginHorizontal: 8,
     marginBottom: 8,
   },
 });
