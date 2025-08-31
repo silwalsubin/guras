@@ -30,7 +30,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
   const brandColors = getBrandColors();
 
   const renderStatsCard = () => (
-    <SemiTransparentCard>
+    <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="bar-chart" size={16} color={brandColors.primary} />
@@ -113,7 +113,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
     const lockedAchievements = guidedMeditation.achievements.filter(a => !a.isUnlocked && a.progress === 0);
 
     return (
-      <SemiTransparentCard>
+      <SemiTransparentCard contentStyle={{ paddingHorizontal: 4 }}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: '#FFD700' + '20' }]}>
             <Icon name="trophy" size={16} color="#FFD700" />
@@ -211,7 +211,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
     }
 
     return (
-      <SemiTransparentCard>
+      <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
             <Icon name="clock-o" size={16} color={brandColors.primary} />
@@ -271,7 +271,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
     }
 
     return (
-      <SemiTransparentCard>
+      <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: '#FF6B6B' + '20' }]}>
             <Icon name="flag" size={16} color="#FF6B6B" />
