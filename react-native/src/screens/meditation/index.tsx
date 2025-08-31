@@ -198,7 +198,7 @@ const MeditationScreen: React.FC = () => {
 
 
   const renderStreakCard = () => (
-    <SemiTransparentCard>
+    <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="fire" size={16} color={brandColors.primary} />
@@ -235,7 +235,7 @@ const MeditationScreen: React.FC = () => {
   );
 
   const renderStatsCard = () => (
-    <SemiTransparentCard>
+    <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="bar-chart" size={16} color={brandColors.primary} />
@@ -287,7 +287,7 @@ const MeditationScreen: React.FC = () => {
   );
 
   const renderWeeklyProgress = () => (
-    <SemiTransparentCard>
+    <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="calendar" size={16} color={brandColors.primary} />
@@ -474,7 +474,7 @@ const MeditationScreen: React.FC = () => {
 
       {/* Monthly Progress Chart */}
       <View style={styles.pastCardWrapper}>
-        <SemiTransparentCard>
+        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
               <Icon name="calendar" size={16} color={brandColors.primary} />
@@ -520,7 +520,7 @@ const MeditationScreen: React.FC = () => {
 
       {/* Meditation Event Log */}
       <View style={styles.pastCardWrapper}>
-        <SemiTransparentCard>
+        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
             <Icon name="list-alt" size={16} color={brandColors.primary} />
@@ -629,7 +629,7 @@ const MeditationScreen: React.FC = () => {
     <>
       {/* Tomorrow's Plan Card */}
       <View style={styles.pastCardWrapper}>
-        <SemiTransparentCard>
+        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
             <Icon name="calendar-plus-o" size={16} color={brandColors.primary} />
@@ -660,7 +660,7 @@ const MeditationScreen: React.FC = () => {
 
       {/* Weekly Goals Card */}
       <View style={styles.pastCardWrapper}>
-        <SemiTransparentCard>
+        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: '#FF9500' + '20' }]}>
             <Icon name="bullseye" size={16} color="#FF9500" />
@@ -701,41 +701,43 @@ const MeditationScreen: React.FC = () => {
           </View>
         </View>
       </SemiTransparentCard>
+      </View>
 
       {/* Upcoming Challenges Card */}
-      <SemiTransparentCard>
-        <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: '#9C27B0' + '20' }]}>
-            <Icon name="trophy" size={16} color="#9C27B0" />
-          </View>
-          <View style={styles.headerTextContainer}>
-            <Text style={[styles.cardTitle, { color: themeColors.textPrimary }]}>
-              Upcoming Challenges
-            </Text>
-            <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-              Join the community
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.challengesList}>
-          <View style={styles.challengeItem}>
-            <Text style={[styles.challengeTitle, { color: themeColors.textPrimary }]}>30-Day Mindfulness Challenge</Text>
-            <Text style={[styles.challengeDate, { color: themeColors.textSecondary }]}>Starts Feb 1st</Text>
-            <TouchableOpacity style={[styles.joinButton, { backgroundColor: '#9C27B0' + '10', borderColor: '#9C27B0' + '30' }]}>
-              <Text style={[styles.joinButtonText, { color: '#9C27B0' }]}>Join Challenge</Text>
-            </TouchableOpacity>
+      <View style={styles.pastCardWrapper}>
+        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.iconContainer, { backgroundColor: '#9C27B0' + '20' }]}>
+              <Icon name="trophy" size={16} color="#9C27B0" />
+            </View>
+            <View style={styles.headerTextContainer}>
+              <Text style={[styles.cardTitle, { color: themeColors.textPrimary }]}>
+                Upcoming Challenges
+              </Text>
+              <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
+                Join the community
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.challengeItem}>
-            <Text style={[styles.challengeTitle, { color: themeColors.textPrimary }]}>Morning Meditation Week</Text>
-            <Text style={[styles.challengeDate, { color: themeColors.textSecondary }]}>Starts Feb 15th</Text>
-            <TouchableOpacity style={[styles.joinButton, { backgroundColor: '#9C27B0' + '10', borderColor: '#9C27B0' + '30' }]}>
-              <Text style={[styles.joinButtonText, { color: '#9C27B0' }]}>Join Challenge</Text>
-            </TouchableOpacity>
+          <View style={styles.challengesList}>
+            <View style={styles.challengeItem}>
+              <Text style={[styles.challengeTitle, { color: themeColors.textPrimary }]}>30-Day Mindfulness Challenge</Text>
+              <Text style={[styles.challengeDate, { color: themeColors.textSecondary }]}>Starts Feb 1st</Text>
+              <TouchableOpacity style={[styles.joinButton, { backgroundColor: '#9C27B0' + '10', borderColor: '#9C27B0' + '30' }]}>
+                <Text style={[styles.joinButtonText, { color: '#9C27B0' }]}>Join Challenge</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.challengeItem}>
+              <Text style={[styles.challengeTitle, { color: themeColors.textPrimary }]}>Morning Meditation Week</Text>
+              <Text style={[styles.challengeDate, { color: themeColors.textSecondary }]}>Starts Feb 15th</Text>
+              <TouchableOpacity style={[styles.joinButton, { backgroundColor: '#9C27B0' + '10', borderColor: '#9C27B0' + '30' }]}>
+                <Text style={[styles.joinButtonText, { color: '#9C27B0' }]}>Join Challenge</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </SemiTransparentCard>
+        </SemiTransparentCard>
       </View>
     </>
   );
@@ -876,7 +878,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 0,
-    paddingTop: 4, // Very minimal spacing from tabs
+    paddingTop: 16, // Increased spacing from tabs
     paddingBottom: 100, // Space for bottom navigation
   },
   // Slide functionality styles
@@ -923,7 +925,7 @@ const styles = StyleSheet.create({
   // Tab Navigation Styles
   tabContainer: {
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 48,
     paddingBottom: 20,
     backgroundColor: 'transparent',
   },
@@ -1028,6 +1030,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 18,
+    paddingLeft: 0,
   },
   headerTextContainer: {
     marginLeft: 8,
@@ -1102,8 +1105,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dayBar: {
-    width: 16,
-    borderRadius: 8,
+    width: 8,
+    borderRadius: 4,
     marginBottom: 8,
   },
   dayLabel: {
@@ -1118,6 +1121,7 @@ const styles = StyleSheet.create({
   quickStatsSection: {
     paddingHorizontal: 20,
     paddingVertical: 16,
+    marginTop: 32,
     marginBottom: 20,
   },
   quickStatsTitle: {
@@ -1262,8 +1266,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   monthBar: {
-    width: 10,
-    borderRadius: 5,
+    width: 6,
+    borderRadius: 3,
     marginBottom: 8,
   },
   monthLabel: {
@@ -1350,7 +1354,7 @@ const styles = StyleSheet.create({
   },
   // Past Card Wrapper for margins
   pastCardWrapper: {
-    marginHorizontal: 8, // Reduced from 16 to 8 for wider cards
+    marginHorizontal: 8, // Set to 8 for balanced card width
     marginBottom: 4, // Reduced from 8 to 4
   },
 
