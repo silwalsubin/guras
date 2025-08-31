@@ -518,7 +518,7 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onSessionComplete, fo
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     paddingVertical: 16,
   },
 
