@@ -9,7 +9,7 @@ import { getBrandColors } from '@/config/colors';
 import { MeditationTrack } from '@/contexts/MusicPlayerContext';
 import DurationSelector from '@/components/shared/DurationSelector';
 import MeditationMusicSelector from '@/components/shared/MeditationMusicSelector';
-import SemiTransparentCard from '@/components/shared/SemiTransparentCard';
+import TranslucentCard from '@/components/shared/TranslucentCard';
 
 interface MeditationSetupCardProps {
   selectedDuration: number;
@@ -31,7 +31,7 @@ const MeditationSetupCard: React.FC<MeditationSetupCardProps> = ({
   const brandColors = getBrandColors();
 
   return (
-    <SemiTransparentCard>
+    <TranslucentCard>
       {/* Duration Selector */}
       <DurationSelector
         selectedDuration={selectedDuration}
@@ -65,7 +65,7 @@ const MeditationSetupCard: React.FC<MeditationSetupCardProps> = ({
           <Text style={styles.startButtonText}>Start</Text>
         </TouchableOpacity>
       </View>
-    </SemiTransparentCard>
+    </TranslucentCard>
   );
 };
 
