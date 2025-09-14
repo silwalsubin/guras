@@ -66,7 +66,7 @@ class AuthService {
     const fullUrl = `${API_CONFIG.BASE_URL}${endpoint}`;
     
     // Get the current Firebase ID token for authentication
-    let authHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+    const authHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
     
     try {
       const auth = getAuth();

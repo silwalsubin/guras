@@ -18,7 +18,6 @@ import { RefreshUtils } from '@/utils/refreshUtils';
 import { ProfileAvatar, AchievementBadge } from '@/components/shared';
 import NotificationSettings from './components/NotificationSettings';
 import SignOutButton from './components/SignOutButton';
-import quotesService from '@/services/quotesService';
 import notificationService from '@/services/notificationService';
 import { NotificationPreferences } from '@/store/quotesSlice';
 import { useAuth } from '@/contexts/AuthContext';

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,12 @@ import {
   Modal,
   SafeAreaView,
   Animated,
-  Easing,
   Platform,
   Vibration,
   TextInput,
 } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { setSelectedMinutes } from '@/store/meditationSliceNew';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import Icon from 'react-native-vector-icons/FontAwesome';

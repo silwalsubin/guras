@@ -3,9 +3,6 @@ import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
 // No Redux imports - using only MusicPlayerContext
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { getBrandColors } from '@/config/colors';
-import TrackPlayer from 'react-native-track-player';
-import { apiService, AudioFile } from '@/services/api';
-import { State } from 'react-native-track-player';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const NextButton: React.FC = () => {

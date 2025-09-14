@@ -13,9 +13,7 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
-import { TYPOGRAPHY } from '@/config/fonts';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Feather from 'react-native-vector-icons/Feather';
 import { apiService, AudioFile } from '@/services/api';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { useDownload } from '@/contexts/DownloadContext';

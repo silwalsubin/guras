@@ -1,10 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, FlatList, Alert, ImageBackground, Image } from 'react-native';
-import TrackPlayer, { State, Event } from 'react-native-track-player';
+import React from 'react';
+import { View, TouchableOpacity, StyleSheet, ImageBackground, Image } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { COLORS, getThemeColors, getBrandColors } from '@/config/colors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
-import { apiService, AudioFile } from '@/services/api';
 // No Redux imports - using only MusicPlayerContext
 import TrackName from './track-name';
 import PreviousButton from './music-controls/previous-button';

@@ -11,8 +11,6 @@ import { getThemeColors, getBrandColors, COLORS } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import {
   AppHeader,
-  SectionHeader,
-  BaseCard,
   QuickActionCard,
   HorizontalSeparator,
 } from '@/components/shared';

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
@@ -11,7 +10,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { HorizontalSeparator, SemiTransparentCard } from '@/components/shared';
+import { SemiTransparentCard } from '@/components/shared';
 
 const { width } = Dimensions.get('window');
 

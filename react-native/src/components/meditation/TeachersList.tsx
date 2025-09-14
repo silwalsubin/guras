@@ -39,7 +39,7 @@ const TeachersList: React.FC<TeachersListProps> = ({
   const [sortBy, setSortBy] = useState<'rating' | 'experience' | 'sessions' | 'name'>('rating');
 
   const filteredAndSortedTeachers = useMemo(() => {
-    let filtered = mockTeachers.filter(teacher => {
+    const filtered = mockTeachers.filter(teacher => {
       // Specialty filter
       if (filterBySpecialty && !teacher.specialties.includes(filterBySpecialty)) {
         return false;
