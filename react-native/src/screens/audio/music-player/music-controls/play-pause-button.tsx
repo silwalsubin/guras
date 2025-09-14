@@ -1,12 +1,12 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { getBrandColors, getThemeColors, COLORS } from '@/config/colors';
-import TrackPlayer, { State } from 'react-native-track-player';
-import { apiService, AudioFile } from '@/services/api';
+import TrackPlayer from 'react-native-track-player';
+import { AudioFile } from '@/services/api';
 
 const PlayPauseButton: React.FC = () => {
   const {

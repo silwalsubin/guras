@@ -7,7 +7,6 @@ import {
   Alert,
   Animated,
   Dimensions,
-  ScrollView,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -19,14 +18,12 @@ import {
   updateTimeLeft,
   setSelectedMinutes,
   completeSession,
-  syncTimerState,
   setFadeOutStarted
 } from '@/store/meditationSliceNew';
 import { getThemeColors, getBrandColors } from '@/config/colors';
-import { TYPOGRAPHY } from '@/config/fonts';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useMusicPlayer, MeditationTrack } from '@/contexts/MusicPlayerContext';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import MeditationSetupCard from '@/components/shared/MeditationSetupCard';
 // No Redux music control - MusicPlayerContext handles everything
 

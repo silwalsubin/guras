@@ -1,10 +1,9 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
   View,
   RefreshControl,
-  Text,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab, TAB_KEYS } from '@/store/navigationSlice';

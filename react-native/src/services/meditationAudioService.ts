@@ -1,4 +1,4 @@
-import TrackPlayer, { State } from 'react-native-track-player';
+import TrackPlayer from 'react-native-track-player';
 import { Alert } from 'react-native';
 
 export interface MeditationAudioCue {

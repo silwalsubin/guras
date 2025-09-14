@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { useSelector } from 'react-redux';
-import { getThemeColors, COLORS } from '@/config/colors';
+import { getThemeColors } from '@/config/colors';
 import { RootState } from '@/store';
 
 interface BaseCardProps {

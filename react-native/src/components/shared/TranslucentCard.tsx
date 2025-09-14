@@ -7,27 +7,31 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 
-interface SemiTransparentCardProps {
+interface TranslucentCardProps {
   children: React.ReactNode;
   style?: ViewStyle;
   contentStyle?: ViewStyle;
+  blurAmount?: number;
+  intensity?: number;
 }
 
-const SemiTransparentCard: React.FC<SemiTransparentCardProps> = ({
+const TranslucentCard: React.FC<TranslucentCardProps> = ({
   children,
   style,
   contentStyle,
+  blurAmount: _blurAmount,
+  intensity = 0.8,
 }) => {
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
 
-  // Clean, elegant semi-transparent effect
+  // Clean, elegant translucent effect
   return (
     <View style={[
       styles.card,
       {
         backgroundColor: isDarkMode
-          ? 'rgba(0, 0, 0, 0.6)'
-          : 'rgba(255, 255, 255, 0.6)',
+          ? `rgba(0, 0, 0, ${0.4 + (intensity * 0.2)})`
+          : `rgba(255, 255, 255, ${0.4 + (intensity * 0.2)})`,
         borderColor: isDarkMode
           ? 'rgba(255, 255, 255, 0.2)'
           : 'rgba(0, 0, 0, 0.1)',
@@ -35,11 +39,11 @@ const SemiTransparentCard: React.FC<SemiTransparentCardProps> = ({
         shadowColor: '#000',
         shadowOffset: {
           width: 0,
-          height: 6,
+          height: 8,
         },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 6,
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+        elevation: 8,
       },
       style
     ]}>
@@ -63,4 +67,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SemiTransparentCard;
+export default TranslucentCard;

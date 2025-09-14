@@ -1,19 +1,17 @@
 import React from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   Modal,
   SafeAreaView,
   StatusBar,
   ImageBackground,
-  Animated,
   Image
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { getThemeColors, getBrandColors, COLORS } from '@/config/colors';
+import { getThemeColors, getBrandColors } from '@/config/colors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';

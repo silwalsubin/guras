@@ -15,9 +15,8 @@ import FontLoader from './src/components/app/FontLoader';
 import { getThemeColors } from './src/config/colors';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import store, { RootState } from './src/store';
-import { setActiveTab, TAB_KEYS } from './src/store/navigationSlice';
+import { TAB_KEYS } from './src/store/navigationSlice';
 import { setDarkMode } from './src/store/themeSlice';
-import { stopTimer } from './src/store/meditationSliceNew';
 import { MusicPlayerProvider, useMusicPlayer } from './src/contexts/MusicPlayerContext';
 import { DownloadProvider } from './src/contexts/DownloadContext';
 import MeditationScreen from './src/screens/meditation';
@@ -25,7 +24,6 @@ import LearnScreen from './src/screens/learn';
 import AudioScreen from './src/screens/audio';
 import HomeScreen from './src/screens/home';
 import BottomNavigation from './src/components/app/navigation/BottomNavigation';
-import notificationService from './src/services/notificationService';
 import MiniMusicPlayer from './src/components/MiniMusicPlayer';
 import FullMusicPlayerModal from './src/components/FullMusicPlayerModal';
 

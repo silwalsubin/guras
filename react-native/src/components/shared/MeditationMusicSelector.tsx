@@ -12,7 +12,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
-import { BaseCard, DownloadButton } from '@/components/shared';
+import { DownloadButton } from '@/components/shared';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { apiService, AudioFile } from '@/services/api';
 

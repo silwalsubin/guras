@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { GuidedMeditationSession, MeditationProgram, UserMeditationProgress } from '@/types/meditation';
+import { GuidedMeditationSession, UserMeditationProgress } from '@/types/meditation';
 
 export interface GuidedMeditationState {
   // Session Progress
@@ -305,7 +305,7 @@ const guidedMeditationSlice = createSlice({
       today.setHours(0, 0, 0, 0);
       
       let streak = 0;
-      let currentDate = new Date(today);
+      const currentDate = new Date(today);
       
       while (true) {
         const dateStr = currentDate.toISOString().split('T')[0];

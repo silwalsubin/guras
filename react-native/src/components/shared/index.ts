@@ -5,7 +5,10 @@ export { default as SectionHeader } from './layout/SectionHeader';
 // Card Components
 export { default as BaseCard } from './cards/BaseCard';
 export { default as SemiTransparentCard } from './SemiTransparentCard';
+export { default as TranslucentCard } from './TranslucentCard';
+export { default as TranslucentCardDemo } from './TranslucentCardDemo';
 export { default as ProgressCard } from './cards/ProgressCard';
+export { default as BlurViewWrapper } from './BlurViewWrapper';
 export { default as QuickActionCard } from './cards/QuickActionCard';
 export { default as QuickStartCard } from './cards/QuickStartCard';
 export { default as RecentSessionsCard } from './cards/RecentSessionsCard';

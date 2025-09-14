@@ -62,7 +62,7 @@ const ThemedSessionsBrowser: React.FC<ThemedSessionsBrowserProps> = ({
   ];
 
   const filteredAndSortedSessions = useMemo(() => {
-    let filtered = mockGuidedSessions.filter(session => {
+    const filtered = mockGuidedSessions.filter(session => {
       // Theme filter
       if (selectedTheme !== 'all' && session.theme !== selectedTheme) return false;
       
