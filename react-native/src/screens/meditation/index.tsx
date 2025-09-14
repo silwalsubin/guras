@@ -20,7 +20,7 @@ import { getThemeColors, getBrandColors } from '@/config/colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {
   MeditationTimer,
-  SemiTransparentCard,
+  TranslucentCard,
 } from '@/components/shared';
 import GuidedProgressDashboard from '@/components/meditation/GuidedProgressDashboard';
 import VideoBackground from '@/components/meditation/VideoBackground';
@@ -198,7 +198,7 @@ const MeditationScreen: React.FC = () => {
 
 
   const renderStreakCard = () => (
-    <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
+    <TranslucentCard style={{ padding: 16, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="fire" size={16} color={brandColors.primary} />
@@ -208,34 +208,55 @@ const MeditationScreen: React.FC = () => {
             Meditation Streak
           </Text>
           <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-            Your dedication so far
+            Keep the momentum going!
           </Text>
         </View>
       </View>
-      <View style={styles.streakContainer}>
-        <View style={styles.streakItem}>
-          <Text style={[styles.streakNumber, { color: brandColors.primary }]}>
-            {mockData.currentStreak}
-          </Text>
-          <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
-            Current Streak
-          </Text>
-        </View>
-        <View style={styles.streakDivider} />
+      
+      {/* Main streak display */}
+      <View style={styles.mainStreakDisplay}>
+        <Text style={[styles.mainStreakNumber, { color: brandColors.primary }]}>
+          {mockData.currentStreak}
+        </Text>
+        <Text style={[styles.mainStreakLabel, { color: themeColors.textPrimary }]}>
+          {mockData.currentStreak === 1 ? 'Day' : 'Days'} in a row
+        </Text>
+      </View>
+
+      {/* Additional streak insights */}
+      <View style={styles.streakInsights}>
         <View style={styles.streakItem}>
           <Text style={[styles.streakNumber, { color: themeColors.textPrimary }]}>
             {mockData.longestStreak}
           </Text>
           <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
-            Longest Streak
+            Best Streak
+          </Text>
+        </View>
+        <View style={styles.streakDivider} />
+        <View style={styles.streakItem}>
+          <Text style={[styles.streakNumber, { color: themeColors.textPrimary }]}>
+            {Math.floor(mockData.totalMinutes / 60)}h {mockData.totalMinutes % 60}m
+          </Text>
+          <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
+            Total Time
+          </Text>
+        </View>
+        <View style={styles.streakDivider} />
+        <View style={styles.streakItem}>
+          <Text style={[styles.streakNumber, { color: themeColors.textPrimary }]}>
+            {mockData.totalSessions}
+          </Text>
+          <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
+            Sessions
           </Text>
         </View>
       </View>
-    </SemiTransparentCard>
+    </TranslucentCard>
   );
 
   const renderStatsCard = () => (
-    <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
+    <TranslucentCard style={{ padding: 16, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="bar-chart" size={16} color={brandColors.primary} />
@@ -245,27 +266,11 @@ const MeditationScreen: React.FC = () => {
             Your Statistics
           </Text>
           <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-            Your journey in numbers
+            Insights and patterns
           </Text>
         </View>
       </View>
       <View style={styles.statsGrid}>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
-            {mockData.totalSessions}
-          </Text>
-          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
-            Total Sessions
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
-            {Math.floor(mockData.totalMinutes / 60)}h {mockData.totalMinutes % 60}m
-          </Text>
-          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
-            Total Time
-          </Text>
-        </View>
         <View style={styles.statItem}>
           <Text style={[styles.statNumber, { color: brandColors.primary }]}>
             {mockData.completionRate}%
@@ -282,12 +287,28 @@ const MeditationScreen: React.FC = () => {
             Avg Session
           </Text>
         </View>
+        <View style={styles.statItem}>
+          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
+            {Math.floor(mockData.totalMinutes / mockData.totalSessions)}m
+          </Text>
+          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
+            Per Session
+          </Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
+            {Math.floor(mockData.totalMinutes / 7)}m
+          </Text>
+          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
+            Weekly Avg
+          </Text>
+        </View>
       </View>
-    </SemiTransparentCard>
+    </TranslucentCard>
   );
 
   const renderWeeklyProgress = () => (
-    <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
+    <TranslucentCard style={{ padding: 16, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
       <View style={styles.cardHeader}>
         <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
           <Icon name="calendar" size={16} color={brandColors.primary} />
@@ -328,7 +349,7 @@ const MeditationScreen: React.FC = () => {
           );
         })}
       </View>
-    </SemiTransparentCard>
+    </TranslucentCard>
   );
 
   const renderSectionTabs = () => (
@@ -429,39 +450,6 @@ const MeditationScreen: React.FC = () => {
 
   const renderProgressSection = () => (
     <>
-      {/* Quick Stats Summary for Past Tab */}
-      <View style={styles.quickStatsSection}>
-        <Text style={[styles.quickStatsTitle, { color: themeColors.textPrimary }]}>
-          Your Journey
-        </Text>
-        <View style={styles.quickStatsRow}>
-          <View style={styles.quickStatItem}>
-            <Text style={[styles.quickStatNumber, { color: brandColors.primary }]}>
-              {mockData.totalSessions}
-            </Text>
-            <Text style={[styles.quickStatLabel, { color: themeColors.textSecondary }]}>
-              Sessions
-            </Text>
-          </View>
-          <View style={styles.quickStatItem}>
-            <Text style={[styles.quickStatNumber, { color: brandColors.primary }]}>
-              {Math.floor(mockData.totalMinutes / 60)}h {mockData.totalMinutes % 60}m
-            </Text>
-            <Text style={[styles.quickStatLabel, { color: themeColors.textSecondary }]}>
-              Total Time
-            </Text>
-          </View>
-          <View style={styles.quickStatItem}>
-            <Text style={[styles.quickStatNumber, { color: brandColors.primary }]}>
-              {mockData.currentStreak}
-            </Text>
-            <Text style={[styles.quickStatLabel, { color: themeColors.textSecondary }]}>
-              Day Streak
-            </Text>
-          </View>
-        </View>
-      </View>
-
       <View style={styles.pastCardWrapper}>
         {renderStreakCard()}
       </View>
@@ -474,7 +462,7 @@ const MeditationScreen: React.FC = () => {
 
       {/* Monthly Progress Chart */}
       <View style={styles.pastCardWrapper}>
-        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
+        <TranslucentCard style={{ padding: 16, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
               <Icon name="calendar" size={16} color={brandColors.primary} />
@@ -515,12 +503,12 @@ const MeditationScreen: React.FC = () => {
               );
             })}
           </View>
-        </SemiTransparentCard>
+        </TranslucentCard>
       </View>
 
       {/* Meditation Event Log */}
       <View style={styles.pastCardWrapper}>
-        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
+        <TranslucentCard style={{ padding: 16, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
             <Icon name="list-alt" size={16} color={brandColors.primary} />
@@ -608,7 +596,7 @@ const MeditationScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
         </View>
-      </SemiTransparentCard>
+      </TranslucentCard>
       </View>
 
       {/* Guided Meditation Progress */}
@@ -629,7 +617,7 @@ const MeditationScreen: React.FC = () => {
     <>
       {/* Tomorrow's Plan Card */}
       <View style={styles.pastCardWrapper}>
-        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
+        <TranslucentCard style={{ padding: 16, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: brandColors.primary + '20' }]}>
             <Icon name="calendar-plus-o" size={16} color={brandColors.primary} />
@@ -655,12 +643,12 @@ const MeditationScreen: React.FC = () => {
             <Text style={[styles.futureActionText, { color: brandColors.primary }]}>Set Goal</Text>
           </TouchableOpacity>
         </View>
-      </SemiTransparentCard>
+      </TranslucentCard>
       </View>
 
       {/* Weekly Goals Card */}
       <View style={styles.pastCardWrapper}>
-        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
+        <TranslucentCard style={{ padding: 16, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: '#FF9500' + '20' }]}>
             <Icon name="bullseye" size={16} color="#FF9500" />
@@ -700,12 +688,12 @@ const MeditationScreen: React.FC = () => {
             <Text style={[styles.goalProgress, { color: themeColors.textSecondary }]}>7 days</Text>
           </View>
         </View>
-      </SemiTransparentCard>
+      </TranslucentCard>
       </View>
 
       {/* Upcoming Challenges Card */}
       <View style={styles.pastCardWrapper}>
-        <SemiTransparentCard style={{ padding: 4, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
+        <TranslucentCard style={{ padding: 16, paddingTop: 16 }} contentStyle={{ paddingHorizontal: 8 }}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconContainer, { backgroundColor: '#9C27B0' + '20' }]}>
               <Icon name="trophy" size={16} color="#9C27B0" />
@@ -737,7 +725,7 @@ const MeditationScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           </View>
-        </SemiTransparentCard>
+        </TranslucentCard>
       </View>
     </>
   );
@@ -1049,6 +1037,25 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   // Streak Card Styles
+  mainStreakDisplay: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 12,
+  },
+  mainStreakNumber: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  mainStreakLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  streakInsights: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
   streakContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1058,19 +1065,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   streakNumber: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   streakLabel: {
-    fontSize: 14,
+    fontSize: 12,
     textAlign: 'center',
   },
   streakDivider: {
     width: 1,
-    height: 40,
+    height: 30,
     backgroundColor: '#E0E0E0',
-    marginHorizontal: 20,
+    marginHorizontal: 12,
   },
   // Stats Grid Styles
   statsGrid: {
@@ -1116,37 +1123,6 @@ const styles = StyleSheet.create({
   dayMinutes: {
     fontSize: 10,
     fontWeight: '500',
-  },
-  // Quick Stats Styles (for Past tab)
-  quickStatsSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginTop: 32,
-    marginBottom: 20,
-  },
-  quickStatsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  quickStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  quickStatItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  quickStatNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  quickStatLabel: {
-    fontSize: 12,
-    textAlign: 'center',
   },
   // Session List Styles
   sessionItem: {
