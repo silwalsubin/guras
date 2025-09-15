@@ -39,43 +39,8 @@ const TeachersList: React.FC<TeachersListProps> = ({
   const [sortBy, setSortBy] = useState<'rating' | 'experience' | 'sessions' | 'name'>('rating');
 
   const filteredAndSortedTeachers = useMemo(() => {
-    const filtered = mockTeachers.filter(teacher => {
-      // Specialty filter
-      if (filterBySpecialty && !teacher.specialties.includes(filterBySpecialty)) {
-        return false;
-      }
-      
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        return (
-          teacher.name.toLowerCase().includes(query) ||
-          teacher.bio.toLowerCase().includes(query) ||
-          teacher.voiceStyle.toLowerCase().includes(query) ||
-          teacher.specialties.some(specialty => specialty.toLowerCase().includes(query))
-        );
-      }
-      
-      return true;
-    });
-
-    // Sort teachers
-    switch (sortBy) {
-      case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'experience':
-        filtered.sort((a, b) => b.yearsExperience - a.yearsExperience);
-        break;
-      case 'sessions':
-        filtered.sort((a, b) => b.totalSessions - a.totalSessions);
-        break;
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-    }
-
-    return maxItems ? filtered.slice(0, maxItems) : filtered;
+    // No meditation teachers - only Osho and Buddha are available
+    return [];
   }, [searchQuery, sortBy, filterBySpecialty, maxItems]);
 
   const handleTeacherPress = (teacher: Teacher) => {
@@ -181,12 +146,12 @@ const TeachersList: React.FC<TeachersListProps> = ({
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Icon name="user-times" size={48} color={themeColors.textSecondary} />
+      <Icon name="heart" size={48} color={themeColors.textSecondary} />
       <Text style={[styles.emptyTitle, { color: themeColors.textPrimary }]}>
-        No Teachers Found
+        Spiritual Teachers Only
       </Text>
       <Text style={[styles.emptyDescription, { color: themeColors.textSecondary }]}>
-        Try adjusting your search or filter criteria
+        We focus on spiritual teachers like Osho and Buddha. Visit the Spiritual tab to explore them.
       </Text>
     </View>
   );

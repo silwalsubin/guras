@@ -23,7 +23,7 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({
   const videoRef = useRef<any>(null);
 
   // Default video source - now we have a real video file
-  const defaultVideoSource = videoSource || require('@/assets/videos/meditation-sky.mp4');
+  const defaultVideoSource = videoSource || require('../../../assets/videos/meditation-sky.mp4');
 
   return (
     <View style={[styles.container, style]}>

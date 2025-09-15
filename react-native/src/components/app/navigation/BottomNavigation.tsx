@@ -68,10 +68,9 @@ const BottomNavigation: React.FC = () => {
         iconType="feather"
       />
       <FooterMenuItem
-        tabKey={TAB_KEYS.LEARN}
+        tabKey={TAB_KEYS.SPIRITUAL}
         iconName="book-open"
-        iconType="fontawesome"
-        solid
+        iconType="feather"
       />
       <FooterMenuItem
         tabKey={TAB_KEYS.PROFILE}

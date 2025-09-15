@@ -4,7 +4,7 @@ export const TAB_KEYS = {
   HOME: 'home',
   MEDITATION: 'meditation',
   AUDIO: 'audio',
-  LEARN: 'learn',
+  SPIRITUAL: 'spiritual',
   PROFILE: 'profile',
 } as const;
 
