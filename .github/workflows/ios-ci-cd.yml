@@ -268,7 +268,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: 'latest-stable'
+        xcode-version: '15.0'
         
     - name: Set NODE_BINARY environment variable
       run: |
@@ -342,10 +342,38 @@ jobs:
         # This is safer than modifying the project file directly
         echo "✅ Project ready for CI build with code signing disabled"
         
+    - name: List available simulators
+      run: |
+        echo "📱 Listing available iOS simulators..."
+        xcrun simctl list devices available
+        
+    - name: Boot iOS Simulator
+      run: |
+        echo "🚀 Booting iOS Simulator..."
+        # Try to boot iPhone 15 Pro first, fallback to any available iPhone
+        xcrun simctl boot "iPhone 15 Pro" 2>/dev/null || \
+        xcrun simctl boot "iPhone 15" 2>/dev/null || \
+        xcrun simctl boot "iPhone 14 Pro" 2>/dev/null || \
+        xcrun simctl boot "iPhone 14" 2>/dev/null || \
+        xcrun simctl boot "iPhone 13 Pro" 2>/dev/null || \
+        xcrun simctl boot "iPhone 13" 2>/dev/null || \
+        echo "⚠️ Could not boot any iPhone simulator"
+        
+        # List booted simulators
+        echo "📱 Booted simulators:"
+        xcrun simctl list devices booted
+        
     - name: Validate project structure
       working-directory: ./react-native/ios
       run: |
         echo "🔍 Validating project structure for version ${{ steps.version.outputs.version }}"
+        
+        # First, try to list available destinations
+        echo "📱 Available destinations:"
+        xcodebuild -workspace Guras.xcworkspace -scheme Guras -showdestinations || echo "⚠️ Could not list destinations"
+        
+        # Try to build without specifying destination (let Xcode choose)
+        echo "📱 Attempting build without destination specification..."
         xcodebuild -workspace Guras.xcworkspace \
                    -scheme Guras \
                    -configuration Debug \
@@ -368,7 +396,6 @@ jobs:
         xcodebuild -workspace Guras.xcworkspace \
                    -scheme Guras \
                    -configuration Release \
-                   -destination generic/platform=iOS \
                    -archivePath ./build/Guras.xcarchive \
                    NODE_BINARY="$NODE_BINARY" \
                    clean archive
