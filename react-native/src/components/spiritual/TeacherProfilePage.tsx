@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   RefreshControl,
   StatusBar,
   Platform,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
@@ -48,6 +49,49 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   const [activeTab, setActiveTab] = useState<ContentTab>('overview');
   const [refreshing, setRefreshing] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  
+  // Scroll animation
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const HEADER_MAX_HEIGHT = 280;
+  const HEADER_MIN_HEIGHT = 120;
+  const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
+
+  // Animated values
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE],
+    outputRange: [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
+    extrapolate: 'clamp',
+  });
+
+  const profileImageSize = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE],
+    outputRange: [80, 36],
+    extrapolate: 'clamp',
+  });
+
+  const profileImageBorderRadius = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE],
+    outputRange: [40, 18],
+    extrapolate: 'clamp',
+  });
+
+  const titleOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
+    outputRange: [1, 0.5, 0],
+    extrapolate: 'clamp',
+  });
+
+  const subtitleOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE / 3, HEADER_SCROLL_DISTANCE],
+    outputRange: [1, 0.3, 0],
+    extrapolate: 'clamp',
+  });
+
+  const followersOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
+    outputRange: [1, 0.5, 0],
+    extrapolate: 'clamp',
+  });
 
   useEffect(() => {
     const follow = followedTeachers.find(f => f.teacherId === teacher.id);
@@ -301,38 +345,104 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
         </View>
       )}
       
-      <View style={[styles.header, { backgroundColor: 'transparent', paddingTop: insets.top + 20, marginTop: 0 }]}>
+      <Animated.View style={[styles.header, { 
+        backgroundColor: 'transparent', 
+        paddingTop: insets.top + 10, 
+        marginTop: 0,
+        height: headerHeight,
+        justifyContent: 'flex-start',
+        alignItems: 'center'
+      }]}>
         {onBack && (
-          <TouchableOpacity style={[styles.backButton, { top: insets.top + 20 }]} onPress={onBack}>
+          <TouchableOpacity style={[styles.backButton, { top: insets.top + 10 }]} onPress={onBack}>
             <FontAwesome name="arrow-left" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
         )}
         
-        <View style={styles.headerContent}>
-          <View style={[styles.teacherIcon, { backgroundColor: getTeacherColor() + '20' }]}>
+        {/* Expanded Header Layout */}
+        <Animated.View style={[styles.headerContent, { opacity: titleOpacity }]}>
+          <Animated.View style={[styles.teacherIcon, { 
+            backgroundColor: getTeacherColor() + '20',
+            width: profileImageSize,
+            height: profileImageSize,
+            borderRadius: profileImageBorderRadius,
+          }]}>
+            {getTeacherImage() ? (
+              <Animated.Image
+                source={getTeacherImage()}
+                style={[styles.teacherImage, {
+                  width: profileImageSize,
+                  height: profileImageSize,
+                  borderRadius: profileImageBorderRadius,
+                }]}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={styles.teacherIconText}>👤</Text>
+            )}
+          </Animated.View>
+          <Animated.Text style={[styles.teacherName, { 
+            color: colors.textPrimary,
+            fontSize: 24,
+          }]}>
+            {teacher.displayName || teacher.name}
+          </Animated.Text>
+          <Animated.Text style={[styles.teacherTitle, { 
+            color: colors.textSecondary,
+            fontSize: 14,
+          }]}>
+            {teacher.tradition?.name || teacher.voiceStyle || 'Spiritual Teacher'}
+          </Animated.Text>
+          <Animated.Text style={[styles.followersCount, { 
+            color: getTeacherColor(),
+            fontSize: 16,
+          }]}>
+            {teacher.followers?.toLocaleString() || '0'} Followers
+          </Animated.Text>
+        </Animated.View>
+
+        {/* Compact Header Layout */}
+        <Animated.View style={[styles.compactHeader, { 
+          top: insets.top + 10,
+          opacity: scrollY.interpolate({
+            inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
+            outputRange: [0, 0.5, 1],
+            extrapolate: 'clamp',
+          }),
+        }]}>
+          <View style={styles.compactTextContainer}>
+            <Text style={[styles.compactTeacherName, { 
+              color: colors.textPrimary,
+            }]}>
+              {teacher.displayName || teacher.name}
+            </Text>
+            <Text style={[styles.compactTeacherTitle, { 
+              color: colors.textSecondary,
+            }]}>
+              {teacher.tradition?.name || teacher.voiceStyle || 'Spiritual Teacher'}
+            </Text>
+          </View>
+          <View style={[styles.compactTeacherIcon, { 
+            backgroundColor: getTeacherColor() + '20',
+          }]}>
             {getTeacherImage() ? (
               <Image
                 source={getTeacherImage()}
-                style={styles.teacherImage}
+                style={styles.compactTeacherImage}
                 resizeMode="cover"
               />
             ) : (
               <Text style={styles.teacherIconText}>👤</Text>
             )}
           </View>
-          <Text style={[styles.teacherName, { color: colors.textPrimary }]}>
-            {teacher.displayName || teacher.name}
-          </Text>
-          <Text style={[styles.teacherTitle, { color: colors.textSecondary }]}>
-            {teacher.tradition?.name || teacher.voiceStyle || 'Spiritual Teacher'}
-          </Text>
-          <Text style={[styles.followersCount, { color: getTeacherColor() }]}>
-            {teacher.followers?.toLocaleString() || '0'} Followers
-          </Text>
-        </View>
+        </Animated.View>
         
+      </Animated.View>
+      
+      {/* Follow Button - Positioned outside main header */}
+      <Animated.View style={[styles.followButtonContainer, { opacity: titleOpacity }]}>
         <TouchableOpacity
-          style={[styles.followButton, { top: insets.top + 20 }]}
+          style={[styles.followButton, { top: insets.top + 10 }]}
           onPress={handleFollow}
         >
           <FontAwesome 
@@ -344,12 +454,18 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
             {isFollowing ? 'Following' : 'Follow'}
           </Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
+      
       {renderTabs()}
       
-      <ScrollView
+      <Animated.ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -359,7 +475,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
         }
       >
         {renderContent()}
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };
@@ -403,17 +519,81 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: 20,
+    top: 0,
     padding: 8,
-    zIndex: 1,
+    height: 60, // Match compact header height
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 15, // Higher than compact header
+  },
+  followButtonContainer: {
+    position: 'absolute',
+    right: -10, // Move further beyond the edge
+    top: 15, // Move down more to align with back button
+    height: 60, // Match compact header height
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 15, // Higher than compact header
   },
   headerContent: {
     alignItems: 'center',
     marginTop: 20,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  headerTextContainer: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  compactHeader: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: 70, // Consistent space for back button
+    paddingRight: 20,
+    paddingVertical: 12,
+    height: 60,
+    backgroundColor: 'transparent', // Transparent background to blend with background image
+    zIndex: 10, // Higher than background overlay to ensure visibility
+  },
+  compactTeacherIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactTeacherImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  compactTextContainer: {
+    flex: 1,
+    marginRight: 12,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    minHeight: 36, // Ensure consistent height
+  },
+  compactTeacherName: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  compactTeacherTitle: {
+    fontSize: 12,
+    opacity: 0.9,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   teacherIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -421,9 +601,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   teacherImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    // Dimensions will be set via animation
   },
   teacherIconText: {
     fontSize: 40,
@@ -468,6 +646,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
     paddingVertical: 12,
+    marginTop: 30, // Very tight spacing
     zIndex: 2,
   },
   tabBarContent: {
