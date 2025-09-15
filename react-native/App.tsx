@@ -21,9 +21,9 @@ import { setDarkMode } from './src/store/themeSlice';
 import { MusicPlayerProvider, useMusicPlayer } from './src/contexts/MusicPlayerContext';
 import { DownloadProvider } from './src/contexts/DownloadContext';
 import MeditationScreen from './src/screens/meditation';
-import LearnScreen from './src/screens/learn';
 import AudioScreen from './src/screens/audio';
 import HomeScreen from './src/screens/home';
+import { SpiritualTeacherScreen } from './src/screens';
 import BottomNavigation from './src/components/app/navigation/BottomNavigation';
 import MiniMusicPlayer from './src/components/MiniMusicPlayer';
 import FullMusicPlayerModal from './src/components/FullMusicPlayerModal';
@@ -87,8 +87,8 @@ const MainApp: React.FC = () => {
         return <MeditationScreen />;
       case TAB_KEYS.AUDIO:
         return <AudioScreen />;
-      case TAB_KEYS.LEARN:
-        return <LearnScreen />;
+      case TAB_KEYS.SPIRITUAL:
+        return <SpiritualTeacherScreen />;
       case TAB_KEYS.PROFILE:
         return <ProfileScreen />;
       default:

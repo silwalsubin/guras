@@ -7,6 +7,17 @@ This directory contains technical documentation for the Guras meditation app's R
 ### Architecture & Design
 - [Offline-First Data Architecture](./OFFLINE_FIRST_ARCHITECTURE.md) - Comprehensive guide for implementing offline-first data storage with database synchronization
 
+### Personal Therapist Features
+- [Personal Therapist Documentation](./personal-therapist/) - Complete documentation for transforming the app into a personal therapist application
+  - [Transformation Roadmap](./personal-therapist/THERAPIST_TRANSFORMATION_ROADMAP.md) - Strategic roadmap and vision
+  - [Features Specification](./personal-therapist/THERAPIST_FEATURES_SPECIFICATION.md) - Technical specifications and data models
+  - [Implementation Phases](./personal-therapist/THERAPIST_IMPLEMENTATION_PHASES.md) - Detailed implementation plan
+
+### Personal Spiritual Teacher Features
+- [Personal Spiritual Teacher Documentation](./personal-spiritual-teacher/) - Complete documentation for implementing spiritual teacher features
+  - [Spiritual Teacher Roadmap](./personal-spiritual-teacher/SPIRITUAL_TEACHER_ROADMAP.md) - Strategic roadmap and vision
+  - [Osho Integration Specification](./personal-spiritual-teacher/OSHO_INTEGRATION_SPECIFICATION.md) - Technical specifications for Osho integration
+
 ### Development Guides
 - [Environment Setup](../ENVIRONMENT_SETUP.md) - Development environment configuration
 - [API Integration](./API_INTEGRATION.md) - Backend API integration patterns (coming soon)

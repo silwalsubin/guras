@@ -5,3 +5,4 @@ export { default as AudioScreen } from './audio';
 export { default as ProfileScreen } from './profile';
 export { default as ProgressScreen } from './progress';
 export { default as SignUpScreen } from './sign-up';
+export { default as SpiritualTeacherScreen } from './spiritual';

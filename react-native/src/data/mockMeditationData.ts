@@ -8,64 +8,8 @@ import {
   MeditationTheme 
 } from '../types/meditation';
 
-// Mock Teachers
-export const mockTeachers: Teacher[] = [
-  {
-    id: 'teacher-1',
-    name: 'Sarah Chen',
-    bio: 'A mindfulness expert with over 10 years of experience in meditation and stress reduction techniques.',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-    voiceStyle: 'Calm and soothing',
-    specialties: ['mindfulness', 'stress-relief', 'anxiety'],
-    totalSessions: 45,
-    rating: 4.8,
-    yearsExperience: 10,
-  },
-  {
-    id: 'teacher-2',
-    name: 'Marcus Johnson',
-    bio: 'Former monk turned meditation teacher, specializing in traditional mindfulness and compassion practices.',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    voiceStyle: 'Deep and grounding',
-    specialties: ['compassion', 'mindfulness', 'body-scan'],
-    totalSessions: 38,
-    rating: 4.9,
-    yearsExperience: 15,
-  },
-  {
-    id: 'teacher-3',
-    name: 'Emma Rodriguez',
-    bio: 'Sleep specialist and meditation teacher focused on helping people achieve better rest and relaxation.',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-    voiceStyle: 'Gentle and nurturing',
-    specialties: ['sleep', 'stress-relief', 'body-scan'],
-    totalSessions: 32,
-    rating: 4.7,
-    yearsExperience: 8,
-  },
-  {
-    id: 'teacher-4',
-    name: 'David Kim',
-    bio: 'Focus and productivity coach who combines meditation with cognitive enhancement techniques.',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    voiceStyle: 'Clear and motivating',
-    specialties: ['focus', 'mindfulness', 'stress-relief'],
-    totalSessions: 28,
-    rating: 4.6,
-    yearsExperience: 6,
-  },
-  {
-    id: 'teacher-5',
-    name: 'Lisa Thompson',
-    bio: 'Gratitude and positive psychology expert helping people cultivate appreciation and joy.',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
-    voiceStyle: 'Warm and uplifting',
-    specialties: ['gratitude', 'compassion', 'mindfulness'],
-    totalSessions: 25,
-    rating: 4.8,
-    yearsExperience: 7,
-  },
-];
+// Mock Teachers - Only Osho and Buddha
+export const mockTeachers: Teacher[] = [];
 
 // Mock Guided Meditation Sessions
 export const mockGuidedSessions: GuidedMeditationSession[] = [

@@ -87,14 +87,14 @@ const WeatherBackground: React.FC<WeatherBackgroundProps> = ({
     // For now, we'll use a placeholder or fallback to gradient
     // Later you can add actual video files here
     const videoMap = {
-      'sunny-day': require('@/assets/videos/meditation-sky.mp4'),
-      'cloudy-day': require('@/assets/videos/meditation-sky.mp4'),
-      'rainy-day': require('@/assets/videos/meditation-sky.mp4'),
-      'foggy-day': require('@/assets/videos/meditation-sky.mp4'),
-      'clear-night': require('@/assets/videos/meditation-sky.mp4'),
-      'cloudy-night': require('@/assets/videos/meditation-sky.mp4'),
-      'rainy-night': require('@/assets/videos/meditation-sky.mp4'),
-      'foggy-night': require('@/assets/videos/meditation-sky.mp4'),
+      'sunny-day': require('../../../assets/videos/meditation-sky.mp4'),
+      'cloudy-day': require('../../../assets/videos/meditation-sky.mp4'),
+      'rainy-day': require('../../../assets/videos/meditation-sky.mp4'),
+      'foggy-day': require('../../../assets/videos/meditation-sky.mp4'),
+      'clear-night': require('../../../assets/videos/meditation-sky.mp4'),
+      'cloudy-night': require('../../../assets/videos/meditation-sky.mp4'),
+      'rainy-night': require('../../../assets/videos/meditation-sky.mp4'),
+      'foggy-night': require('../../../assets/videos/meditation-sky.mp4'),
     };
 
     const key = `${weather.condition}-${weather.isDay ? 'day' : 'night'}` as keyof typeof videoMap;
