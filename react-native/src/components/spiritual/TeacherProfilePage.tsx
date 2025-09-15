@@ -76,20 +76,20 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   });
 
   const titleOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-    outputRange: [1, 0.5, 0],
+    inputRange: [0, HEADER_SCROLL_DISTANCE * 0.3, HEADER_SCROLL_DISTANCE],
+    outputRange: [1, 1, 0],
     extrapolate: 'clamp',
   });
 
   const subtitleOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 3, HEADER_SCROLL_DISTANCE],
-    outputRange: [1, 0.3, 0],
+    inputRange: [0, HEADER_SCROLL_DISTANCE * 0.3, HEADER_SCROLL_DISTANCE],
+    outputRange: [1, 1, 0],
     extrapolate: 'clamp',
   });
 
   const followersOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-    outputRange: [1, 0.5, 0],
+    inputRange: [0, HEADER_SCROLL_DISTANCE * 0.3, HEADER_SCROLL_DISTANCE],
+    outputRange: [1, 1, 0],
     extrapolate: 'clamp',
   });
 
@@ -405,8 +405,8 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
         <Animated.View style={[styles.compactHeader, { 
           top: insets.top + 10,
           opacity: scrollY.interpolate({
-            inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-            outputRange: [0, 0.5, 1],
+            inputRange: [0, HEADER_SCROLL_DISTANCE * 0.7, HEADER_SCROLL_DISTANCE],
+            outputRange: [0, 0, 1],
             extrapolate: 'clamp',
           }),
         }]}>
