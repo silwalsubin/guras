@@ -14,7 +14,8 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import FontLoader from './src/components/app/FontLoader';
 import { getThemeColors } from './src/config/colors';
 import { Provider, useSelector, useDispatch } from 'react-redux';
-import store, { RootState } from './src/store';
+import { PersistGate } from 'redux-persist/integration/react';
+import store, { persistor, RootState } from './src/store';
 import { TAB_KEYS } from './src/store/navigationSlice';
 import { setDarkMode } from './src/store/themeSlice';
 import { MusicPlayerProvider, useMusicPlayer } from './src/contexts/MusicPlayerContext';
@@ -135,19 +136,21 @@ function App(): React.JSX.Element {
 
   return (
     <Provider store={store}>
-      <SafeAreaProvider>
-        <FontLoader>
-          <AuthProvider>
-            <AuthWrapper>
-              <MusicPlayerProvider>
-                <DownloadProvider>
-                  <MainApp />
-                </DownloadProvider>
-              </MusicPlayerProvider>
-            </AuthWrapper>
-          </AuthProvider>
-        </FontLoader>
-      </SafeAreaProvider>
+      <PersistGate loading={null} persistor={persistor}>
+        <SafeAreaProvider>
+          <FontLoader>
+            <AuthProvider>
+              <AuthWrapper>
+                <MusicPlayerProvider>
+                  <DownloadProvider>
+                    <MainApp />
+                  </DownloadProvider>
+                </MusicPlayerProvider>
+              </AuthWrapper>
+            </AuthProvider>
+          </FontLoader>
+        </SafeAreaProvider>
+      </PersistGate>
     </Provider>
   );
 }

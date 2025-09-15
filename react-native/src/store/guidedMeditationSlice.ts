@@ -1,5 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { GuidedMeditationSession, UserMeditationProgress } from '@/types/meditation';
+import offlineStorageService from '@/services/offlineStorageService';
 
 export interface GuidedMeditationState {
   // Session Progress
@@ -28,6 +29,11 @@ export interface GuidedMeditationState {
   
   // Milestones
   milestones: Milestone[];
+  
+  // Offline storage state
+  isOfflineMode: boolean;
+  lastSyncTime: number;
+  pendingSyncCount: number;
 }
 
 export interface ProgramProgress {
@@ -177,7 +183,54 @@ const initialState: GuidedMeditationState = {
   averageSessionRating: 0,
   recentSessions: [],
   milestones: [],
+  // Offline storage state
+  isOfflineMode: false,
+  lastSyncTime: 0,
+  pendingSyncCount: 0,
 };
+
+// Async thunks for offline storage
+export const saveGuidedSessionOffline = createAsyncThunk(
+  'guidedMeditation/saveSessionOffline',
+  async (sessionData: {
+    session: GuidedMeditationSession;
+    rating?: number;
+    mood?: { before: number; after: number };
+    programId?: string;
+    programDay?: number;
+  }) => {
+    const sessionId = await offlineStorageService.saveGuidedSession({
+      sessionId: sessionData.session.id,
+      title: sessionData.session.title,
+      teacherName: sessionData.session.teacher.name,
+      theme: sessionData.session.theme,
+      duration: sessionData.session.duration,
+      completedAt: new Date().toISOString(),
+      rating: sessionData.rating,
+      mood: sessionData.mood,
+      programId: sessionData.programId,
+      programDay: sessionData.programDay,
+      isCompleted: true,
+    });
+    return sessionId;
+  }
+);
+
+export const saveProgramProgressOffline = createAsyncThunk(
+  'guidedMeditation/saveProgramProgressOffline',
+  async (progressData: {
+    programId: string;
+    currentDay: number;
+    completedDays: number[];
+    enrolledAt: string;
+    lastActivityAt: string;
+    isCompleted: boolean;
+    completedAt?: string;
+  }) => {
+    const progressId = await offlineStorageService.saveProgramProgress(progressData);
+    return progressId;
+  }
+);
 
 const guidedMeditationSlice = createSlice({
   name: 'guidedMeditation',
@@ -406,6 +459,28 @@ const guidedMeditationSlice = createSlice({
     resetProgress: (state) => {
       return initialState;
     },
+    setOfflineMode: (state, action: PayloadAction<boolean>) => {
+      state.isOfflineMode = action.payload;
+    },
+    updateSyncStatus: (state, action: PayloadAction<{ lastSyncTime: number; pendingCount: number }>) => {
+      state.lastSyncTime = action.payload.lastSyncTime;
+      state.pendingSyncCount = action.payload.pendingCount;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(saveGuidedSessionOffline.fulfilled, (state, action) => {
+        console.log('Guided session saved offline:', action.payload);
+      })
+      .addCase(saveGuidedSessionOffline.rejected, (state, action) => {
+        console.error('Failed to save guided session offline:', action.error);
+      })
+      .addCase(saveProgramProgressOffline.fulfilled, (state, action) => {
+        console.log('Program progress saved offline:', action.payload);
+      })
+      .addCase(saveProgramProgressOffline.rejected, (state, action) => {
+        console.error('Failed to save program progress offline:', action.error);
+      });
   },
 });
 
@@ -417,6 +492,8 @@ export const {
   checkAchievements,
   addMilestone,
   resetProgress,
+  setOfflineMode,
+  updateSyncStatus,
 } = guidedMeditationSlice.actions;
 
 export default guidedMeditationSlice.reducer;
