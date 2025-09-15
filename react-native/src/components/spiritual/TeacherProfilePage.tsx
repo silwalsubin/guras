@@ -8,7 +8,10 @@ import {
   Image,
   Dimensions,
   RefreshControl,
+  StatusBar,
+  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { getThemeColors, getBrandColors } from '../../config/colors';
@@ -37,6 +40,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   const dispatch = useDispatch();
   const colors = getThemeColors();
   const brandColors = getBrandColors();
+  const insets = useSafeAreaInsets();
   
   const { followedTeachers, teacherFeeds, isLoading } = useSelector((state: RootState) => state.teacher);
   
@@ -102,59 +106,6 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
     return brandColors.secondary;
   };
 
-  const renderHeader = () => (
-    <View style={[styles.header, { backgroundColor: colors.surface }]}>
-      {onBack && (
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <FontAwesome name="arrow-left" size={20} color={colors.text} />
-        </TouchableOpacity>
-      )}
-      
-      <View style={styles.headerContent}>
-        <View style={[styles.teacherIcon, { backgroundColor: getTeacherColor() + '20' }]}>
-          {getTeacherImage() ? (
-            <Image
-              source={getTeacherImage()}
-              style={styles.teacherImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <Text style={styles.teacherIconText}>👤</Text>
-          )}
-        </View>
-        <Text style={[styles.teacherName, { color: colors.text }]}>
-          {teacher.displayName || teacher.name}
-        </Text>
-        <Text style={[styles.teacherTitle, { color: colors.textSecondary }]}>
-          {teacher.tradition?.name || teacher.voiceStyle || 'Spiritual Teacher'}
-        </Text>
-      </View>
-      
-      <TouchableOpacity
-        style={[
-          styles.followButton,
-          { 
-            backgroundColor: isFollowing ? colors.border : getTeacherColor(),
-            borderColor: getTeacherColor(),
-            borderWidth: 1,
-          }
-        ]}
-        onPress={handleFollow}
-      >
-        <FontAwesome 
-          name={isFollowing ? "check" : "plus"} 
-          size={14} 
-          color={isFollowing ? getTeacherColor() : 'white'} 
-        />
-        <Text style={[
-          styles.followButtonText,
-          { color: isFollowing ? getTeacherColor() : 'white' }
-        ]}>
-          {isFollowing ? 'Following' : 'Follow'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   const renderTabs = () => (
     <View style={[styles.tabBar, { backgroundColor: colors.surface }]}>
@@ -315,8 +266,53 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {renderHeader()}
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+      <StatusBar 
+        barStyle="dark-content" 
+        backgroundColor="transparent" 
+        translucent={true} 
+      />
+      <View style={[styles.header, { backgroundColor: colors.surface, paddingTop: insets.top + 20, marginTop: 0 }]}>
+        {onBack && (
+          <TouchableOpacity style={[styles.backButton, { top: insets.top + 20 }]} onPress={onBack}>
+            <FontAwesome name="arrow-left" size={20} color={colors.text} />
+          </TouchableOpacity>
+        )}
+        
+        <View style={styles.headerContent}>
+          <View style={[styles.teacherIcon, { backgroundColor: getTeacherColor() + '20' }]}>
+            {getTeacherImage() ? (
+              <Image
+                source={getTeacherImage()}
+                style={styles.teacherImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={styles.teacherIconText}>👤</Text>
+            )}
+          </View>
+          <Text style={[styles.teacherName, { color: colors.text }]}>
+            {teacher.displayName || teacher.name}
+          </Text>
+          <Text style={[styles.teacherTitle, { color: colors.textSecondary }]}>
+            {teacher.tradition?.name || teacher.voiceStyle || 'Spiritual Teacher'}
+          </Text>
+        </View>
+        
+        <TouchableOpacity
+          style={[styles.followButton, { top: insets.top + 20 }]}
+          onPress={handleFollow}
+        >
+          <FontAwesome 
+            name={isFollowing ? "check" : "plus"} 
+            size={12} 
+            color="#FFFFFF" 
+          />
+          <Text style={styles.followButtonText}>
+            {isFollowing ? 'Following' : 'Follow'}
+          </Text>
+        </TouchableOpacity>
+      </View>
       {renderTabs()}
       
       <ScrollView
@@ -339,10 +335,11 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
+    marginTop: 0,
+    paddingTop: 0,
   },
   header: {
-    paddingTop: 50,
     paddingBottom: 24,
     paddingHorizontal: 20,
     backgroundColor: '#F8FAFC',
@@ -350,7 +347,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 50,
     left: 20,
     padding: 8,
     zIndex: 1,
@@ -392,7 +388,6 @@ const styles = StyleSheet.create({
   },
   followButton: {
     position: 'absolute',
-    top: 50,
     right: 20,
     flexDirection: 'row',
     alignItems: 'center',
