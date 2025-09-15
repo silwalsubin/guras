@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   Dimensions,
   ScrollView,
   Image,
+  TextInput,
+  FlatList,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -16,7 +18,6 @@ import { getThemeColors, getBrandColors } from '@/config/colors';
 import { loadSpiritualProfile } from '@/store/spiritualTeacherSlice';
 import { OshoTeaching, OshoQuote, OshoPractice, BuddhaCategory } from '@/types/spiritual';
 import TeacherSelector from '@/components/spiritual/TeacherSelector';
-import TeacherDiscovery from '@/components/spiritual/TeacherDiscovery';
 import TeacherProfilePage from '@/components/spiritual/TeacherProfilePage';
 import SpiritualQA from '@/components/spiritual/SpiritualQA';
 import DailyGuidance from '@/components/spiritual/DailyGuidance';
@@ -37,17 +38,61 @@ const SpiritualTeacherScreen: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'discover' | 'profile' | 'qa' | 'guidance' | 'library'>('discover');
   const [showTeacherSelector, setShowTeacherSelector] = useState(false);
-  const [showTeacherDiscovery, setShowTeacherDiscovery] = useState(false);
   const [showTeacherProfile, setShowTeacherProfile] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [showQA, setShowQA] = useState(false);
   const [selectedTeaching, setSelectedTeaching] = useState<OshoTeaching | null>(null);
   const [selectedQuote, setSelectedQuote] = useState<OshoQuote | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<OshoPractice | null>(null);
+  
+  // Search functionality
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'teachers' | 'practices' | 'philosophy' | 'courses'>('teachers');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  // Mock search data
+  const mockSearchData = useMemo(() => [
+    // Teachers
+    { id: 'osho', type: 'teacher', name: 'Osho', description: 'Spiritual Teacher', category: 'teachers', image: require('../../../assets/teachers/osho.jpg') },
+    { id: 'buddha', type: 'teacher', name: 'Buddha', description: 'Spiritual Teacher', category: 'teachers', image: require('../../../assets/teachers/buddha.jpg') },
+    
+    // Practices
+    { id: 'meditation', type: 'practice', name: 'Mindfulness Meditation', description: 'A practice of present-moment awareness', category: 'practices' },
+    { id: 'breathing', type: 'practice', name: 'Breathing Exercises', description: 'Techniques for conscious breathing', category: 'practices' },
+    { id: 'body-scan', type: 'practice', name: 'Body Scan', description: 'Progressive body awareness practice', category: 'practices' },
+    
+    // Philosophy
+    { id: 'enlightenment', type: 'philosophy', name: 'Path to Enlightenment', description: 'Understanding the journey of spiritual awakening', category: 'philosophy' },
+    { id: 'compassion', type: 'philosophy', name: 'Compassion & Love', description: 'Cultivating loving-kindness and compassion', category: 'philosophy' },
+    { id: 'mindfulness', type: 'philosophy', name: 'Mindfulness Philosophy', description: 'The philosophy of present-moment awareness', category: 'philosophy' },
+    
+    // Courses
+    { id: 'beginner-meditation', type: 'course', name: 'Meditation for Beginners', description: 'A comprehensive course for meditation newcomers', category: 'courses' },
+    { id: 'advanced-practices', type: 'course', name: 'Advanced Spiritual Practices', description: 'Deep dive into advanced meditation techniques', category: 'courses' },
+    { id: 'philosophy-course', type: 'course', name: 'Eastern Philosophy', description: 'Understanding Eastern spiritual traditions', category: 'courses' },
+  ], []);
+
+  // Filter search results
+  const filteredResults = useMemo(() => {
+    // If no search query and teachers category is selected, show all teachers
+    if (!searchQuery.trim() && selectedCategory === 'teachers') {
+      return mockSearchData.filter(item => item.category === 'teachers');
+    }
+    
+    // If no search query, return empty array (show empty state)
+    if (!searchQuery.trim()) return [];
+    
+    return mockSearchData.filter(item => {
+      const matchesQuery = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+      return matchesQuery && matchesCategory;
+    });
+  }, [searchQuery, selectedCategory, mockSearchData]);
 
   const loadProfile = async () => {
     try {
@@ -101,18 +146,65 @@ const SpiritualTeacherScreen: React.FC = () => {
 
   const handleDiscoverTeachers = () => {
     setActiveTab('discover');
-    setShowTeacherDiscovery(true);
+    // No longer need to show TeacherDiscovery modal
   };
 
   const handleTeacherSelect = (teacher: any) => {
     setSelectedTeacher(teacher);
     setShowTeacherProfile(true);
-    setShowTeacherDiscovery(false);
   };
 
   const handleBackToDiscovery = () => {
     setShowTeacherProfile(false);
-    setShowTeacherDiscovery(true);
+    // No longer need to show TeacherDiscovery since we have the search page
+  };
+
+  const renderSearchResult = ({ item }: { item: any }) => {
+    const getCategoryIcon = (category: string) => {
+      switch (category) {
+        case 'teachers': return 'user';
+        case 'practices': return 'play-circle';
+        case 'philosophy': return 'heart';
+        case 'courses': return 'graduation-cap';
+        default: return 'file';
+      }
+    };
+
+    const handleResultPress = () => {
+      if (item.type === 'teacher') {
+        setSelectedTeacher({ id: item.id, type: 'spiritual', displayName: item.name });
+        setShowTeacherProfile(true);
+      } else {
+        // Handle other types of content
+        Alert.alert(item.name, item.description);
+      }
+    };
+
+    return (
+      <TouchableOpacity 
+        style={[styles.searchResultItem, { borderBottomColor: themeColors.border }]}
+        onPress={handleResultPress}
+      >
+        <View style={styles.searchResultContent}>
+          {item.image ? (
+            <Image source={item.image} style={styles.searchResultImage} resizeMode="cover" />
+          ) : (
+            <View style={[styles.searchResultIcon, { backgroundColor: brandColors.primary + '20' }]}>
+              <FontAwesome name={getCategoryIcon(item.category) as any} size={20} color={brandColors.primary} />
+            </View>
+          )}
+          <View style={styles.searchResultText}>
+            <Text style={[styles.searchResultTitle, { color: themeColors.textPrimary }]}>
+              {item.name}
+            </Text>
+            <Text style={[styles.searchResultDescription, { color: themeColors.textSecondary }]}>
+              {item.description}
+            </Text>
+          </View>
+        </View>
+        <FontAwesome name="chevron-right" size={16} color={themeColors.textSecondary} />
+      </TouchableOpacity>
+    );
   };
 
 
@@ -150,114 +242,90 @@ const SpiritualTeacherScreen: React.FC = () => {
         }
       case 'discover':
         return (
-          <ScrollView style={[styles.discoverContainer, { backgroundColor: themeColors.background }]}>
-            {/* Header */}
-            <View style={[styles.discoverHeader, { backgroundColor: themeColors.surface }]}>
-              <Text style={[styles.discoverTitle, { color: themeColors.textPrimary }]}>
-                Discover Teachers
-              </Text>
-              <Text style={[styles.discoverSubtitle, { color: themeColors.textSecondary }]}>
-                Find spiritual and meditation teachers whose wisdom resonates with you
-              </Text>
-            </View>
+          <View style={[styles.searchContainer, { backgroundColor: themeColors.background }]}>
 
-            {/* Quick Actions */}
-            <View style={[styles.quickActions, { backgroundColor: themeColors.surface }]}>
-              <TouchableOpacity
-                style={[styles.quickActionButton, { backgroundColor: brandColors.primary }]}
-                onPress={handleDiscoverTeachers}
-              >
-                <FontAwesome name="search" size={20} color="white" />
-                <Text style={styles.quickActionText}>Browse All Teachers</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.quickActionButton, { backgroundColor: brandColors.secondary }]}
-                onPress={() => setActiveTab('profile')}
-              >
-                <FontAwesome name="user" size={20} color="white" />
-                <Text style={styles.quickActionText}>My Current Teacher</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Learning Categories */}
-            <View style={[styles.learningSection, { backgroundColor: themeColors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
-                Learning Categories
-              </Text>
-              <View style={styles.categoriesGrid}>
-                <TouchableOpacity style={[styles.categoryCard, { backgroundColor: themeColors.background }]}>
-                  <FontAwesome name="book" size={24} color={brandColors.primary} />
-                  <Text style={[styles.categoryTitle, { color: themeColors.textPrimary }]}>Teachings</Text>
-                  <Text style={[styles.categoryDescription, { color: themeColors.textSecondary }]}>Wisdom & Philosophy</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={[styles.categoryCard, { backgroundColor: themeColors.background }]}>
-                  <FontAwesome name="play-circle" size={24} color={brandColors.primary} />
-                  <Text style={[styles.categoryTitle, { color: themeColors.textPrimary }]}>Practices</Text>
-                  <Text style={[styles.categoryDescription, { color: themeColors.textSecondary }]}>Meditation & Exercises</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={[styles.categoryCard, { backgroundColor: themeColors.background }]}>
-                  <FontAwesome name="graduation-cap" size={24} color={brandColors.primary} />
-                  <Text style={[styles.categoryTitle, { color: themeColors.textPrimary }]}>Courses</Text>
-                  <Text style={[styles.categoryDescription, { color: themeColors.textSecondary }]}>Structured Learning</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={[styles.categoryCard, { backgroundColor: themeColors.background }]}>
-                  <FontAwesome name="heart" size={24} color={brandColors.primary} />
-                  <Text style={[styles.categoryTitle, { color: themeColors.textPrimary }]}>Philosophy</Text>
-                  <Text style={[styles.categoryDescription, { color: themeColors.textSecondary }]}>Deep Insights</Text>
-                </TouchableOpacity>
+            {/* Search Input */}
+            <View style={[styles.searchInputContainer, { backgroundColor: themeColors.background }]}>
+              <View style={[styles.searchInputWrapper, { backgroundColor: themeColors.background, borderColor: themeColors.border }]}>
+                <FontAwesome name="search" size={16} color={themeColors.textSecondary} />
+                <TextInput
+                  style={[styles.searchInput, { color: themeColors.textPrimary }]}
+                  placeholder="Search with Guras AI"
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <FontAwesome name="times" size={16} color={themeColors.textSecondary} />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
 
-            {/* Popular Teachers Preview */}
-            <View style={[styles.teachersPreview, { backgroundColor: themeColors.surface }]}>
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
-                  Popular Teachers
+            {/* Category Filters */}
+            <View style={[styles.categoryFilters, { backgroundColor: themeColors.background }]}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryFiltersContent}>
+                {[
+                  { key: 'all', label: 'All' },
+                  { key: 'teachers', label: 'Teachers' },
+                  { key: 'practices', label: 'Practices' },
+                  { key: 'philosophy', label: 'Philosophy' },
+                  { key: 'courses', label: 'Courses' },
+                ].map((category) => (
+                  <TouchableOpacity
+                    key={category.key}
+                    style={[
+                      styles.categoryFilter,
+                      {
+                        backgroundColor: selectedCategory === category.key ? brandColors.primary : themeColors.background,
+                        borderColor: selectedCategory === category.key ? brandColors.primary : themeColors.border,
+                      }
+                    ]}
+                    onPress={() => setSelectedCategory(category.key as any)}
+                  >
+                    <Text style={[
+                      styles.categoryFilterText,
+                      { color: selectedCategory === category.key ? 'white' : themeColors.textPrimary }
+                    ]}>
+                      {category.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Search Results */}
+            {filteredResults.length > 0 ? (
+              <View style={styles.resultsContainer}>
+                {searchQuery.length > 0 && (
+                  <Text style={[styles.resultsCount, { color: themeColors.textSecondary }]}>
+                    {filteredResults.length} results found
+                  </Text>
+                )}
+                <FlatList
+                  data={filteredResults}
+                  keyExtractor={(item) => item.id}
+                  renderItem={renderSearchResult}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.resultsList}
+                />
+              </View>
+            ) : (
+              <View style={[styles.emptyState, { backgroundColor: themeColors.card }]}>
+                <FontAwesome name="search" size={48} color={themeColors.textSecondary} />
+                <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
+                  {searchQuery.length > 0 ? 'No Results Found' : 'Start Searching'}
                 </Text>
-                <TouchableOpacity onPress={handleDiscoverTeachers}>
-                  <Text style={[styles.seeAllText, { color: brandColors.primary }]}>See All</Text>
-                </TouchableOpacity>
+                <Text style={[styles.emptyStateSubtitle, { color: themeColors.textSecondary }]}>
+                  {searchQuery.length > 0 
+                    ? 'Try adjusting your search terms or selecting a different category'
+                    : 'Search for teachers, practices, philosophy, or courses to discover new content'
+                  }
+                </Text>
               </View>
-              
-              <View style={styles.teacherPreviewCards}>
-                <TouchableOpacity 
-                  style={[styles.teacherPreviewCard, { backgroundColor: themeColors.background }]}
-                  onPress={() => {
-                    setSelectedTeacher({ id: 'osho', type: 'spiritual', displayName: 'Osho' });
-                    setShowTeacherProfile(true);
-                  }}
-                >
-                  <Image
-                    source={require('../../../assets/teachers/osho.jpg')}
-                    style={styles.teacherPreviewImage}
-                    resizeMode="cover"
-                  />
-                  <Text style={[styles.teacherPreviewName, { color: themeColors.textPrimary }]}>Osho</Text>
-                  <Text style={[styles.teacherPreviewTitle, { color: themeColors.textSecondary }]}>Spiritual Teacher</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={[styles.teacherPreviewCard, { backgroundColor: themeColors.background }]}
-                  onPress={() => {
-                    setSelectedTeacher({ id: 'buddha', type: 'spiritual', displayName: 'Buddha' });
-                    setShowTeacherProfile(true);
-                  }}
-                >
-                  <Image
-                    source={require('../../../assets/teachers/buddha.jpg')}
-                    style={styles.teacherPreviewImage}
-                    resizeMode="cover"
-                  />
-                  <Text style={[styles.teacherPreviewName, { color: themeColors.textPrimary }]}>Buddha</Text>
-                  <Text style={[styles.teacherPreviewTitle, { color: themeColors.textSecondary }]}>Spiritual Teacher</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
+            )}
+          </View>
         );
       case 'qa':
         return (
@@ -352,12 +420,6 @@ const SpiritualTeacherScreen: React.FC = () => {
         </View>
       </Modal>
 
-      {/* Teacher Discovery Modal */}
-      <TeacherDiscovery
-        visible={showTeacherDiscovery}
-        onClose={() => setShowTeacherDiscovery(false)}
-        onTeacherSelect={handleTeacherSelect}
-      />
 
       {/* Teacher Profile Modal */}
       {selectedTeacher && (
@@ -580,6 +642,130 @@ const styles = StyleSheet.create({
   teacherPreviewTitle: {
     fontSize: 13,
     textAlign: 'center',
+    color: '#666666',
+  },
+  // Search styles
+  searchContainer: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  searchInputContainer: {
+    padding: 24,
+  },
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    marginLeft: 12,
+    color: '#1A1A1A',
+  },
+  categoryFilters: {
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+  },
+  categoryFiltersContent: {
+    paddingRight: 24,
+  },
+  categoryFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 12,
+    borderWidth: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  categoryFilterText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A1A1A',
+  },
+  resultsContainer: {
+    flex: 1,
+  },
+  resultsCount: {
+    fontSize: 14,
+    marginBottom: 16,
+    marginHorizontal: 24,
+    color: '#666666',
+  },
+  resultsList: {
+    paddingBottom: 20,
+  },
+  searchResultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    backgroundColor: 'transparent',
+  },
+  searchResultContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchResultImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 12,
+  },
+  searchResultIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  searchResultText: {
+    flex: 1,
+  },
+  searchResultTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    color: '#1A1A1A',
+  },
+  searchResultDescription: {
+    fontSize: 14,
+    marginBottom: 4,
+    color: '#666666',
+  },
+  searchResultCategory: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    backgroundColor: '#FFFFFF',
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 8,
+    color: '#1A1A1A',
+  },
+  emptyStateSubtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
     color: '#666666',
   },
 });
