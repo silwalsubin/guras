@@ -38,7 +38,8 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   onBack,
 }) => {
   const dispatch = useDispatch();
-  const colors = getThemeColors();
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  const colors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
   const insets = useSafeAreaInsets();
   
@@ -108,7 +109,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
 
 
   const renderTabs = () => (
-    <View style={[styles.tabBar, { backgroundColor: colors.surface }]}>
+    <View style={[styles.tabBar, { backgroundColor: colors.card }]}>
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -156,7 +157,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   const renderOverview = () => (
     <View style={styles.tabContent}>
       {/* Stats Row */}
-      <View style={[styles.statsRow, { backgroundColor: colors.surface }]}>
+      <View style={[styles.statsRow, { backgroundColor: colors.card }]}>
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: getTeacherColor() }]}>
             {teacher.followers?.toLocaleString() || '0'}
@@ -178,8 +179,8 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
       </View>
 
       {/* About Section */}
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>About</Text>
         <Text style={[styles.description, { color: colors.textSecondary }]}>
           {teacher.description || teacher.bio}
         </Text>
@@ -193,8 +194,8 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
 
       {/* Philosophy Section */}
       {teacher.philosophy && (
-        <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Philosophy</Text>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Philosophy</Text>
           <Text style={[styles.description, { color: colors.textSecondary }]}>
             {teacher.philosophy.essence}
           </Text>
@@ -203,12 +204,12 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
 
       {/* Core Teachings */}
       {teacher.coreTeachings && (
-        <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Core Teachings</Text>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Core Teachings</Text>
           {teacher.coreTeachings.map((teaching: string, index: number) => (
             <View key={index} style={styles.teachingItem}>
               <Text style={styles.teachingNumber}>{index + 1}</Text>
-              <Text style={[styles.teachingText, { color: colors.text }]}>{teaching}</Text>
+              <Text style={[styles.teachingText, { color: colors.textPrimary }]}>{teaching}</Text>
             </View>
           ))}
         </View>
@@ -266,16 +267,29 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar 
         barStyle="dark-content" 
         backgroundColor="transparent" 
         translucent={true} 
       />
-      <View style={[styles.header, { backgroundColor: colors.surface, paddingTop: insets.top + 20, marginTop: 0 }]}>
+      
+      {/* Background Profile Picture */}
+      {getTeacherImage() && (
+        <View style={styles.backgroundImageContainer}>
+          <Image
+            source={getTeacherImage()}
+            style={styles.backgroundImage}
+            resizeMode="cover"
+          />
+          <View style={styles.backgroundOverlay} />
+        </View>
+      )}
+      
+      <View style={[styles.header, { backgroundColor: 'transparent', paddingTop: insets.top + 20, marginTop: 0 }]}>
         {onBack && (
           <TouchableOpacity style={[styles.backButton, { top: insets.top + 20 }]} onPress={onBack}>
-            <FontAwesome name="arrow-left" size={20} color={colors.text} />
+            <FontAwesome name="arrow-left" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
         )}
         
@@ -291,7 +305,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
               <Text style={styles.teacherIconText}>👤</Text>
             )}
           </View>
-          <Text style={[styles.teacherName, { color: colors.text }]}>
+          <Text style={[styles.teacherName, { color: colors.textPrimary }]}>
             {teacher.displayName || teacher.name}
           </Text>
           <Text style={[styles.teacherTitle, { color: colors.textSecondary }]}>
@@ -322,7 +336,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={brandColors.primary}
           />
         }
       >
@@ -339,11 +353,34 @@ const styles = StyleSheet.create({
     marginTop: 0,
     paddingTop: 0,
   },
+  backgroundImageContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+    zIndex: 0,
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.4,
+  },
+  backgroundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+    backgroundColor: 'rgba(248, 250, 252, 0.7)',
+    zIndex: 1,
+  },
   header: {
     paddingBottom: 24,
     paddingHorizontal: 20,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
     alignItems: 'center',
+    zIndex: 2,
   },
   backButton: {
     position: 'absolute',
@@ -403,10 +440,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   tabBar: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
     paddingVertical: 12,
+    zIndex: 2,
   },
   tabBarContent: {
     paddingHorizontal: 16,
@@ -431,14 +469,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
+    zIndex: 2,
   },
   tabContent: {
     padding: 20,
   },
   section: {
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     padding: 20,
     borderRadius: 12,
     borderWidth: 1,
@@ -462,6 +501,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   statsGrid: {
     flexDirection: 'row',
