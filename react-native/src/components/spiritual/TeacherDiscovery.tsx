@@ -9,6 +9,7 @@ import {
   Modal,
   Dimensions,
   Image,
+  StatusBar,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
@@ -295,7 +296,7 @@ const TeacherDiscovery: React.FC<TeacherDiscoveryProps> = ({
       <Modal
         visible={!!selectedTeacher}
         animationType="slide"
-        presentationStyle="pageSheet"
+        presentationStyle="fullScreen"
         onRequestClose={() => setSelectedTeacher(null)}
       >
         <TeacherProfilePage
@@ -318,10 +319,15 @@ const TeacherDiscovery: React.FC<TeacherDiscoveryProps> = ({
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
       <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar 
+          barStyle="dark-content" 
+          backgroundColor="transparent" 
+          translucent={true} 
+        />
         <View style={[styles.header, { backgroundColor: colors.surface }]}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <FontAwesome name="times" size={20} color={colors.textSecondary} />
