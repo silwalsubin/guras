@@ -115,50 +115,6 @@ const SpiritualTeacherScreen: React.FC = () => {
     setShowTeacherDiscovery(true);
   };
 
-  const renderTabBar = () => {
-    const teacherName = currentTeacher?.displayName || 'Teacher';
-    const tabs = [
-      { key: 'discover', label: 'Teachers', icon: 'search' },
-      { key: 'profile', label: 'My Teacher', icon: 'user' },
-      { key: 'qa', label: 'Ask', icon: 'question-circle' },
-      { key: 'guidance', label: 'Guidance', icon: 'sun-o' },
-      { key: 'library', label: 'Library', icon: 'book' },
-    ];
-
-    return (
-      <View style={[styles.tabBar, { backgroundColor: themeColors.card }]}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[
-              styles.tab,
-              {
-                backgroundColor: activeTab === tab.key ? brandColors.primary : 'transparent',
-              },
-            ]}
-            onPress={() => setActiveTab(tab.key as any)}
-            activeOpacity={0.8}
-          >
-            <FontAwesome
-              name={tab.icon as any}
-              size={16}
-              color={activeTab === tab.key ? '#FFFFFF' : themeColors.textSecondary}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                {
-                  color: activeTab === tab.key ? '#FFFFFF' : themeColors.textSecondary,
-                },
-              ]}
-            >
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -363,8 +319,6 @@ const SpiritualTeacherScreen: React.FC = () => {
         {renderContent()}
       </View>
 
-      {renderTabBar()}
-
       {/* QA Modal */}
         <Modal
           visible={showQA}
@@ -477,29 +431,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  tabBar: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    marginHorizontal: 2,
-  },
-  tabText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 6,
   },
   modalContainer: {
     flex: 1,
