@@ -10,7 +10,8 @@ import {
 import { 
   saveGuidedSessionOffline,
   completeGuidedSession,
-  setOfflineMode as setGuidedOfflineMode 
+  setOfflineMode as setGuidedOfflineMode,
+  checkAchievements
 } from '@/store/guidedMeditationSlice';
 import NetInfo from '@react-native-community/netinfo';
 import offlineStorageService from '@/services/offlineStorageService';
@@ -74,6 +75,9 @@ export const useOfflineMeditation = () => {
         mood: sessionData?.mood,
       }));
     }
+
+    // Check achievements after completing session
+    dispatch(checkAchievements());
   }, [dispatch, meditationState.selectedMinutes]);
 
   // Complete guided meditation session with offline storage
@@ -89,6 +93,9 @@ export const useOfflineMeditation = () => {
 
     // Save to offline storage
     await dispatch(saveGuidedSessionOffline(sessionData));
+
+    // Check achievements after completing guided session
+    dispatch(checkAchievements());
   }, [dispatch]);
 
   // Get offline statistics

@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { GuidedMeditationSession, UserMeditationProgress } from '@/types/meditation';
 import offlineStorageService from '@/services/offlineStorageService';
+import achievementService from '@/services/achievementService';
+import { RootState } from './index';
 
 export interface GuidedMeditationState {
   // Session Progress
@@ -229,6 +231,18 @@ export const saveProgramProgressOffline = createAsyncThunk(
   }) => {
     const progressId = await offlineStorageService.saveProgramProgress(progressData);
     return progressId;
+  }
+);
+
+// Check achievements async thunk
+export const checkAchievements = createAsyncThunk(
+  'guidedMeditation/checkAchievements',
+  async (_, { getState }) => {
+    const state = getState() as RootState;
+    const { meditation, guidedMeditation } = state;
+    
+    const result = achievementService.checkAllAchievements(meditation, guidedMeditation);
+    return result;
   }
 );
 
@@ -480,6 +494,36 @@ const guidedMeditationSlice = createSlice({
       })
       .addCase(saveProgramProgressOffline.rejected, (state, action) => {
         console.error('Failed to save program progress offline:', action.error);
+      })
+      .addCase(checkAchievements.fulfilled, (state, action) => {
+        const { newlyUnlocked, updatedProgress } = action.payload;
+        
+        // Update progress for all achievements
+        updatedProgress.forEach(progress => {
+          const achievement = state.achievements.find(a => a.id === progress.achievementId);
+          if (achievement) {
+            achievement.progress = progress.progress;
+            if (progress.isUnlocked && !achievement.isUnlocked) {
+              achievement.isUnlocked = true;
+              achievement.unlockedAt = progress.unlockedAt;
+              state.unlockedAchievements.push(progress.achievementId);
+              
+              // Add milestone for newly unlocked achievement
+              const milestone: Milestone = {
+                id: `achievement-${achievement.id}`,
+                title: 'Achievement Unlocked!',
+                description: achievement.name,
+                icon: achievement.icon,
+                achievedAt: new Date().toISOString(),
+                type: 'session',
+              };
+              state.milestones.unshift(milestone);
+            }
+          }
+        });
+      })
+      .addCase(checkAchievements.rejected, (state, action) => {
+        console.error('Failed to check achievements:', action.error);
       });
   },
 });
@@ -489,7 +533,6 @@ export const {
   enrollInProgram,
   updateProgramProgress,
   updateGuidedStreak,
-  checkAchievements,
   addMilestone,
   resetProgress,
   setOfflineMode,
