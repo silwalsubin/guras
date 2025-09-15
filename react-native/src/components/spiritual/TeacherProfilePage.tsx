@@ -156,28 +156,6 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
 
   const renderOverview = () => (
     <View style={styles.tabContent}>
-      {/* Stats Row */}
-      <View style={[styles.statsRow, { backgroundColor: colors.card }]}>
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: getTeacherColor() }]}>
-            {teacher.followers?.toLocaleString() || '0'}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Followers</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: getTeacherColor() }]}>
-            {teacher.rating || 'N/A'}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rating</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: getTeacherColor() }]}>
-            {teacher.sessions || 'N/A'}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Sessions</Text>
-        </View>
-      </View>
-
       {/* About Section */}
       <View style={[styles.section, { backgroundColor: colors.card }]}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>About</Text>
@@ -186,10 +164,47 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
         </Text>
         <Text style={[styles.description, { color: colors.textSecondary, marginTop: 12 }]}>
           {teacher.id === 'osho' 
-            ? "Osho was a spiritual teacher and mystic who founded the Osho International Meditation Resort in Pune, India. His teachings combine Eastern philosophy with Western psychology, emphasizing meditation, awareness, and living life with joy and celebration."
-            : "Buddha, also known as Siddhartha Gautama, was a spiritual teacher and founder of Buddhism. His teachings focus on the Four Noble Truths, the Eightfold Path, and the practice of mindfulness and compassion to achieve enlightenment and end suffering."
+            ? "Osho (born Chandra Mohan Jain) was a controversial yet influential spiritual teacher, mystic, and philosopher who founded the Osho International Meditation Resort in Pune, India. Known for his dynamic meditation techniques and unconventional approach to spirituality, Osho combined Eastern philosophy with Western psychology to create a unique path of self-discovery. His teachings emphasized living life with joy, celebration, and awareness, challenging traditional religious and social norms. Osho developed over 100 meditation techniques, including the famous Dynamic Meditation, and wrote extensively on topics ranging from meditation and consciousness to love, relationships, and the nature of existence. Despite controversy surrounding his lifestyle and community, his teachings continue to inspire millions worldwide seeking personal transformation and spiritual growth."
+            : "Buddha, also known as Siddhartha Gautama, was a spiritual teacher and founder of Buddhism, one of the world's major religions. Born into a royal family in ancient India, he renounced his privileged life at age 29 to seek the truth about human suffering. After six years of intense spiritual practice, he achieved enlightenment under the Bodhi tree at age 35. Buddha's teachings, known as the Dharma, center on the Four Noble Truths and the Eightfold Path, providing a practical framework for ending suffering and achieving liberation. He spent the next 45 years teaching across northern India, establishing a monastic community (Sangha) and spreading his message of compassion, mindfulness, and wisdom. Buddha's profound insights into the nature of existence, impermanence, and the path to enlightenment continue to guide millions of practitioners worldwide in their spiritual journey toward awakening and inner peace."
           }
         </Text>
+      </View>
+
+      {/* Biographical Information */}
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Biographical Information</Text>
+        <View style={styles.bioInfo}>
+          <View style={styles.bioItem}>
+            <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Born</Text>
+            <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
+              {teacher.id === 'osho' ? 'December 11, 1931' : 'c. 563 BCE'}
+            </Text>
+          </View>
+          <View style={styles.bioItem}>
+            <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Birth Place</Text>
+            <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
+              {teacher.id === 'osho' ? 'Kuchwada, India' : 'Lumbini, Nepal'}
+            </Text>
+          </View>
+          <View style={styles.bioItem}>
+            <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Died</Text>
+            <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
+              {teacher.id === 'osho' ? 'January 19, 1990' : 'c. 483 BCE'}
+            </Text>
+          </View>
+          <View style={styles.bioItem}>
+            <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Death Place</Text>
+            <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
+              {teacher.id === 'osho' ? 'Pune, India' : 'Kushinagar, India'}
+            </Text>
+          </View>
+          <View style={styles.bioItem}>
+            <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Lifespan</Text>
+            <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
+              {teacher.id === 'osho' ? '58 years' : '80 years'}
+            </Text>
+          </View>
+        </View>
       </View>
 
       {/* Philosophy Section */}
@@ -311,6 +326,9 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
           <Text style={[styles.teacherTitle, { color: colors.textSecondary }]}>
             {teacher.tradition?.name || teacher.voiceStyle || 'Spiritual Teacher'}
           </Text>
+          <Text style={[styles.followersCount, { color: getTeacherColor() }]}>
+            {teacher.followers?.toLocaleString() || '0'} Followers
+          </Text>
         </View>
         
         <TouchableOpacity
@@ -419,9 +437,15 @@ const styles = StyleSheet.create({
   },
   teacherTitle: {
     fontSize: 14,
-    marginBottom: 20,
+    marginBottom: 8,
     textAlign: 'center',
     color: '#6B7280',
+  },
+  followersCount: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   followButton: {
     position: 'absolute',
@@ -549,6 +573,27 @@ const styles = StyleSheet.create({
     marginTop: 60,
     fontStyle: 'italic',
     color: '#999999',
+  },
+  bioInfo: {
+    marginTop: 12,
+  },
+  bioItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  bioLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  bioValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
   },
 });
 
