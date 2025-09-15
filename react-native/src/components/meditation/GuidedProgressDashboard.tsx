@@ -11,6 +11,7 @@ import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { TranslucentCard } from '@/components/shared';
+import achievementService from '@/services/achievementService';
 
 const { width } = Dimensions.get('window');
 
@@ -110,6 +111,7 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
     const unlockedAchievements = guidedMeditation.achievements.filter(a => a.isUnlocked);
     const inProgressAchievements = guidedMeditation.achievements.filter(a => !a.isUnlocked && a.progress > 0);
     const lockedAchievements = guidedMeditation.achievements.filter(a => !a.isUnlocked && a.progress === 0);
+    const hasAnyProgress = unlockedAchievements.length > 0 || inProgressAchievements.length > 0;
 
     return (
       <TranslucentCard contentStyle={{ paddingHorizontal: 4 }}>
@@ -122,14 +124,18 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
               Achievements
             </Text>
             <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-              {unlockedAchievements.length} of {guidedMeditation.achievements.length} unlocked
+              {hasAnyProgress 
+                ? `${unlockedAchievements.length} of ${guidedMeditation.achievements.length} unlocked`
+                : 'Your achievement journey'
+              }
             </Text>
           </View>
         </View>
 
-        <View style={styles.achievementsGrid}>
-          {/* Unlocked Achievements */}
-          {unlockedAchievements.map((achievement) => (
+        {hasAnyProgress ? (
+          <View style={styles.achievementsGrid}>
+            {/* Unlocked Achievements */}
+            {unlockedAchievements.map((achievement) => (
             <TouchableOpacity
               key={achievement.id}
               style={[styles.achievementGridCard, { backgroundColor: '#FFD700' + '20', borderColor: '#FFD700' }]}
@@ -182,22 +188,51 @@ const GuidedProgressDashboard: React.FC<GuidedProgressDashboardProps> = ({
           ))}
 
           {/* Locked Achievements */}
-          {lockedAchievements.slice(0, 4).map((achievement) => (
-            <TouchableOpacity
-              key={achievement.id}
-              style={[styles.achievementGridCard, { backgroundColor: themeColors.background, borderColor: themeColors.border, opacity: 0.6 }]}
-              onPress={() => onAchievementPress && onAchievementPress(achievement.id)}
-            >
-              <Icon name="lock" size={24} color={themeColors.textSecondary} />
-              <Text style={[styles.achievementGridName, { color: themeColors.textSecondary }]} numberOfLines={2}>
-                ???
-              </Text>
-              <Text style={[styles.achievementGridDescription, { color: themeColors.textSecondary }]} numberOfLines={2}>
-                Complete more sessions to unlock
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+          {lockedAchievements.slice(0, 4).map((achievement) => {
+            const rarity = achievementService.getAchievementRarity(achievement);
+            const rarityColor = achievementService.getAchievementColor(rarity);
+            const encouragement = achievementService.getEncouragementMessage(achievement);
+            
+            return (
+              <TouchableOpacity
+                key={achievement.id}
+                style={[styles.achievementGridCard, { 
+                  backgroundColor: themeColors.background, 
+                  borderColor: rarityColor + '40',
+                  opacity: 0.8 
+                }]}
+                onPress={() => onAchievementPress && onAchievementPress(achievement.id)}
+              >
+                <Icon name="lock" size={24} color={rarityColor} />
+                <Text style={[styles.achievementGridName, { color: themeColors.textPrimary }]} numberOfLines={2}>
+                  {achievement.name}
+                </Text>
+                <Text style={[styles.achievementGridDescription, { color: themeColors.textSecondary }]} numberOfLines={2}>
+                  {encouragement}
+                </Text>
+                <View style={[styles.rarityBadge, { backgroundColor: rarityColor + '20' }]}>
+                  <Text style={[styles.rarityText, { color: rarityColor }]}>
+                    {rarity.toUpperCase()}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+          </View>
+        ) : (
+          /* Empty state for achievements */
+          <View style={styles.emptyStateContainer}>
+            <View style={[styles.emptyStateIcon, { backgroundColor: '#FFD700' + '20' }]}>
+              <Icon name="trophy" size={32} color="#FFD700" />
+            </View>
+            <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
+              Start Your Journey
+            </Text>
+            <Text style={[styles.emptyStateDescription, { color: themeColors.textSecondary }]}>
+              Complete meditation sessions to unlock achievements and track your progress. Each achievement brings you closer to your mindfulness goals!
+            </Text>
+          </View>
+        )}
       </TranslucentCard>
     );
   };
@@ -497,6 +532,42 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 9,
     alignSelf: 'flex-start',
+  },
+  rarityBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  rarityText: {
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  emptyStateIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyStateDescription: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   activityItem: {
     flexDirection: 'row',
