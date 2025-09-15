@@ -366,12 +366,12 @@ const SpiritualTeacherScreen: React.FC = () => {
       {renderTabBar()}
 
       {/* QA Modal */}
-      <Modal
-        visible={showQA}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowQA(false)}
-      >
+        <Modal
+          visible={showQA}
+          animationType="slide"
+          presentationStyle="fullScreen"
+          onRequestClose={() => setShowQA(false)}
+        >
         <SpiritualQA onClose={() => setShowQA(false)} />
       </Modal>
 
@@ -379,7 +379,7 @@ const SpiritualTeacherScreen: React.FC = () => {
       <Modal
         visible={showTeacherSelector}
         animationType="slide"
-        presentationStyle="pageSheet"
+        presentationStyle="fullScreen"
         onRequestClose={() => setShowTeacherSelector(false)}
       >
         <View style={[styles.modalContainer, { backgroundColor: themeColors.background }]}>
@@ -410,7 +410,7 @@ const SpiritualTeacherScreen: React.FC = () => {
         <Modal
           visible={showTeacherProfile}
           animationType="slide"
-          presentationStyle="pageSheet"
+          presentationStyle="fullScreen"
           onRequestClose={() => setShowTeacherProfile(false)}
         >
           <TeacherProfilePage
