@@ -18,6 +18,7 @@ import { setBottomNavVisibility } from '@/store/bottomNavSlice';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useOfflineMeditation } from '@/hooks/useOfflineMeditation';
 import {
   MeditationTimer,
   TranslucentCard,
@@ -25,31 +26,7 @@ import {
 import GuidedProgressDashboard from '@/components/meditation/GuidedProgressDashboard';
 import VideoBackground from '@/components/meditation/VideoBackground';
 
-// Enhanced mock data for comprehensive meditation tracking
-const mockData = {
-  currentStreak: 7,
-  longestStreak: 21,
-  totalSessions: 45,
-  totalMinutes: 892,
-  weeklyMinutes: [45, 30, 60, 0, 25, 40, 35], // Last 7 days
-  monthlyMinutes: 285, // This month
-  completionRate: 85,
-  favoriteTime: '7:00 AM',
-  averageSessionLength: 19.8,
-  achievements: [
-    { id: 1, name: 'First Steps', description: 'Complete your first meditation', earned: true, icon: 'star' },
-    { id: 2, name: 'Week Warrior', description: '7-day meditation streak', earned: true, icon: 'fire' },
-    { id: 3, name: 'Mindful Month', description: '30-day meditation streak', earned: false, icon: 'calendar', progress: 23, target: 30 },
-    { id: 4, name: 'Century Club', description: 'Complete 100 meditation sessions', earned: false, icon: 'trophy', progress: 45, target: 100 },
-    { id: 5, name: 'Time Master', description: 'Meditate for 1000 minutes total', earned: false, icon: 'clock-o', progress: 892, target: 1000 },
-  ],
-  recentSessions: [
-    { date: '2025-01-20', duration: 20, completed: true, mood: { before: 3, after: 4 } },
-    { date: '2025-01-19', duration: 15, completed: true, mood: { before: 2, after: 4 } },
-    { date: '2025-01-18', duration: 25, completed: true, mood: { before: 3, after: 5 } },
-    { date: '2025-01-17', duration: 10, completed: false, mood: { before: 2, after: null } },
-  ],
-};
+// Real data will be sourced from Redux store and offline storage
 
 const MeditationScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -57,6 +34,43 @@ const MeditationScreen: React.FC = () => {
   const bottomNavState = useSelector((state: RootState) => state.bottomNav);
   const [refreshing, setRefreshing] = useState(false);
   const [activeSection, setActiveSection] = useState<'timer' | 'progress' | 'future'>('timer');
+  
+  // Get real data from Redux store
+  const meditationState = useSelector((state: RootState) => state.meditation);
+  const guidedMeditationState = useSelector((state: RootState) => state.guidedMeditation);
+  
+  // Offline functionality
+  const { isOffline, completeMeditationSession, offlineStats } = useOfflineMeditation();
+  
+
+  // Compute real data from Redux store
+  const meditationData = {
+    currentStreak: guidedMeditationState.guidedStreak,
+    longestStreak: guidedMeditationState.longestGuidedStreak,
+    totalSessions: meditationState.totalSessions + guidedMeditationState.totalGuidedSessions,
+    totalMinutes: meditationState.totalMinutes + guidedMeditationState.totalGuidedMinutes,
+    completionRate: meditationState.totalSessions > 0 ? Math.round((meditationState.totalSessions / (meditationState.totalSessions + 5)) * 100) : 0, // Simple calculation
+    averageSessionLength: meditationState.totalSessions > 0 ? meditationState.totalMinutes / meditationState.totalSessions : 0,
+    achievements: guidedMeditationState.achievements.map(achievement => ({
+      id: achievement.id,
+      name: achievement.name,
+      description: achievement.description,
+      earned: achievement.isUnlocked,
+      icon: achievement.icon,
+      progress: achievement.progress,
+      target: achievement.requirement.target,
+    })),
+    recentSessions: guidedMeditationState.recentSessions.map(session => ({
+      date: session.completedAt.split('T')[0],
+      duration: session.duration,
+      completed: true,
+      mood: session.mood,
+    })),
+    weeklyMinutes: [0, 0, 0, 0, 0, 0, 0], // TODO: Calculate from recent sessions
+  };
+
+  // Check if user has any meditation data
+  const hasData = meditationData.totalSessions > 0 || meditationData.totalMinutes > 0;
 
   // Animated text for Now tab
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -103,7 +117,6 @@ const MeditationScreen: React.FC = () => {
   }, [dispatch]);
 
   // Get meditation state for real progress data
-  const meditationState = useSelector((state: RootState) => state.meditation);
   const { isFullScreen } = meditationState;
 
   // Handle slide/swipe between sections
@@ -189,10 +202,18 @@ const MeditationScreen: React.FC = () => {
     };
   }, [dispatch]);
 
-  const handleMeditationComplete = (duration: number) => {
+  const handleMeditationComplete = async (duration: number) => {
     // Track meditation session completion
     console.log(`Meditation session completed: ${duration} minutes`);
-    // TODO: Update progress data, save to storage, etc.
+    
+    // Save to offline storage
+    await completeMeditationSession({
+      rating: undefined, // Could add rating UI later
+      notes: undefined,  // Could add notes UI later
+      mood: undefined,   // Could add mood tracking UI later
+    });
+    
+    console.log(`Session saved offline. Offline mode: ${isOffline}`);
   };
 
 
@@ -208,50 +229,73 @@ const MeditationScreen: React.FC = () => {
             Meditation Streak
           </Text>
           <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-            Keep the momentum going!
+            {hasData ? 'Keep the momentum going!' : 'Start your meditation journey'}
           </Text>
         </View>
       </View>
       
-      {/* Main streak display */}
-      <View style={styles.mainStreakDisplay}>
-        <Text style={[styles.mainStreakNumber, { color: brandColors.primary }]}>
-          {mockData.currentStreak}
-        </Text>
-        <Text style={[styles.mainStreakLabel, { color: themeColors.textPrimary }]}>
-          {mockData.currentStreak === 1 ? 'Day' : 'Days'} in a row
-        </Text>
-      </View>
+      {hasData ? (
+        <>
+          {/* Main streak display */}
+          <View style={styles.mainStreakDisplay}>
+            <Text style={[styles.mainStreakNumber, { color: brandColors.primary }]}>
+              {meditationData.currentStreak}
+            </Text>
+            <Text style={[styles.mainStreakLabel, { color: themeColors.textPrimary }]}>
+              {meditationData.currentStreak === 1 ? 'Day' : 'Days'} in a row
+            </Text>
+          </View>
 
-      {/* Additional streak insights */}
-      <View style={styles.streakInsights}>
-        <View style={styles.streakItem}>
-          <Text style={[styles.streakNumber, { color: themeColors.textPrimary }]}>
-            {mockData.longestStreak}
+          {/* Additional streak insights */}
+          <View style={styles.streakInsights}>
+            <View style={styles.streakItem}>
+              <Text style={[styles.streakNumber, { color: themeColors.textPrimary }]}>
+                {meditationData.longestStreak}
+              </Text>
+              <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
+                Best Streak
+              </Text>
+            </View>
+            <View style={styles.streakDivider} />
+            <View style={styles.streakItem}>
+              <Text style={[styles.streakNumber, { color: themeColors.textPrimary }]}>
+                {Math.floor(meditationData.totalMinutes / 60)}h {meditationData.totalMinutes % 60}m
+              </Text>
+              <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
+                Total Time
+              </Text>
+            </View>
+            <View style={styles.streakDivider} />
+            <View style={styles.streakItem}>
+              <Text style={[styles.streakNumber, { color: themeColors.textPrimary }]}>
+                {meditationData.totalSessions}
+              </Text>
+              <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
+                Sessions
+              </Text>
+            </View>
+          </View>
+        </>
+      ) : (
+        /* Empty state for streak card */
+        <View style={styles.emptyStateContainer}>
+          <View style={[styles.emptyStateIcon, { backgroundColor: brandColors.primary + '20' }]}>
+            <Icon name="play-circle" size={32} color={brandColors.primary} />
+          </View>
+          <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
+            Ready to begin?
           </Text>
-          <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
-            Best Streak
+          <Text style={[styles.emptyStateDescription, { color: themeColors.textSecondary }]}>
+            Complete your first meditation session to start building your streak and tracking your progress.
           </Text>
+          <TouchableOpacity 
+            style={[styles.emptyStateButton, { backgroundColor: brandColors.primary }]}
+            onPress={() => handleSlideToSection('timer')}
+          >
+            <Text style={styles.emptyStateButtonText}>Start Meditating</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.streakDivider} />
-        <View style={styles.streakItem}>
-          <Text style={[styles.streakNumber, { color: themeColors.textPrimary }]}>
-            {Math.floor(mockData.totalMinutes / 60)}h {mockData.totalMinutes % 60}m
-          </Text>
-          <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
-            Total Time
-          </Text>
-        </View>
-        <View style={styles.streakDivider} />
-        <View style={styles.streakItem}>
-          <Text style={[styles.streakNumber, { color: themeColors.textPrimary }]}>
-            {mockData.totalSessions}
-          </Text>
-          <Text style={[styles.streakLabel, { color: themeColors.textSecondary }]}>
-            Sessions
-          </Text>
-        </View>
-      </View>
+      )}
     </TranslucentCard>
   );
 
@@ -266,44 +310,60 @@ const MeditationScreen: React.FC = () => {
             Your Statistics
           </Text>
           <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-            Insights and patterns
+            {hasData ? 'Insights and patterns' : 'Your meditation insights'}
           </Text>
         </View>
       </View>
-      <View style={styles.statsGrid}>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
-            {mockData.completionRate}%
+      
+      {hasData ? (
+        <View style={styles.statsGrid}>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: brandColors.primary }]}>
+              {meditationData.completionRate}%
+            </Text>
+            <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
+              Completion Rate
+            </Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: brandColors.primary }]}>
+              {meditationData.averageSessionLength.toFixed(1)}m
+            </Text>
+            <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
+              Avg Session
+            </Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: brandColors.primary }]}>
+              {meditationData.totalSessions > 0 ? Math.floor(meditationData.totalMinutes / meditationData.totalSessions) : 0}m
+            </Text>
+            <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
+              Per Session
+            </Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: brandColors.primary }]}>
+              {Math.floor(meditationData.totalMinutes / 7)}m
+            </Text>
+            <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
+              Weekly Avg
+            </Text>
+          </View>
+        </View>
+      ) : (
+        /* Empty state for stats card */
+        <View style={styles.emptyStateContainer}>
+          <View style={[styles.emptyStateIcon, { backgroundColor: brandColors.primary + '20' }]}>
+            <Icon name="line-chart" size={32} color={brandColors.primary} />
+          </View>
+          <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
+            Track Your Progress
           </Text>
-          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
-            Completion Rate
+          <Text style={[styles.emptyStateDescription, { color: themeColors.textSecondary }]}>
+            Once you start meditating, you'll see detailed statistics about your practice, including completion rates and session patterns.
           </Text>
         </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
-            {mockData.averageSessionLength.toFixed(1)}m
-          </Text>
-          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
-            Avg Session
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
-            {Math.floor(mockData.totalMinutes / mockData.totalSessions)}m
-          </Text>
-          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
-            Per Session
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: brandColors.primary }]}>
-            {Math.floor(mockData.totalMinutes / 7)}m
-          </Text>
-          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>
-            Weekly Avg
-          </Text>
-        </View>
-      </View>
+      )}
     </TranslucentCard>
   );
 
@@ -318,37 +378,53 @@ const MeditationScreen: React.FC = () => {
             This Week
           </Text>
           <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-            Daily meditation minutes
+            {hasData ? 'Daily meditation minutes' : 'Your weekly progress'}
           </Text>
         </View>
       </View>
-      <View style={styles.weeklyChart}>
-        {mockData.weeklyMinutes.map((minutes, index) => {
-          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          const maxMinutes = Math.max(...mockData.weeklyMinutes);
-          const height = minutes > 0 ? Math.max((minutes / maxMinutes) * 60, 8) : 4;
+      
+      {hasData ? (
+        <View style={styles.weeklyChart}>
+          {meditationData.weeklyMinutes.map((minutes, index) => {
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const maxMinutes = Math.max(...meditationData.weeklyMinutes);
+            const height = minutes > 0 ? Math.max((minutes / maxMinutes) * 60, 8) : 4;
 
-          return (
-            <View key={index} style={styles.dayColumn}>
-              <View
-                style={[
-                  styles.dayBar,
-                  {
-                    height,
-                    backgroundColor: minutes > 0 ? brandColors.primary : themeColors.border,
-                  },
-                ]}
-              />
-              <Text style={[styles.dayLabel, { color: themeColors.textSecondary }]}>
-                {dayNames[index]}
-              </Text>
-              <Text style={[styles.dayMinutes, { color: themeColors.textPrimary }]}>
-                {minutes}m
-              </Text>
-            </View>
-          );
-        })}
-      </View>
+            return (
+              <View key={index} style={styles.dayColumn}>
+                <View
+                  style={[
+                    styles.dayBar,
+                    {
+                      height,
+                      backgroundColor: minutes > 0 ? brandColors.primary : themeColors.border,
+                    },
+                  ]}
+                />
+                <Text style={[styles.dayLabel, { color: themeColors.textSecondary }]}>
+                  {dayNames[index]}
+                </Text>
+                <Text style={[styles.dayMinutes, { color: themeColors.textPrimary }]}>
+                  {minutes}m
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        /* Empty state for weekly progress */
+        <View style={styles.emptyStateContainer}>
+          <View style={[styles.emptyStateIcon, { backgroundColor: brandColors.primary + '20' }]}>
+            <Icon name="calendar" size={32} color={brandColors.primary} />
+          </View>
+          <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
+            Build Your Routine
+          </Text>
+          <Text style={[styles.emptyStateDescription, { color: themeColors.textSecondary }]}>
+            Start meditating daily to see your weekly progress chart and build a consistent practice.
+          </Text>
+        </View>
+      )}
     </TranslucentCard>
   );
 
@@ -441,6 +517,17 @@ const MeditationScreen: React.FC = () => {
 
   const renderTimerSection = () => (
     <>
+      {/* Offline Indicator */}
+      {isOffline && (
+        <View style={[styles.offlineIndicator, { backgroundColor: themeColors.card }]}>
+          <Icon name="wifi" size={16} color={themeColors.textPrimary} />
+          <Text style={[styles.offlineText, { color: themeColors.textPrimary }]}>
+            Offline Mode - Data will sync when online
+          </Text>
+        </View>
+      )}
+      
+      
       {/* Meditation Timer - Hero Section */}
       <View style={styles.heroSection}>
         <MeditationTimer onSessionComplete={handleMeditationComplete} forceFullScreen={false} />
@@ -472,37 +559,54 @@ const MeditationScreen: React.FC = () => {
                 This Year
               </Text>
               <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-                Monthly meditation progress
+                {hasData ? 'Monthly meditation progress' : 'Your yearly journey'}
               </Text>
             </View>
           </View>
-          <View style={styles.monthlyChart}>
-            {[15, 22, 18, 25, 30, 28, 35, 40, 32, 38, 45, 42].map((minutes, index) => {
-              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-              const maxMinutes = Math.max(...[15, 22, 18, 25, 30, 28, 35, 40, 32, 38, 45, 42]);
-              const height = minutes > 0 ? Math.max((minutes / maxMinutes) * 80, 8) : 4;
+          
+          {hasData ? (
+            <View style={styles.monthlyChart}>
+              {/* TODO: Calculate real monthly data from meditation sessions */}
+              {[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((minutes, index) => {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const maxMinutes = Math.max(...[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+                const height = minutes > 0 ? Math.max((minutes / maxMinutes) * 80, 8) : 4;
 
-              return (
-                <View key={index} style={styles.monthColumn}>
-                  <View
-                    style={[
-                      styles.monthBar,
-                      {
-                        height,
-                        backgroundColor: minutes > 0 ? brandColors.primary : themeColors.border,
-                      },
-                    ]}
-                  />
-                  <Text style={[styles.monthLabel, { color: themeColors.textSecondary }]}>
-                    {monthNames[index]}
-                  </Text>
-                  <Text style={[styles.monthMinutes, { color: themeColors.textPrimary }]}>
-                    {minutes}m
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
+                return (
+                  <View key={index} style={styles.monthColumn}>
+                    <View
+                      style={[
+                        styles.monthBar,
+                        {
+                          height,
+                          backgroundColor: minutes > 0 ? brandColors.primary : themeColors.border,
+                        },
+                      ]}
+                    />
+                    <Text style={[styles.monthLabel, { color: themeColors.textSecondary }]}>
+                      {monthNames[index]}
+                    </Text>
+                    <Text style={[styles.monthMinutes, { color: themeColors.textPrimary }]}>
+                      {minutes}m
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            /* Empty state for yearly progress */
+            <View style={styles.emptyStateContainer}>
+              <View style={[styles.emptyStateIcon, { backgroundColor: brandColors.primary + '20' }]}>
+                <Icon name="calendar" size={32} color={brandColors.primary} />
+              </View>
+              <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
+                Track Your Year
+              </Text>
+              <Text style={[styles.emptyStateDescription, { color: themeColors.textSecondary }]}>
+                Start meditating regularly to see your monthly progress chart and track your growth throughout the year.
+              </Text>
+            </View>
+          )}
         </TranslucentCard>
       </View>
 
@@ -518,83 +622,74 @@ const MeditationScreen: React.FC = () => {
               Meditation Log
             </Text>
             <Text style={[styles.cardSubtitle, { color: themeColors.textSecondary }]}>
-              Every step you've taken
+              {hasData ? 'Every step you\'ve taken' : 'Your meditation journey'}
             </Text>
           </View>
         </View>
 
         {/* Event Log Entries */}
         <View style={styles.eventLogContainer}>
-          {/* Mock event data - in real app this would come from user's complete history */}
-          {[
-            { date: '2025-01-20', type: 'session', duration: 20, music: 'Forest Sounds', milestone: null },
-            { date: '2025-01-19', type: 'session', duration: 15, music: 'Ocean Waves', milestone: null },
-            { date: '2025-01-18', type: 'milestone', duration: 25, music: 'Rain Sounds', milestone: '7-day streak!' },
-            { date: '2025-01-17', type: 'session', duration: 10, music: null, milestone: null },
-            { date: '2025-01-15', type: 'session', duration: 30, music: 'Mountain Breeze', milestone: null },
-            { date: '2025-01-14', type: 'milestone', duration: 20, music: 'Forest Sounds', milestone: 'First 100 minutes!' },
-            { date: '2025-01-12', type: 'session', duration: 15, music: 'Ocean Waves', milestone: null },
-            { date: '2025-01-10', type: 'session', duration: 25, music: null, milestone: null },
-            { date: '2025-01-08', type: 'milestone', duration: 20, music: 'Rain Sounds', milestone: 'First meditation!' },
-          ].map((event, index) => (
+          {hasData ? (
+            /* Real event data from Redux store */
+            meditationData.recentSessions.map((session, index) => (
             <View key={index} style={styles.eventLogItem}>
               {/* Timeline connector */}
               <View style={styles.timelineConnector}>
                 <View style={[
                   styles.eventDot,
                   {
-                    backgroundColor: event.type === 'milestone'
-                      ? '#FFD700'
-                      : brandColors.primary
+                    backgroundColor: session.completed
+                      ? brandColors.primary
+                      : '#FF6B6B'
                   }
                 ]} />
-                {index < 8 && <View style={[styles.connectorLine, { backgroundColor: themeColors.border }]} />}
+                {index < meditationData.recentSessions.length - 1 && <View style={[styles.connectorLine, { backgroundColor: themeColors.border }]} />}
               </View>
 
               {/* Event content */}
               <View style={styles.eventContent}>
                 <View style={styles.eventHeader}>
                   <Text style={[styles.eventDate, { color: themeColors.textPrimary }]}>
-                    {new Date(event.date).toLocaleDateString('en-US', {
+                    {new Date(session.date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric'
                     })}
                   </Text>
                   <Text style={[styles.eventDuration, { color: brandColors.primary }]}>
-                    {event.duration}m
+                    {session.duration}m
                   </Text>
                 </View>
 
-                {event.milestone && (
-                  <View style={styles.milestoneContainer}>
-                    <Icon name="star" size={14} color="#FFD700" />
-                    <Text style={[styles.milestoneText, { color: '#FFD700' }]}>
-                      {event.milestone}
+                {session.mood && (
+                  <View style={styles.moodContainer}>
+                    <Text style={[styles.moodText, { color: themeColors.textSecondary }]}>
+                      😊 Mood: {session.mood.before} → {session.mood.after}
                     </Text>
                   </View>
                 )}
 
-                {event.music && (
-                  <Text style={[styles.eventMusic, { color: themeColors.textSecondary }]}>
-                    🎵 {event.music}
-                  </Text>
-                )}
-
                 <Text style={[styles.eventTime, { color: themeColors.textSecondary }]}>
-                  {new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' })} •
-                  {event.type === 'milestone' ? ' Achievement unlocked' : ' Meditation completed'}
+                  {new Date(session.date).toLocaleDateString('en-US', { weekday: 'long' })} •
+                  {session.completed ? ' Meditation completed' : ' Session incomplete'}
                 </Text>
               </View>
             </View>
-          ))}
-
-          {/* Load more indicator */}
-          <TouchableOpacity style={styles.loadMoreButton}>
-            <Text style={[styles.loadMoreText, { color: brandColors.primary }]}>
-              Load earlier sessions...
-            </Text>
-          </TouchableOpacity>
+            ))
+          ) : (
+            /* Empty state for meditation log */
+            <View style={styles.emptyStateContainer}>
+              <View style={[styles.emptyStateIcon, { backgroundColor: brandColors.primary + '20' }]}>
+                <Icon name="history" size={32} color={brandColors.primary} />
+              </View>
+              <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
+                Start Your Journey
+              </Text>
+              <Text style={[styles.emptyStateDescription, { color: themeColors.textSecondary }]}>
+                Your meditation sessions will appear here, creating a beautiful timeline of your mindfulness practice.
+              </Text>
+            </View>
+          )}
         </View>
       </TranslucentCard>
       </View>
@@ -1332,6 +1427,73 @@ const styles = StyleSheet.create({
   pastCardWrapper: {
     marginHorizontal: 8, // Set to 8 for balanced card width
     marginBottom: 4, // Reduced from 8 to 4
+  },
+  
+  // Offline indicator styles
+  offlineIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginHorizontal: 8,
+    marginBottom: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFA500',
+  },
+  offlineText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  
+  // Mood container styles
+  moodContainer: {
+    marginTop: 4,
+  },
+  moodText: {
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  
+  // Empty state styles
+  emptyStateContainer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  emptyStateIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyStateDescription: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  emptyStateButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    minWidth: 140,
+    alignItems: 'center',
+  },
+  emptyStateButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 
 
