@@ -63,6 +63,8 @@ const SpiritualTeacherScreen: React.FC = () => {
         return require('../../../assets/teachers/buddha.jpg');
       case 'krishnamurti':
         return require('../../../assets/teachers/jkrishnamurti.jpg');
+      case 'vivekananda':
+        return require('../../../assets/teachers/vivekananda.jpg');
       default:
         return require('../../../assets/teachers/osho.jpg'); // fallback
     }

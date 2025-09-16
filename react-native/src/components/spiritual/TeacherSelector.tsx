@@ -25,6 +25,10 @@ const TeacherSelector: React.FC<TeacherSelectorProps> = ({ onTeacherSelect }) =>
         return '🧘‍♂️';
       case 'buddha':
         return '🕉️';
+      case 'krishnamurti':
+        return '🤔';
+      case 'vivekananda':
+        return '🕉️';
       default:
         return '👤';
     }
@@ -36,6 +40,10 @@ const TeacherSelector: React.FC<TeacherSelectorProps> = ({ onTeacherSelect }) =>
         return '#FF6B35';
       case 'buddha':
         return '#FF9800';
+      case 'krishnamurti':
+        return '#9C27B0';
+      case 'vivekananda':
+        return '#FF5722';
       default:
         return colors.primary;
     }

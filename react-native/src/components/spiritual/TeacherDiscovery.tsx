@@ -108,6 +108,8 @@ const TeacherDiscovery: React.FC<TeacherDiscoveryProps> = ({
           return require('../../../assets/teachers/buddha.jpg');
         case 'krishnamurti':
           return require('../../../assets/teachers/jkrishnamurti.jpg');
+        case 'vivekananda':
+          return require('../../../assets/teachers/vivekananda.jpg');
         default:
           return null;
       }
@@ -122,6 +124,10 @@ const TeacherDiscovery: React.FC<TeacherDiscoveryProps> = ({
           return '#FF6B35';
         case 'buddha':
           return '#FF9800';
+        case 'krishnamurti':
+          return '#9C27B0';
+        case 'vivekananda':
+          return '#FF5722';
         default:
           return brandColors.primary;
       }

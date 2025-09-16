@@ -15,6 +15,11 @@ import {
   KrishnamurtiQuote,
   KrishnamurtiPractice,
   KrishnamurtiCategory,
+  VivekanandaProfile,
+  VivekanandaTeaching,
+  VivekanandaQuote,
+  VivekanandaPractice,
+  VivekanandaCategory,
   SpiritualGuidance,
   SpiritualConversation,
   SpiritualProfile,
@@ -287,6 +292,94 @@ const initialKrishnamurtiProfile: KrishnamurtiProfile = {
   userRating: 4.7
 };
 
+// Initial Swami Vivekananda profile
+const initialVivekanandaProfile: VivekanandaProfile = {
+  id: 'vivekananda',
+  name: 'Vivekananda',
+  displayName: 'Swami Vivekananda',
+  fullName: 'Swami Vivekananda (Narendranath Datta)',
+  birthYear: 1863,
+  deathYear: 1902,
+  nationality: 'Indian',
+  description: 'A Hindu monk and philosopher who introduced Vedanta to the Western world. Disciple of Sri Ramakrishna, he founded the Ramakrishna Mission and delivered the famous speech at the Parliament of World Religions in Chicago in 1893, beginning with "Sisters and Brothers of America." He emphasized the divinity of man, self-confidence, and service to humanity as the highest form of worship.',
+  tradition: {
+    name: 'Vedanta & Yoga',
+    description: 'Hindu philosophy emphasizing the unity of all existence and the divinity of the soul',
+    origin: 'India',
+    keyConcepts: ['Vedanta', 'Yoga', 'Service', 'Education', 'Universal Religion', 'Self-Realization'],
+    practices: ['Karma Yoga', 'Bhakti Yoga', 'Jnana Yoga', 'Raja Yoga', 'Service', 'Meditation'],
+    philosophy: 'Unity of all religions and the divinity of the human soul'
+  },
+  era: '1863-1902',
+  avatar: 'vivekananda_avatar',
+  background: 'spiritual_landscape',
+  coreTeachings: [
+    'Arise, awake, and stop not till the goal is reached',
+    'You cannot believe in God until you believe in yourself',
+    'The greatest sin is to think yourself weak',
+    'All differences in this world are of degree, and not of kind',
+    'Those who serve others, serve the Lord',
+    'Education is the manifestation of the perfection already in man',
+    'Each soul is potentially divine'
+  ],
+  teachingStyle: {
+    approach: 'inspiring',
+    tone: 'passionate',
+    focus: 'service',
+    complexity: 'intermediate'
+  },
+  personality: {
+    traits: ['Inspiring', 'Confident', 'Practical', 'Compassionate', 'Wise', 'Courageous'],
+    communication: 'Inspiring and direct, emphasizing self-confidence and practical application',
+    humor: 'Present but subtle, often in the form of gentle wisdom',
+    compassion: 'Deep love for humanity and service to others'
+  },
+  philosophy: {
+    essence: 'Divinity of man and unity of all religions through self-realization',
+    keyPrinciples: [
+      'Arise, awake, and stop not till the goal is reached',
+      'You cannot believe in God until you believe in yourself',
+      'The greatest sin is to think yourself weak',
+      'All differences in this world are of degree, and not of kind',
+      'Those who serve others, serve the Lord',
+      'Education is the manifestation of the perfection already in man',
+      'Each soul is potentially divine'
+    ],
+    approach: 'Practical spirituality through self-confidence, service, and self-realization',
+    focus: 'Self-confidence, service to humanity, education, and universal religion'
+  },
+  teachingStyle: {
+    communication: {
+      tone: 'inspiring',
+      method: 'lecture',
+      humor: 'Present but subtle, often in the form of gentle wisdom',
+      compassion: 'Deep love for humanity and service to others'
+    },
+    content: {
+      topics: [
+        'Self-confidence and self-realization',
+        'Karma Yoga and selfless service',
+        'Bhakti Yoga and devotion',
+        'Jnana Yoga and knowledge',
+        'Raja Yoga and meditation',
+        'Education and character building',
+        'Universal religion and tolerance'
+      ],
+      complexity: 'intermediate',
+      depth: 'profound'
+    },
+    interaction: {
+      questioning: 'Encouraging self-inquiry and practical application',
+      guidance: 'Inspiring and practical, focused on service',
+      support: 'Compassionate and encouraging',
+      challenge: 'Motivating to rise above limitations and serve others'
+    }
+  },
+  isAvailable: true,
+  popularity: 9,
+  userRating: 4.8
+};
+
 // Osho teaching categories
 const oshoCategories: Record<OshoCategory, any> = {
   meditation: {
@@ -404,6 +497,66 @@ const buddhaCategories: Record<BuddhaCategory, any> = {
     color: '#673AB7',
     icon: '✨',
     keyConcepts: ['Nirvana', 'Bodhi', 'Liberation', 'Awakening']
+  }
+};
+
+// Vivekananda teaching categories
+const vivekanandaCategories: Record<VivekanandaCategory, any> = {
+  karma_yoga: {
+    name: 'Karma Yoga',
+    description: 'The path of selfless action and service',
+    color: '#FF5722',
+    icon: '🤝',
+    keyConcepts: ['Selfless service', 'Action without attachment', 'Duty', 'Work as worship']
+  },
+  bhakti_yoga: {
+    name: 'Bhakti Yoga',
+    description: 'The path of devotion and love for the divine',
+    color: '#E91E63',
+    icon: '💖',
+    keyConcepts: ['Devotion', 'Love', 'Surrender', 'Divine love']
+  },
+  jnana_yoga: {
+    name: 'Jnana Yoga',
+    description: 'The path of knowledge and wisdom',
+    color: '#2196F3',
+    icon: '🧠',
+    keyConcepts: ['Knowledge', 'Wisdom', 'Discrimination', 'Self-realization']
+  },
+  raja_yoga: {
+    name: 'Raja Yoga',
+    description: 'The royal path of meditation and control of mind',
+    color: '#9C27B0',
+    icon: '🧘‍♂️',
+    keyConcepts: ['Meditation', 'Mind control', 'Concentration', 'Samadhi']
+  },
+  service: {
+    name: 'Service to Humanity',
+    description: 'Selfless service to others as a spiritual practice',
+    color: '#4CAF50',
+    icon: '🌍',
+    keyConcepts: ['Service', 'Humanity', 'Compassion', 'Social reform']
+  },
+  education: {
+    name: 'Education & Character',
+    description: 'Education as the manifestation of perfection',
+    color: '#FFC107',
+    icon: '📚',
+    keyConcepts: ['Education', 'Character', 'Manifestation', 'Perfection']
+  },
+  nationalism: {
+    name: 'Nationalism & Pride',
+    description: 'Love for one\'s country and cultural heritage',
+    color: '#FF9800',
+    icon: '🏛️',
+    keyConcepts: ['Nationalism', 'Pride', 'Heritage', 'Cultural identity']
+  },
+  universal_religion: {
+    name: 'Universal Religion',
+    description: 'Unity of all religions and universal brotherhood',
+    color: '#607D8B',
+    icon: '🌐',
+    keyConcepts: ['Unity', 'Universal religion', 'Tolerance', 'Brotherhood']
   }
 };
 
@@ -747,6 +900,207 @@ const sampleOshoPractices: OshoPractice[] = [
   }
 ];
 
+// Sample Vivekananda teachings
+const sampleVivekanandaTeachings: VivekanandaTeaching[] = [
+  {
+    id: 'karma-yoga-1',
+    title: 'Karma Yoga: The Path of Selfless Action',
+    content: 'Karma Yoga is the path of selfless action. Work without attachment to the fruits of action. Do your duty without expecting any reward. This is the highest form of yoga - to work for the sake of work itself, not for any personal gain.',
+    source: {
+      type: 'lecture',
+      title: 'Karma Yoga',
+      location: 'New York',
+      date: '1895'
+    },
+    category: 'karma_yoga',
+    tags: ['karma yoga', 'selfless action', 'duty', 'work'],
+    spiritualLevel: 'beginner',
+    popularity: 9,
+    keyConcepts: ['Selfless action', 'Duty', 'Work without attachment', 'Service'],
+    teachingValue: 9,
+    memorability: 8
+  },
+  {
+    id: 'education-1',
+    title: 'Education as Manifestation of Perfection',
+    content: 'Education is the manifestation of the perfection already in man. Every soul is potentially divine. The goal is to manifest this divinity within by controlling nature, external and internal. Do this either by work, or worship, or psychic control, or philosophy.',
+    source: {
+      type: 'lecture',
+      title: 'Education',
+      location: 'Madras',
+      date: '1897'
+    },
+    category: 'education',
+    tags: ['education', 'perfection', 'divinity', 'manifestation'],
+    spiritualLevel: 'intermediate',
+    popularity: 8,
+    keyConcepts: ['Education', 'Perfection', 'Divinity', 'Manifestation'],
+    teachingValue: 8,
+    memorability: 9
+  },
+  {
+    id: 'universal-religion-1',
+    title: 'Universal Religion and Unity',
+    content: 'All religions are true. The time has come when every human being should be able to say, "I am a Hindu, I am a Christian, I am a Muslim, I am a Jew." That is the basis of universal religion. The whole world is one family.',
+    source: {
+      type: 'speech',
+      title: 'Address at the Parliament of Religions',
+      location: 'Chicago',
+      date: '1893'
+    },
+    category: 'universal_religion',
+    tags: ['universal religion', 'unity', 'tolerance', 'brotherhood'],
+    spiritualLevel: 'beginner',
+    popularity: 10,
+    keyConcepts: ['Universal religion', 'Unity', 'Tolerance', 'Brotherhood'],
+    teachingValue: 10,
+    memorability: 10
+  }
+];
+
+// Sample Vivekananda quotes
+const sampleVivekanandaQuotes: VivekanandaQuote[] = [
+  {
+    id: 'arise-awake-quote',
+    text: 'Arise, awake, and stop not until the goal is reached.',
+    source: {
+      type: 'lecture',
+      title: 'Karma Yoga',
+      location: 'New York',
+      date: '1895'
+    },
+    category: 'karma_yoga',
+    tags: ['arise', 'awake', 'goal', 'determination'],
+    spiritualLevel: 'beginner',
+    popularity: 10,
+    keyConcepts: ['Determination', 'Goal', 'Awakening', 'Action'],
+    teachingValue: 10,
+    memorability: 10,
+    relatedQuotes: ['children-of-god-quote'],
+    practices: ['karma-yoga-practice']
+  },
+  {
+    id: 'self-confidence-quote',
+    text: 'You cannot believe in God until you believe in yourself.',
+    source: {
+      type: 'lecture',
+      title: 'Raja Yoga',
+      location: 'New York',
+      date: '1895'
+    },
+    category: 'jnana_yoga',
+    tags: ['self-confidence', 'belief', 'god', 'yourself'],
+    spiritualLevel: 'beginner',
+    popularity: 9,
+    keyConcepts: ['Self-confidence', 'Belief', 'Self-realization', 'Divinity'],
+    teachingValue: 9,
+    memorability: 9,
+    relatedQuotes: ['arise-awake-quote'],
+    practices: ['jnana-yoga-practice']
+  },
+  {
+    id: 'service-quote',
+    text: 'Those who serve others, serve the Lord.',
+    source: {
+      type: 'lecture',
+      title: 'Karma Yoga',
+      location: 'New York',
+      date: '1895'
+    },
+    category: 'service',
+    tags: ['service', 'others', 'lord', 'selfless'],
+    spiritualLevel: 'beginner',
+    popularity: 9,
+    keyConcepts: ['Service', 'Selfless action', 'Divine service', 'Humanity'],
+    teachingValue: 9,
+    memorability: 9,
+    relatedQuotes: ['arise-awake-quote'],
+    practices: ['karma-yoga-practice']
+  }
+];
+
+// Sample Vivekananda practices
+const sampleVivekanandaPractices: VivekanandaPractice[] = [
+  {
+    id: 'karma-yoga-practice',
+    name: 'Karma Yoga Practice',
+    type: 'service',
+    category: 'karma_yoga',
+    difficulty: 'beginner',
+    duration: { minimum: 30, recommended: 60, maximum: 120 },
+    description: 'Practice selfless service without attachment to results',
+    instructions: [
+      'Choose a service activity that helps others',
+      'Perform the service with full attention and dedication',
+      'Do not expect any reward or recognition',
+      'Focus on the quality of your work, not the outcome',
+      'Dedicate your actions to the divine or humanity'
+    ],
+    preparation: ['Identify a service opportunity', 'Set aside time', 'Prepare mentally for selfless action'],
+    benefits: ['Reduces ego', 'Develops compassion', 'Builds character', 'Brings inner peace'],
+    whenToUse: ['Daily', 'When feeling selfish', 'During community service', 'When seeking purpose'],
+    prerequisites: ['Willingness to serve', 'Basic understanding of selfless action'],
+    relatedPractices: ['bhakti-yoga-practice'],
+    teaching: 'karma-yoga-1',
+    popularity: 8,
+    effectiveness: 8,
+    userRating: 4.6,
+    completionRate: 0.7
+  },
+  {
+    id: 'raja-yoga-meditation',
+    name: 'Raja Yoga Meditation',
+    type: 'meditation',
+    category: 'raja_yoga',
+    difficulty: 'intermediate',
+    duration: { minimum: 20, recommended: 45, maximum: 90 },
+    description: 'Meditation practice for controlling the mind and achieving concentration',
+    instructions: [
+      'Sit in a comfortable position with spine straight',
+      'Close your eyes and focus on your breathing',
+      'Gradually withdraw your senses from external objects',
+      'Focus your mind on a single point or idea',
+      'Maintain this concentration for the duration of practice'
+    ],
+    preparation: ['Find a quiet space', 'Sit comfortably', 'Set a timer'],
+    benefits: ['Mind control', 'Concentration', 'Inner peace', 'Self-realization'],
+    whenToUse: ['Morning', 'Evening', 'Before important tasks', 'During stress'],
+    prerequisites: ['Basic meditation experience', 'Ability to sit still'],
+    relatedPractices: ['karma-yoga-practice'],
+    teaching: 'raja-yoga-1',
+    popularity: 7,
+    effectiveness: 8,
+    userRating: 4.5,
+    completionRate: 0.6
+  },
+  {
+    id: 'jnana-yoga-study',
+    name: 'Jnana Yoga Study',
+    type: 'study',
+    category: 'jnana_yoga',
+    difficulty: 'advanced',
+    duration: { minimum: 30, recommended: 60, maximum: 120 },
+    description: 'Study and contemplation of spiritual texts and philosophy',
+    instructions: [
+      'Choose a spiritual text or philosophical work',
+      'Read slowly and thoughtfully',
+      'Contemplate the deeper meanings',
+      'Apply the teachings to your life',
+      'Reflect on how the knowledge affects your understanding'
+    ],
+    preparation: ['Select appropriate texts', 'Create a study space', 'Set aside dedicated time'],
+    benefits: ['Wisdom development', 'Self-knowledge', 'Spiritual understanding', 'Discrimination'],
+    whenToUse: ['Daily study time', 'When seeking understanding', 'During contemplation periods'],
+    prerequisites: ['Basic reading ability', 'Interest in philosophy', 'Contemplative nature'],
+    relatedPractices: ['raja-yoga-meditation'],
+    teaching: 'jnana-yoga-1',
+    popularity: 6,
+    effectiveness: 7,
+    userRating: 4.3,
+    completionRate: 0.5
+  }
+];
+
 // Spiritual Teacher State
 export interface SpiritualTeacherState {
   // Current teacher
@@ -774,6 +1128,13 @@ export interface SpiritualTeacherState {
   krishnamurtiPractices: KrishnamurtiPractice[];
   krishnamurtiCategories: Record<KrishnamurtiCategory, any>;
   
+  // Vivekananda-specific data
+  vivekanandaProfile: VivekanandaProfile;
+  vivekanandaTeachings: VivekanandaTeaching[];
+  vivekanandaQuotes: VivekanandaQuote[];
+  vivekanandaPractices: VivekanandaPractice[];
+  vivekanandaCategories: Record<VivekanandaCategory, any>;
+  
   // User interactions
   conversations: SpiritualConversation[];
   currentConversation: SpiritualConversation | null;
@@ -787,7 +1148,7 @@ export interface SpiritualTeacherState {
   // UI state
   isLoading: boolean;
   error: string | null;
-  selectedCategory: OshoCategory | BuddhaCategory | KrishnamurtiCategory | null;
+  selectedCategory: OshoCategory | BuddhaCategory | KrishnamurtiCategory | VivekanandaCategory | null;
   searchQuery: string;
   
   // Offline storage state
@@ -798,7 +1159,7 @@ export interface SpiritualTeacherState {
 
 const initialState: SpiritualTeacherState = {
   currentTeacher: initialOshoProfile,
-  availableTeachers: [initialOshoProfile, initialBuddhaProfile, initialKrishnamurtiProfile],
+  availableTeachers: [initialOshoProfile, initialBuddhaProfile, initialKrishnamurtiProfile, initialVivekanandaProfile],
   
   oshoProfile: initialOshoProfile,
   oshoTeachings: sampleOshoTeachings,
@@ -817,6 +1178,12 @@ const initialState: SpiritualTeacherState = {
   krishnamurtiQuotes: [],
   krishnamurtiPractices: [],
   krishnamurtiCategories: {},
+  
+  vivekanandaProfile: initialVivekanandaProfile,
+  vivekanandaTeachings: sampleVivekanandaTeachings,
+  vivekanandaQuotes: sampleVivekanandaQuotes,
+  vivekanandaPractices: sampleVivekanandaPractices,
+  vivekanandaCategories: vivekanandaCategories,
   
   conversations: [],
   currentConversation: null,

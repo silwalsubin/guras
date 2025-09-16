@@ -222,6 +222,8 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
             ? "Osho (born Chandra Mohan Jain) was a controversial yet influential spiritual teacher, mystic, and philosopher who founded the Osho International Meditation Resort in Pune, India. Known for his dynamic meditation techniques and unconventional approach to spirituality, Osho combined Eastern philosophy with Western psychology to create a unique path of self-discovery. His teachings emphasized living life with joy, celebration, and awareness, challenging traditional religious and social norms. Osho developed over 100 meditation techniques, including the famous Dynamic Meditation, and wrote extensively on topics ranging from meditation and consciousness to love, relationships, and the nature of existence. Despite controversy surrounding his lifestyle and community, his teachings continue to inspire millions worldwide seeking personal transformation and spiritual growth."
             : teacher.id === 'buddha' 
             ? "Buddha, also known as Siddhartha Gautama, was a spiritual teacher and founder of Buddhism, one of the world's major religions. Born into a royal family in ancient India, he renounced his privileged life at age 29 to seek the truth about human suffering. After six years of intense spiritual practice, he achieved enlightenment under the Bodhi tree at age 35. Buddha's teachings, known as the Dharma, center on the Four Noble Truths and the Eightfold Path, providing a practical framework for ending suffering and achieving liberation. He spent the next 45 years teaching across northern India, establishing a monastic community (Sangha) and spreading his message of compassion, mindfulness, and wisdom. Buddha's profound insights into the nature of existence, impermanence, and the path to enlightenment continue to guide millions of practitioners worldwide in their spiritual journey toward awakening and inner peace."
+            : teacher.id === 'vivekananda'
+            ? "Swami Vivekananda (born Narendranath Datta) was a Hindu monk and philosopher who introduced Vedanta to the Western world. A disciple of Sri Ramakrishna, he founded the Ramakrishna Mission and delivered the famous speech at the Parliament of World Religions in Chicago in 1893, beginning with 'Sisters and Brothers of America.' He emphasized the divinity of man, self-confidence, and service to humanity as the highest form of worship. Vivekananda's teachings focused on practical spirituality through the four paths of yoga: Karma Yoga (selfless service), Bhakti Yoga (devotion), Jnana Yoga (knowledge), and Raja Yoga (meditation). He believed that education should manifest the perfection already in man and that all religions are valid paths to the same truth. His inspiring message of self-confidence and service continues to motivate millions worldwide in their spiritual and social development."
             : "Jiddu Krishnamurti was a philosopher, speaker, and writer who questioned the very nature of thought, consciousness, and freedom. Born in India and raised by the Theosophical Society, he later rejected all organized religion and spiritual authority, including the role they had prepared for him as the 'World Teacher.' Instead, he dedicated his life to exploring the nature of consciousness and human conditioning through direct inquiry and dialogue. His teachings emphasized the importance of self-inquiry, observation without the observer, and freedom from psychological conditioning. Krishnamurti's approach was unique in that he refused to establish any system, method, or following, insisting that truth is a pathless land that each individual must discover for themselves through their own investigation and awareness."
           }
         </Text>
@@ -236,6 +238,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? 'December 11, 1931' : 
                teacher.id === 'buddha' ? 'c. 563 BCE' : 
+               teacher.id === 'vivekananda' ? 'January 12, 1863' :
                'May 12, 1895'}
             </Text>
           </View>
@@ -244,6 +247,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? 'Kuchwada, India' : 
                teacher.id === 'buddha' ? 'Lumbini, Nepal' : 
+               teacher.id === 'vivekananda' ? 'Calcutta, India' :
                'Madanapalle, India'}
             </Text>
           </View>
@@ -252,6 +256,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? 'January 19, 1990' : 
                teacher.id === 'buddha' ? 'c. 483 BCE' : 
+               teacher.id === 'vivekananda' ? 'July 4, 1902' :
                'February 17, 1986'}
             </Text>
           </View>
@@ -260,6 +265,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? 'Pune, India' : 
                teacher.id === 'buddha' ? 'Kushinagar, India' : 
+               teacher.id === 'vivekananda' ? 'Belur, India' :
                'Ojai, California, USA'}
             </Text>
           </View>
@@ -268,6 +274,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? '58 years' : 
                teacher.id === 'buddha' ? '80 years' : 
+               teacher.id === 'vivekananda' ? '39 years' :
                '90 years'}
             </Text>
           </View>
