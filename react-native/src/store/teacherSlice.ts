@@ -5,11 +5,9 @@ import {
   TeacherFeed, 
   TeacherRecommendation,
   TeacherInsight,
-  TeacherStats,
   TeacherSearchFilters,
   TeacherSearchResult,
   TeacherActivity,
-  TeacherInteraction,
   TeacherLearningPath
 } from '../types/teacher';
 

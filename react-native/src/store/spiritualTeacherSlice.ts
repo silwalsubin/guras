@@ -10,13 +10,17 @@ import {
   BuddhaQuote,
   BuddhaPractice,
   BuddhaCategory,
+  KrishnamurtiProfile,
+  KrishnamurtiTeaching,
+  KrishnamurtiQuote,
+  KrishnamurtiPractice,
+  KrishnamurtiCategory,
   SpiritualGuidance,
   SpiritualConversation,
   SpiritualProfile,
   DailyGuidance,
   SpiritualProgress,
-  OshoCategory,
-  SpiritualContext
+  OshoCategory
 } from '@/types/spiritual';
 
 // Initial Osho profile
@@ -193,6 +197,94 @@ const initialBuddhaProfile: BuddhaProfile = {
   isAvailable: true,
   popularity: 10,
   userRating: 4.9
+};
+
+// Initial Krishnamurti profile
+const initialKrishnamurtiProfile: KrishnamurtiProfile = {
+  id: 'krishnamurti',
+  name: 'Krishnamurti',
+  displayName: 'J. Krishnamurti',
+  fullName: 'Jiddu Krishnamurti',
+  birthYear: 1895,
+  deathYear: 1986,
+  nationality: 'Indian',
+  description: 'A philosopher and spiritual teacher who emphasized freedom from conditioning and self-inquiry',
+  tradition: {
+    name: 'Philosophy & Self-Inquiry',
+    description: 'A unique approach to freedom through self-observation and inquiry',
+    origin: 'India',
+    keyConcepts: ['Freedom', 'Awareness', 'Inquiry', 'Observation', 'Conditioning'],
+    practices: ['Self-Inquiry', 'Observation', 'Dialogue', 'Awareness', 'Reflection'],
+    philosophy: 'Freedom from conditioning through self-observation and inquiry'
+  },
+  era: '1895-1986',
+  avatar: 'krishnamurti_avatar',
+  background: 'philosophical_landscape',
+  coreTeachings: [
+    'Freedom is not from something but from the very idea of freedom',
+    'The observer is the observed',
+    'Inquiry begins when we stop looking for answers',
+    'Awareness without choice is the highest form of intelligence',
+    'The mind that is free from conditioning can see clearly',
+    'Truth is a pathless land',
+    'Self-knowledge is the beginning of wisdom'
+  ],
+  teachingStyle: {
+    approach: 'inquiry',
+    tone: 'serious',
+    focus: 'awareness',
+    complexity: 'advanced'
+  },
+  personality: {
+    traits: ['Wise', 'Serious', 'Questioning', 'Direct', 'Profound'],
+    communication: 'Direct and questioning, often paradoxical',
+    humor: 'Subtle and thoughtful',
+    compassion: 'Deep understanding of human suffering'
+  },
+  philosophy: {
+    essence: 'Freedom from conditioning through self-observation and inquiry',
+    keyPrinciples: [
+      'Freedom is not from something but from the very idea of freedom',
+      'The observer is the observed',
+      'Inquiry begins when we stop looking for answers',
+      'Awareness without choice is the highest form of intelligence',
+      'The mind that is free from conditioning can see clearly',
+      'Truth is a pathless land',
+      'Self-knowledge is the beginning of wisdom'
+    ],
+    approach: 'Self-inquiry and observation',
+    focus: 'Freedom from conditioning and psychological freedom'
+  },
+  teachingStyle: {
+    communication: {
+      tone: 'serious',
+      method: 'inquiry',
+      humor: 'Subtle and thoughtful',
+      compassion: 'Deep understanding of human suffering'
+    },
+    content: {
+      topics: [
+        'Freedom and conditioning',
+        'Self-inquiry and observation',
+        'Awareness and consciousness',
+        'Fear and psychological security',
+        'Relationship and love',
+        'Education and learning',
+        'The nature of the mind'
+      ],
+      complexity: 'advanced',
+      depth: 'philosophical'
+    },
+    interaction: {
+      questioning: 'Deep inquiry into the nature of consciousness',
+      guidance: 'Direct and challenging',
+      support: 'Intellectual and philosophical',
+      challenge: 'Questions that break down assumptions'
+    }
+  },
+  isAvailable: true,
+  popularity: 8,
+  userRating: 4.7
 };
 
 // Osho teaching categories
@@ -675,6 +767,13 @@ export interface SpiritualTeacherState {
   buddhaPractices: BuddhaPractice[];
   buddhaCategories: Record<BuddhaCategory, any>;
   
+  // Krishnamurti-specific data
+  krishnamurtiProfile: KrishnamurtiProfile;
+  krishnamurtiTeachings: KrishnamurtiTeaching[];
+  krishnamurtiQuotes: KrishnamurtiQuote[];
+  krishnamurtiPractices: KrishnamurtiPractice[];
+  krishnamurtiCategories: Record<KrishnamurtiCategory, any>;
+  
   // User interactions
   conversations: SpiritualConversation[];
   currentConversation: SpiritualConversation | null;
@@ -688,7 +787,7 @@ export interface SpiritualTeacherState {
   // UI state
   isLoading: boolean;
   error: string | null;
-  selectedCategory: OshoCategory | BuddhaCategory | null;
+  selectedCategory: OshoCategory | BuddhaCategory | KrishnamurtiCategory | null;
   searchQuery: string;
   
   // Offline storage state
@@ -699,7 +798,7 @@ export interface SpiritualTeacherState {
 
 const initialState: SpiritualTeacherState = {
   currentTeacher: initialOshoProfile,
-  availableTeachers: [initialOshoProfile, initialBuddhaProfile],
+  availableTeachers: [initialOshoProfile, initialBuddhaProfile, initialKrishnamurtiProfile],
   
   oshoProfile: initialOshoProfile,
   oshoTeachings: sampleOshoTeachings,
@@ -712,6 +811,12 @@ const initialState: SpiritualTeacherState = {
   buddhaQuotes: sampleBuddhaQuotes,
   buddhaPractices: sampleBuddhaPractices,
   buddhaCategories: buddhaCategories,
+  
+  krishnamurtiProfile: initialKrishnamurtiProfile,
+  krishnamurtiTeachings: [],
+  krishnamurtiQuotes: [],
+  krishnamurtiPractices: [],
+  krishnamurtiCategories: {},
   
   conversations: [],
   currentConversation: null,

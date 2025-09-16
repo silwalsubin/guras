@@ -538,3 +538,123 @@ export interface SpiritualRecommendation {
   timeRequired: number; // minutes
   difficulty: 'easy' | 'moderate' | 'challenging';
 }
+
+// Krishnamurti-specific types
+export interface KrishnamurtiProfile extends SpiritualTeacher {
+  id: 'krishnamurti';
+  name: 'Krishnamurti';
+  displayName: 'J. Krishnamurti';
+  fullName: 'Jiddu Krishnamurti';
+  birthYear: 1895;
+  deathYear: 1986;
+  nationality: 'Indian';
+  philosophy: KrishnamurtiPhilosophy;
+  teachingStyle: KrishnamurtiTeachingStyle;
+  personality: KrishnamurtiPersonality;
+}
+
+export interface KrishnamurtiPhilosophy {
+  essence: string;
+  keyPrinciples: string[];
+  approach: string;
+  focus: string;
+}
+
+export interface KrishnamurtiTeachingStyle {
+  approach: 'inquiry' | 'dialogue' | 'observation' | 'self-investigation';
+  tone: 'serious' | 'gentle' | 'direct' | 'questioning';
+  focus: 'awareness' | 'freedom' | 'inquiry' | 'observation';
+  complexity: 'beginner' | 'intermediate' | 'advanced';
+}
+
+export interface KrishnamurtiPersonality {
+  traits: string[];
+  communication: string;
+  humor: string;
+  compassion: string;
+}
+
+// Krishnamurti teaching categories
+export type KrishnamurtiCategory = 
+  | 'awareness'
+  | 'freedom'
+  | 'inquiry'
+  | 'observation'
+  | 'conditioning'
+  | 'relationship'
+  | 'fear'
+  | 'love';
+
+export interface KrishnamurtiTeachingCategory {
+  name: string;
+  description: string;
+  color: string;
+  icon: string;
+  keyConcepts: string[];
+}
+
+// Krishnamurti teaching content
+export interface KrishnamurtiTeaching {
+  id: string;
+  title: string;
+  content: string;
+  source: {
+    type: 'talk' | 'discussion' | 'dialogue' | 'interview' | 'writing';
+    title: string;
+    location?: string;
+    date?: string;
+  };
+  category: KrishnamurtiCategory;
+  tags: string[];
+  spiritualLevel: 'beginner' | 'intermediate' | 'advanced';
+  popularity: number;
+  keyConcepts: string[];
+  teachingValue: number; // 1-10
+  memorability: number; // 1-10
+}
+
+export interface KrishnamurtiQuote {
+  id: string;
+  text: string;
+  source: {
+    type: 'talk' | 'discussion' | 'dialogue' | 'interview' | 'writing';
+    title: string;
+    location?: string;
+    date?: string;
+  };
+  category: KrishnamurtiCategory;
+  tags: string[];
+  spiritualLevel: 'beginner' | 'intermediate' | 'advanced';
+  popularity: number;
+  keyConcepts: string[];
+  teachingValue: number; // 1-10
+  memorability: number; // 1-10
+  context?: string;
+  explanation?: string;
+  relatedQuotes: string[];
+  practices: string[];
+}
+
+export interface KrishnamurtiPractice {
+  id: string;
+  name: string;
+  type: 'inquiry' | 'observation' | 'awareness' | 'dialogue' | 'reflection';
+  category: KrishnamurtiCategory;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  duration: {
+    minimum: number; // minutes
+    recommended: number; // minutes
+    maximum: number; // minutes
+  };
+  description: string;
+  instructions: string[];
+  preparation: string[];
+  benefits: string[];
+  challenges: string[];
+  tips: string[];
+  variations: string[];
+  spiritualLevel: 'beginner' | 'intermediate' | 'advanced';
+  popularity: number;
+  userRating: number;
+  completionRate: number;
+}

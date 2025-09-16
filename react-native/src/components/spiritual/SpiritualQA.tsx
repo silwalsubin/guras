@@ -13,7 +13,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
-import { askSpiritualQuestion, addMessage } from '@/store/spiritualTeacherSlice';
+import { askSpiritualQuestion } from '@/store/spiritualTeacherSlice';
 import { SpiritualMessage } from '@/types/spiritual';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 

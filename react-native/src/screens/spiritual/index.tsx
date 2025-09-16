@@ -54,45 +54,70 @@ const SpiritualTeacherScreen: React.FC = () => {
     loadProfile();
   }, []);
 
-  // Mock search data
-  const mockSearchData = useMemo(() => [
-    // Teachers
-    { id: 'osho', type: 'teacher', name: 'Osho', description: 'Spiritual Teacher', category: 'teachers', image: require('../../../assets/teachers/osho.jpg') },
-    { id: 'buddha', type: 'teacher', name: 'Buddha', description: 'Spiritual Teacher', category: 'teachers', image: require('../../../assets/teachers/buddha.jpg') },
-    
-    // Practices
-    { id: 'meditation', type: 'practice', name: 'Mindfulness Meditation', description: 'A practice of present-moment awareness', category: 'practices' },
-    { id: 'breathing', type: 'practice', name: 'Breathing Exercises', description: 'Techniques for conscious breathing', category: 'practices' },
-    { id: 'body-scan', type: 'practice', name: 'Body Scan', description: 'Progressive body awareness practice', category: 'practices' },
+  // Helper function to get teacher image
+  const getTeacherImage = (teacherId: string) => {
+    switch (teacherId) {
+      case 'osho':
+        return require('../../../assets/teachers/osho.jpg');
+      case 'buddha':
+        return require('../../../assets/teachers/buddha.jpg');
+      case 'krishnamurti':
+        return require('../../../assets/teachers/jkrishnamurti.jpg');
+      default:
+        return require('../../../assets/teachers/osho.jpg'); // fallback
+    }
+  };
+
+  // Get teachers data from store
+  const teachers = useSelector((state: RootState) => state.spiritualTeacher.availableTeachers) || [];
+
+  // Search data - using centralized data from store
+  const searchData = useMemo(() => {
+    return [
+      // Teachers - using centralized data from store
+      ...teachers.map(teacher => ({
+        id: teacher.id,
+        type: 'teacher',
+        name: teacher.displayName || teacher.name,
+        description: teacher.tradition?.name || 'Spiritual Teacher',
+        category: 'teachers',
+        image: getTeacherImage(teacher.id)
+      })),
+      
+      // Practices
+      { id: 'meditation', type: 'practice', name: 'Mindfulness Meditation', description: 'A practice of present-moment awareness', category: 'practices' },
+      { id: 'breathing', type: 'practice', name: 'Breathing Exercises', description: 'Techniques for conscious breathing', category: 'practices' },
+      { id: 'body-scan', type: 'practice', name: 'Body Scan', description: 'Progressive body awareness practice', category: 'practices' },
     
     // Philosophy
     { id: 'enlightenment', type: 'philosophy', name: 'Path to Enlightenment', description: 'Understanding the journey of spiritual awakening', category: 'philosophy' },
     { id: 'compassion', type: 'philosophy', name: 'Compassion & Love', description: 'Cultivating loving-kindness and compassion', category: 'philosophy' },
     { id: 'mindfulness', type: 'philosophy', name: 'Mindfulness Philosophy', description: 'The philosophy of present-moment awareness', category: 'philosophy' },
     
-    // Courses
-    { id: 'beginner-meditation', type: 'course', name: 'Meditation for Beginners', description: 'A comprehensive course for meditation newcomers', category: 'courses' },
-    { id: 'advanced-practices', type: 'course', name: 'Advanced Spiritual Practices', description: 'Deep dive into advanced meditation techniques', category: 'courses' },
-    { id: 'philosophy-course', type: 'course', name: 'Eastern Philosophy', description: 'Understanding Eastern spiritual traditions', category: 'courses' },
-  ], []);
+      // Courses
+      { id: 'beginner-meditation', type: 'course', name: 'Meditation for Beginners', description: 'A comprehensive course for meditation newcomers', category: 'courses' },
+      { id: 'advanced-practices', type: 'course', name: 'Advanced Spiritual Practices', description: 'Deep dive into advanced meditation techniques', category: 'courses' },
+      { id: 'philosophy-course', type: 'course', name: 'Eastern Philosophy', description: 'Understanding Eastern spiritual traditions', category: 'courses' },
+    ];
+  }, [teachers]);
 
   // Filter search results
   const filteredResults = useMemo(() => {
     // If no search query and teachers category is selected, show all teachers
     if (!searchQuery.trim() && selectedCategory === 'teachers') {
-      return mockSearchData.filter(item => item.category === 'teachers');
+      return searchData.filter(item => item.category === 'teachers');
     }
     
     // If no search query, return empty array (show empty state)
     if (!searchQuery.trim()) return [];
     
-    return mockSearchData.filter(item => {
+    return searchData.filter(item => {
       const matchesQuery = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
       return matchesQuery && matchesCategory;
     });
-  }, [searchQuery, selectedCategory, mockSearchData]);
+  }, [searchQuery, selectedCategory, searchData]);
 
   const loadProfile = async () => {
     try {
@@ -172,7 +197,23 @@ const SpiritualTeacherScreen: React.FC = () => {
 
     const handleResultPress = () => {
       if (item.type === 'teacher') {
-        setSelectedTeacher({ id: item.id, type: 'spiritual', displayName: item.name });
+        // Get the complete teacher data from the store and add the image
+        const fullTeacher = teachers.find(t => t.id === item.id);
+        if (fullTeacher) {
+          // Add the image data to the teacher object
+          setSelectedTeacher({
+            ...fullTeacher,
+            image: item.image // Preserve the image from search data
+          });
+        } else {
+          // Fallback if teacher not found in store
+          setSelectedTeacher({ 
+            id: item.id, 
+            type: 'spiritual', 
+            displayName: item.name,
+            image: item.image
+          });
+        }
         setShowTeacherProfile(true);
       } else {
         // Handle other types of content
