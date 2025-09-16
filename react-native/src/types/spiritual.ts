@@ -658,3 +658,138 @@ export interface KrishnamurtiPractice {
   userRating: number;
   completionRate: number;
 }
+
+// Swami Vivekananda-specific types
+export interface VivekanandaProfile extends SpiritualTeacher {
+  id: 'vivekananda';
+  name: 'Vivekananda';
+  displayName: 'Swami Vivekananda';
+  fullName: 'Swami Vivekananda (Narendranath Datta)';
+  birthYear: 1863;
+  deathYear: 1902;
+  nationality: 'Indian';
+  philosophy: VivekanandaPhilosophy;
+  teachingStyle: VivekanandaTeachingStyle;
+  personality: VivekanandaPersonality;
+}
+
+export interface VivekanandaPhilosophy {
+  essence: string;
+  keyPrinciples: string[];
+  approach: string;
+  focus: string;
+}
+
+export interface VivekanandaTeachingStyle {
+  communication: {
+    tone: 'inspiring' | 'passionate' | 'practical' | 'direct';
+    method: 'lecture' | 'storytelling' | 'practical guidance' | 'service';
+    humor: string;
+    compassion: string;
+  };
+  content: {
+    topics: string[];
+    complexity: 'beginner' | 'intermediate' | 'advanced';
+    depth: 'practical' | 'profound';
+  };
+  interaction: {
+    questioning: string;
+    guidance: string;
+    support: string;
+    challenge: string;
+  };
+}
+
+export interface VivekanandaPersonality {
+  traits: string[];
+  communication: string;
+  humor: string;
+  compassion: string;
+}
+
+// Vivekananda teaching categories
+export type VivekanandaCategory = 
+  | 'karma_yoga'
+  | 'bhakti_yoga'
+  | 'jnana_yoga'
+  | 'raja_yoga'
+  | 'service'
+  | 'education'
+  | 'nationalism'
+  | 'universal_religion';
+
+export interface VivekanandaTeachingCategory {
+  name: string;
+  description: string;
+  color: string;
+  icon: string;
+  keyConcepts: string[];
+}
+
+// Vivekananda teaching content
+export interface VivekanandaTeaching {
+  id: string;
+  title: string;
+  content: string;
+  source: {
+    type: 'lecture' | 'writing' | 'discourse' | 'speech';
+    title: string;
+    location?: string;
+    date?: string;
+  };
+  category: VivekanandaCategory;
+  tags: string[];
+  spiritualLevel: 'beginner' | 'intermediate' | 'advanced';
+  popularity: number;
+  keyConcepts: string[];
+  teachingValue: number; // 1-10
+  memorability: number; // 1-10
+}
+
+export interface VivekanandaQuote {
+  id: string;
+  text: string;
+  source: {
+    type: 'lecture' | 'writing' | 'discourse' | 'speech';
+    title: string;
+    location?: string;
+    date?: string;
+  };
+  category: VivekanandaCategory;
+  tags: string[];
+  spiritualLevel: 'beginner' | 'intermediate' | 'advanced';
+  popularity: number;
+  keyConcepts: string[];
+  teachingValue: number; // 1-10
+  memorability: number; // 1-10
+  context?: string;
+  explanation?: string;
+  relatedQuotes: string[];
+  practices: string[];
+}
+
+export interface VivekanandaPractice {
+  id: string;
+  name: string;
+  type: 'meditation' | 'service' | 'study' | 'contemplation' | 'yoga';
+  category: VivekanandaCategory;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  duration: {
+    minimum: number; // minutes
+    recommended: number; // minutes
+    maximum: number; // minutes
+  };
+  description: string;
+  instructions: string[];
+  preparation: string[];
+  benefits: string[];
+  warnings?: string[];
+  whenToUse: string[];
+  prerequisites: string[];
+  relatedPractices: string[];
+  teaching: string; // Source teaching
+  popularity: number;
+  effectiveness: number; // 1-10
+  userRating: number;
+  completionRate: number;
+}
