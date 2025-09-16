@@ -54,7 +54,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   const scrollY = useRef(new Animated.Value(0)).current;
   const HEADER_MAX_HEIGHT = 280;
   const HEADER_MIN_HEIGHT = 120;
-  const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
+  const HEADER_SCROLL_DISTANCE = 80; // Reduced from 160 to make header compact easier
 
   // Animated values
   const headerHeight = scrollY.interpolate({
@@ -153,7 +153,11 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
 
 
   const renderTabs = () => (
-    <View style={[styles.tabBar, { backgroundColor: colors.card }]}>
+    <View style={[styles.tabBar, { 
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    }]}>
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -199,9 +203,9 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   );
 
   const renderOverview = () => (
-    <View style={styles.tabContent}>
+    <View style={styles.contentContainer}>
       {/* About Section */}
-      <View style={[styles.section, { backgroundColor: colors.card }]}>
+      <View style={[styles.fullWidthSection, { backgroundColor: colors.background }]}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>About</Text>
         <Text style={[styles.description, { color: colors.textSecondary }]}>
           {teacher.description || teacher.bio}
@@ -215,34 +219,34 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
       </View>
 
       {/* Biographical Information */}
-      <View style={[styles.section, { backgroundColor: colors.card }]}>
+      <View style={[styles.fullWidthSection, { backgroundColor: colors.background }]}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Biographical Information</Text>
         <View style={styles.bioInfo}>
-          <View style={styles.bioItem}>
+          <View style={[styles.bioItem, { borderBottomColor: colors.border }]}>
             <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Born</Text>
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? 'December 11, 1931' : 'c. 563 BCE'}
             </Text>
           </View>
-          <View style={styles.bioItem}>
+          <View style={[styles.bioItem, { borderBottomColor: colors.border }]}>
             <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Birth Place</Text>
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? 'Kuchwada, India' : 'Lumbini, Nepal'}
             </Text>
           </View>
-          <View style={styles.bioItem}>
+          <View style={[styles.bioItem, { borderBottomColor: colors.border }]}>
             <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Died</Text>
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? 'January 19, 1990' : 'c. 483 BCE'}
             </Text>
           </View>
-          <View style={styles.bioItem}>
+          <View style={[styles.bioItem, { borderBottomColor: colors.border }]}>
             <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Death Place</Text>
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? 'Pune, India' : 'Kushinagar, India'}
             </Text>
           </View>
-          <View style={styles.bioItem}>
+          <View style={[styles.bioItem, { borderBottomColor: colors.border }]}>
             <Text style={[styles.bioLabel, { color: colors.textSecondary }]}>Lifespan</Text>
             <Text style={[styles.bioValue, { color: colors.textPrimary }]}>
               {teacher.id === 'osho' ? '58 years' : '80 years'}
@@ -253,7 +257,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
 
       {/* Philosophy Section */}
       {teacher.philosophy && (
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <View style={[styles.fullWidthSection, { backgroundColor: colors.background }]}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Philosophy</Text>
           <Text style={[styles.description, { color: colors.textSecondary }]}>
             {teacher.philosophy.essence}
@@ -263,7 +267,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
 
       {/* Core Teachings */}
       {teacher.coreTeachings && (
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <View style={[styles.fullWidthSection, { backgroundColor: colors.background }]}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Core Teachings</Text>
           {teacher.coreTeachings.map((teaching: string, index: number) => (
             <View key={index} style={styles.teachingItem}>
@@ -273,6 +277,9 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
           ))}
         </View>
       )}
+      
+      {/* Spacer at bottom to allow scrolling up */}
+      <View style={styles.topSpacer} />
     </View>
   );
 
@@ -294,41 +301,45 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   };
 
   const renderTeachings = () => (
-    <View style={styles.tabContent}>
+    <View style={styles.contentContainer}>
       <Text style={[styles.comingSoon, { color: colors.textSecondary }]}>
         Teachings content coming soon...
       </Text>
+      <View style={styles.topSpacer} />
     </View>
   );
 
   const renderPractices = () => (
-    <View style={styles.tabContent}>
+    <View style={styles.contentContainer}>
       <Text style={[styles.comingSoon, { color: colors.textSecondary }]}>
         Practices content coming soon...
       </Text>
+      <View style={styles.topSpacer} />
     </View>
   );
 
   const renderSessions = () => (
-    <View style={styles.tabContent}>
+    <View style={styles.contentContainer}>
       <Text style={[styles.comingSoon, { color: colors.textSecondary }]}>
         Sessions content coming soon...
       </Text>
+      <View style={styles.topSpacer} />
     </View>
   );
 
   const renderLearningPaths = () => (
-    <View style={styles.tabContent}>
+    <View style={styles.contentContainer}>
       <Text style={[styles.comingSoon, { color: colors.textSecondary }]}>
         Learning paths coming soon...
       </Text>
+      <View style={styles.topSpacer} />
     </View>
   );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar 
-        barStyle="dark-content" 
+        barStyle={isDarkMode ? "light-content" : "dark-content"} 
         backgroundColor="transparent" 
         translucent={true} 
       />
@@ -341,7 +352,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
             style={styles.backgroundImage}
             resizeMode="cover"
           />
-          <View style={styles.backgroundOverlay} />
+          <View style={[styles.backgroundOverlay, { backgroundColor: colors.overlay }]} />
         </View>
       )}
       
@@ -461,6 +472,8 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
       <Animated.ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustContentInsets={false}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
@@ -483,7 +496,6 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
     marginTop: 0,
     paddingTop: 0,
   },
@@ -506,7 +518,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 300,
-    backgroundColor: 'rgba(248, 250, 252, 0.7)',
     zIndex: 1,
   },
   header: {
@@ -611,13 +622,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
     textAlign: 'center',
-    color: '#1F2937',
   },
   teacherTitle: {
     fontSize: 14,
     marginBottom: 8,
     textAlign: 'center',
-    color: '#6B7280',
   },
   followersCount: {
     fontSize: 16,
@@ -642,9 +651,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   tabBar: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
     paddingVertical: 12,
     marginTop: 30, // Very tight spacing
     zIndex: 2,
@@ -674,6 +680,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
     zIndex: 2,
+    marginTop: 0,
+    paddingTop: 0,
+  },
+  contentContainer: {
+    minHeight: 600, // Ensure enough height to trigger scroll animation
+  },
+  topSpacer: {
+    height: 100, // Space to allow scrolling up and see header expand
   },
   tabContent: {
     padding: 20,
@@ -686,16 +700,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
+  fullWidthSection: {
+    marginBottom: 24,
+    marginTop: 0,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    width: '100%',
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: '#1F2937',
   },
   description: {
     fontSize: 14,
     lineHeight: 20,
-    color: '#6B7280',
   },
   statsRow: {
     flexDirection: 'row',
@@ -762,17 +781,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   bioLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
   },
   bioValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
 });
 
