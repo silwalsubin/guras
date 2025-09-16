@@ -11,8 +11,8 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
-import { getDailyGuidance, loadSpiritualProfile } from '@/store/spiritualTeacherSlice';
-import { DailyGuidance as DailyGuidanceType, OshoQuote, OshoPractice } from '@/types/spiritual';
+import { getDailyGuidance } from '@/store/spiritualTeacherSlice';
+import { OshoQuote, OshoPractice } from '@/types/spiritual';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 interface DailyGuidanceProps {

@@ -9,7 +9,6 @@ import guidedMeditationReducer from './guidedMeditationSlice';
 import bottomNavReducer from './bottomNavSlice';
 import spiritualTeacherReducer from './spiritualTeacherSlice';
 import teacherReducer from './teacherSlice';
-import { rootPersistConfig } from './persistConfig';
 
 // Create persisted reducers
 const persistedMeditationReducer = persistReducer(

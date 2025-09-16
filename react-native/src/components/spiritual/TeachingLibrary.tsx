@@ -7,7 +7,6 @@ import {
   ScrollView,
   TextInput,
   FlatList,
-  Alert,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';

@@ -17,7 +17,6 @@ import { getThemeColors, getBrandColors } from '../../config/colors';
 import { setCurrentTeacher } from '../../store/spiritualTeacherSlice';
 import { Teacher } from '../../types/meditation';
 import { SpiritualTeacher } from '../../types/spiritual';
-import { mockTeachers } from '../../data/mockMeditationData';
 import TeacherProfilePage from './TeacherProfilePage';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
@@ -60,7 +59,7 @@ const TeacherDiscovery: React.FC<TeacherDiscoveryProps> = ({
   }, [availableTeachers]);
 
   const filteredTeachers = useMemo(() => {
-    let filtered = allTeachers.filter(teacher => {
+    const filtered = allTeachers.filter(teacher => {
       // Type filter
       if (selectedType !== 'all' && teacher.type !== selectedType) {
         return false;
@@ -107,6 +106,8 @@ const TeacherDiscovery: React.FC<TeacherDiscoveryProps> = ({
           return require('../../../assets/teachers/osho.jpg');
         case 'buddha':
           return require('../../../assets/teachers/buddha.jpg');
+        case 'krishnamurti':
+          return require('../../../assets/teachers/jkrishnamurti.jpg');
         default:
           return null;
       }
