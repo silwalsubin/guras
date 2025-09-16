@@ -10,6 +10,7 @@ import {
   RefreshControl,
   StatusBar,
   Animated,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
@@ -18,6 +19,7 @@ import { getThemeColors, getBrandColors } from '../../config/colors';
 import { followTeacher, unfollowTeacher, getTeacherFeed } from '../../store/teacherSlice';
 import { setCurrentTeacher } from '../../store/spiritualTeacherSlice';
 import { TeacherContent, TeacherLearningPath } from '../../types/teacher';
+import TeacherChatScreen from '../../screens/spiritual/TeacherChatScreen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const { width } = Dimensions.get('window');
@@ -48,6 +50,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   const [activeTab, setActiveTab] = useState<ContentTab>('overview');
   const [refreshing, setRefreshing] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
   
   // Scroll animation
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -95,7 +98,17 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
   useEffect(() => {
     const follow = followedTeachers.find(f => f.teacherId === teacher.id);
     setIsFollowing(!!follow);
-  }, [followedTeachers, teacher.id]);
+    
+    // Set as current teacher for spiritual guidance
+    if (teacher.type === 'spiritual' || !teacher.type) {
+      console.log('🎭 TeacherProfile - Setting current teacher:', {
+        id: teacher.id,
+        name: teacher.name,
+        displayName: teacher.displayName
+      });
+      dispatch(setCurrentTeacher(teacher));
+    }
+  }, [followedTeachers, teacher.id, dispatch, teacher]);
 
   const handleFollow = async () => {
     if (isFollowing) {
@@ -303,6 +316,7 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
           ))}
         </View>
       )}
+
       
       {/* Spacer at bottom to allow scrolling up */}
       <View style={styles.topSpacer} />
@@ -515,6 +529,34 @@ const TeacherProfilePage: React.FC<TeacherProfilePageProps> = ({
       >
         {renderContent()}
       </Animated.ScrollView>
+
+      {/* Floating Chat Button */}
+      <TouchableOpacity
+        style={[
+          styles.floatingChatButton, 
+          { 
+            backgroundColor: getTeacherColor(),
+            bottom: insets.bottom + 20, // Closer to bottom but above tab bar
+          }
+        ]}
+        onPress={() => {
+          console.log('🎯 Floating chat button pressed!');
+          setShowChatModal(true);
+        }}
+        activeOpacity={0.8}
+      >
+        <FontAwesome name="comments" size={24} color="white" />
+      </TouchableOpacity>
+
+      {/* Chat Modal */}
+      <Modal
+        visible={showChatModal}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowChatModal(false)}
+      >
+        <TeacherChatScreen onClose={() => setShowChatModal(false)} />
+      </Modal>
     </View>
   );
 };
@@ -815,6 +857,24 @@ const styles = StyleSheet.create({
   bioValue: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  floatingChatButton: {
+    position: 'absolute',
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 10,
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
   },
 });
 

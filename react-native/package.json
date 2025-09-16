@@ -27,6 +27,7 @@
     "@react-native/new-app-screen": "0.80.0",
     "@react-navigation/native-stack": "^7.3.21",
     "@reduxjs/toolkit": "^2.8.2",
+    "onnxruntime-react-native": "^1.22.0",
     "react": "19.1.0",
     "react-native": "0.80.0",
     "react-native-chart-kit": "^6.12.0",

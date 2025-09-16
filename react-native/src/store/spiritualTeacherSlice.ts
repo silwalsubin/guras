@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { 
   SpiritualTeacher, 
+  SpiritualContext,
   OshoProfile, 
   OshoTeaching, 
   OshoQuote, 
@@ -1242,64 +1243,191 @@ export const loadSpiritualProfile = createAsyncThunk(
 export const askSpiritualQuestion = createAsyncThunk(
   'spiritualTeacher/askQuestion',
   async (question: string, { getState }) => {
-    // TODO: Implement AI response generation
     const state = getState() as any;
-    const currentTeacher = state.spiritualTeacher.currentTeacher;
+    const { currentTeacher, conversations, spiritualProfile } = state.spiritualTeacher;
     
-    // Mock responses based on teacher
-    let responses: string[] = [];
-    
-    if (currentTeacher?.id === 'buddha') {
-      responses = [
-        "The root of suffering is attachment. When we let go of our attachments, we find peace.",
-        "The mind is everything. What you think you become. Cultivate positive thoughts.",
-        "Hatred does not cease by hatred, but only by love; this is the eternal rule.",
-        "Be present in this moment. The past is gone, the future is not yet born.",
-        "Compassion for all beings brings inner peace and happiness.",
-        "The Four Noble Truths show us the path to liberation from suffering.",
-        "Right mindfulness is the key to understanding the nature of reality."
-      ];
-    } else {
-      // Osho responses
-      responses = [
-        "Meditation is not concentration. It is awareness - total awareness of everything that is happening around you and within you.",
-        "Love is the only religion. When you love, you don't need any other religion.",
-        "Be here now. This moment is all there is. The past is gone, the future is not yet born.",
-        "Freedom is the ultimate value. But freedom comes with responsibility - the responsibility to be yourself.",
-        "Celebrate life! Life is a celebration, not a problem to be solved."
-      ];
+    if (!currentTeacher) {
+      throw new Error('No teacher selected');
     }
-    
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    
-    return {
-      id: `response_${Date.now()}`,
+
+    // Import AI service dynamically to avoid circular dependencies
+    const SpiritualAIService = (await import('@/services/spiritualAIService')).default;
+    const aiService = SpiritualAIService.getInstance();
+
+    // Create spiritual context from user profile
+    const context: SpiritualContext = {
+      userLevel: spiritualProfile?.spiritualLevel || 'beginner',
+      currentChallenges: spiritualProfile?.journey?.challenges || [],
+      spiritualGoals: spiritualProfile?.goals?.map((g: any) => g.description) || [],
+      recentInsights: spiritualProfile?.insights?.map((i: any) => i.content) || [],
+      practiceHistory: spiritualProfile?.practices?.map((p: any) => p.name) || [],
+      favoriteTeachings: spiritualProfile?.preferences?.favoriteCategories || [],
+      oshoContext: {
+        familiarConcepts: spiritualProfile?.preferences?.favoriteCategories || [],
+        exploredCategories: spiritualProfile?.preferences?.favoriteCategories || [],
+        completedPractices: spiritualProfile?.practices?.map((p: any) => p.name) || [],
+        currentMeditation: '',
+        spiritualQuestions: []
+      },
+      emotionalState: {
+        mood: 'neutral',
+        energy: 5,
+        stress: 5,
+        openness: 7
+      },
+      lifeContext: {
+        currentSituation: 'normal',
+        challenges: spiritualProfile?.journey?.challenges || [],
+        relationships: [],
+        work: '',
+        health: ''
+      }
+    };
+
+    // Get recent conversation history
+    const recentConversation = conversations[conversations.length - 1];
+    const conversationHistory = recentConversation?.messages || [];
+
+    // Generate AI response
+    const aiResponse = await aiService.generateResponse(
       question,
-      response: randomResponse,
-      teacher: currentTeacher?.name || 'Osho',
+      currentTeacher,
+      context,
+      conversationHistory
+    );
+
+    // Create user message
+    const userMessage: SpiritualMessage = {
+      id: `user_${Date.now()}`,
+      role: 'user',
+      content: question,
       timestamp: new Date().toISOString()
+    };
+
+    // Create teacher response message
+    const teacherMessage: SpiritualMessage = {
+      id: `teacher_${Date.now()}`,
+      role: 'teacher',
+      content: aiResponse.response,
+      timestamp: new Date().toISOString(),
+      teaching: aiResponse.relatedTeachings.length > 0 ? {
+        id: `teaching_${Date.now()}`,
+        title: aiResponse.relatedTeachings[0],
+        content: aiResponse.response,
+        source: 'AI Generated',
+        category: 'general' as any,
+        level: context.userLevel,
+        tags: [],
+        relatedPractices: aiResponse.practice ? [aiResponse.practice] : []
+      } : undefined,
+      practice: aiResponse.practice ? {
+        id: `practice_${Date.now()}`,
+        name: aiResponse.practice,
+        description: `Practice suggested by ${currentTeacher.displayName}`,
+        duration: 15,
+        instructions: ['Follow the guidance of your teacher'],
+        benefits: ['Spiritual growth', 'Deeper understanding'],
+        difficulty: 'beginner' as any,
+        teacher: currentTeacher.displayName
+      } : undefined
+    };
+
+    return {
+      userMessage,
+      teacherMessage,
+      followUpQuestions: aiResponse.followUpQuestions,
+      relatedTeachings: aiResponse.relatedTeachings,
+      practice: aiResponse.practice
     };
   }
 );
 
 export const getDailyGuidance = createAsyncThunk(
   'spiritualTeacher/getDailyGuidance',
-  async (userId: string) => {
-    // TODO: Generate personalized daily guidance
+  async (userId: string, { getState }) => {
+    const state = getState() as any;
+    const { currentTeacher, spiritualProfile } = state.spiritualTeacher;
+    
+    if (!currentTeacher) {
+      throw new Error('No teacher selected');
+    }
+
+    // Import AI service dynamically to avoid circular dependencies
+    const SpiritualAIService = (await import('@/services/spiritualAIService')).default;
+    const aiService = SpiritualAIService.getInstance();
+
+    // Create spiritual context from user profile
+    const context: SpiritualContext = {
+      userLevel: spiritualProfile?.spiritualLevel || 'beginner',
+      currentChallenges: spiritualProfile?.journey?.challenges || [],
+      spiritualGoals: spiritualProfile?.goals?.map((g: any) => g.description) || [],
+      recentInsights: spiritualProfile?.insights?.map((i: any) => i.content) || [],
+      practiceHistory: spiritualProfile?.practices?.map((p: any) => p.name) || [],
+      favoriteTeachings: spiritualProfile?.preferences?.favoriteCategories || [],
+      oshoContext: {
+        familiarConcepts: spiritualProfile?.preferences?.favoriteCategories || [],
+        exploredCategories: spiritualProfile?.preferences?.favoriteCategories || [],
+        completedPractices: spiritualProfile?.practices?.map((p: any) => p.name) || [],
+        currentMeditation: '',
+        spiritualQuestions: []
+      },
+      emotionalState: {
+        mood: 'neutral',
+        energy: 5,
+        stress: 5,
+        openness: 7
+      },
+      lifeContext: {
+        currentSituation: 'normal',
+        challenges: spiritualProfile?.journey?.challenges || [],
+        relationships: [],
+        work: '',
+        health: ''
+      }
+    };
+
+    // Generate AI-powered daily guidance
+    const aiGuidance = await aiService.generateDailyGuidance(currentTeacher, context);
+    
     const today = new Date().toISOString().split('T')[0];
     
     return {
       id: `guidance_${today}`,
       userId,
-      teacherId: 'osho',
+      teacherId: currentTeacher.id,
       date: today,
-      morningWisdom: 'Start your day with awareness. Be present in each moment.',
-      eveningReflection: 'Reflect on your day. What did you learn? What are you grateful for?',
-      dailyPractice: sampleOshoPractices[0], // Witnessing Meditation
-      inspirationalQuote: sampleOshoQuotes[0], // Meditation quote
+      morningWisdom: aiGuidance.morningWisdom,
+      eveningReflection: aiGuidance.eveningReflection,
+      dailyPractice: {
+        id: `practice_${Date.now()}`,
+        name: aiGuidance.dailyPractice,
+        description: `Daily practice recommended by ${currentTeacher.displayName}`,
+        duration: 15,
+        instructions: ['Follow the guidance of your teacher'],
+        benefits: ['Spiritual growth', 'Daily wisdom'],
+        difficulty: 'beginner' as any,
+        teacher: currentTeacher.displayName
+      },
+      inspirationalQuote: {
+        id: `quote_${Date.now()}`,
+        text: aiGuidance.inspirationalQuote,
+        source: {
+          type: 'ai_generated' as any,
+          title: `${currentTeacher.displayName} AI`,
+          year: new Date().getFullYear()
+        },
+        category: 'general' as any,
+        tags: ['daily', 'inspiration'],
+        spiritualLevel: context.userLevel,
+        popularity: 5,
+        keyConcepts: ['wisdom', 'daily'],
+        emotionalTone: 'inspiring',
+        teachingValue: 8,
+        memorability: 7
+      },
       theme: 'meditation' as OshoCategory,
-      insights: ['Awareness is the key to transformation'],
-      actionItems: ['Practice 20 minutes of witnessing meditation'],
+      insights: ['AI-generated personalized guidance'],
+      actionItems: [`Practice: ${aiGuidance.dailyPractice}`],
       completed: false
     } as DailyGuidance;
   }
@@ -1381,29 +1509,18 @@ const spiritualTeacherSlice = createSlice({
       })
       .addCase(askSpiritualQuestion.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Add to current conversation or create new one
-        const message: SpiritualMessage = {
-          id: `msg_${Date.now()}`,
-          role: 'user',
-          content: action.payload.question,
-          timestamp: new Date().toISOString()
-        };
-        
-        const response: SpiritualMessage = {
-          id: `msg_${Date.now() + 1}`,
-          role: 'teacher',
-          content: action.payload.response,
-          timestamp: new Date().toISOString()
-        };
+        // Add to current conversation or create new one using the new AI response format
+        const userMessage = action.payload.userMessage;
+        const teacherMessage = action.payload.teacherMessage;
         
         if (state.currentConversation) {
-          state.currentConversation.messages.push(message, response);
+          state.currentConversation.messages.push(userMessage, teacherMessage);
         } else {
           const newConversation: SpiritualConversation = {
             id: `conv_${Date.now()}`,
             userId: state.spiritualProfile?.userId || 'unknown',
             teacherId: state.currentTeacher?.id || 'osho',
-            messages: [message, response],
+            messages: [userMessage, teacherMessage],
             context: {
               userLevel: 'beginner',
               currentChallenges: [],

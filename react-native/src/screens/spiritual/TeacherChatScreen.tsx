@@ -11,6 +11,7 @@ import {
   Alert,
   SafeAreaView,
   StatusBar,
+  Dimensions,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -19,11 +20,13 @@ import { askSpiritualQuestion } from '@/store/spiritualTeacherSlice';
 import { SpiritualMessage } from '@/types/spiritual';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
-interface SpiritualQAProps {
-  onClose?: () => void;
+const { width } = Dimensions.get('window');
+
+interface TeacherChatScreenProps {
+  onClose: () => void;
 }
 
-const SpiritualQA: React.FC<SpiritualQAProps> = ({ onClose }) => {
+const TeacherChatScreen: React.FC<TeacherChatScreenProps> = ({ onClose }) => {
   const dispatch = useDispatch();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
@@ -35,7 +38,7 @@ const SpiritualQA: React.FC<SpiritualQAProps> = ({ onClose }) => {
 
   // Debug: Log current teacher when component mounts or teacher changes
   useEffect(() => {
-    console.log('🎭 SpiritualQA - Current teacher:', {
+    console.log('🎭 TeacherChat - Current teacher:', {
       id: currentTeacher?.id,
       name: currentTeacher?.name,
       displayName: currentTeacher?.displayName
@@ -88,6 +91,21 @@ const SpiritualQA: React.FC<SpiritualQAProps> = ({ onClose }) => {
         return 'V';
       default:
         return 'T';
+    }
+  };
+
+  const getTeacherGreeting = () => {
+    switch (currentTeacher?.id) {
+      case 'osho':
+        return 'Ask Osho about meditation, awareness, love, and the celebration of life...';
+      case 'buddha':
+        return 'Ask Buddha about mindfulness, compassion, and the path to liberation...';
+      case 'krishnamurti':
+        return 'Ask Krishnamurti about freedom, awareness, and breaking conditioning...';
+      case 'vivekananda':
+        return 'Ask Vivekananda about strength, service, and self-realization...';
+      default:
+        return 'Ask your teacher about meditation, life, or spirituality...';
     }
   };
 
@@ -145,8 +163,8 @@ const SpiritualQA: React.FC<SpiritualQAProps> = ({ onClose }) => {
           style={[
             styles.messageBubble,
             {
-              backgroundColor: isUser ? brandColors.primary : themeColors.card,
-              borderColor: isUser ? brandColors.primary : themeColors.border,
+              backgroundColor: isUser ? getTeacherColor() : themeColors.card,
+              borderColor: isUser ? getTeacherColor() : themeColors.border,
             },
           ]}
         >
@@ -260,7 +278,7 @@ const SpiritualQA: React.FC<SpiritualQAProps> = ({ onClose }) => {
         <Text style={[styles.practiceTitle, { color: themeColors.textPrimary }]}>
           Suggested practice:
         </Text>
-        <View style={[styles.practiceChip, { backgroundColor: brandColors.primary }]}>
+        <View style={[styles.practiceChip, { backgroundColor: getTeacherColor() }]}>
           <FontAwesome name="play-circle" size={16} color="#FFFFFF" />
           <Text style={[styles.practiceText, { color: '#FFFFFF' }]}>
             {suggestedPractice}
@@ -273,9 +291,11 @@ const SpiritualQA: React.FC<SpiritualQAProps> = ({ onClose }) => {
   const renderEmptyState = () => {
     return (
       <View style={styles.emptyState}>
-        <FontAwesome name="question-circle" size={48} color={themeColors.textSecondary} />
+        <View style={[styles.teacherWelcome, { backgroundColor: getTeacherColor() }]}>
+          <Text style={styles.teacherWelcomeText}>{getTeacherInitial()}</Text>
+        </View>
         <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
-          Ask {currentTeacher?.displayName || 'Your Teacher'} Anything
+          Chat with {currentTeacher?.displayName || 'Your Teacher'}
         </Text>
         <Text style={[styles.emptyStateDescription, { color: themeColors.textSecondary }]}>
           Get personalized spiritual guidance from {currentTeacher?.displayName || 'your teacher'}'s wisdom. Ask about meditation, love, awareness, or any aspect of your spiritual journey.
@@ -286,11 +306,11 @@ const SpiritualQA: React.FC<SpiritualQAProps> = ({ onClose }) => {
             Try asking:
           </Text>
           {[
+            "Who are you?",
             "What is meditation?",
             "How can I find inner peace?",
             "What is the meaning of love?",
-            "How do I deal with stress?",
-            "What is awareness?"
+            "How do I deal with stress?"
           ].map((suggestion, index) => (
             <TouchableOpacity
               key={index}
@@ -318,6 +338,10 @@ const SpiritualQA: React.FC<SpiritualQAProps> = ({ onClose }) => {
         {/* Header */}
         <View style={[styles.header, { backgroundColor: themeColors.card, borderBottomColor: themeColors.border }]}>
           <View style={styles.headerContent}>
+            <TouchableOpacity onPress={onClose} style={styles.backButton}>
+              <FontAwesome name="arrow-left" size={20} color={themeColors.textPrimary} />
+            </TouchableOpacity>
+            
             <View style={styles.teacherInfo}>
               <View style={[styles.teacherAvatar, { backgroundColor: getTeacherColor() }]}>
                 <Text style={styles.teacherAvatarText}>{getTeacherInitial()}</Text>
@@ -331,78 +355,77 @@ const SpiritualQA: React.FC<SpiritualQAProps> = ({ onClose }) => {
                 </Text>
               </View>
             </View>
-            {onClose && (
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <FontAwesome name="times" size={24} color={themeColors.textSecondary} />
-              </TouchableOpacity>
-            )}
+
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <FontAwesome name="times" size={20} color={themeColors.textSecondary} />
+            </TouchableOpacity>
           </View>
         </View>
 
-      {/* Messages */}
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.messagesContainer}
-        contentContainerStyle={styles.messagesContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {currentConversation?.messages?.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          <>
-            {currentConversation?.messages?.map((message, index) =>
-              renderMessage(message, index)
-            )}
-            {renderTypingIndicator()}
-            {renderFollowUpQuestions()}
-            {renderRelatedTeachings()}
-            {renderSuggestedPractice()}
-          </>
-        )}
-      </ScrollView>
+        {/* Messages */}
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.messagesContainer}
+          contentContainerStyle={styles.messagesContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {currentConversation?.messages?.length === 0 ? (
+            renderEmptyState()
+          ) : (
+            <>
+              {currentConversation?.messages?.map((message, index) =>
+                renderMessage(message, index)
+              )}
+              {renderTypingIndicator()}
+              {renderFollowUpQuestions()}
+              {renderRelatedTeachings()}
+              {renderSuggestedPractice()}
+            </>
+          )}
+        </ScrollView>
 
-      {/* Input */}
-      <View style={[styles.inputContainer, { backgroundColor: themeColors.card, borderTopColor: themeColors.border }]}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={[
-              styles.textInput,
-              {
-                backgroundColor: themeColors.background,
-                color: themeColors.textPrimary,
-                borderColor: themeColors.border,
-              },
-            ]}
-            value={question}
-            onChangeText={setQuestion}
-            placeholder={`Ask ${currentTeacher?.displayName || 'your teacher'} about meditation, life, or spirituality...`}
-            placeholderTextColor={themeColors.textSecondary}
-            multiline
-            maxLength={500}
-            editable={!isLoading}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              {
-                backgroundColor: question.trim() ? brandColors.primary : themeColors.border,
-              },
-            ]}
-            onPress={handleAskQuestion}
-            disabled={!question.trim() || isLoading}
-            activeOpacity={0.8}
-          >
-            <FontAwesome
-              name="paper-plane"
-              size={16}
-              color={question.trim() ? '#FFFFFF' : themeColors.textSecondary}
+        {/* Input */}
+        <View style={[styles.inputContainer, { backgroundColor: themeColors.card, borderTopColor: themeColors.border }]}>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: themeColors.background,
+                  color: themeColors.textPrimary,
+                  borderColor: themeColors.border,
+                },
+              ]}
+              value={question}
+              onChangeText={setQuestion}
+              placeholder={getTeacherGreeting()}
+              placeholderTextColor={themeColors.textSecondary}
+              multiline
+              maxLength={500}
+              editable={!isLoading}
             />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                {
+                  backgroundColor: question.trim() ? getTeacherColor() : themeColors.border,
+                },
+              ]}
+              onPress={handleAskQuestion}
+              disabled={!question.trim() || isLoading}
+              activeOpacity={0.8}
+            >
+              <FontAwesome
+                name="paper-plane"
+                size={16}
+                color={question.trim() ? '#FFFFFF' : themeColors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
+          <Text style={[styles.characterCount, { color: themeColors.textSecondary }]}>
+            {question.length}/500
+          </Text>
         </View>
-        <Text style={[styles.characterCount, { color: themeColors.textSecondary }]}>
-          {question.length}/500
-        </Text>
-      </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -433,9 +456,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 40,
+    minHeight: 40,
+  },
   teacherInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    marginLeft: 16,
   },
   teacherAvatar: {
     width: 40,
@@ -451,19 +484,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   teacherName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
   },
   teacherStatus: {
     fontSize: 12,
   },
   closeButton: {
-    padding: 12,
+    padding: 8,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: 40,
+    minHeight: 40,
   },
   messagesContainer: {
     flex: 1,
@@ -520,10 +553,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 40,
   },
+  teacherWelcome: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  teacherWelcomeText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
   emptyStateTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginTop: 20,
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -550,36 +595,6 @@ const styles = StyleSheet.create({
   suggestionText: {
     fontSize: 14,
     textAlign: 'center',
-  },
-  inputContainer: {
-    padding: 20,
-    borderTopWidth: 1,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  textInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    marginRight: 10,
-    maxHeight: 100,
-    fontSize: 16,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  characterCount: {
-    fontSize: 12,
-    textAlign: 'right',
-    marginTop: 5,
   },
   teachingChip: {
     padding: 12,
@@ -614,6 +629,36 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontWeight: '600',
   },
+  inputContainer: {
+    padding: 20,
+    borderTopWidth: 1,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  textInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    marginRight: 10,
+    maxHeight: 100,
+    fontSize: 16,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  characterCount: {
+    fontSize: 12,
+    textAlign: 'right',
+    marginTop: 5,
+  },
 });
 
-export default SpiritualQA;
+export default TeacherChatScreen;
