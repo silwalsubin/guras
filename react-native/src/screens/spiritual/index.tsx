@@ -86,10 +86,11 @@ const SpiritualTeacherScreen: React.FC = () => {
         image: getTeacherImage(teacher.id)
       })),
       
-      // Practices
-      { id: 'meditation', type: 'practice', name: 'Mindfulness Meditation', description: 'A practice of present-moment awareness', category: 'practices' },
-      { id: 'breathing', type: 'practice', name: 'Breathing Exercises', description: 'Techniques for conscious breathing', category: 'practices' },
-      { id: 'body-scan', type: 'practice', name: 'Body Scan', description: 'Progressive body awareness practice', category: 'practices' },
+      // Practices - Major World Religions
+      { id: 'hinduism', type: 'practice', name: 'Hinduism', description: 'Ancient spiritual tradition with meditation, yoga, and devotion practices', category: 'practices' },
+      { id: 'islam', type: 'practice', name: 'Islam', description: 'Islamic spiritual practices including prayer, meditation, and study', category: 'practices' },
+      { id: 'buddhism', type: 'practice', name: 'Buddhism', description: 'Buddhist meditation, mindfulness, and compassion practices', category: 'practices' },
+      { id: 'christianity', type: 'practice', name: 'Christianity', description: 'Christian prayer, meditation, and contemplative practices', category: 'practices' },
     
     // Philosophy
     { id: 'enlightenment', type: 'philosophy', name: 'Path to Enlightenment', description: 'Understanding the journey of spiritual awakening', category: 'philosophy' },
@@ -105,13 +106,13 @@ const SpiritualTeacherScreen: React.FC = () => {
 
   // Filter search results
   const filteredResults = useMemo(() => {
-    // If no search query and teachers category is selected, show all teachers
-    if (!searchQuery.trim() && selectedCategory === 'teachers') {
-      return searchData.filter(item => item.category === 'teachers');
+    // If no search query and a specific category is selected, show all items in that category
+    if (!searchQuery.trim() && selectedCategory !== 'all') {
+      return searchData.filter(item => item.category === selectedCategory);
     }
     
-    // If no search query, return empty array (show empty state)
-    if (!searchQuery.trim()) return [];
+    // If no search query and 'all' is selected, return empty array (show empty state)
+    if (!searchQuery.trim() && selectedCategory === 'all') return [];
     
     return searchData.filter(item => {
       const matchesQuery = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
