@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using services.notifications.Services;
 using services.notifications.Domain;
+using apis.Requests;
+using apis.Extensions;
 
 namespace apis.Controllers;
 
@@ -78,6 +80,16 @@ public class UserNotificationPreferencesController : ControllerBase
     {
         try
         {
+            // Validate the request first - fail fast if invalid
+            try
+            {
+                request.Validate();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
@@ -166,15 +178,3 @@ public class UserNotificationPreferencesController : ControllerBase
     }
 }
 
-public class UpdateNotificationPreferencesRequest
-{
-    public bool Enabled { get; set; }
-    public string Frequency { get; set; } = string.Empty; // "5min", "hourly", "twice-daily", "daily"
-    public QuietHoursRequest QuietHours { get; set; } = new();
-}
-
-public class QuietHoursRequest
-{
-    public string Start { get; set; } = string.Empty; // "HH:MM" format
-    public string End { get; set; } = string.Empty;   // "HH:MM" format
-}

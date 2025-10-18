@@ -4,6 +4,9 @@ using System.Security.Claims;
 using services.users.Services;
 using services.users.Domain;
 using Microsoft.Extensions.Logging;
+using apis.Requests;
+using apis.Responses;
+using apis.Extensions;
 
 namespace apis.Controllers;
 
@@ -17,6 +20,16 @@ public class AuthController(ILogger<AuthController> logger, IUserAuthService use
     {
         try
         {
+            // Validate the request first - fail fast if invalid
+            try
+            {
+                request.Validate();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+
             // Verify Firebase ID token
             var firebaseToken = await userAuthService.VerifyIdTokenAsync(request.IdToken);
             
@@ -35,11 +48,11 @@ public class AuthController(ILogger<AuthController> logger, IUserAuthService use
             
             var response = new SignUpResponse
             {
-                uid = userId.ToString(),
-                email = request.Email,
-                displayName = request.Name,
-                isNewUser = true,
-                firebaseUid = firebaseToken.Uid
+                Uid = userId.ToString(),
+                Email = request.Email,
+                DisplayName = request.Name,
+                IsNewUser = true,
+                FirebaseUid = firebaseToken.Uid
             };
             
             return Ok(response);
@@ -68,7 +81,7 @@ public class AuthController(ILogger<AuthController> logger, IUserAuthService use
         var picture = User.FindFirst("picture")?.Value;
         var emailVerified = User.FindFirst("email_verified")?.Value;
 
-        var profile = new UserProfile
+        var profile = new UserProfileResponse
         {
             Uid = applicationUserId ?? firebaseUid ?? "", // Prefer application user ID, fallback to Firebase UID
             Email = email,
@@ -86,50 +99,11 @@ public class AuthController(ILogger<AuthController> logger, IUserAuthService use
     {
         var applicationUserId = User.FindFirst("application_user_id")?.Value;
         var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Ok(new { 
-            message = "Token is valid", 
-            applicationUserId = applicationUserId,
-            firebaseUid = firebaseUid
+        return Ok(new TokenVerificationResponse
+        { 
+            Message = "Token is valid", 
+            ApplicationUserId = applicationUserId,
+            FirebaseUid = firebaseUid
         });
     }
 }
-
-public class SignUpRequest
-{
-    public string IdToken { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string? Name { get; set; }
-}
-
-public class SignUpResponse
-{
-    public string uid { get; set; } = string.Empty;
-    public string? email { get; set; }
-    public string? displayName { get; set; }
-    public bool isNewUser { get; set; }
-    public string firebaseUid { get; set; } = string.Empty;
-}
-
-public class LoginResponse
-{
-    public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public UserInfo User { get; set; } = new UserInfo();
-}
-
-public class UserProfile
-{
-    public string Uid { get; set; } = string.Empty;
-    public string? Email { get; set; }
-    public string? DisplayName { get; set; }
-    public string? PhotoUrl { get; set; }
-    public bool EmailVerified { get; set; }
-}
-
-public class UserInfo
-{
-    public string Id { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string? Name { get; set; }
-    public string FirebaseUid { get; set; } = string.Empty;
-} 
