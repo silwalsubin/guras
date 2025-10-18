@@ -177,6 +177,7 @@ jspm_packages/
 # C#
 server/**/bin/**
 server/**/obj/**
+server/**/.vs/**
 guras-firebase-adminsdk.json
 
 # Flyway configuration files (contain sensitive database credentials)
