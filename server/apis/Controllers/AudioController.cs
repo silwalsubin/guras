@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using services.audio.Models;
 using services.audio.Services;
-using System.Security.Claims;
+using apis.Extensions;
+using apis.Requests;
+using apis.Responses;
 
 namespace apis.Controllers;
 
@@ -12,42 +14,22 @@ namespace apis.Controllers;
 public class AudioController(IAudioFileService audioFileService, ILogger<AudioController> logger, IWebHostEnvironment environment) : ControllerBase
 {
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadAudio()
+    public async Task<IActionResult> UploadAudio([FromForm] UploadAudioRequest request)
     {
         try
         {
-            // Get form data manually
-            var form = await Request.ReadFormAsync();
-
-            var name = form["Name"].ToString();
-            var author = form["Author"].ToString();
-            var description = form["Description"].ToString();
-
-            var audioFile = form.Files["AudioFile"];
-            var thumbnailFile = form.Files["ThumbnailFile"];
+            // Validate the request first - fail fast if invalid
+            try
+            {
+                request.Validate();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
 
             logger.LogInformation("Upload request received - Name: {Name}, Author: {Author}, AudioFile: {AudioFile}, ThumbnailFile: {ThumbnailFile}",
-                name, author, audioFile?.FileName, thumbnailFile?.FileName);
-
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                return BadRequest("Name is required");
-            }
-
-            if (string.IsNullOrWhiteSpace(author))
-            {
-                return BadRequest("Author is required");
-            }
-
-            if (audioFile == null)
-            {
-                return BadRequest("Audio file is required");
-            }
-
-            if (thumbnailFile == null)
-            {
-                return BadRequest("Thumbnail file is required");
-            }
+                request.Name, request.Author, request.AudioFile?.FileName, request.ThumbnailFile?.FileName);
 
             var userIdClaim = User.FindFirst("application_user_id")?.Value;
             if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
@@ -57,28 +39,28 @@ public class AudioController(IAudioFileService audioFileService, ILogger<AudioCo
 
             var metadata = new CreateAudioFileRequest
             {
-                Name = name,
-                Author = author,
-                Description = description
+                Name = request.Name,
+                Author = request.Author,
+                Description = request.Description
             };
 
             // Convert IFormFile to FileUpload
-            using var audioStream = audioFile.OpenReadStream();
-            using var thumbnailStream = thumbnailFile.OpenReadStream();
+            using var audioStream = request.AudioFile!.OpenReadStream();
+            using var thumbnailStream = request.ThumbnailFile!.OpenReadStream();
 
             var audioFileUpload = new services.audio.Models.FileUpload
             {
-                FileName = audioFile.FileName,
-                ContentType = audioFile.ContentType,
-                Length = audioFile.Length,
+                FileName = request.AudioFile!.FileName,
+                ContentType = request.AudioFile!.ContentType,
+                Length = request.AudioFile!.Length,
                 Stream = audioStream
             };
 
             var thumbnailFileUpload = new services.audio.Models.FileUpload
             {
-                FileName = thumbnailFile.FileName,
-                ContentType = thumbnailFile.ContentType,
-                Length = thumbnailFile.Length,
+                FileName = request.ThumbnailFile!.FileName,
+                ContentType = request.ThumbnailFile!.ContentType,
+                Length = request.ThumbnailFile!.Length,
                 Stream = thumbnailStream
             };
 
@@ -99,7 +81,7 @@ public class AudioController(IAudioFileService audioFileService, ILogger<AudioCo
         {
             var audioFiles = await audioFileService.GetAllAsync(expirationMinutes ?? 60);
 
-            return Ok(new
+            return Ok(new AudioFilesResponse
             {
                 Files = audioFiles,
                 TotalCount = audioFiles.Count(),
@@ -126,7 +108,7 @@ public class AudioController(IAudioFileService audioFileService, ILogger<AudioCo
 
             var audioFiles = await audioFileService.GetByUserIdAsync(userId, expirationMinutes ?? 60);
 
-            return Ok(new
+            return Ok(new AudioFilesResponse
             {
                 Files = audioFiles,
                 TotalCount = audioFiles.Count(),
@@ -198,7 +180,7 @@ public class AudioController(IAudioFileService audioFileService, ILogger<AudioCo
             var success = await audioFileService.DeleteAsync(id);
             if (success)
             {
-                return Ok(new { Message = "Audio file deleted successfully" });
+                return Ok(new DeleteAudioFileResponse { Message = "Audio file deleted successfully" });
             }
             else
             {
@@ -211,13 +193,4 @@ public class AudioController(IAudioFileService audioFileService, ILogger<AudioCo
             return StatusCode(500, "Internal server error");
         }
     }
-}
-
-public class UploadAudioRequest
-{
-    public string Name { get; set; } = string.Empty;
-    public string Author { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public IFormFile AudioFile { get; set; } = null!;
-    public IFormFile ThumbnailFile { get; set; } = null!;
 }
