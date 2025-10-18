@@ -24,15 +24,15 @@ public class TeachersDbContext : DbContext
             // Configure string arrays for PostgreSQL
             entity.Property(e => e.CoreTeachings)
                 .HasConversion(
-                    v => string.Join("|", v), // Convert List<string> to string
-                    v => v.Split("|", StringSplitOptions.RemoveEmptyEntries).ToList() // Convert string to List<string>
+                    v => v.ToArray(), // Convert List<string> to string[]
+                    v => v.ToList() // Convert string[] to List<string>
                 )
                 .HasColumnType("text[]");
 
             entity.Property(e => e.PersonalityTraits)
                 .HasConversion(
-                    v => string.Join("|", v), // Convert List<string> to string
-                    v => v.Split("|", StringSplitOptions.RemoveEmptyEntries).ToList() // Convert string to List<string>
+                    v => v.ToArray(), // Convert List<string> to string[]
+                    v => v.ToList() // Convert string[] to List<string>
                 )
                 .HasColumnType("text[]");
 
