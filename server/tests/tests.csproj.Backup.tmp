@@ -20,14 +20,12 @@
         <PackageReference Include="Testcontainers" Version="3.7.0" />
         <PackageReference Include="Testcontainers.MsSql" Version="3.7.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
         <PackageReference Include="FluentAssertions" Version="6.12.0" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\apis\apis.csproj" />
         <ProjectReference Include="..\utilities\utilities.csproj" />
-        <ProjectReference Include="..\services.teachers\services.teachers.csproj" />
     </ItemGroup>
 
     <ItemGroup>
