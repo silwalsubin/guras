@@ -108,21 +108,12 @@ jobs:
         echo "JAR files in installation:"
         find /opt/flyway -name "*.jar" | head -10
         
-        # Create a wrapper script that sets the correct classpath
-        echo '#!/bin/bash' | sudo tee /usr/local/bin/flyway > /dev/null
-        echo 'export FLYWAY_HOME="/opt/flyway"' | sudo tee -a /usr/local/bin/flyway > /dev/null
-        echo 'export CLASSPATH="$FLYWAY_HOME/lib/community/*:$FLYWAY_HOME/lib/*:$FLYWAY_HOME/drivers/*:$FLYWAY_HOME/jars/*:$FLYWAY_HOME/*.jar"' | sudo tee -a /usr/local/bin/flyway > /dev/null
-        echo 'echo "FLYWAY_HOME: $FLYWAY_HOME"' | sudo tee -a /usr/local/bin/flyway > /dev/null
-        echo 'echo "CLASSPATH: $CLASSPATH"' | sudo tee -a /usr/local/bin/flyway > /dev/null
-        echo 'echo "Available JAR files:"' | sudo tee -a /usr/local/bin/flyway > /dev/null
-        echo 'find "$FLYWAY_HOME" -name "*.jar" | head -5' | sudo tee -a /usr/local/bin/flyway > /dev/null
-        echo 'exec java -cp "$CLASSPATH" org.flywaydb.commandline.Main "$@"' | sudo tee -a /usr/local/bin/flyway > /dev/null
-        
-        sudo chmod +x /usr/local/bin/flyway
+        # Use the original flyway script instead of recreating it
+        sudo ln -sf /opt/flyway/flyway /usr/local/bin/flyway
         
         # Verify installation
         echo "Verifying installation..."
-        flyway -version
+        flyway --version
         
         # Clean up download
         rm -rf flyway.tar.gz flyway-*
