@@ -51,8 +51,16 @@ export interface GetUploadUrlsResponse {
 }
 
 export interface ApiResponse<T> {
+  success: boolean
   data?: T
-  error?: string
+  error?: {
+    code: string
+    message: string
+    details?: string
+    field?: string
+  }
+  traceId: string
+  timestamp: string
 }
 
 class ApiService {
@@ -134,10 +142,42 @@ class ApiService {
 
       const response = await this.axiosInstance(config)
 
-      return { data: response.data }
+      // Handle new standardized success format
+      if (response.data.success !== undefined) {
+        return response.data
+      }
+      
+      // Fallback for legacy success format (direct data)
+      return {
+        success: true,
+        data: response.data,
+        traceId: response.headers['x-correlation-id'] || '',
+        timestamp: new Date().toISOString()
+      }
     } catch (error: any) {
+      console.error('API Request Error:', error)
+      
+      // Handle new standardized error format
+      if (error.response?.data?.error) {
+        return {
+          success: false,
+          error: error.response.data.error,
+          traceId: error.response.data.traceId || error.response.headers['x-correlation-id'] || '',
+          timestamp: error.response.data.timestamp || new Date().toISOString()
+        }
+      }
+      
+      // Fallback for legacy error format
       const errorMessage = error.response?.data?.message || error.message || 'An error occurred'
-      return { error: errorMessage }
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: errorMessage
+        },
+        traceId: error.response?.headers['x-correlation-id'] || '',
+        timestamp: new Date().toISOString()
+      }
     }
   }
 

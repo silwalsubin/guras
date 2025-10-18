@@ -13,7 +13,7 @@ const loadAudioFiles = async () => {
   isLoading.value = true
   try {
     const response = await apiService.getAudioFiles()
-    if (response.data) {
+    if (response.success && response.data) {
       audioFiles.value = response.data.files
     }
   } catch (error) {

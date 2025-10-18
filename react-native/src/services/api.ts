@@ -30,8 +30,16 @@ export interface UploadUrlResponse {
 }
 
 interface ApiResponse<T> {
+  success: boolean;
   data?: T;
-  error?: string;
+  error?: {
+    code: string;
+    message: string;
+    details?: string;
+    field?: string;
+  };
+  traceId: string;
+  timestamp: string;
 }
 
 class ApiService {
@@ -62,7 +70,15 @@ class ApiService {
       const token = await this.getAuthToken();
       if (!token) {
         console.error('❌ No authentication token available');
-        return { error: 'No authentication token available' };
+        return {
+          success: false,
+          error: {
+            code: 'AUTH_ERROR',
+            message: 'No authentication token available'
+          },
+          traceId: '',
+          timestamp: new Date().toISOString()
+        };
       }
 
       console.log('🔑 Using auth token (first 20 chars):', token.substring(0, 20) + '...');
@@ -83,20 +99,52 @@ class ApiService {
         url: fullUrl
       });
 
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const errorText = await response.text();
         console.error('❌ API Error:', {
           status: response.status,
           statusText: response.statusText,
-          errorText,
+          responseData,
           url: fullUrl
         });
-        return { error: `HTTP ${response.status}: ${errorText}` };
+        
+        // Handle new standardized error format
+        if (responseData.error) {
+          return {
+            success: false,
+            error: responseData.error,
+            traceId: responseData.traceId || '',
+            timestamp: responseData.timestamp || new Date().toISOString()
+          };
+        }
+        
+        // Fallback for legacy error format
+        return {
+          success: false,
+          error: {
+            code: 'HTTP_ERROR',
+            message: `HTTP ${response.status}: ${responseData.message || response.statusText}`
+          },
+          traceId: responseData.traceId || '',
+          timestamp: responseData.timestamp || new Date().toISOString()
+        };
       }
 
-      const data = await response.json();
-      console.log('✅ API Success for:', fullUrl);
-      return { data };
+      console.log('✅ API Success for:', fullUrl, { traceId: responseData.traceId });
+      
+      // Handle new standardized success format
+      if (responseData.success !== undefined) {
+        return responseData;
+      }
+      
+      // Fallback for legacy success format (direct data)
+      return {
+        success: true,
+        data: responseData,
+        traceId: '',
+        timestamp: new Date().toISOString()
+      };
     } catch (error) {
       console.error('❌ Network Error:', {
         url: fullUrl,
@@ -104,7 +152,15 @@ class ApiService {
         name: error instanceof Error ? error.name : 'Unknown',
         stack: error instanceof Error ? error.stack : undefined
       });
-      return { error: error instanceof Error ? error.message : 'Network request failed' };
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: error instanceof Error ? error.message : 'Network request failed'
+        },
+        traceId: '',
+        timestamp: new Date().toISOString()
+      };
     }
   }
 
