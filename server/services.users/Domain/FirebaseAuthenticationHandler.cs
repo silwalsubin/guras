@@ -11,10 +11,9 @@ public class FirebaseAuthenticationHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,
     ILoggerFactory loggerFactory,
     UrlEncoder encoder,
-    ISystemClock clock,
     IUserAuthService userAuthService,
     UserService userService)
-    : AuthenticationHandler<AuthenticationSchemeOptions>(options, loggerFactory, encoder, clock)
+    : AuthenticationHandler<AuthenticationSchemeOptions>(options, loggerFactory, encoder)
 {
     private readonly ILogger<FirebaseAuthenticationHandler> _logger = loggerFactory.CreateLogger<FirebaseAuthenticationHandler>();
 

@@ -114,7 +114,7 @@ public class S3Service(IAmazonS3 s3Client, ILogger<S3Service> logger) : IS3Servi
             };
 
             var response = await s3Client.ListObjectsV2Async(request);
-            var fileNames = (response.S3Objects?.Select(obj => obj.Key)).ToList<string>() ?? new List<string>();
+            var fileNames = response.S3Objects?.Select(obj => obj.Key).ToList() ?? new List<string>();
             
             logger.LogInformation("Listed {Count} files with prefix: {Prefix}", fileNames.Count, prefix);
             
