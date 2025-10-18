@@ -11,7 +11,7 @@ namespace apis.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AudioController(IAudioFileService audioFileService, ILogger<AudioController> logger, IWebHostEnvironment environment) : ControllerBase
+public class AudioController(IAudioFileService audioFileService, ILogger<AudioController> logger) : ControllerBase
 {
     [HttpPost("upload")]
     public async Task<IActionResult> UploadAudio([FromForm] UploadAudioRequest request)

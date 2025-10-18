@@ -56,7 +56,7 @@ public class ApiResponse : ApiResponse<object>
         };
     }
 
-    public static ApiResponse ErrorResponse(string message, string traceId, string? details = null, string? code = null)
+    public static new ApiResponse ErrorResponse(string message, string traceId, string? details = null, string? code = null)
     {
         return new ApiResponse
         {

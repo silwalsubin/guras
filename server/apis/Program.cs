@@ -6,6 +6,7 @@ using services.users.Configuration;
 using services.notifications.Configuration;
 using utilities.Persistence;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 

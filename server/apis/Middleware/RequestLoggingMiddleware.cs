@@ -32,7 +32,7 @@ public class RequestLoggingMiddleware
             userId);
 
         // Add correlation ID to response headers
-        context.Response.Headers.Add("X-Correlation-ID", correlationId);
+        context.Response.Headers["X-Correlation-ID"] = correlationId;
 
         try
         {
