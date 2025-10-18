@@ -42,26 +42,57 @@ jobs:
     
     - name: Install Flyway
       run: |
+        # Set Flyway version
+        FLYWAY_VERSION="9.22.3"
+        
         # Download Flyway with proper error handling
-        curl -L -o flyway.tar.gz https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/11.11.0/flyway-commandline-11.11.0-linux-x64.tar.gz
+        echo "Downloading Flyway ${FLYWAY_VERSION}..."
+        curl -L -o flyway.tar.gz "https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${FLYWAY_VERSION}/flyway-commandline-${FLYWAY_VERSION}.tar.gz"
         
         # Verify download was successful
         if [ ! -f flyway.tar.gz ] || [ ! -s flyway.tar.gz ]; then
           echo "Failed to download Flyway"
+          echo "File size: $(stat -c%s flyway.tar.gz 2>/dev/null || echo 'unknown')"
+          echo "File type: $(file flyway.tar.gz 2>/dev/null || echo 'unknown')"
           exit 1
         fi
         
+        # Check file size (should be reasonable for Flyway)
+        FILE_SIZE=$(stat -c%s flyway.tar.gz)
+        if [ "$FILE_SIZE" -lt 1000 ]; then
+          echo "Downloaded file is too small (${FILE_SIZE} bytes). It might be an error page."
+          echo "File contents:"
+          head -5 flyway.tar.gz
+          exit 1
+        fi
+        
+        echo "Download successful (${FILE_SIZE} bytes)"
+        
         # Extract with verbose output for debugging
+        echo "Extracting Flyway..."
         tar -xzf flyway.tar.gz
         
+        # Find the extracted directory
+        FLYWAY_DIR=$(find . -name "flyway-*" -type d | head -1)
+        if [ -z "$FLYWAY_DIR" ]; then
+          echo "Could not find Flyway directory after extraction"
+          echo "Contents of current directory:"
+          ls -la
+          exit 1
+        fi
+        
+        echo "Found Flyway directory: ${FLYWAY_DIR}"
+        
         # Install to system path
-        sudo ln -sf $(pwd)/flyway-11.11.0/flyway /usr/local/bin/flyway
+        sudo cp "${FLYWAY_DIR}/flyway" /usr/local/bin/
+        sudo chmod +x /usr/local/bin/flyway
         
         # Verify installation
+        echo "Verifying installation..."
         flyway -version
         
         # Clean up download
-        rm flyway.tar.gz
+        rm -rf flyway.tar.gz flyway-*
     
     - name: Wait for PostgreSQL
       run: |
