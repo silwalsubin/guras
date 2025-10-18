@@ -30,7 +30,7 @@ public class AudioFileRepository : IAudioFileRepository
             ) RETURNING *";
 
         using var connection = await _connectionFactory.GetConnectionAsync();
-        
+
         var audioFile = await connection.QuerySingleAsync<AudioFile>(sql, new
         {
             Id = audioFileId ?? Guid.NewGuid(), // Use provided ID or generate new one
@@ -155,10 +155,10 @@ public class AudioFileRepository : IAudioFileRepository
     public async Task<bool> DeleteAsync(Guid id)
     {
         const string sql = "DELETE FROM audiofiles WHERE id = @Id";
-        
+
         using var connection = await _connectionFactory.GetConnectionAsync();
         var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
-        
+
         _logger.LogInformation("Deleted audio file record with ID: {AudioFileId}", id);
         return rowsAffected > 0;
     }
@@ -166,7 +166,7 @@ public class AudioFileRepository : IAudioFileRepository
     public async Task<bool> ExistsAsync(Guid id)
     {
         const string sql = "SELECT COUNT(1) FROM audiofiles WHERE id = @Id";
-        
+
         using var connection = await _connectionFactory.GetConnectionAsync();
         var count = await connection.QuerySingleAsync<int>(sql, new { Id = id });
         return count > 0;

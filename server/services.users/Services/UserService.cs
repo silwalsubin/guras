@@ -1,4 +1,3 @@
-using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using services.users.Domain;
 using services.users.Persistence;
@@ -46,7 +45,7 @@ public class UserService(IUserRepository userRepository, ILogger<UserService> lo
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-        
+
         await userRepository.CreateAsync(userRecord);
         logger.LogInformation($"Created user with ID {userRecord.UserId} for email {userRecord.Email}");
         return userRecord.UserId;

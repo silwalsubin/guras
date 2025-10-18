@@ -29,27 +29,27 @@ public class QuotesService : IQuotesService
 
     public QuoteData? GetQuoteByCategory(string category)
     {
-        var quote = _quotes.FirstOrDefault(q => 
+        var quote = _quotes.FirstOrDefault(q =>
             string.Equals(q.Category, category, StringComparison.OrdinalIgnoreCase));
-        
+
         if (quote != null)
         {
-            _logger.LogInformation("Found quote for category '{Category}': \"{QuoteText}\" by {Author}", 
+            _logger.LogInformation("Found quote for category '{Category}': \"{QuoteText}\" by {Author}",
                 category, quote.Text, quote.Author);
         }
         else
         {
             _logger.LogWarning("No quote found for category: {Category}", category);
         }
-        
+
         return quote;
     }
 
     public List<QuoteData> GetQuotesByCategory(string category)
     {
-        var quotes = _quotes.Where(q => 
+        var quotes = _quotes.Where(q =>
             string.Equals(q.Category, category, StringComparison.OrdinalIgnoreCase)).ToList();
-        
+
         _logger.LogInformation("Found {Count} quotes for category '{Category}'", quotes.Count, category);
         return quotes;
     }
@@ -76,4 +76,4 @@ public class QuotesService : IQuotesService
             new() { Text = "You yourself, as much as anybody in the entire universe, deserve your love and affection.", Author = "Buddha", Category = "self-love" }
         };
     }
-} 
+}

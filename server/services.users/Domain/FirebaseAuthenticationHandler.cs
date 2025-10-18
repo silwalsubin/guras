@@ -35,7 +35,7 @@ public class FirebaseAuthenticationHandler(
         try
         {
             var firebaseToken = await userAuthService.VerifyIdTokenAsync(token);
-            
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, firebaseToken.Uid),
@@ -83,4 +83,4 @@ public class FirebaseAuthenticationHandler(
             return AuthenticateResult.Fail($"Invalid token: {ex.Message}");
         }
     }
-} 
+}

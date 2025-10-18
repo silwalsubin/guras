@@ -8,4 +8,4 @@ public interface IQuotesService
     List<QuoteData> GetAllQuotes();
     QuoteData? GetQuoteByCategory(string category);
     List<QuoteData> GetQuotesByCategory(string category);
-} 
+}

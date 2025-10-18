@@ -1,9 +1,6 @@
 using FluentAssertions;
 using services.users.Domain;
 using services.users.Services;
-using utilities.Persistence;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace tests.services.users;
@@ -11,7 +8,7 @@ namespace tests.services.users;
 public class UserServiceIntegrationTests
 {
     private readonly UserService _userService;
-    
+
     public UserServiceIntegrationTests()
     {
         _userService = TestServiceProvider.GetService<UserService>();

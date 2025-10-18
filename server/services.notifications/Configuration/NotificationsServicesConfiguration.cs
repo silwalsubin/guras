@@ -11,4 +11,4 @@ public static class NotificationsServicesConfiguration
         services.AddScoped<IUserNotificationPreferencesService, UserNotificationPreferencesService>();
         return services;
     }
-} 
+}

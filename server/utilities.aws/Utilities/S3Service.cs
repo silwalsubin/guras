@@ -21,7 +21,7 @@ public class S3Service(IAmazonS3 s3Client, ILogger<S3Service> logger) : IS3Servi
 
             var preSignedUrl = await s3Client.GetPreSignedURLAsync(request);
             logger.LogInformation("Generated pre-signed upload URL for file: {FileName}", fileName);
-            
+
             return preSignedUrl;
         }
         catch (Exception ex)
@@ -92,7 +92,7 @@ public class S3Service(IAmazonS3 s3Client, ILogger<S3Service> logger) : IS3Servi
 
             await s3Client.DeleteObjectAsync(request);
             logger.LogInformation("Deleted file: {FileName}", fileName);
-            
+
             return true;
         }
         catch (Exception ex)
@@ -115,9 +115,9 @@ public class S3Service(IAmazonS3 s3Client, ILogger<S3Service> logger) : IS3Servi
 
             var response = await s3Client.ListObjectsV2Async(request);
             var fileNames = response.S3Objects?.Select(obj => obj.Key).ToList() ?? new List<string>();
-            
+
             logger.LogInformation("Listed {Count} files with prefix: {Prefix}", fileNames.Count, prefix);
-            
+
             return fileNames;
         }
         catch (Exception ex)
@@ -165,4 +165,4 @@ public class S3Service(IAmazonS3 s3Client, ILogger<S3Service> logger) : IS3Servi
             _ => "application/octet-stream"
         };
     }
-} 
+}

@@ -1,7 +1,4 @@
 using Dapper;
-using Microsoft.Extensions.Logging;
-using services.users.Domain;
-using utilities.Persistence;
 using utilities.Persistence.ConnectionFactories;
 
 namespace services.users.Persistence;

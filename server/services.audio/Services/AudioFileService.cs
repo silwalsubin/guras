@@ -85,11 +85,11 @@ public class AudioFileService : IAudioFileService
     {
         // Generate unique ID for this audio file
         var audioFileId = Guid.NewGuid();
-        
+
         // Generate S3 keys based on the unique ID
         var audioExtension = Path.GetExtension(request.AudioFileName);
         var audioS3Key = $"{audioFileId}-audio{audioExtension}";
-        
+
         string? thumbnailS3Key = null;
         if (!string.IsNullOrWhiteSpace(request.ThumbnailFileName))
         {
@@ -101,7 +101,7 @@ public class AudioFileService : IAudioFileService
 
         // Generate pre-signed upload URLs
         var audioUploadUrl = await _audioFilesUtility.GeneratePreSignedUploadUrlAsync(audioS3Key, expiration);
-        
+
         string? thumbnailUploadUrl = null;
         if (thumbnailS3Key != null)
         {
