@@ -86,9 +86,21 @@ fi
 
 echo -e "${GREEN}✅ Found Flyway directory: ${FLYWAY_DIR}${NC}"
 
-# Install Flyway to /usr/local/bin
-echo -e "${YELLOW}🔧 Installing Flyway to /usr/local/bin...${NC}"
-sudo cp "${FLYWAY_DIR}/flyway" /usr/local/bin/
+# Install Flyway to /opt/flyway (keep all files together)
+echo -e "${YELLOW}🔧 Installing Flyway to /opt/flyway...${NC}"
+sudo mkdir -p /opt/flyway
+sudo cp -r "${FLYWAY_DIR}"/* /opt/flyway/
+sudo chmod +x /opt/flyway/flyway
+
+# Create a wrapper script that sets the correct classpath
+echo -e "${YELLOW}🔧 Creating Flyway wrapper script...${NC}"
+sudo tee /usr/local/bin/flyway > /dev/null << 'EOF'
+#!/bin/bash
+export FLYWAY_HOME="/opt/flyway"
+export CLASSPATH="$FLYWAY_HOME/drivers/*:$FLYWAY_HOME/lib/*"
+exec java -cp "$CLASSPATH" org.flywaydb.commandline.Main "$@"
+EOF
+
 sudo chmod +x /usr/local/bin/flyway
 
 # Verify installation
