@@ -95,7 +95,7 @@ public class QuotesController : ControllerBase
                 return NotFound($"No quote found for category: {category}");
             }
 
-            _logger.LogInformation("Retrieved quote for category '{Category}': \"{QuoteText}\" by {Author}", 
+            _logger.LogInformation("Retrieved quote for category '{Category}': \"{QuoteText}\" by {Author}",
                 category, quote.Text, quote.Author);
             return Ok(quote);
         }

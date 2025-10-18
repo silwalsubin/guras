@@ -9,10 +9,10 @@ namespace apis.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class HeartBeatController(
-    ILogger<HeartBeatController> logger, 
+    ILogger<HeartBeatController> logger,
     IDbConnectionFactory dbConnectionFactory,
     AudioFilesUtility audioFilesUtility
-): ControllerBase
+) : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
@@ -21,7 +21,7 @@ public class HeartBeatController(
         logger.LogInformation("Heart Beat endpoint called");
         return Ok("Heart Beat Successful");
     }
-    
+
     [HttpGet("DbConnection")]
     [AllowAnonymous]
     public async Task<IActionResult> GetDbConnectionHeartBeat()
@@ -30,7 +30,7 @@ public class HeartBeatController(
         var sqlServerTime = await connection.QuerySingleAsync<DateTime>("SELECT NOW()");
         return Ok(sqlServerTime);
     }
-    
+
     [HttpGet("S3Connection")]
     [AllowAnonymous]
     public async Task<IActionResult> GetS3ConnectionHeartBeat()
@@ -41,4 +41,4 @@ public class HeartBeatController(
         var fileCount = files.Count();
         return Ok(fileCount);
     }
-} 
+}

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using services.users.Services;
 using services.users.Domain;
-using Microsoft.Extensions.Logging;
 using apis.Requests;
 using apis.Responses;
 using apis.Extensions;
@@ -22,7 +21,7 @@ public class AuthController(ILogger<AuthController> logger, IUserAuthService use
 
         // Verify Firebase ID token
         var firebaseToken = await userAuthService.VerifyIdTokenAsync(request.IdToken);
-        
+
         // Create payload for user service
         var createUserPayload = new CreateNewUserPayload
         {
@@ -30,12 +29,12 @@ public class AuthController(ILogger<AuthController> logger, IUserAuthService use
             Name = request.Name,
             FireBaseUserId = firebaseToken.Uid
         };
-        
+
         // Create user using the service
         var userId = await userService.CreateUserAsync(createUserPayload);
-        
+
         logger.LogBusinessOperation("User signup successful", userId.ToString(), new { Email = request.Email });
-        
+
         var response = new SignUpResponse
         {
             Uid = userId.ToString(),
@@ -44,7 +43,7 @@ public class AuthController(ILogger<AuthController> logger, IUserAuthService use
             IsNewUser = true,
             FirebaseUid = firebaseToken.Uid
         };
-        
+
         return SuccessResponse(response);
     }
 
@@ -78,8 +77,8 @@ public class AuthController(ILogger<AuthController> logger, IUserAuthService use
         var applicationUserId = User.FindFirst("application_user_id")?.Value;
         var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return Ok(new TokenVerificationResponse
-        { 
-            Message = "Token is valid", 
+        {
+            Message = "Token is valid",
             ApplicationUserId = applicationUserId,
             FirebaseUid = firebaseUid
         });

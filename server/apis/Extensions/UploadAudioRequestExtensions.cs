@@ -19,8 +19,8 @@ public static class UploadAudioRequestExtensions
         Guard.IsLessThanOrEqualTo(request.AudioFile.Length, 100 * 1024 * 1024, nameof(request.AudioFile));
 
         var allowedAudioTypes = new[] { "audio/mpeg", "audio/mp3", "audio/wav", "audio/m4a", "audio/aac" };
-        Guard.IsTrue(allowedAudioTypes.Contains(request.AudioFile.ContentType), 
-            nameof(request.AudioFile), 
+        Guard.IsTrue(allowedAudioTypes.Contains(request.AudioFile.ContentType),
+            nameof(request.AudioFile),
             $"Audio file type '{request.AudioFile.ContentType}' is not supported. Allowed types: {string.Join(", ", allowedAudioTypes)}");
 
         // Validate thumbnail file
@@ -29,8 +29,8 @@ public static class UploadAudioRequestExtensions
         Guard.IsLessThanOrEqualTo(request.ThumbnailFile.Length, 10 * 1024 * 1024, nameof(request.ThumbnailFile));
 
         var allowedImageTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/webp" };
-        Guard.IsTrue(allowedImageTypes.Contains(request.ThumbnailFile.ContentType), 
-            nameof(request.ThumbnailFile), 
+        Guard.IsTrue(allowedImageTypes.Contains(request.ThumbnailFile.ContentType),
+            nameof(request.ThumbnailFile),
             $"Thumbnail file type '{request.ThumbnailFile.ContentType}' is not supported. Allowed types: {string.Join(", ", allowedImageTypes)}");
     }
 }

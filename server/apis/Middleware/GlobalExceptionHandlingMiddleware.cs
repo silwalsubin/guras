@@ -11,7 +11,7 @@ public class GlobalExceptionHandlingMiddleware
     private readonly IWebHostEnvironment _environment;
 
     public GlobalExceptionHandlingMiddleware(
-        RequestDelegate next, 
+        RequestDelegate next,
         ILogger<GlobalExceptionHandlingMiddleware> logger,
         IWebHostEnvironment environment)
     {
@@ -37,7 +37,7 @@ public class GlobalExceptionHandlingMiddleware
         _logger.LogError(exception, "An unhandled exception occurred. TraceId: {TraceId}", context.TraceIdentifier);
 
         var response = CreateErrorResponse(context, exception);
-        
+
         context.Response.StatusCode = GetStatusCode(exception);
         context.Response.ContentType = "application/json";
 
@@ -52,41 +52,41 @@ public class GlobalExceptionHandlingMiddleware
     private ApiResponse CreateErrorResponse(HttpContext context, Exception exception)
     {
         var isDevelopment = _environment.IsDevelopment();
-        
+
         return exception switch
         {
             ArgumentException argEx => ApiResponse.ErrorResponse(
-                "Invalid request parameters", 
+                "Invalid request parameters",
                 context.TraceIdentifier,
                 isDevelopment ? argEx.Message : null,
                 "VALIDATION_ERROR"),
-                
+
             UnauthorizedAccessException => ApiResponse.ErrorResponse(
-                "Access denied", 
+                "Access denied",
                 context.TraceIdentifier,
                 isDevelopment ? exception.Message : null,
                 "UNAUTHORIZED"),
-                
+
             KeyNotFoundException => ApiResponse.ErrorResponse(
-                "Resource not found", 
+                "Resource not found",
                 context.TraceIdentifier,
                 isDevelopment ? exception.Message : null,
                 "NOT_FOUND"),
-                
+
             InvalidOperationException invOpEx => ApiResponse.ErrorResponse(
-                "Operation failed", 
+                "Operation failed",
                 context.TraceIdentifier,
                 isDevelopment ? invOpEx.Message : null,
                 "INVALID_OPERATION"),
-                
+
             TimeoutException => ApiResponse.ErrorResponse(
-                "Request timeout", 
+                "Request timeout",
                 context.TraceIdentifier,
                 isDevelopment ? exception.Message : null,
                 "TIMEOUT"),
-                
+
             _ => ApiResponse.ErrorResponse(
-                "An unexpected error occurred", 
+                "An unexpected error occurred",
                 context.TraceIdentifier,
                 isDevelopment ? exception.Message : null,
                 "INTERNAL_ERROR")

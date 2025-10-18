@@ -6,16 +6,16 @@ public class ApiResponse<T>
 {
     [JsonPropertyName("success")]
     public bool Success { get; set; }
-    
+
     [JsonPropertyName("data")]
     public T? Data { get; set; }
-    
+
     [JsonPropertyName("error")]
     public ErrorInfo? Error { get; set; }
-    
+
     [JsonPropertyName("traceId")]
     public string TraceId { get; set; } = string.Empty;
-    
+
     [JsonPropertyName("timestamp")]
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 

@@ -1,0 +1,42 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs,vb}]
+indent_style = space
+indent_size = 4
+
+# C# Code Style Rules
+[*.cs]
+
+# Unused usings
+dotnet_diagnostic.IDE0005.severity = warning
+dotnet_diagnostic.IDE0005.suggestion = true
+
+# Unused variables
+dotnet_diagnostic.IDE0051.severity = warning
+dotnet_diagnostic.IDE0052.severity = warning
+
+# Unused parameters
+dotnet_diagnostic.IDE0060.severity = warning
+
+# Expression body preferences
+dotnet_diagnostic.IDE0025.severity = suggestion
+dotnet_diagnostic.IDE0026.severity = suggestion
+
+# 'using' directive preferences
+dotnet_diagnostic.IDE0065.severity = suggestion
+
+# Modifier preferences
+dotnet_diagnostic.IDE0044.severity = suggestion
+dotnet_diagnostic.IDE0046.severity = suggestion
+
+# C# formatting rules
+dotnet_diagnostic.IDE0055.severity = warning
+
+# Naming conventions
+dotnet_diagnostic.IDE1006.severity = warning

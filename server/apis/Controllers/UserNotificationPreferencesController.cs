@@ -120,7 +120,7 @@ public class UserNotificationPreferencesController : ControllerBase
 
             var updatedPreferences = await _preferencesService.CreateOrUpdateUserPreferencesAsync(preferences);
 
-            _logger.LogInformation("User {UserId} updated notification preferences: Enabled={Enabled}, Frequency={Frequency}", 
+            _logger.LogInformation("User {UserId} updated notification preferences: Enabled={Enabled}, Frequency={Frequency}",
                 userId, request.Enabled, request.Frequency);
 
             var response = new
