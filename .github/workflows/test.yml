@@ -89,12 +89,10 @@ jobs:
         sudo chmod +x /opt/flyway/flyway
         
         # Create a wrapper script that sets the correct classpath
-        sudo tee /usr/local/bin/flyway > /dev/null << 'EOF'
-#!/bin/bash
-export FLYWAY_HOME="/opt/flyway"
-export CLASSPATH="$FLYWAY_HOME/drivers/*:$FLYWAY_HOME/lib/*"
-exec java -cp "$CLASSPATH" org.flywaydb.commandline.Main "$@"
-EOF
+        echo '#!/bin/bash' | sudo tee /usr/local/bin/flyway > /dev/null
+        echo 'export FLYWAY_HOME="/opt/flyway"' | sudo tee -a /usr/local/bin/flyway > /dev/null
+        echo 'export CLASSPATH="$FLYWAY_HOME/drivers/*:$FLYWAY_HOME/lib/*"' | sudo tee -a /usr/local/bin/flyway > /dev/null
+        echo 'exec java -cp "$CLASSPATH" org.flywaydb.commandline.Main "$@"' | sudo tee -a /usr/local/bin/flyway > /dev/null
         
         sudo chmod +x /usr/local/bin/flyway
         
