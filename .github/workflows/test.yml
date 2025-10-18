@@ -90,8 +90,12 @@ jobs:
         find "${FLYWAY_DIR}" -name "*.jar" | head -10
         echo "Contents of lib directory:"
         ls -la "${FLYWAY_DIR}/lib/"
+        echo "Contents of lib/community directory:"
+        ls -la "${FLYWAY_DIR}/lib/community/"
         echo "Contents of jars directory:"
         ls -la "${FLYWAY_DIR}/jars/"
+        echo "Original flyway script content:"
+        head -20 "${FLYWAY_DIR}/flyway"
         
         # Install Flyway to /opt/flyway (keep all files together)
         sudo mkdir -p /opt/flyway
@@ -107,7 +111,7 @@ jobs:
         # Create a wrapper script that sets the correct classpath
         echo '#!/bin/bash' | sudo tee /usr/local/bin/flyway > /dev/null
         echo 'export FLYWAY_HOME="/opt/flyway"' | sudo tee -a /usr/local/bin/flyway > /dev/null
-        echo 'export CLASSPATH="$FLYWAY_HOME/jars/*:$FLYWAY_HOME/lib/*:$FLYWAY_HOME/drivers/*:$FLYWAY_HOME/*.jar"' | sudo tee -a /usr/local/bin/flyway > /dev/null
+        echo 'export CLASSPATH="$FLYWAY_HOME/lib/community/*:$FLYWAY_HOME/lib/*:$FLYWAY_HOME/drivers/*:$FLYWAY_HOME/jars/*:$FLYWAY_HOME/*.jar"' | sudo tee -a /usr/local/bin/flyway > /dev/null
         echo 'echo "FLYWAY_HOME: $FLYWAY_HOME"' | sudo tee -a /usr/local/bin/flyway > /dev/null
         echo 'echo "CLASSPATH: $CLASSPATH"' | sudo tee -a /usr/local/bin/flyway > /dev/null
         echo 'echo "Available JAR files:"' | sudo tee -a /usr/local/bin/flyway > /dev/null
