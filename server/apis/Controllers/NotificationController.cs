@@ -39,7 +39,7 @@ namespace apis.Controllers
 
         [HttpPost("register-token")]
         [AllowAnonymous]
-        public async Task<IActionResult> RegisterToken([FromBody] RegisterTokenRequest request)
+        public Task<IActionResult> RegisterToken([FromBody] RegisterTokenRequest request)
         {
             try
             {
@@ -50,25 +50,25 @@ namespace apis.Controllers
                 }
                 catch (ArgumentException ex)
                 {
-                    return BadRequest(new { Error = ex.Message });
+                    return Task.FromResult<IActionResult>(BadRequest(new { Error = ex.Message }));
                 }
 
                 _logger.LogInformation($"Registering FCM token for user {request.UserId} on {request.Platform}");
                 
                 _notificationTokenService.RegisterToken(request.Token, request.Platform, request.UserId);
                 
-                return Ok(new { success = true, message = "Token registered successfully" });
+                return Task.FromResult<IActionResult>(Ok(new { success = true, message = "Token registered successfully" }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error registering FCM token");
-                return StatusCode(500, new { 
+                return Task.FromResult<IActionResult>(StatusCode(500, new { 
                     success = false, 
                     message = "Failed to register token",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
                     stackTrace = ex.StackTrace
-                });
+                }));
             }
         }
 
@@ -162,14 +162,14 @@ namespace apis.Controllers
 
         [HttpPost("test-notification")]
         [AllowAnonymous]
-        public async Task<IActionResult> SendTestNotification()
+        public Task<IActionResult> SendTestNotification()
         {
             try
             {
                 var storedTokens = _notificationTokenService.GetStoredTokens();
                 if (!storedTokens.Any())
                 {
-                    return BadRequest(new { success = false, message = "No registered tokens found" });
+                    return Task.FromResult<IActionResult>(BadRequest(new { success = false, message = "No registered tokens found" }));
                 }
 
                 var testQuote = new QuoteData
@@ -186,18 +186,18 @@ namespace apis.Controllers
                 };
 
                 // Send the notification
-                return SendQuoteNotification(request).Result;
+                return SendQuoteNotification(request);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending test notification");
-                return StatusCode(500, new { 
+                return Task.FromResult<IActionResult>(StatusCode(500, new { 
                     success = false, 
                     message = "Failed to send test notification",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
                     stackTrace = ex.StackTrace
-                });
+                }));
             }
         }
 
@@ -727,7 +727,7 @@ namespace apis.Controllers
                         LastNotificationSent = pref.LastNotificationSent.ToString("yyyy-MM-dd HH:mm:ss UTC"),
                         IsDue = isDue,
                         HasTokens = hasTokens,
-                        TokenCount = hasTokens ? tokens.Count : 0
+                        TokenCount = hasTokens ? tokens?.Count ?? 0 : 0
                     });
                 }
 

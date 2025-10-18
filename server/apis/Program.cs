@@ -4,6 +4,7 @@ using apis.Middleware;
 using orchestration.backgroundServices.BackgroundServices;
 using services.users.Configuration;
 using services.notifications.Configuration;
+using services.teachers.Configuration;
 using utilities.Persistence;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
@@ -76,6 +77,7 @@ ApisServiceConfiguration.ConfigureApiServices(builder.Services);
 
 builder.Services.AddAuthenticationServices();
 builder.Services.AddNotificationsServices();
+builder.Services.AddTeachersServices(builder.Configuration);
 
 // Configure authorization
 builder.Services.AddAuthorization();

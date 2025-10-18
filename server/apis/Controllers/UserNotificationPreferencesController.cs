@@ -147,33 +147,33 @@ public class UserNotificationPreferencesController : ControllerBase
     }
 
     [HttpPost("test")]
-    public async Task<IActionResult> SendTestNotification()
+    public Task<IActionResult> SendTestNotification()
     {
         try
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(new { message = "User not authenticated" });
+                return Task.FromResult<IActionResult>(Unauthorized(new { message = "User not authenticated" }));
             }
 
             // Get user's FCM tokens
             var userTokens = _tokenService.GetUserTokens();
             if (!userTokens.TryGetValue(userId, out var tokens) || !tokens.Any())
             {
-                return BadRequest(new { message = "No FCM tokens found for user" });
+                return Task.FromResult<IActionResult>(BadRequest(new { message = "No FCM tokens found for user" }));
             }
 
             // Send test notification
             // This would typically call the notification service
             _logger.LogInformation("Test notification requested for user {UserId}", userId);
 
-            return Ok(new { message = "Test notification sent", tokenCount = tokens.Count });
+            return Task.FromResult<IActionResult>(Ok(new { message = "Test notification sent", tokenCount = tokens.Count }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending test notification");
-            return StatusCode(500, new { message = "Internal server error" });
+            return Task.FromResult<IActionResult>(StatusCode(500, new { message = "Internal server error" }));
         }
     }
 }
