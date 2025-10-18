@@ -23,6 +23,7 @@ public static class AwsUtility
             VersionStage = version
         };
         var response = await client.GetSecretValueAsync(request);
-        return JsonConvert.DeserializeObject<T>(response.SecretString);
+        var result = JsonConvert.DeserializeObject<T>(response.SecretString);
+        return result ?? throw new InvalidOperationException($"Failed to deserialize secret '{secretName}' as type {typeof(T).Name}");
     }
 }
