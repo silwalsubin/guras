@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36603.0 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apis", "apis\apis.csproj", "{B4F26749-5F1A-4367-A4E1-A3F9190119EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.users", "services.users\services.users.csproj", "{61EBE0A4-A8B3-40D3-AAB8-A47A1F5B98B7}"
@@ -8,9 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orchestration", "orchestrat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.quotes", "services.quotes\services.quotes.csproj", "{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orchestration.backgroundServices", "orchestration.backgroundServices\orchestration.backgroundServices.csproj", "{00000000-0000-0000-0000-000000000000}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orchestration.backgroundServices", "orchestration.backgroundServices\orchestration.backgroundServices.csproj", "{E3B77DBC-A8A8-4875-9969-3B6F51BC30C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.notifications", "services.notifications\services.notifications.csproj", "{00000000-0000-0000-0000-000000000000}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.notifications", "services.notifications\services.notifications.csproj", "{05593189-D052-466C-A0B4-FD9B60BD6E10}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities", "utilities\utilities.csproj", "{8662C11D-FE1A-4F90-9482-5671AEB1BFCE}"
 EndProject
@@ -19,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.audio", "services.audio\services.audio.csproj", "{8A6D7C5F-4CDE-4159-BC12-DE88F3308C25}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests", "tests\tests.csproj", "{682B8A30-C3F0-411F-BAA1-FB7E9BC5927A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.teachers", "services.teachers\services.teachers.csproj", "{89C66615-5E35-E6AB-B9D3-D210EE26CD82}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +47,14 @@ Global
 		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3B77DBC-A8A8-4875-9969-3B6F51BC30C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3B77DBC-A8A8-4875-9969-3B6F51BC30C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3B77DBC-A8A8-4875-9969-3B6F51BC30C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3B77DBC-A8A8-4875-9969-3B6F51BC30C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05593189-D052-466C-A0B4-FD9B60BD6E10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05593189-D052-466C-A0B4-FD9B60BD6E10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05593189-D052-466C-A0B4-FD9B60BD6E10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05593189-D052-466C-A0B4-FD9B60BD6E10}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8662C11D-FE1A-4F90-9482-5671AEB1BFCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8662C11D-FE1A-4F90-9482-5671AEB1BFCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8662C11D-FE1A-4F90-9482-5671AEB1BFCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -58,5 +71,15 @@ Global
 		{682B8A30-C3F0-411F-BAA1-FB7E9BC5927A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{682B8A30-C3F0-411F-BAA1-FB7E9BC5927A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{682B8A30-C3F0-411F-BAA1-FB7E9BC5927A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89C66615-5E35-E6AB-B9D3-D210EE26CD82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89C66615-5E35-E6AB-B9D3-D210EE26CD82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89C66615-5E35-E6AB-B9D3-D210EE26CD82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89C66615-5E35-E6AB-B9D3-D210EE26CD82}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A45F76E0-2C3E-4DFB-B1BB-48454DBF4346}
 	EndGlobalSection
 EndGlobal

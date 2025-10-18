@@ -9,7 +9,7 @@ namespace tests;
 
 public static class TestServiceProvider
 {
-    public static T GetService<T>()
+    public static T GetService<T>() where T : notnull
     {
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -28,6 +28,6 @@ public static class TestServiceProvider
             builder.SetMinimumLevel(LogLevel.Debug);
         });
         services.AddSingleton(dbConfiguration!);
-        return services.BuildServiceProvider().GetRequiredService<T>();
+        return services.BuildServiceProvider().GetRequiredService<T>()!;
     }
 }

@@ -25,7 +25,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\apis\apis.csproj" />
-        <ProjectReference Include="..\services\services.csproj" />
         <ProjectReference Include="..\utilities\utilities.csproj" />
     </ItemGroup>
 

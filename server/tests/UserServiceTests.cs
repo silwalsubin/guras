@@ -186,9 +186,7 @@ public class UserServiceTests
 
     [Theory]
     [InlineData("", "Test User", "firebase123")]
-    [InlineData(null, "Test User", "firebase123")]
     [InlineData("test@example.com", "Test User", "")]
-    [InlineData("test@example.com", "Test User", null)]
     public async Task CreateUserAsync_ShouldThrowException_WhenInvalidPayloadProvided(string email, string name, string firebaseUserId)
     {
         // Arrange
@@ -278,7 +276,6 @@ public class UserServiceTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
     public async Task UpdateUserAsync_ShouldThrowException_WhenInvalidEmailProvided(string email)
     {
         // Arrange

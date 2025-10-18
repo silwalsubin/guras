@@ -13,7 +13,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.7.1"/>
         <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.0.16"/>
-        <PackageReference Include="AWSSDK.S3" Version="4.0.0.12"/>
+        <PackageReference Include="AWSSDK.S3" Version="4.0.1"/>
         <PackageReference Include="Npgsql" Version="9.0.3"/>
         <PackageReference Include="Dapper" Version="2.1.66"/>
         <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2"/>
@@ -23,6 +23,7 @@
       <ProjectReference Include="..\services.quotes\services.quotes.csproj" />
       <ProjectReference Include="..\services.notifications\services.notifications.csproj" />
       <ProjectReference Include="..\services.audio\services.audio.csproj" />
+      <ProjectReference Include="..\services.teachers\services.teachers.csproj" />
       <ProjectReference Include="..\orchestration.backgroundServices\orchestration.backgroundServices.csproj" />
       <ProjectReference Include="..\services.users\services.users.csproj" />
       <ProjectReference Include="..\utilities.aws\utilities.aws.csproj" />
