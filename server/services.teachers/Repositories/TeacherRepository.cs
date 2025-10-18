@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using services.teachers.Data;
 using services.teachers.Domain;
 using services.teachers.Models;

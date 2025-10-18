@@ -160,7 +160,7 @@ public class TeachersController : BaseController
     /// <returns>Created teacher details</returns>
     [HttpPost]
     [Authorize] // Add admin role check in production
-    public async Task<IActionResult> CreateTeacher([FromBody] CreateTeacherRequest request)
+    public async Task<IActionResult> CreateTeacher([FromBody] apis.Requests.CreateTeacherRequest request)
     {
         try
         {
@@ -180,7 +180,31 @@ public class TeachersController : BaseController
                 return ValidationErrorResponse("Display name is required", "DisplayName");
             }
 
-            var teacher = await _teacherService.CreateTeacherAsync(request);
+            // Map API request to domain request
+            var domainRequest = new services.teachers.Domain.CreateTeacherRequest
+            {
+                Name = request.Name,
+                DisplayName = request.DisplayName,
+                FullName = request.FullName,
+                BirthYear = request.BirthYear,
+                DeathYear = request.DeathYear,
+                Nationality = request.Nationality,
+                Description = request.Description,
+                TraditionName = request.TraditionName,
+                TraditionDescription = request.TraditionDescription,
+                TraditionOrigin = request.TraditionOrigin,
+                Era = request.Era,
+                AvatarUrl = request.AvatarUrl,
+                BackgroundUrl = request.BackgroundUrl,
+                CoreTeachings = request.CoreTeachings,
+                TeachingApproach = request.TeachingApproach,
+                TeachingTone = request.TeachingTone,
+                TeachingFocus = request.TeachingFocus,
+                TeachingComplexity = request.TeachingComplexity,
+                PersonalityTraits = request.PersonalityTraits
+            };
+
+            var teacher = await _teacherService.CreateTeacherAsync(domainRequest);
             _logger.LogInformation("Created new teacher: {TeacherName} (ID: {TeacherId})", teacher.DisplayName, teacher.Id);
             return SuccessResponse(teacher);
         }
@@ -199,7 +223,7 @@ public class TeachersController : BaseController
     /// <returns>Updated teacher details</returns>
     [HttpPut("{id}")]
     [Authorize] // Add admin role check in production
-    public async Task<IActionResult> UpdateTeacher(Guid id, [FromBody] UpdateTeacherRequest request)
+    public async Task<IActionResult> UpdateTeacher(Guid id, [FromBody] apis.Requests.UpdateTeacherRequest request)
     {
         try
         {
@@ -208,7 +232,31 @@ public class TeachersController : BaseController
                 return ValidationErrorResponse("Request body is required");
             }
 
-            var teacher = await _teacherService.UpdateTeacherAsync(id, request);
+            // Map API request to domain request
+            var domainRequest = new services.teachers.Domain.UpdateTeacherRequest
+            {
+                DisplayName = request.DisplayName,
+                FullName = request.FullName,
+                BirthYear = request.BirthYear,
+                DeathYear = request.DeathYear,
+                Nationality = request.Nationality,
+                Description = request.Description,
+                TraditionName = request.TraditionName,
+                TraditionDescription = request.TraditionDescription,
+                TraditionOrigin = request.TraditionOrigin,
+                Era = request.Era,
+                AvatarUrl = request.AvatarUrl,
+                BackgroundUrl = request.BackgroundUrl,
+                CoreTeachings = request.CoreTeachings,
+                TeachingApproach = request.TeachingApproach,
+                TeachingTone = request.TeachingTone,
+                TeachingFocus = request.TeachingFocus,
+                TeachingComplexity = request.TeachingComplexity,
+                PersonalityTraits = request.PersonalityTraits,
+                IsActive = request.IsActive
+            };
+
+            var teacher = await _teacherService.UpdateTeacherAsync(id, domainRequest);
             if (teacher == null)
             {
                 return NotFoundResponse("Teacher not found");

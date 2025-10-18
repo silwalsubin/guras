@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using services.teachers.Domain;
 using services.teachers.Repositories;
 

@@ -21,19 +21,11 @@ public class TeachersDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.ToTable("teachers");
 
-            // Configure string arrays for PostgreSQL
+            // Configure string arrays for PostgreSQL - EF Core handles this natively
             entity.Property(e => e.CoreTeachings)
-                .HasConversion(
-                    v => v.ToArray(), // Convert List<string> to string[]
-                    v => v.ToList() // Convert string[] to List<string>
-                )
                 .HasColumnType("text[]");
 
             entity.Property(e => e.PersonalityTraits)
-                .HasConversion(
-                    v => v.ToArray(), // Convert List<string> to string[]
-                    v => v.ToList() // Convert string[] to List<string>
-                )
                 .HasColumnType("text[]");
 
             // Configure indexes
@@ -83,7 +75,7 @@ public class TeachersDbContext : DbContext
 
         foreach (var entry in entries)
         {
-            entry.Entity.UpdatedAt = DateTime.UtcNow;
+            entry.Entity.UpdatedAt = DateTime.Now; // Use local time to match database CURRENT_TIMESTAMP
         }
     }
 }
