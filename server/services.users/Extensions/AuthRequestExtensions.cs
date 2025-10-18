@@ -1,7 +1,7 @@
-using apis.Requests;
+using services.users.Requests;
 using CommunityToolkit.Diagnostics;
 
-namespace apis.Extensions;
+namespace services.users.Extensions;
 
 public static class AuthRequestExtensions
 {

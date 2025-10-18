@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using services.audio.Models;
 
-namespace apis.Responses;
+namespace services.audio.Responses;
 
 public class AudioFilesResponse
 {

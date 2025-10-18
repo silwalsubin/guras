@@ -1,5 +1,6 @@
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using utilities.Responses;
 
 namespace apis.Filters;
 
@@ -46,7 +47,7 @@ public class ResponseTypeOperationFilter : IOperationFilter
             {
                 ["application/json"] = new OpenApiMediaType
                 {
-                    Schema = context.SchemaGenerator.GenerateSchema(typeof(Responses.ApiResponse), context.SchemaRepository)
+                    Schema = context.SchemaGenerator.GenerateSchema(typeof(ApiResponse), context.SchemaRepository)
                 }
             }
         });

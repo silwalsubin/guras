@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using services.teachers.Services;
+using services.teachers.Requests;
+using utilities.Controllers;
 
-namespace apis.Controllers;
+namespace services.teachers.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -158,7 +161,7 @@ public class TeachersController : BaseController
     /// <returns>Created teacher details</returns>
     [HttpPost]
     [Authorize] // Add admin role check in production
-    public async Task<IActionResult> CreateTeacher([FromBody] apis.Requests.CreateTeacherRequest request)
+    public async Task<IActionResult> CreateTeacher([FromBody] CreateTeacherRequest request)
     {
         try
         {
@@ -221,7 +224,7 @@ public class TeachersController : BaseController
     /// <returns>Updated teacher details</returns>
     [HttpPut("{id}")]
     [Authorize] // Add admin role check in production
-    public async Task<IActionResult> UpdateTeacher(Guid id, [FromBody] apis.Requests.UpdateTeacherRequest request)
+    public async Task<IActionResult> UpdateTeacher(Guid id, [FromBody] UpdateTeacherRequest request)
     {
         try
         {

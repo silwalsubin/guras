@@ -1,7 +1,7 @@
-using apis.Requests;
+using services.audio.Requests;
 using CommunityToolkit.Diagnostics;
 
-namespace apis.Extensions;
+namespace services.audio.Extensions;
 
 public static class UploadAudioRequestExtensions
 {

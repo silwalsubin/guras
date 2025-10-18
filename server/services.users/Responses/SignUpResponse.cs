@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace apis.Responses;
+namespace services.users.Responses;
 
 public class SignUpResponse
 {

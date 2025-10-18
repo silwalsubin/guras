@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using apis.Responses;
+using utilities.Responses;
 
 namespace apis.Filters;
 

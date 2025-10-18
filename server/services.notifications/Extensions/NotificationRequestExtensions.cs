@@ -1,7 +1,7 @@
-using apis.Requests;
+using services.notifications.Requests;
 using CommunityToolkit.Diagnostics;
 
-namespace apis.Extensions;
+namespace services.notifications.Extensions;
 
 public static class NotificationRequestExtensions
 {

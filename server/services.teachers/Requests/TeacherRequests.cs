@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace apis.Requests;
+namespace services.teachers.Requests;
 
 public class CreateTeacherRequest
 {

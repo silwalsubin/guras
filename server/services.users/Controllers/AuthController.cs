@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using services.users.Services;
 using services.users.Domain;
-using apis.Requests;
-using apis.Responses;
-using apis.Extensions;
+using services.users.Requests;
+using services.users.Responses;
+using services.users.Extensions;
+using utilities.Controllers;
 
-namespace apis.Controllers;
+namespace services.users.Controllers;
 
 [Route("api/[controller]")]
 public class AuthController(ILogger<AuthController> logger, IUserAuthService userAuthService, UserService userService)
