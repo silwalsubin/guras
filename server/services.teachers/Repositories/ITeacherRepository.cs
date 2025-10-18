@@ -14,4 +14,6 @@ public interface ITeacherRepository
     Task<bool> DeactivateTeacherAsync(Guid id);
     Task<IEnumerable<Teacher>> GetTeachersByFocusAsync(string focus);
     Task<IEnumerable<Teacher>> GetTeachersByComplexityAsync(string complexity);
+    Task<bool> TeacherExistsAsync(Guid id);
+    Task<bool> TeacherNameExistsAsync(string name);
 }

@@ -77,7 +77,7 @@ ApisServiceConfiguration.ConfigureApiServices(builder.Services);
 
 builder.Services.AddAuthenticationServices();
 builder.Services.AddNotificationsServices();
-builder.Services.AddTeachersServices();
+builder.Services.AddTeachersServices(builder.Configuration);
 
 // Configure authorization
 builder.Services.AddAuthorization();
