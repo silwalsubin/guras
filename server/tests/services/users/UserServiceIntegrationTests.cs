@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace tests;
+namespace tests.services.users;
 
 public class UserServiceIntegrationTests
 {
