@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using services.teachers.Domain;
 using services.teachers.Services;
-using apis.Requests;
 
 namespace apis.Controllers;
 

@@ -44,7 +44,7 @@ public abstract class BaseController : ControllerBase
 
     protected string? GetUserId()
     {
-        return User.FindFirst("application_user_id")?.Value 
+        return User.FindFirst("application_user_id")?.Value
                ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     }
 }

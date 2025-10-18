@@ -7,10 +7,10 @@ public class RegisterTokenRequest
 {
     [Required]
     public string Token { get; set; } = string.Empty;
-    
+
     [Required]
     public string Platform { get; set; } = string.Empty;
-    
+
     [Required]
     public string UserId { get; set; } = string.Empty;
 }
@@ -19,15 +19,15 @@ public class SendNotificationRequest
 {
     [Required]
     public string Token { get; set; } = string.Empty;
-    
+
     [Required]
     public string Title { get; set; } = string.Empty;
-    
+
     [Required]
     public string Body { get; set; } = string.Empty;
-    
+
     public Dictionary<string, string>? Data { get; set; }
-    
+
     public string Platform { get; set; } = string.Empty;
 }
 
@@ -35,7 +35,7 @@ public class SendQuoteNotificationRequest
 {
     [Required]
     public List<string> UserTokens { get; set; } = new();
-    
+
     [Required]
     public QuoteData Quote { get; set; } = new();
 }

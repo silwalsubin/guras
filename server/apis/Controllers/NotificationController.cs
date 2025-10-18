@@ -1,13 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
-using Google.Apis.Auth.OAuth2;
 using services.notifications.Services;
 using services.notifications.Domain;
-using Microsoft.Extensions.DependencyInjection;
 using services.quotes.Services;
 using apis.Requests;
 using apis.Extensions;
@@ -54,16 +51,17 @@ namespace apis.Controllers
                 }
 
                 _logger.LogInformation($"Registering FCM token for user {request.UserId} on {request.Platform}");
-                
+
                 _notificationTokenService.RegisterToken(request.Token, request.Platform, request.UserId);
-                
+
                 return Task.FromResult<IActionResult>(Ok(new { success = true, message = "Token registered successfully" }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error registering FCM token");
-                return Task.FromResult<IActionResult>(StatusCode(500, new { 
-                    success = false, 
+                return Task.FromResult<IActionResult>(StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to register token",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
@@ -119,8 +117,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending FCM notification");
-                return StatusCode(500, new { 
-                    success = false, 
+                return StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to send notification",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
@@ -138,9 +137,10 @@ namespace apis.Controllers
                 var userTokens = _notificationTokenService.GetUserTokens();
                 var tokenUsers = _notificationTokenService.GetTokenUsers();
                 var (totalUsers, totalTokens) = _notificationTokenService.GetTokenStatistics();
-                
-                return Ok(new { 
-                    success = true, 
+
+                return Ok(new
+                {
+                    success = true,
                     userTokens = userTokens,
                     tokenUsers = tokenUsers,
                     totalUsers = totalUsers,
@@ -150,8 +150,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting registered tokens");
-                return StatusCode(500, new { 
-                    success = false, 
+                return StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to get tokens",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
@@ -191,8 +192,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending test notification");
-                return Task.FromResult<IActionResult>(StatusCode(500, new { 
-                    success = false, 
+                return Task.FromResult<IActionResult>(StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to send test notification",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
@@ -210,9 +212,10 @@ namespace apis.Controllers
                 var firebaseApp = FirebaseApp.DefaultInstance;
                 var isInitialized = firebaseApp != null;
                 var (_, totalTokens) = _notificationTokenService.GetTokenStatistics();
-                
-                return Ok(new { 
-                    success = true, 
+
+                return Ok(new
+                {
+                    success = true,
                     firebaseInitialized = isInitialized,
                     registeredTokensCount = totalTokens,
                     message = isInitialized ? "Firebase is properly configured" : "Firebase is not configured"
@@ -221,8 +224,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 var (_, totalTokens) = _notificationTokenService.GetTokenStatistics();
-                return Ok(new { 
-                    success = false, 
+                return Ok(new
+                {
+                    success = false,
                     firebaseInitialized = false,
                     registeredTokensCount = totalTokens,
                     message = $"Firebase error: {ex.Message}"
@@ -309,9 +313,9 @@ namespace apis.Controllers
 
                 _logger.LogInformation($"Quote notifications completed: {successCount} successful, {failureCount} failed");
 
-                return Ok(new 
-                { 
-                    success = true, 
+                return Ok(new
+                {
+                    success = true,
                     successCount = successCount,
                     failureCount = failureCount,
                     errors = errors.Any() ? errors : null
@@ -320,8 +324,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending quote notifications");
-                return StatusCode(500, new { 
-                    success = false, 
+                return StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to send notifications",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
@@ -397,9 +402,10 @@ namespace apis.Controllers
                 {
                     var response = await FirebaseMessaging.DefaultInstance.SendAsync(testMessage);
                     _logger.LogInformation($"FCM connection test successful: {response}");
-                    
-                    return Ok(new { 
-                        success = true, 
+
+                    return Ok(new
+                    {
+                        success = true,
                         message = "FCM connection test completed successfully",
                         messageId = response,
                         token = request.Token[..20] + "..."
@@ -408,8 +414,9 @@ namespace apis.Controllers
                 catch (FirebaseMessagingException ex)
                 {
                     _logger.LogError(ex, "Firebase messaging error during connection test");
-                    return StatusCode(500, new { 
-                        success = false, 
+                    return StatusCode(500, new
+                    {
+                        success = false,
                         message = "FCM connection test failed",
                         error = ex.Message,
                         errorType = ex.GetType().Name,
@@ -421,8 +428,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during FCM connection test");
-                return StatusCode(500, new { 
-                    success = false, 
+                return StatusCode(500, new
+                {
+                    success = false,
                     message = "FCM connection test failed",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
@@ -490,8 +498,9 @@ namespace apis.Controllers
                 var response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
                 _logger.LogInformation($"Test notification sent successfully: {response}");
 
-                return Ok(new { 
-                    success = true, 
+                return Ok(new
+                {
+                    success = true,
                     messageId = response,
                     message = "Test notification sent successfully"
                 });
@@ -499,8 +508,9 @@ namespace apis.Controllers
             catch (FirebaseMessagingException ex)
             {
                 _logger.LogError(ex, "Firebase messaging error when testing token");
-                return StatusCode(500, new { 
-                    success = false, 
+                return StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to send test notification",
                     error = ex.Message,
                     errorType = "FirebaseMessagingException",
@@ -510,8 +520,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error testing specific token");
-                return StatusCode(500, new { 
-                    success = false, 
+                return StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to send test notification",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
@@ -545,8 +556,9 @@ namespace apis.Controllers
 
                 _logger.LogInformation($"Test schedule set for user {request.UserId}: {request.Frequency}");
 
-                return Ok(new { 
-                    success = true, 
+                return Ok(new
+                {
+                    success = true,
                     message = $"Test notification schedule set to {request.Frequency}",
                     userId = request.UserId,
                     frequency = request.Frequency.ToString()
@@ -555,8 +567,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error setting test notification schedule");
-                return StatusCode(500, new { 
-                    success = false, 
+                return StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to set test schedule",
                     error = ex.Message
                 });
@@ -673,9 +686,9 @@ namespace apis.Controllers
 
                 _logger.LogInformation($"Test schedule notifications completed: {successCount} successful, {failureCount} failed");
 
-                return Ok(new 
-                { 
-                    success = true, 
+                return Ok(new
+                {
+                    success = true,
                     message = $"Test schedule notification sent immediately",
                     successCount = successCount,
                     failureCount = failureCount,
@@ -687,8 +700,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error testing immediate notification schedule");
-                return StatusCode(500, new { 
-                    success = false, 
+                return StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to test notification schedule",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
@@ -713,7 +727,7 @@ namespace apis.Controllers
                 // Get all user preferences for debugging
                 var allPreferences = await preferencesService.GetAllUserPreferencesAsync();
                 _logger.LogInformation($"Total users with preferences: {allPreferences.Count}");
-                
+
                 var debugInfo = new List<object>();
                 foreach (var pref in allPreferences)
                 {
@@ -735,9 +749,9 @@ namespace apis.Controllers
                 var usersDueForNotification = await preferencesService.GetUsersDueForNotificationAsync();
                 _logger.LogInformation($"Users due for notification: {usersDueForNotification.Count}");
 
-                return Ok(new 
-                { 
-                    success = true, 
+                return Ok(new
+                {
+                    success = true,
                     message = "Background service test completed",
                     totalUsers = allPreferences.Count,
                     usersDue = usersDueForNotification.Count,
@@ -753,8 +767,9 @@ namespace apis.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error testing background service");
-                return StatusCode(500, new { 
-                    success = false, 
+                return StatusCode(500, new
+                {
+                    success = false,
                     message = "Failed to test background service",
                     error = ex.Message,
                     errorType = ex.GetType().Name,
@@ -764,4 +779,4 @@ namespace apis.Controllers
         }
     }
 
-} 
+}

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using apis.Extensions;
 using apis.Responses;
 
 namespace apis.Filters;
@@ -27,20 +26,20 @@ public class ValidationActionFilter : IActionFilter
                     try
                     {
                         validateMethod.Invoke(value, null);
-                        _logger.LogDebug("Validation passed for {ParameterName} of type {ParameterType}", 
+                        _logger.LogDebug("Validation passed for {ParameterName} of type {ParameterType}",
                             parameter.Name, parameter.ParameterType.Name);
                     }
                     catch (Exception ex) when (ex.InnerException is ArgumentException argEx)
                     {
-                        _logger.LogWarning("Validation failed for {ParameterName}: {ErrorMessage}", 
+                        _logger.LogWarning("Validation failed for {ParameterName}: {ErrorMessage}",
                             parameter.Name, argEx.Message);
-                        
+
                         var errorResponse = ApiResponse.ErrorResponse(
-                            argEx.Message, 
+                            argEx.Message,
                             context.HttpContext.TraceIdentifier,
                             null,
                             "VALIDATION_ERROR");
-                        
+
                         context.Result = new BadRequestObjectResult(errorResponse);
                         return;
                     }

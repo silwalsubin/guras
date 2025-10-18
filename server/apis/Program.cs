@@ -33,7 +33,7 @@ builder.Services.AddSwaggerGen(options =>
             Email = "dev@guras.com"
         }
     });
-    
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.Http,
@@ -41,10 +41,10 @@ builder.Services.AddSwaggerGen(options =>
         BearerFormat = "JWT",
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
     });
-    
+
     options.OperationFilter<AuthOperationFilter>();
     options.OperationFilter<ResponseTypeOperationFilter>();
-    
+
     // Include XML comments if available
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);

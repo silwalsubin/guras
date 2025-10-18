@@ -19,15 +19,15 @@ public class RequestLoggingMiddleware
     {
         var stopwatch = Stopwatch.StartNew();
         var correlationId = context.TraceIdentifier;
-        
+
         // Extract user ID from claims if available
-        var userId = context.User?.FindFirst("application_user_id")?.Value 
+        var userId = context.User?.FindFirst("application_user_id")?.Value
                     ?? context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         // Log request
         _logger.LogApiRequest(
-            context.Request.Path, 
-            context.Request.Method, 
+            context.Request.Path,
+            context.Request.Method,
             ExtractRequestData(context),
             userId);
 
@@ -41,11 +41,11 @@ public class RequestLoggingMiddleware
         finally
         {
             stopwatch.Stop();
-            
+
             // Log response
             _logger.LogApiResponse(
-                context.Request.Path, 
-                context.Response.StatusCode, 
+                context.Request.Path,
+                context.Response.StatusCode,
                 stopwatch.Elapsed,
                 userId);
 
@@ -53,7 +53,7 @@ public class RequestLoggingMiddleware
             if (stopwatch.Elapsed.TotalSeconds > 5)
             {
                 _logger.LogPerformanceWarning(
-                    $"{context.Request.Method} {context.Request.Path}", 
+                    $"{context.Request.Method} {context.Request.Path}",
                     stopwatch.Elapsed,
                     userId);
             }
@@ -63,7 +63,7 @@ public class RequestLoggingMiddleware
     private static object? ExtractRequestData(HttpContext context)
     {
         // Only log request data for non-GET requests and non-file uploads
-        if (context.Request.Method == "GET" || 
+        if (context.Request.Method == "GET" ||
             context.Request.ContentType?.Contains("multipart/form-data") == true)
         {
             return null;
