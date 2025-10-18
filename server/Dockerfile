@@ -6,6 +6,7 @@ WORKDIR /src
 COPY guras.sln ./
 COPY apis/apis.csproj apis/
 COPY services.users/services.users.csproj services.users/
+COPY services.teachers/services.teachers.csproj services.teachers/
 COPY orchestration/orchestration.csproj orchestration/
 COPY utilities.aws/utilities.aws.csproj utilities.aws/
 COPY utilities/utilities.csproj utilities/
@@ -19,6 +20,7 @@ RUN dotnet restore
 # Copy the rest of the source code
 COPY apis/ apis/
 COPY services.users/ services.users/
+COPY services.teachers/ services.teachers/
 COPY orchestration/ orchestration/
 COPY utilities/ utilities/
 COPY utilities.aws/ utilities.aws/
