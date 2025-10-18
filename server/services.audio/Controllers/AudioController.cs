@@ -1,17 +1,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using services.audio.Models;
 using services.audio.Services;
-using apis.Extensions;
-using apis.Requests;
-using apis.Responses;
+using services.audio.Extensions;
+using services.audio.Requests;
+using services.audio.Responses;
+using utilities.Controllers;
 
-namespace apis.Controllers;
+namespace services.audio.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AudioController(IAudioFileService audioFileService, ILogger<AudioController> logger) : ControllerBase
+public class AudioController(IAudioFileService audioFileService, ILogger<AudioController> logger) : BaseController
 {
     [HttpPost("upload")]
     public async Task<IActionResult> UploadAudio([FromForm] UploadAudioRequest request)

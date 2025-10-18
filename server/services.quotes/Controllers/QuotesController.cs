@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using services.quotes.Services;
 using services.quotes.Domain;
+using utilities.Controllers;
 
-namespace apis.Controllers;
+namespace services.quotes.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class QuotesController : ControllerBase
+public class QuotesController : BaseController
 {
     private readonly IQuotesService _quotesService;
     private readonly ILogger<QuotesController> _logger;

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using apis.Responses;
+using utilities.Responses;
 
-namespace apis.Controllers;
+namespace utilities.Controllers;
 
 [ApiController]
 public abstract class BaseController : ControllerBase
@@ -25,26 +25,27 @@ public abstract class BaseController : ControllerBase
     protected IActionResult ValidationErrorResponse(string message, string? field = null)
     {
         var response = ApiResponse.ErrorResponse(message, HttpContext.TraceIdentifier, null, "VALIDATION_ERROR");
-        if (response.Error != null && !string.IsNullOrEmpty(field))
+        if (!string.IsNullOrEmpty(field))
         {
-            response.Error.Field = field;
+            response.Error!.Field = field;
         }
         return BadRequest(response);
     }
 
-    protected IActionResult NotFoundResponse(string message = "Resource not found")
+    protected IActionResult NotFoundResponse(string message)
     {
-        return ErrorResponse(message, 404, code: "NOT_FOUND");
+        var response = ApiResponse.ErrorResponse(message, HttpContext.TraceIdentifier, null, "NOT_FOUND");
+        return NotFound(response);
     }
 
-    protected IActionResult UnauthorizedResponse(string message = "Access denied")
+    protected IActionResult UnauthorizedResponse(string message)
     {
-        return ErrorResponse(message, 401, code: "UNAUTHORIZED");
+        var response = ApiResponse.ErrorResponse(message, HttpContext.TraceIdentifier, null, "UNAUTHORIZED");
+        return Unauthorized(response);
     }
 
     protected string? GetUserId()
     {
-        return User.FindFirst("application_user_id")?.Value
-               ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return User.FindFirst("application_user_id")?.Value;
     }
 }

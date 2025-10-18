@@ -1,19 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using services.notifications.Services;
 using services.notifications.Domain;
 using services.quotes.Services;
-using apis.Requests;
-using apis.Extensions;
+using services.notifications.Requests;
+using services.notifications.Extensions;
+using utilities.Controllers;
 
-namespace apis.Controllers
+namespace services.notifications.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class NotificationController : ControllerBase
+    public class NotificationController : BaseController
     {
         private readonly ILogger<NotificationController> _logger;
         private readonly INotificationTokenService _notificationTokenService;
@@ -778,5 +781,4 @@ namespace apis.Controllers
             }
         }
     }
-
 }

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using services.notifications.Domain;
 
-namespace apis.Requests;
+namespace services.notifications.Requests;
 
 public class RegisterTokenRequest
 {

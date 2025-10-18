@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace apis.Responses;
+namespace services.audio.Responses;
 
 public class DeleteAudioFileResponse
 {

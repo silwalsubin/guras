@@ -1,4 +1,6 @@
-namespace apis.Requests;
+using Microsoft.AspNetCore.Http;
+
+namespace services.audio.Requests;
 
 public class UploadAudioRequest
 {
