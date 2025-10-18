@@ -121,12 +121,13 @@ const refreshFiles = async () => {
       ? await apiService.getMyAudioFiles()
       : await apiService.getAudioFiles()
 
-    if (response.data) {
+    if (response.success && response.data) {
       allAudioFiles.value = response.data.files
       const fileType = showMyFiles.value ? 'your' : 'all'
       toast.success(`Loaded ${response.data.files.length} ${fileType} audio files`)
     } else {
-      toast.error(response.error || 'Failed to load audio files')
+      const errorMessage = response.error?.message || 'Failed to load audio files'
+      toast.error(errorMessage)
     }
   } catch (error: any) {
     toast.error('Error loading audio files: ' + error.message)
@@ -154,11 +155,12 @@ const deleteFile = async (fileId: string, fileName: string) => {
 
   try {
     const response = await apiService.deleteAudioFile(fileId)
-    if (response.data) {
+    if (response.success && response.data) {
       toast.success(`"${fileName}" deleted successfully`)
       allAudioFiles.value = allAudioFiles.value.filter(file => file.id !== fileId)
     } else {
-      toast.error(response.error || 'Failed to delete file')
+      const errorMessage = response.error?.message || 'Failed to delete file'
+      toast.error(errorMessage)
     }
   } catch (error: any) {
     toast.error('Error deleting file: ' + error.message)

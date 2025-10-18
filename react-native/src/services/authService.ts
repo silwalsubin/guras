@@ -107,27 +107,42 @@ class AuthService {
         url: response.url
       });
 
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`;
         console.error('❌ Server error response details:', { 
           status: response.status, 
           statusText: response.statusText,
-          error: errorData, 
+          error: responseData, 
           endpoint,
           fullUrl,
           requestBody: body
         });
+        
+        // Handle new standardized error format
+        if (responseData.error) {
+          throw new Error(responseData.error.message || responseData.error.code || 'Server error');
+        }
+        
+        // Fallback for legacy error format
+        const errorMessage = responseData.message || responseData.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
-      const responseData = await response.json();
       console.log(`✅ Server response successful for ${fullUrl}:`, {
         endpoint,
         fullUrl,
         responseData,
-        requestBody: body
+        requestBody: body,
+        traceId: responseData.traceId
       });
+      
+      // Handle new standardized success format
+      if (responseData.success !== undefined) {
+        return responseData.data;
+      }
+      
+      // Fallback for legacy success format (direct data)
       return responseData;
     } catch (error) {
       console.error(`💥 Request failed for ${fullUrl}:`, {

@@ -12,12 +12,15 @@ server/apis/
 ├── Requests/            # Individual request class files
 ├── Responses/           # Individual API response class files  
 ├── Models/              # Shared data models used across classes
-├── Extensions/          # Validation extension methods
+├── Extensions/          # Validation extension methods and logging extensions
+├── Middleware/          # Global middleware for exception handling and logging
+├── Filters/             # Action filters for cross-cutting concerns
 └── ARCHITECTURE_REQUIREMENTS.md
 ```
 
 ### Controllers/
 - Contains only controller classes
+- **MUST** inherit from `BaseController` for standardized responses
 - Focus on business logic and HTTP handling
 - Must reference appropriate namespaces: `apis.Requests`, `apis.Responses`, `apis.Models`, `apis.Extensions`
 
@@ -39,8 +42,22 @@ server/apis/
 
 ### Extensions/
 - Validation extension methods using CommunityToolkit.Diagnostics Guard API
-- Naming pattern: `[RequestType]Extensions.cs`
-- Examples: `AuthRequestExtensions.cs`, `UploadAudioRequestExtensions.cs`
+- Logging extension methods for structured logging
+- Naming pattern: `[RequestType]Extensions.cs` or `LoggingExtensions.cs`
+- Examples: `AuthRequestExtensions.cs`, `UploadAudioRequestExtensions.cs`, `LoggingExtensions.cs`
+
+### Middleware/
+- Global exception handling middleware
+- Request logging middleware with correlation IDs
+- Performance monitoring middleware
+- Examples: `GlobalExceptionHandlingMiddleware.cs`, `RequestLoggingMiddleware.cs`
+
+### Filters/
+- Action filters for cross-cutting concerns
+- Validation filters (replaces manual validation in controllers)
+- Logging filters for business operations
+- Swagger operation filters for API documentation
+- Examples: `ValidationActionFilter.cs`, `LoggingActionFilter.cs`, `SwaggerOperationFilter.cs`
 
 ## Naming Conventions
 
@@ -57,6 +74,32 @@ server/apis/
 ### Files
 - One class per file
 - File name matches class name exactly
+
+## Enhanced Architecture Patterns
+
+### Global Exception Handling
+- **MUST** use `GlobalExceptionHandlingMiddleware` for centralized error handling
+- **MUST NOT** use try-catch blocks in controllers for generic exceptions
+- **MUST** let exceptions bubble up to middleware for consistent error responses
+- **MUST** use specific exception types for different error scenarios
+
+### Standardized Response Format
+- **MUST** use `ApiResponse<T>` wrapper for all API responses
+- **MUST** inherit from `BaseController` for standardized response methods
+- **MUST** include correlation IDs in all responses
+- **MUST** use `SuccessResponse()` and `ErrorResponse()` methods
+
+### Enhanced Logging
+- **MUST** use structured logging with correlation IDs
+- **MUST** use `LoggingExtensions` for consistent log formatting
+- **MUST** log business operations, security events, and performance warnings
+- **MUST** include user context in log messages when available
+
+### Action Filters
+- **MUST** use `ValidationActionFilter` for automatic request validation
+- **MUST** use `LoggingActionFilter` for business operation logging
+- **MUST NOT** manually validate requests in controller methods
+- **MUST NOT** manually log basic request/response information
 
 ## Validation Requirements
 
@@ -120,8 +163,10 @@ When creating new API endpoints:
 - [ ] Create validation extension in `Extensions/` folder
 - [ ] Use PascalCase for all properties in C# code
 - [ ] Add JsonPropertyName attributes for camelCase API responses
-- [ ] Add validation as first operation in controller method
-- [ ] Use Guard API for validation
+- [ ] Inherit from `BaseController` for standardized responses
+- [ ] Use `SuccessResponse()` and `ErrorResponse()` methods
+- [ ] Use `LoggingExtensions` for business operation logging
+- [ ] Let exceptions bubble up to global exception handler
 - [ ] Add appropriate using statements to controller
 - [ ] Use null-forgiving operator after validation
 
@@ -193,26 +238,19 @@ using apis.Requests;
 using apis.Responses;
 using apis.Extensions;
 
-[HttpPost("signup")]
-public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
+[Route("api/[controller]")]
+public class AuthController : BaseController
 {
-    try
+    [HttpPost("signup")]
+    public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
-        // Validate first - fail fast
-        try
-        {
-            request.Validate();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        // Validation is now handled by ValidationActionFilter
+        logger.LogBusinessOperation("User signup attempt", null, new { Email = request.Email });
 
         // ... business logic
-    }
-    catch (Exception ex)
-    {
-        // ... error handling
+        
+        var response = new SignUpResponse { /* ... */ };
+        return SuccessResponse(response);
     }
 }
 ```
