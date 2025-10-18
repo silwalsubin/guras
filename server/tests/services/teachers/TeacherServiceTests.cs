@@ -239,7 +239,7 @@ public class TeacherServiceTests
 
         var existingTeacher = CreateSampleTeacher("Osho", "Osho Rajneesh", teacherId);
         var updatedTeacher = CreateSampleTeacher("Osho", "Updated Osho", teacherId);
-        
+
         _mockRepository.Setup(r => r.GetTeacherByIdAsync(teacherId))
             .ReturnsAsync(existingTeacher);
         _mockRepository.Setup(r => r.UpdateTeacherAsync(teacherId, It.IsAny<Teacher>()))
@@ -410,9 +410,9 @@ public class TeacherServiceTests
     #region Helper Methods
 
     private static Teacher CreateSampleTeacher(
-        string name, 
-        string displayName, 
-        Guid? id = null, 
+        string name,
+        string displayName,
+        Guid? id = null,
         bool isActive = true,
         string? teachingFocus = "Meditation",
         string? teachingComplexity = "Intermediate")

@@ -6,7 +6,6 @@ using services.teachers.Data;
 using services.teachers.Domain;
 using services.teachers.Models;
 using services.teachers.Repositories;
-using services.teachers.Services;
 using Xunit;
 
 namespace tests;
@@ -490,8 +489,8 @@ public class TeacherRepositoryTests : IDisposable
     #region Helper Methods
 
     private static TeacherEntity CreateSampleTeacherEntity(
-        string name, 
-        string displayName, 
+        string name,
+        string displayName,
         bool isActive = true,
         string? teachingFocus = "Meditation",
         string? teachingComplexity = "Intermediate")

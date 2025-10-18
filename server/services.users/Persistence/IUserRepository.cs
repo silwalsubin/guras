@@ -1,5 +1,3 @@
-using services.users.Domain;
-
 namespace services.users.Persistence;
 
 public interface IUserRepository

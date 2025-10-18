@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using services.teachers.Data;
 using services.teachers.Domain;
-using services.teachers.Models;
 using services.teachers.Services;
 
 namespace services.teachers.Repositories;
@@ -94,14 +93,14 @@ public class TeacherRepository : ITeacherRepository
         try
         {
             _logger.LogInformation("Creating teacher: {TeacherName} using Entity Framework", teacher.Name);
-            
+
             var entity = teacher.ToEntity();
             _context.Teachers.Add(entity);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Successfully created teacher: {TeacherName} with ID: {TeacherId}", 
+            _logger.LogInformation("Successfully created teacher: {TeacherName} with ID: {TeacherId}",
                 teacher.Name, entity.Id);
-            
+
             return entity.ToDomain();
         }
         catch (Exception ex)
@@ -116,7 +115,7 @@ public class TeacherRepository : ITeacherRepository
         try
         {
             _logger.LogInformation("Updating teacher: {TeacherId} using Entity Framework", id);
-            
+
             var entity = await _context.Teachers.FindAsync(id);
             if (entity == null)
             {
@@ -164,7 +163,7 @@ public class TeacherRepository : ITeacherRepository
         try
         {
             _logger.LogInformation("Deleting teacher: {TeacherId} using Entity Framework", id);
-            
+
             var entity = await _context.Teachers.FindAsync(id);
             if (entity == null)
             {
@@ -174,7 +173,7 @@ public class TeacherRepository : ITeacherRepository
 
             _context.Teachers.Remove(entity);
             var result = await _context.SaveChangesAsync();
-            
+
             _logger.LogInformation("Teacher deletion result: {Result} for ID: {TeacherId}", result > 0, id);
             return result > 0;
         }
@@ -190,7 +189,7 @@ public class TeacherRepository : ITeacherRepository
         try
         {
             _logger.LogInformation("Deactivating teacher: {TeacherId} using Entity Framework", id);
-            
+
             var entity = await _context.Teachers.FindAsync(id);
             if (entity == null)
             {
@@ -200,9 +199,9 @@ public class TeacherRepository : ITeacherRepository
 
             entity.IsActive = false;
             entity.UpdatedAt = DateTime.UtcNow;
-            
+
             var result = await _context.SaveChangesAsync();
-            
+
             _logger.LogInformation("Teacher deactivation result: {Result} for ID: {TeacherId}", result > 0, id);
             return result > 0;
         }

@@ -141,7 +141,7 @@ public class UserServiceTests
         // Assert
         result.Should().NotBeEmpty();
         _mockUserRepository.Verify(r => r.GetByEmailAsync(payload.Email!), Times.Once);
-        _mockUserRepository.Verify(r => r.CreateAsync(It.Is<UserRecord>(u => 
+        _mockUserRepository.Verify(r => r.CreateAsync(It.Is<UserRecord>(u =>
             u.Email == payload.Email &&
             u.Name == payload.Name &&
             u.FireBaseUserId == payload.FireBaseUserId &&
@@ -201,7 +201,7 @@ public class UserServiceTests
         // Expect either ArgumentException or ArgumentNullException
         var exception = await Assert.ThrowsAnyAsync<ArgumentException>(
             () => _userService.CreateUserAsync(payload));
-        
+
         // Both exception types should contain validation-related messages
         exception.Message.Should().MatchRegex("(Required input|Value cannot be null)");
     }
@@ -240,7 +240,7 @@ public class UserServiceTests
 
         // Assert
         _mockUserRepository.Verify(r => r.GetByUserIdAsync(userId), Times.Once);
-        _mockUserRepository.Verify(r => r.UpdateAsync(It.Is<UserRecord>(u => 
+        _mockUserRepository.Verify(r => r.UpdateAsync(It.Is<UserRecord>(u =>
             u.UserId == userId &&
             u.Email == payload.Email &&
             u.Name == payload.Name &&
@@ -305,7 +305,7 @@ public class UserServiceTests
         // Expect either ArgumentException or ArgumentNullException
         var exception = await Assert.ThrowsAnyAsync<ArgumentException>(
             () => _userService.UpdateUserAsync(payload));
-        
+
         // Both exception types should contain validation-related messages
         exception.Message.Should().MatchRegex("(Required input|Value cannot be null)");
     }

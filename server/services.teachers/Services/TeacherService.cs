@@ -80,7 +80,7 @@ public class TeacherService : ITeacherService
         try
         {
             _logger.LogInformation("Creating new teacher: {TeacherName}", request.Name);
-            
+
             var teacher = new Teacher
             {
                 Name = request.Name,
@@ -106,9 +106,9 @@ public class TeacherService : ITeacherService
             };
 
             var createdTeacher = await _teacherRepository.CreateTeacherAsync(teacher);
-            _logger.LogInformation("Successfully created teacher: {TeacherName} with ID: {TeacherId}", 
+            _logger.LogInformation("Successfully created teacher: {TeacherName} with ID: {TeacherId}",
                 createdTeacher.Name, createdTeacher.Id);
-            
+
             return MapToResponse(createdTeacher);
         }
         catch (Exception ex)
@@ -123,7 +123,7 @@ public class TeacherService : ITeacherService
         try
         {
             _logger.LogInformation("Updating teacher: {TeacherId}", id);
-            
+
             var existingTeacher = await _teacherRepository.GetTeacherByIdAsync(id);
             if (existingTeacher == null)
             {

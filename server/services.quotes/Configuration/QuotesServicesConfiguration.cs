@@ -8,7 +8,7 @@ public static class QuotesServicesConfiguration
     public static IServiceCollection ConfigureServices(this IServiceCollection services)
     {
         services.AddScoped<IQuotesService, QuotesService>();
-        
+
         return services;
     }
-} 
+}

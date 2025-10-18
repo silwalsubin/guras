@@ -5,7 +5,7 @@ namespace services.notifications.Services;
 public class NotificationTokenService : INotificationTokenService
 {
     private readonly ILogger<NotificationTokenService> _logger;
-    
+
     // In-memory storage for FCM tokens with user associations (for testing - replace with database in production)
     private static readonly Dictionary<string, List<string>> _userTokens = new(); // userId -> List<token>
     private static readonly Dictionary<string, string> _tokenUsers = new(); // token -> userId
@@ -62,8 +62,8 @@ public class NotificationTokenService : INotificationTokenService
             }
             _userTokens[userId].Add(token);
             _tokenUsers[token] = userId;
-            
-            _logger.LogInformation("FCM Token stored for user {UserId}: {TokenPrefix}... (Total users: {TotalUsers}, Total tokens: {TotalTokens})", 
+
+            _logger.LogInformation("FCM Token stored for user {UserId}: {TokenPrefix}... (Total users: {TotalUsers}, Total tokens: {TotalTokens})",
                 userId, token[..20], _userTokens.Count, _tokenUsers.Count);
         }
     }
@@ -91,4 +91,4 @@ public class NotificationTokenService : INotificationTokenService
             return (_userTokens.Count, _tokenUsers.Count);
         }
     }
-} 
+}

@@ -10,7 +10,7 @@ public static class AudioServicesConfiguration
     {
         services.AddScoped<IAudioFileRepository, AudioFileRepository>();
         services.AddScoped<IAudioFileService, AudioFileService>();
-        
+
         return services;
     }
 }

@@ -16,32 +16,32 @@ public class FirebaseService : IUserAuthService
         if (FirebaseApp.DefaultInstance == null)
         {
             var serviceAccountPath = configuration["Firebase:ServiceAccountPath"];
-            
+
             logger.LogInformation("Firebase initialization - ServiceAccountPath: {ServiceAccountPath}", serviceAccountPath);
             logger.LogInformation("Current directory: {CurrentDirectory}", Directory.GetCurrentDirectory());
-            
+
             try
             {
                 if (!string.IsNullOrEmpty(serviceAccountPath))
                 {
                     logger.LogInformation("Checking if file exists: {ServiceAccountPath}", serviceAccountPath);
                     logger.LogInformation("File.Exists result: {FileExists}", File.Exists(serviceAccountPath));
-                    
+
                     if (File.Exists(serviceAccountPath))
                     {
                         logger.LogInformation("File size: {FileSize} bytes", new FileInfo(serviceAccountPath).Length);
-                        
+
                         // Read and parse the service account file to get project info
                         try
                         {
                             var serviceAccountJson = File.ReadAllText(serviceAccountPath);
                             var serviceAccountData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(serviceAccountJson);
-                            
+
                             if (serviceAccountData != null && serviceAccountData.ContainsKey("project_id"))
                             {
                                 logger.LogInformation("Firebase Project ID: {ProjectId}", serviceAccountData["project_id"]);
                             }
-                            
+
                             if (serviceAccountData != null && serviceAccountData.ContainsKey("client_email"))
                             {
                                 logger.LogInformation("Service Account Email: {ClientEmail}", serviceAccountData["client_email"]);
@@ -51,7 +51,7 @@ public class FirebaseService : IUserAuthService
                         {
                             logger.LogWarning(ex, "⚠️ Could not parse service account file: {ErrorMessage}", ex.Message);
                         }
-                        
+
                         FirebaseApp.Create(new AppOptions
                         {
                             Credential = GoogleCredential.FromFile(serviceAccountPath)
@@ -66,7 +66,7 @@ public class FirebaseService : IUserAuthService
                         {
                             logger.LogInformation("   - {FileName}", file);
                         }
-                        
+
                         logger.LogInformation("Available files in apis directory:");
                         if (Directory.Exists("apis"))
                         {
@@ -79,7 +79,7 @@ public class FirebaseService : IUserAuthService
                         {
                             logger.LogInformation("   - apis directory does not exist");
                         }
-                        
+
                         // For development/testing, try default credentials
                         try
                         {
@@ -139,4 +139,4 @@ public class FirebaseService : IUserAuthService
             throw new UnauthorizedAccessException($"User not found: {uid}", ex);
         }
     }
-} 
+}

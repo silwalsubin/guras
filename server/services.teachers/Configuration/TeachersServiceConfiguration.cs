@@ -20,10 +20,10 @@ public static class TeachersServiceConfiguration
 
         // Register repositories
         services.AddScoped<ITeacherRepository, TeacherRepository>();
-        
+
         // Register services
         services.AddScoped<ITeacherService, TeacherService>();
-        
+
         return services;
     }
 }

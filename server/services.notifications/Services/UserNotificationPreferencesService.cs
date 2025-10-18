@@ -6,7 +6,7 @@ namespace services.notifications.Services;
 public class UserNotificationPreferencesService : IUserNotificationPreferencesService
 {
     private readonly ILogger<UserNotificationPreferencesService> _logger;
-    
+
     // In-memory storage for user preferences (replace with database in production)
     private static readonly Dictionary<string, UserNotificationPreferences> _userPreferences = new();
     private static readonly object _lock = new();
@@ -19,7 +19,7 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
     public async Task<UserNotificationPreferences?> GetUserPreferencesAsync(string userId)
     {
         await Task.CompletedTask; // Simulate async operation
-        
+
         lock (_lock)
         {
             if (_userPreferences.TryGetValue(userId, out var preferences))
@@ -27,7 +27,7 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
                 _logger.LogDebug("Retrieved preferences for user {UserId}", userId);
                 return preferences;
             }
-            
+
             _logger.LogDebug("No preferences found for user {UserId}, returning null", userId);
             return null;
         }
@@ -36,11 +36,11 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
     public async Task<UserNotificationPreferences> CreateOrUpdateUserPreferencesAsync(UserNotificationPreferences preferences)
     {
         await Task.CompletedTask; // Simulate async operation
-        
+
         lock (_lock)
         {
             preferences.UpdatedAt = DateTime.UtcNow;
-            
+
             if (_userPreferences.ContainsKey(preferences.UserId))
             {
                 _userPreferences[preferences.UserId] = preferences;
@@ -52,7 +52,7 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
                 _userPreferences[preferences.UserId] = preferences;
                 _logger.LogInformation("Created notification preferences for user {UserId}", preferences.UserId);
             }
-            
+
             return preferences;
         }
     }
@@ -60,10 +60,10 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
     public async Task<List<UserNotificationPreferences>> GetUsersDueForNotificationAsync()
     {
         await Task.CompletedTask; // Simulate async operation
-        
+
         var now = DateTime.UtcNow;
         var dueUsers = new List<UserNotificationPreferences>();
-        
+
         lock (_lock)
         {
             foreach (var preferences in _userPreferences.Values)
@@ -80,7 +80,7 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
                 }
             }
         }
-        
+
         _logger.LogDebug("Found {Count} users due for notification", dueUsers.Count);
         return dueUsers;
     }
@@ -88,7 +88,7 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
     public async Task UpdateLastNotificationSentAsync(string userId)
     {
         await Task.CompletedTask; // Simulate async operation
-        
+
         lock (_lock)
         {
             if (_userPreferences.TryGetValue(userId, out var preferences))
@@ -104,14 +104,14 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
     {
         var preferences = await GetUserPreferencesAsync(userId);
         if (preferences == null) return false;
-        
+
         return IsUserInQuietHours(preferences, DateTime.UtcNow);
     }
 
     public async Task<List<UserNotificationPreferences>> GetAllUserPreferencesAsync()
     {
         await Task.CompletedTask; // Simulate async operation
-        
+
         lock (_lock)
         {
             return _userPreferences.Values.ToList();
@@ -122,7 +122,7 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
     {
         var preferences = await GetUserPreferencesAsync(userId);
         if (preferences == null) return false;
-        
+
         return IsUserDueForNotification(preferences, DateTime.UtcNow);
     }
 
@@ -131,13 +131,13 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
         var currentTime = now.TimeOfDay;
         var start = preferences.QuietHoursStart;
         var end = preferences.QuietHoursEnd;
-        
+
         // Handle quiet hours that span midnight
         if (start > end)
         {
             return currentTime >= start || currentTime <= end;
         }
-        
+
         return currentTime >= start && currentTime <= end;
     }
 
@@ -148,9 +148,9 @@ public class UserNotificationPreferencesService : IUserNotificationPreferencesSe
         {
             return true;
         }
-        
+
         var timeSinceLastNotification = now - preferences.LastNotificationSent;
-        
+
         return preferences.Frequency switch
         {
             NotificationFrequency.FiveMinutes => timeSinceLastNotification >= TimeSpan.FromMinutes(5),

@@ -7,4 +7,4 @@ public interface INotificationTokenService
     Dictionary<string, List<string>> GetUserTokens();
     Dictionary<string, string> GetTokenUsers();
     (int totalUsers, int totalTokens) GetTokenStatistics();
-} 
+}
