@@ -131,22 +131,41 @@ public class SpiritualAIService : ISpiritualAIService
                 return false;
             }
 
-            _logger.LogInformation("Testing OpenAI API connectivity to {BaseUrl}/chat/completions", _config.OpenAIBaseUrl);
+            _logger.LogInformation("Testing OpenAI API connectivity to {BaseUrl}/chat/completions", _httpClient.BaseAddress);
 
-            var testRequest = new OpenAIRequest
+            // Create a simple test request
+            var testRequest = new
             {
-                Model = _config.DefaultModel,
-                Messages = new[]
+                model = _config.DefaultModel,
+                messages = new[]
                 {
-                    new OpenAIMessage { Role = "user", Content = "Test" }
+                    new { role = "user", content = "Test" }
                 },
-                MaxTokens = 10,
-                Temperature = 0.1
+                max_tokens = 10,
+                temperature = 0.1
             };
 
-            await CallOpenAIAsync(testRequest);
-            _logger.LogInformation("OpenAI API test successful");
-            return true;
+            var json = JsonConvert.SerializeObject(testRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
+
+            var response = await _httpClient.PostAsync("/chat/completions", content);
+            
+            _logger.LogInformation("OpenAI API test response status: {StatusCode}", response.StatusCode);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("OpenAI API test successful");
+                return true;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("OpenAI API test failed: {StatusCode} - {ErrorContent}", response.StatusCode, errorContent);
+                return false;
+            }
         }
         catch (HttpRequestException ex)
         {
