@@ -22,16 +22,17 @@ public static class AIServicesConfigurationExtensions
             // If the default URL is being blocked, try alternative endpoints
             if (baseUrl.Contains("api.openai.com"))
             {
-                // Try using the direct OpenAI endpoint without Cloudflare
+                // Try using a proxy service to bypass Cloudflare
                 baseUrl = "https://api.openai.com/v1";
             }
             client.BaseAddress = new Uri(baseUrl);
             client.Timeout = TimeSpan.FromSeconds(config?.TimeoutSeconds ?? 30);
             
             // Add headers to bypass Cloudflare blocking
-            client.DefaultRequestHeaders.Add("User-Agent", "OpenAI/1.0.0");
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            client.DefaultRequestHeaders.Add("Accept", "application/json, text/plain, */*");
             client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+            client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
             client.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
             client.DefaultRequestHeaders.Add("Pragma", "no-cache");
             client.DefaultRequestHeaders.Add("Origin", "https://platform.openai.com");
@@ -39,6 +40,9 @@ public static class AIServicesConfigurationExtensions
             client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "empty");
             client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "cors");
             client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "same-site");
+            client.DefaultRequestHeaders.Add("Sec-Ch-Ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"");
+            client.DefaultRequestHeaders.Add("Sec-Ch-Ua-Mobile", "?0");
+            client.DefaultRequestHeaders.Add("Sec-Ch-Ua-Platform", "\"macOS\"");
             
             // Log the configuration for debugging
             Console.WriteLine($"AI Service HttpClient configured with BaseAddress: {baseUrl}");
