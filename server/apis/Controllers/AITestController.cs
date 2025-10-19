@@ -174,28 +174,30 @@ public class AITestController : BaseController
             });
         }
 
-        // Test 2: Service availability check
-        try
-        {
-            var isAvailable = await _aiService.IsServiceAvailableAsync();
-            results.Add(new TestResult
-            {
-                Test = "Service Availability",
-                Status = isAvailable ? "PASS" : "FAIL",
-                Details = isAvailable ? "AI service is available" : "AI service is not available",
-                Errors = isAvailable ? new string[0] : new[] { "Service availability check failed" }
-            });
-        }
-        catch (Exception ex)
-        {
-            results.Add(new TestResult
-            {
-                Test = "Service Availability",
-                Status = "ERROR",
-                Details = $"Exception during availability check: {ex.Message}",
-                Errors = new[] { ex.ToString() }
-            });
-        }
+           // Test 2: Service availability check
+           try
+           {
+               var isAvailable = await _aiService.IsServiceAvailableAsync();
+               results.Add(new TestResult
+               {
+                   Test = "Service Availability",
+                   Status = isAvailable ? "PASS" : "FAIL",
+                   Details = isAvailable ? "AI service is available" : "AI service is not available",
+                   Errors = isAvailable ? new string[0] : new[] { "Service availability check failed" }
+               });
+           }
+           catch (Exception ex)
+           {
+               results.Add(new TestResult
+               {
+                   Test = "Service Availability",
+                   Status = "ERROR",
+                   Details = $"Exception during availability check: {ex.Message}",
+                   Errors = new[] { ex.ToString() },
+                   InnerException = ex.InnerException?.ToString(),
+                   StackTrace = ex.StackTrace
+               });
+           }
 
         // Test 3: Direct API call test
         try
@@ -270,6 +272,56 @@ public class AITestController : BaseController
                 Status = "ERROR",
                 Details = $"Exception during network test: {ex.Message}",
                 Errors = new[] { ex.ToString() }
+            });
+        }
+
+        // Test 5: Direct OpenAI API test
+        try
+        {
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_aiConfig.OpenAIApiKey}");
+
+            var testRequest = new
+            {
+                model = _aiConfig.DefaultModel,
+                messages = new[]
+                {
+                    new { role = "user", content = "Test" }
+                },
+                max_tokens = 10,
+                temperature = 0.1
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(testRequest);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var openAIUrl = $"{_aiConfig.OpenAIBaseUrl}/chat/completions";
+            var response = await httpClient.PostAsync(openAIUrl, content);
+
+            results.Add(new TestResult
+            {
+                Test = "Direct OpenAI API",
+                Status = response.IsSuccessStatusCode ? "PASS" : "FAIL",
+                Details = response.IsSuccessStatusCode ?
+                    $"Successfully called OpenAI API: {response.StatusCode}" :
+                    $"OpenAI API error: {response.StatusCode} - {response.ReasonPhrase}",
+                Errors = response.IsSuccessStatusCode ? new string[0] : new[] { $"HTTP {response.StatusCode}: {response.ReasonPhrase}" },
+                Response = response.IsSuccessStatusCode ? 
+                    new { statusCode = response.StatusCode, reasonPhrase = response.ReasonPhrase } :
+                    new { statusCode = response.StatusCode, reasonPhrase = response.ReasonPhrase, content = await response.Content.ReadAsStringAsync() }
+            });
+        }
+        catch (Exception ex)
+        {
+            results.Add(new TestResult
+            {
+                Test = "Direct OpenAI API",
+                Status = "ERROR",
+                Details = $"Exception during OpenAI API test: {ex.Message}",
+                Errors = new[] { ex.ToString() },
+                InnerException = ex.InnerException?.ToString(),
+                StackTrace = ex.StackTrace
             });
         }
 
