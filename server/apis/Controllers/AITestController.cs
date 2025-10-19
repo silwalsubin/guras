@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using services.ai.Services;
+using services.ai.Configuration;
 using utilities.Controllers;
 
 namespace apis.Controllers;
@@ -12,11 +14,13 @@ public class AITestController : BaseController
 {
     private readonly ISpiritualAIService _aiService;
     private readonly ILogger<AITestController> _logger;
+    private readonly AIServicesConfiguration _aiConfig;
 
-    public AITestController(ISpiritualAIService aiService, ILogger<AITestController> logger)
+    public AITestController(ISpiritualAIService aiService, ILogger<AITestController> logger, IOptions<AIServicesConfiguration> aiConfig)
     {
         _aiService = aiService;
         _logger = logger;
+        _aiConfig = aiConfig.Value;
     }
 
     /// <summary>
@@ -85,12 +89,28 @@ public class AITestController : BaseController
             var isAvailable = await _aiService.IsServiceAvailableAsync();
             var stats = await _aiService.GetServiceStatsAsync();
 
+            // Temporarily expose API key for debugging
+            var apiKeyStatus = string.IsNullOrEmpty(_aiConfig.OpenAIApiKey) ? "NOT SET" : 
+                              _aiConfig.OpenAIApiKey.Length > 10 ? 
+                              $"SET (ends with: ...{_aiConfig.OpenAIApiKey.Substring(_aiConfig.OpenAIApiKey.Length - 4)})" : 
+                              "INVALID";
+
             return SuccessResponse(new
             {
                 isAvailable,
                 stats,
                 timestamp = DateTime.UtcNow,
-                message = isAvailable ? "AI service is working!" : "AI service is not available"
+                message = isAvailable ? "AI service is working!" : "AI service is not available",
+                apiKeyStatus = apiKeyStatus,
+                apiKeyLength = _aiConfig.OpenAIApiKey?.Length ?? 0,
+                configInfo = new
+                {
+                    model = _aiConfig.DefaultModel,
+                    baseUrl = _aiConfig.OpenAIBaseUrl,
+                    maxTokens = _aiConfig.MaxTokens,
+                    temperature = _aiConfig.Temperature,
+                    enableFallback = _aiConfig.EnableFallback
+                }
             });
         }
         catch (Exception ex)
