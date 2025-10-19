@@ -20,6 +20,13 @@ public static class AIServicesConfigurationExtensions
             client.BaseAddress = new Uri(baseUrl);
             client.Timeout = TimeSpan.FromSeconds(config?.TimeoutSeconds ?? 30);
             
+            // Add headers to bypass Cloudflare blocking
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+            client.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
+            client.DefaultRequestHeaders.Add("Pragma", "no-cache");
+            
             // Log the configuration for debugging
             Console.WriteLine($"AI Service HttpClient configured with BaseAddress: {baseUrl}");
         });
