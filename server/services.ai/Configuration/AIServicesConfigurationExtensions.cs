@@ -16,8 +16,12 @@ public static class AIServicesConfigurationExtensions
         services.AddHttpClient<ISpiritualAIService, SpiritualAIService>(client =>
         {
             var config = configuration.GetSection("AIServices").Get<AIServicesConfiguration>();
-            client.BaseAddress = new Uri(config?.OpenAIBaseUrl ?? "https://api.openai.com/v1");
+            var baseUrl = config?.OpenAIBaseUrl ?? "https://api.openai.com/v1";
+            client.BaseAddress = new Uri(baseUrl);
             client.Timeout = TimeSpan.FromSeconds(config?.TimeoutSeconds ?? 30);
+            
+            // Log the configuration for debugging
+            Console.WriteLine($"AI Service HttpClient configured with BaseAddress: {baseUrl}");
         });
 
         return services;
