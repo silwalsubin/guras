@@ -248,12 +248,17 @@ public class AITestController : BaseController
             using var httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
             
-            var response = await httpClient.GetAsync(_aiConfig.OpenAIBaseUrl);
+            // Test connectivity to a known external endpoint first
+            var testUrl = "https://httpbin.org/get";
+            var response = await httpClient.GetAsync(testUrl);
+            
             results.Add(new TestResult
             {
                 Test = "Network Connectivity",
                 Status = response.IsSuccessStatusCode ? "PASS" : "FAIL",
-                Details = $"HTTP {response.StatusCode}: {response.ReasonPhrase}",
+                Details = response.IsSuccessStatusCode ? 
+                    $"Successfully reached external endpoint: {testUrl}" : 
+                    $"HTTP {response.StatusCode}: {response.ReasonPhrase}",
                 Errors = response.IsSuccessStatusCode ? new string[0] : new[] { $"HTTP {response.StatusCode}: {response.ReasonPhrase}" }
             });
         }
