@@ -141,26 +141,7 @@ public class AITestController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> DetailedTest()
     {
-        var testResults = new
-        {
-            timestamp = DateTime.UtcNow,
-            configuration = new
-            {
-                apiKeyStatus = string.IsNullOrEmpty(_aiConfig.OpenAIApiKey) ? "NOT SET" : 
-                              _aiConfig.OpenAIApiKey.Length > 10 ? 
-                              $"SET (ends with: ...{_aiConfig.OpenAIApiKey.Substring(_aiConfig.OpenAIApiKey.Length - 4)})" : 
-                              "INVALID",
-                apiKeyLength = _aiConfig.OpenAIApiKey?.Length ?? 0,
-                baseUrl = _aiConfig.OpenAIBaseUrl,
-                model = _aiConfig.DefaultModel,
-                maxTokens = _aiConfig.MaxTokens,
-                temperature = _aiConfig.Temperature,
-                enableFallback = _aiConfig.EnableFallback
-            },
-            tests = new List<object>()
-        };
-
-        var results = testResults.tests.ToList();
+        var results = new List<TestResult>();
 
         // Test 1: Configuration validation
         try
@@ -169,12 +150,12 @@ public class AITestController : BaseController
                              !string.IsNullOrEmpty(_aiConfig.OpenAIBaseUrl) &&
                              !string.IsNullOrEmpty(_aiConfig.DefaultModel);
             
-            results.Add(new
+            results.Add(new TestResult
             {
-                test = "Configuration Validation",
-                status = configValid ? "PASS" : "FAIL",
-                details = configValid ? "All required configuration values are present" : "Missing required configuration values",
-                errors = configValid ? new string[0] : new[]
+                Test = "Configuration Validation",
+                Status = configValid ? "PASS" : "FAIL",
+                Details = configValid ? "All required configuration values are present" : "Missing required configuration values",
+                Errors = configValid ? new string[0] : new[]
                 {
                     string.IsNullOrEmpty(_aiConfig.OpenAIApiKey) ? "API Key is missing" : null,
                     string.IsNullOrEmpty(_aiConfig.OpenAIBaseUrl) ? "Base URL is missing" : null,
@@ -184,12 +165,12 @@ public class AITestController : BaseController
         }
         catch (Exception ex)
         {
-            results.Add(new
+            results.Add(new TestResult
             {
-                test = "Configuration Validation",
-                status = "ERROR",
-                details = $"Exception during configuration validation: {ex.Message}",
-                errors = new[] { ex.ToString() }
+                Test = "Configuration Validation",
+                Status = "ERROR",
+                Details = $"Exception during configuration validation: {ex.Message}",
+                Errors = new[] { ex.ToString() }
             });
         }
 
@@ -197,22 +178,22 @@ public class AITestController : BaseController
         try
         {
             var isAvailable = await _aiService.IsServiceAvailableAsync();
-            results.Add(new
+            results.Add(new TestResult
             {
-                test = "Service Availability",
-                status = isAvailable ? "PASS" : "FAIL",
-                details = isAvailable ? "AI service is available" : "AI service is not available",
-                errors = isAvailable ? new string[0] : new[] { "Service availability check failed" }
+                Test = "Service Availability",
+                Status = isAvailable ? "PASS" : "FAIL",
+                Details = isAvailable ? "AI service is available" : "AI service is not available",
+                Errors = isAvailable ? new string[0] : new[] { "Service availability check failed" }
             });
         }
         catch (Exception ex)
         {
-            results.Add(new
+            results.Add(new TestResult
             {
-                test = "Service Availability",
-                status = "ERROR",
-                details = $"Exception during availability check: {ex.Message}",
-                errors = new[] { ex.ToString() }
+                Test = "Service Availability",
+                Status = "ERROR",
+                Details = $"Exception during availability check: {ex.Message}",
+                Errors = new[] { ex.ToString() }
             });
         }
 
@@ -233,13 +214,13 @@ public class AITestController : BaseController
             };
 
             var response = await _aiService.GenerateResponseAsync(testRequest);
-            results.Add(new
+            results.Add(new TestResult
             {
-                test = "Direct API Call",
-                status = "PASS",
-                details = $"Successfully generated response in {response.ProcessingTimeMs}ms",
-                errors = new string[0],
-                response = new
+                Test = "Direct API Call",
+                Status = "PASS",
+                Details = $"Successfully generated response in {response.ProcessingTimeMs}ms",
+                Errors = new string[0],
+                Response = new
                 {
                     response = response.Response,
                     source = response.Source,
@@ -250,14 +231,14 @@ public class AITestController : BaseController
         }
         catch (Exception ex)
         {
-            results.Add(new
+            results.Add(new TestResult
             {
-                test = "Direct API Call",
-                status = "ERROR",
-                details = $"Exception during direct API call: {ex.Message}",
-                errors = new[] { ex.ToString() },
-                innerException = ex.InnerException?.ToString(),
-                stackTrace = ex.StackTrace
+                Test = "Direct API Call",
+                Status = "ERROR",
+                Details = $"Exception during direct API call: {ex.Message}",
+                Errors = new[] { ex.ToString() },
+                InnerException = ex.InnerException?.ToString(),
+                StackTrace = ex.StackTrace
             });
         }
 
@@ -268,38 +249,50 @@ public class AITestController : BaseController
             httpClient.Timeout = TimeSpan.FromSeconds(10);
             
             var response = await httpClient.GetAsync(_aiConfig.OpenAIBaseUrl);
-            results.Add(new
+            results.Add(new TestResult
             {
-                test = "Network Connectivity",
-                status = response.IsSuccessStatusCode ? "PASS" : "FAIL",
-                details = $"HTTP {response.StatusCode}: {response.ReasonPhrase}",
-                errors = response.IsSuccessStatusCode ? new string[0] : new[] { $"HTTP {response.StatusCode}: {response.ReasonPhrase}" }
+                Test = "Network Connectivity",
+                Status = response.IsSuccessStatusCode ? "PASS" : "FAIL",
+                Details = $"HTTP {response.StatusCode}: {response.ReasonPhrase}",
+                Errors = response.IsSuccessStatusCode ? new string[0] : new[] { $"HTTP {response.StatusCode}: {response.ReasonPhrase}" }
             });
         }
         catch (Exception ex)
         {
-            results.Add(new
+            results.Add(new TestResult
             {
-                test = "Network Connectivity",
-                status = "ERROR",
-                details = $"Exception during network test: {ex.Message}",
-                errors = new[] { ex.ToString() }
+                Test = "Network Connectivity",
+                Status = "ERROR",
+                Details = $"Exception during network test: {ex.Message}",
+                Errors = new[] { ex.ToString() }
             });
         }
 
         return SuccessResponse(new
         {
             timestamp = DateTime.UtcNow,
-            configuration = testResults.configuration,
+            configuration = new
+            {
+                apiKeyStatus = string.IsNullOrEmpty(_aiConfig.OpenAIApiKey) ? "NOT SET" : 
+                              _aiConfig.OpenAIApiKey.Length > 10 ? 
+                              $"SET (ends with: ...{_aiConfig.OpenAIApiKey.Substring(_aiConfig.OpenAIApiKey.Length - 4)})" : 
+                              "INVALID",
+                apiKeyLength = _aiConfig.OpenAIApiKey?.Length ?? 0,
+                baseUrl = _aiConfig.OpenAIBaseUrl,
+                model = _aiConfig.DefaultModel,
+                maxTokens = _aiConfig.MaxTokens,
+                temperature = _aiConfig.Temperature,
+                enableFallback = _aiConfig.EnableFallback
+            },
             tests = results,
             summary = new
             {
                 totalTests = results.Count,
-                passedTests = results.Count(r => r.status == "PASS"),
-                failedTests = results.Count(r => r.status == "FAIL"),
-                errorTests = results.Count(r => r.status == "ERROR"),
-                overallStatus = results.All(r => r.status == "PASS") ? "ALL_PASS" : 
-                              results.Any(r => r.status == "ERROR") ? "ERRORS" : "SOME_FAILED"
+                passedTests = results.Count(r => r.Status == "PASS"),
+                failedTests = results.Count(r => r.Status == "FAIL"),
+                errorTests = results.Count(r => r.Status == "ERROR"),
+                overallStatus = results.All(r => r.Status == "PASS") ? "ALL_PASS" : 
+                              results.Any(r => r.Status == "ERROR") ? "ERRORS" : "SOME_FAILED"
             }
         });
     }
@@ -323,4 +316,15 @@ public class AITestController : BaseController
 public class TestChatRequest
 {
     public string Message { get; set; } = string.Empty;
+}
+
+public class TestResult
+{
+    public string Test { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string Details { get; set; } = string.Empty;
+    public string[] Errors { get; set; } = new string[0];
+    public object? Response { get; set; }
+    public string? InnerException { get; set; }
+    public string? StackTrace { get; set; }
 }
