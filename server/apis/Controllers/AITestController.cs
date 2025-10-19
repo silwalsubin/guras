@@ -225,6 +225,31 @@ public class AITestController : BaseController
             });
         }
 
+        // Test 2.6: Test the actual HttpClient from DI
+        try
+        {
+            var httpClientFactory = HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
+            using var httpClient = httpClientFactory.CreateClient("ISpiritualAIService");
+            
+            results.Add(new TestResult
+            {
+                Test = "DI HttpClient",
+                Status = "PASS",
+                Details = $"DI HttpClient BaseAddress: {httpClient.BaseAddress}, Timeout: {httpClient.Timeout}",
+                Errors = new string[0]
+            });
+        }
+        catch (Exception ex)
+        {
+            results.Add(new TestResult
+            {
+                Test = "DI HttpClient",
+                Status = "ERROR",
+                Details = $"Exception during DI HttpClient check: {ex.Message}",
+                Errors = new[] { ex.ToString() }
+            });
+        }
+
         // Test 3: Direct API call test
         try
         {

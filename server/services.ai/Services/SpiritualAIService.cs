@@ -132,6 +132,8 @@ public class SpiritualAIService : ISpiritualAIService
             }
 
             _logger.LogInformation("Testing OpenAI API connectivity to {BaseUrl}/chat/completions", _httpClient.BaseAddress);
+            _logger.LogInformation("HttpClient BaseAddress: {BaseAddress}", _httpClient.BaseAddress?.ToString() ?? "NULL");
+            _logger.LogInformation("HttpClient Timeout: {Timeout}", _httpClient.Timeout);
 
             // Create a simple test request
             var testRequest = new
