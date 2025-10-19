@@ -117,12 +117,15 @@ public class SpiritualAIService : ISpiritualAIService
     {
         try
         {
+            _logger.LogInformation("=== IsServiceAvailableAsync START ===");
+            
             // Check if API key is configured
             if (string.IsNullOrEmpty(_config.OpenAIApiKey))
             {
                 _logger.LogWarning("OpenAI API key is not configured");
                 return false;
             }
+            _logger.LogInformation("API Key configured: {Length} chars", _config.OpenAIApiKey.Length);
 
             // Check if base URL is configured
             if (string.IsNullOrEmpty(_config.OpenAIBaseUrl))
@@ -130,10 +133,11 @@ public class SpiritualAIService : ISpiritualAIService
                 _logger.LogWarning("OpenAI base URL is not configured");
                 return false;
             }
+            _logger.LogInformation("Base URL configured: {BaseUrl}", _config.OpenAIBaseUrl);
 
-            _logger.LogInformation("Testing OpenAI API connectivity to {BaseUrl}/chat/completions", _httpClient.BaseAddress);
             _logger.LogInformation("HttpClient BaseAddress: {BaseAddress}", _httpClient.BaseAddress?.ToString() ?? "NULL");
             _logger.LogInformation("HttpClient Timeout: {Timeout}", _httpClient.Timeout);
+            _logger.LogInformation("HttpClient DefaultRequestHeaders count: {Count}", _httpClient.DefaultRequestHeaders.Count());
 
             // Create a simple test request
             var testRequest = new
@@ -149,17 +153,25 @@ public class SpiritualAIService : ISpiritualAIService
 
             var json = JsonConvert.SerializeObject(testRequest);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
+            _logger.LogInformation("Request payload: {Json}", json);
 
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
+            _logger.LogInformation("Authorization header set");
 
-            var response = await _httpClient.PostAsync("/chat/completions", content);
+            var url = "/chat/completions";
+            var fullUrl = _httpClient.BaseAddress + url;
+            _logger.LogInformation("Making request to: {FullUrl}", fullUrl);
+
+            var response = await _httpClient.PostAsync(url, content);
             
             _logger.LogInformation("OpenAI API test response status: {StatusCode}", response.StatusCode);
+            _logger.LogInformation("Response headers: {Headers}", string.Join(", ", response.Headers.Select(h => $"{h.Key}={string.Join(",", h.Value)}")));
             
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation("OpenAI API test successful");
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("OpenAI API test successful. Response: {Response}", responseContent.Substring(0, Math.Min(200, responseContent.Length)));
                 return true;
             }
             else
@@ -172,17 +184,24 @@ public class SpiritualAIService : ISpiritualAIService
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "OpenAI API HTTP error: {Message}", ex.Message);
+            _logger.LogError("HTTP error details: {Details}", ex.ToString());
             return false;
         }
         catch (TaskCanceledException ex)
         {
             _logger.LogError(ex, "OpenAI API timeout: {Message}", ex.Message);
+            _logger.LogError("Timeout details: {Details}", ex.ToString());
             return false;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "OpenAI API test failed: {Message}", ex.Message);
+            _logger.LogError("Exception details: {Details}", ex.ToString());
             return false;
+        }
+        finally
+        {
+            _logger.LogInformation("=== IsServiceAvailableAsync END ===");
         }
     }
 
