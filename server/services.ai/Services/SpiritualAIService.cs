@@ -162,6 +162,18 @@ public class SpiritualAIService : ISpiritualAIService
             var url = "/chat/completions";
             var fullUrl = _httpClient.BaseAddress + url;
             _logger.LogInformation("Making request to: {FullUrl}", fullUrl);
+            
+            // Log DNS resolution for debugging
+            try
+            {
+                var host = new Uri(fullUrl).Host;
+                var addresses = System.Net.Dns.GetHostAddresses(host);
+                _logger.LogInformation("DNS resolution for {Host}: {Addresses}", host, string.Join(", ", addresses.Select(a => a.ToString())));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("DNS resolution failed: {Error}", ex.Message);
+            }
 
             var response = await _httpClient.PostAsync(url, content);
             
