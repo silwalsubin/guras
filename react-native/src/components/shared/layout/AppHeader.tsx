@@ -5,6 +5,7 @@ import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { RootState } from '@/store';
 import { useAuth } from '@/contexts/AuthContext';
+import AITestButton from '../AITestButton';
 
 interface AppHeaderProps {
   onProfilePress: () => void;
@@ -26,20 +27,24 @@ const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
           guras
         </Text>
       </View>
-      <TouchableOpacity 
-        style={[styles.profileButton, { backgroundColor: themeColors.border }]}
-        onPress={onProfilePress}
-      >
-        {hasProfilePicture ? (
-          <Image 
-            source={{ uri: user.photoURL }} 
-            style={styles.profileImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <Text style={[styles.profileButtonText, { color: themeColors.textPrimary }]}>👤</Text>
-        )}
-      </TouchableOpacity>
+      
+      <View style={styles.rightContainer}>
+        <AITestButton />
+        <TouchableOpacity 
+          style={[styles.profileButton, { backgroundColor: themeColors.border }]}
+          onPress={onProfilePress}
+        >
+          {hasProfilePicture ? (
+            <Image 
+              source={{ uri: user.photoURL }} 
+              style={styles.profileImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={[styles.profileButtonText, { color: themeColors.textPrimary }]}>👤</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -47,7 +52,7 @@ const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Logo on left, profile on right
+    justifyContent: 'space-between', // Logo on left, buttons on right
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -60,6 +65,11 @@ const styles = StyleSheet.create({
   appName: {
     ...TYPOGRAPHY.LOGO,
   },
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   profileButton: {
     width: 40,
     height: 40,
@@ -67,7 +77,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    marginLeft: 'auto',
   },
   profileButtonText: {
     fontSize: 20,

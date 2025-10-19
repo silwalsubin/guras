@@ -29,6 +29,30 @@ export interface UploadUrlResponse {
   expiresAt: string;
 }
 
+// AI API types
+export interface AIRequest {
+  question: string;
+  teacherId: string;
+  userLevel: string;
+  currentChallenges: string[];
+  spiritualGoals: string[];
+  recentInsights: string[];
+  practiceHistory: string[];
+  emotionalState: string;
+  conversationHistory: string[];
+}
+
+export interface AIResponse {
+  response: string;
+  followUpQuestions: string[];
+  relatedTeachings: string[];
+  practice?: string;
+  source: string;
+  confidence: number;
+  processingTimeMs: number;
+  error?: string;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -213,6 +237,75 @@ class ApiService {
       console.error('Error uploading file to S3:', error);
       return false;
     }
+  }
+
+  // AI API methods
+  async generateAIResponse(request: AIRequest): Promise<ApiResponse<AIResponse>> {
+    return this.makeRequest<AIResponse>('/api/spiritualai/generate-response', {
+      method: 'POST',
+      body: JSON.stringify(request)
+    });
+  }
+
+  async getDailyGuidance(teacherId: string, userId: string): Promise<ApiResponse<AIResponse>> {
+    return this.makeRequest<AIResponse>(
+      `/api/spiritualai/daily-guidance?teacherId=${encodeURIComponent(teacherId)}&userId=${encodeURIComponent(userId)}`,
+      { method: 'POST' }
+    );
+  }
+
+  async checkAIHealth(): Promise<ApiResponse<{ isAvailable: boolean; stats: any; timestamp: string }>> {
+    return this.makeRequest<{ isAvailable: boolean; stats: any; timestamp: string }>('/api/spiritualai/health');
+  }
+
+  async getAIStats(): Promise<ApiResponse<any>> {
+    return this.makeRequest<any>('/api/spiritualai/stats');
+  }
+
+  // AI Test methods (no authentication required)
+  async testAIChat(message: string): Promise<ApiResponse<{
+    message: string;
+    response: string;
+    source: string;
+    confidence: number;
+    processingTimeMs: number;
+    timestamp: string;
+  }>> {
+    return this.makeRequest<{
+      message: string;
+      response: string;
+      source: string;
+      confidence: number;
+      processingTimeMs: number;
+      timestamp: string;
+    }>('/api/aitest/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+  }
+
+  async testAIHealth(): Promise<ApiResponse<{
+    isAvailable: boolean;
+    stats: any;
+    timestamp: string;
+    message: string;
+  }>> {
+    return this.makeRequest<{
+      isAvailable: boolean;
+      stats: any;
+      timestamp: string;
+      message: string;
+    }>('/api/aitest/health');
+  }
+
+  async testAIPing(): Promise<ApiResponse<{
+    message: string;
+    timestamp: string;
+  }>> {
+    return this.makeRequest<{
+      message: string;
+      timestamp: string;
+    }>('/api/aitest/ping');
   }
 }
 

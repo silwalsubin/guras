@@ -29,6 +29,7 @@
       <ProjectReference Include="..\services.notifications\services.notifications.csproj" />
       <ProjectReference Include="..\services.audio\services.audio.csproj" />
       <ProjectReference Include="..\services.teachers\services.teachers.csproj" />
+      <ProjectReference Include="..\services.ai\services.ai.csproj" />
       <ProjectReference Include="..\orchestration.backgroundServices\orchestration.backgroundServices.csproj" />
       <ProjectReference Include="..\services.users\services.users.csproj" />
       <ProjectReference Include="..\utilities.aws\utilities.aws.csproj" />

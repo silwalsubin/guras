@@ -1,4 +1,5 @@
 import { SpiritualTeacher, SpiritualMessage, SpiritualContext } from '@/types/spiritual';
+import { apiService, AIRequest, AIResponse } from './api';
 
 // AI Response Configuration for each teacher
 interface TeacherAIConfig {
@@ -267,7 +268,7 @@ class SpiritualAIService {
     return SpiritualAIService.instance;
   }
 
-  // Generate AI response using hybrid system (templates + AI models)
+  // Generate AI response using real AI API
   async generateResponse(
     question: string,
     teacher: SpiritualTeacher,
@@ -287,37 +288,43 @@ class SpiritualAIService {
     });
 
     try {
-      // Load hybrid AI service dynamically
-      if (!this.hybridAI) {
-        const HybridAIService = (await import('./hybridAIService')).default;
-        this.hybridAI = HybridAIService.getInstance();
-      }
-
-      // Use hybrid AI system
-      const hybridResponse = await this.hybridAI.generateResponse(
+      // Prepare AI request
+      const aiRequest: AIRequest = {
         question,
-        teacher,
-        context,
-        conversationHistory
-      );
-
-      console.log('✅ Spiritual AI - Hybrid response generated:', {
-        source: hybridResponse.source,
-        confidence: hybridResponse.confidence,
-        processingTime: hybridResponse.processingTime + 'ms'
-      });
-
-      return {
-        response: hybridResponse.response,
-        followUpQuestions: hybridResponse.followUpQuestions,
-        relatedTeachings: hybridResponse.relatedTeachings,
-        practice: hybridResponse.practice
+        teacherId: teacher.id,
+        userLevel: context.userLevel,
+        currentChallenges: context.currentChallenges || [],
+        spiritualGoals: context.spiritualGoals || [],
+        recentInsights: context.recentInsights || [],
+        practiceHistory: context.practiceHistory || [],
+        emotionalState: context.emotionalState?.mood || 'neutral',
+        conversationHistory: conversationHistory.map(msg => `${msg.role}: ${msg.content}`)
       };
 
+      // Call real AI API
+      const apiResponse = await apiService.generateAIResponse(aiRequest);
+
+      if (apiResponse.success && apiResponse.data) {
+        console.log('✅ Spiritual AI - Real AI response generated:', {
+          source: apiResponse.data.source,
+          confidence: apiResponse.data.confidence,
+          processingTime: apiResponse.data.processingTimeMs + 'ms'
+        });
+
+        return {
+          response: apiResponse.data.response,
+          followUpQuestions: apiResponse.data.followUpQuestions,
+          relatedTeachings: apiResponse.data.relatedTeachings,
+          practice: apiResponse.data.practice
+        };
+      } else {
+        throw new Error(apiResponse.error?.message || 'Failed to get AI response');
+      }
+
     } catch (error) {
-      console.error('❌ Spiritual AI - Error with hybrid system:', error);
+      console.error('❌ Spiritual AI - Error with real AI API:', error);
       
-      // Fallback to simple response system
+      // Fallback to template system
       return this.generateFallbackResponse(question, teacher, context);
     }
   }
@@ -560,7 +567,7 @@ class SpiritualAIService {
     return undefined;
   }
 
-  // Generate daily guidance
+  // Generate daily guidance using real AI API
   async generateDailyGuidance(
     teacher: SpiritualTeacher,
     context: SpiritualContext
@@ -570,22 +577,49 @@ class SpiritualAIService {
     dailyPractice: string;
     inspirationalQuote: string;
   }> {
-    const teacherConfig = TEACHER_AI_CONFIGS[teacher.id];
-    if (!teacherConfig) {
-      throw new Error(`No AI configuration found for teacher: ${teacher.id}`);
+    try {
+      // Get user ID from context (you might need to pass this differently)
+      const userId = 'current-user'; // This should come from the context or auth
+      
+      // Call real AI API for daily guidance
+      const apiResponse = await apiService.getDailyGuidance(teacher.id, userId);
+
+      if (apiResponse.success && apiResponse.data) {
+        // Parse the AI response to extract different parts
+        const aiResponse = apiResponse.data.response;
+        
+        // For now, use the AI response for all parts
+        // In a more sophisticated implementation, you could ask for specific parts
+        return {
+          morningWisdom: aiResponse,
+          eveningReflection: aiResponse,
+          dailyPractice: apiResponse.data.practice || "Meditation (20 minutes)",
+          inspirationalQuote: apiResponse.data.relatedTeachings[0] || "Wisdom comes from within"
+        };
+      } else {
+        throw new Error(apiResponse.error?.message || 'Failed to get daily guidance');
+      }
+    } catch (error) {
+      console.error('❌ Spiritual AI - Error getting daily guidance:', error);
+      
+      // Fallback to template system
+      const teacherConfig = TEACHER_AI_CONFIGS[teacher.id];
+      if (!teacherConfig) {
+        throw new Error(`No AI configuration found for teacher: ${teacher.id}`);
+      }
+
+      const morningWisdom = this.generateMorningWisdom(teacherConfig, context);
+      const eveningReflection = this.generateEveningReflection(teacherConfig, context);
+      const dailyPractice = this.generateDailyPractice(teacherConfig, context);
+      const inspirationalQuote = this.generateInspirationalQuote(teacherConfig);
+
+      return {
+        morningWisdom,
+        eveningReflection,
+        dailyPractice,
+        inspirationalQuote
+      };
     }
-
-    const morningWisdom = this.generateMorningWisdom(teacherConfig, context);
-    const eveningReflection = this.generateEveningReflection(teacherConfig, context);
-    const dailyPractice = this.generateDailyPractice(teacherConfig, context);
-    const inspirationalQuote = this.generateInspirationalQuote(teacherConfig);
-
-    return {
-      morningWisdom,
-      eveningReflection,
-      dailyPractice,
-      inspirationalQuote
-    };
   }
 
   private generateMorningWisdom(config: TeacherAIConfig, context: SpiritualContext): string {
