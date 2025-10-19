@@ -164,31 +164,30 @@ resource "aws_security_group" "ecs_tasks" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  # Allow HTTPS outbound for external APIs (like OpenAI)
+  # Allow DNS resolution
   egress {
-    protocol    = "tcp"
-    from_port   = 443
-    to_port     = 443
+    protocol    = "udp"
+    from_port   = 53
+    to_port     = 53
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS outbound for external APIs"
+    description = "DNS resolution"
   }
 
-  # Allow HTTP outbound for external APIs
   egress {
     protocol    = "tcp"
-    from_port   = 80
-    to_port     = 80
+    from_port   = 53
+    to_port     = 53
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP outbound for external APIs"
+    description = "DNS resolution over TCP"
   }
 
-  # Allow all outbound traffic (for AWS services via VPC endpoints)
+  # Allow all outbound traffic to anywhere
   egress {
     protocol    = "-1"
     from_port   = 0
     to_port     = 0
     cidr_blocks = ["0.0.0.0/0"]
-    description = "All outbound traffic"
+    description = "All outbound traffic to anywhere"
   }
 
   tags = {
