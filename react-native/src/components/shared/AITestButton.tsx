@@ -60,9 +60,22 @@ const AITestButton: React.FC<AITestButtonProps> = ({ onPress }) => {
       }
       console.log('✅ Health check successful:', healthResponse.data?.message);
 
+      // Display detailed debugging information
+      const healthData = healthResponse.data;
+      const apiKeyInfo = healthData?.apiKeyStatus || 'Unknown';
+      const apiKeyLength = healthData?.apiKeyLength || 0;
+      const model = healthData?.configInfo?.model || 'Unknown';
+      const baseUrl = healthData?.configInfo?.baseUrl || 'Unknown';
+
       Alert.alert(
         'AI Test Results',
-        `✅ Server: Connected\n✅ AI Service: ${healthResponse.data?.isAvailable ? 'Available' : 'Not Available'}\n\nYou can now test AI chat!`,
+        `✅ Server: Connected\n` +
+        `🤖 AI Service: ${healthData?.isAvailable ? 'Available' : 'Not Available'}\n` +
+        `🔑 API Key: ${apiKeyInfo}\n` +
+        `📏 Key Length: ${apiKeyLength} chars\n` +
+        `🤖 Model: ${model}\n` +
+        `🌐 Base URL: ${baseUrl}\n\n` +
+        `You can now test AI chat!`,
         [{ text: 'OK' }]
       );
     } catch (error) {

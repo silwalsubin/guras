@@ -289,12 +289,30 @@ class ApiService {
     stats: any;
     timestamp: string;
     message: string;
+    apiKeyStatus: string;
+    apiKeyLength: number;
+    configInfo: {
+      model: string;
+      baseUrl: string;
+      maxTokens: number;
+      temperature: number;
+      enableFallback: boolean;
+    };
   }>> {
     return this.makeRequest<{
       isAvailable: boolean;
       stats: any;
       timestamp: string;
       message: string;
+      apiKeyStatus: string;
+      apiKeyLength: number;
+      configInfo: {
+        model: string;
+        baseUrl: string;
+        maxTokens: number;
+        temperature: number;
+        enableFallback: boolean;
+      };
     }>('/api/aitest/health');
   }
 
