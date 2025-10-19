@@ -131,6 +131,8 @@ public class SpiritualAIService : ISpiritualAIService
                 return false;
             }
 
+            _logger.LogInformation("Testing OpenAI API connectivity to {BaseUrl}/chat/completions", _config.OpenAIBaseUrl);
+
             var testRequest = new OpenAIRequest
             {
                 Model = _config.DefaultModel,
@@ -145,6 +147,16 @@ public class SpiritualAIService : ISpiritualAIService
             await CallOpenAIAsync(testRequest);
             _logger.LogInformation("OpenAI API test successful");
             return true;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "OpenAI API HTTP error: {Message}", ex.Message);
+            return false;
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "OpenAI API timeout: {Message}", ex.Message);
+            return false;
         }
         catch (Exception ex)
         {
@@ -174,15 +186,24 @@ public class SpiritualAIService : ISpiritualAIService
         _httpClient.DefaultRequestHeaders.Clear();
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
 
-        var response = await _httpClient.PostAsync($"{_config.OpenAIBaseUrl}/chat/completions", content);
+        var url = $"{_config.OpenAIBaseUrl}/chat/completions";
+        _logger.LogInformation("Making OpenAI API request to: {Url}", url);
+        _logger.LogInformation("Request payload: {Json}", json);
+
+        var response = await _httpClient.PostAsync(url, content);
+        
+        _logger.LogInformation("OpenAI API response status: {StatusCode}", response.StatusCode);
         
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync();
+            _logger.LogError("OpenAI API error response: {ErrorContent}", errorContent);
             throw new HttpRequestException($"OpenAI API error: {response.StatusCode} - {errorContent}");
         }
 
         var responseContent = await response.Content.ReadAsStringAsync();
+        _logger.LogInformation("OpenAI API success response received");
+        
         var openAIResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseContent);
 
         if (openAIResponse?.Choices?.Length == 0)
