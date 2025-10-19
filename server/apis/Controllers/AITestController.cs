@@ -32,7 +32,7 @@ public class AITestController : BaseController
         {
             if (string.IsNullOrWhiteSpace(request.Message))
             {
-                return BadRequestResponse("Message is required");
+                return BadRequest("Message is required");
             }
 
             _logger.LogInformation("AI Test - Processing message: {Message}", request.Message);
