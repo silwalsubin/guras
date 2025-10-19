@@ -33,12 +33,12 @@ public class SpiritualAIController : BaseController
         {
             if (string.IsNullOrWhiteSpace(request.Question))
             {
-                return BadRequestResponse("Question is required");
+                return BadRequest("Question is required");
             }
 
             if (string.IsNullOrWhiteSpace(request.TeacherId))
             {
-                return BadRequestResponse("Teacher ID is required");
+                return BadRequest("Teacher ID is required");
             }
 
             _logger.LogInformation("Generating AI response for teacher {TeacherId}", request.TeacherId);
@@ -52,7 +52,7 @@ public class SpiritualAIController : BaseController
         catch (ArgumentException ex)
         {
             _logger.LogWarning(ex, "Invalid request for AI response generation");
-            return BadRequestResponse(ex.Message);
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
@@ -75,12 +75,12 @@ public class SpiritualAIController : BaseController
         {
             if (string.IsNullOrWhiteSpace(teacherId))
             {
-                return BadRequestResponse("Teacher ID is required");
+                return BadRequest("Teacher ID is required");
             }
 
             if (string.IsNullOrWhiteSpace(userId))
             {
-                return BadRequestResponse("User ID is required");
+                return BadRequest("User ID is required");
             }
 
             _logger.LogInformation("Generating daily guidance for user {UserId} from teacher {TeacherId}", userId, teacherId);

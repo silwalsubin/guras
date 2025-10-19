@@ -80,7 +80,11 @@ public class SpiritualAIService : ISpiritualAIService
             
             if (_config.EnableFallback)
             {
-                return GenerateFallbackResponse(request, teacher);
+                // Get teacher information for fallback
+                if (_teachers.TryGetValue(request.TeacherId, out var teacher))
+                {
+                    return GenerateFallbackResponse(request, teacher);
+                }
             }
             
             return new AIResponse
