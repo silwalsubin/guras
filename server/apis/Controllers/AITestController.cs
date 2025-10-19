@@ -95,6 +95,11 @@ public class AITestController : BaseController
                               $"SET (ends with: ...{_aiConfig.OpenAIApiKey.Substring(_aiConfig.OpenAIApiKey.Length - 4)})" : 
                               "INVALID";
 
+            // Check configuration validity
+            var configValid = !string.IsNullOrEmpty(_aiConfig.OpenAIApiKey) && 
+                             !string.IsNullOrEmpty(_aiConfig.OpenAIBaseUrl) &&
+                             !string.IsNullOrEmpty(_aiConfig.DefaultModel);
+
             return SuccessResponse(new
             {
                 isAvailable,
@@ -103,6 +108,7 @@ public class AITestController : BaseController
                 message = isAvailable ? "AI service is working!" : "AI service is not available",
                 apiKeyStatus = apiKeyStatus,
                 apiKeyLength = _aiConfig.OpenAIApiKey?.Length ?? 0,
+                configValid = configValid,
                 configInfo = new
                 {
                     model = _aiConfig.DefaultModel,
@@ -110,6 +116,13 @@ public class AITestController : BaseController
                     maxTokens = _aiConfig.MaxTokens,
                     temperature = _aiConfig.Temperature,
                     enableFallback = _aiConfig.EnableFallback
+                },
+                diagnostics = new
+                {
+                    hasApiKey = !string.IsNullOrEmpty(_aiConfig.OpenAIApiKey),
+                    hasBaseUrl = !string.IsNullOrEmpty(_aiConfig.OpenAIBaseUrl),
+                    hasModel = !string.IsNullOrEmpty(_aiConfig.DefaultModel),
+                    apiKeyPrefix = _aiConfig.OpenAIApiKey?.Substring(0, Math.Min(10, _aiConfig.OpenAIApiKey?.Length ?? 0)) ?? "N/A"
                 }
             });
         }

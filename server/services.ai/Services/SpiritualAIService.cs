@@ -117,6 +117,20 @@ public class SpiritualAIService : ISpiritualAIService
     {
         try
         {
+            // Check if API key is configured
+            if (string.IsNullOrEmpty(_config.OpenAIApiKey))
+            {
+                _logger.LogWarning("OpenAI API key is not configured");
+                return false;
+            }
+
+            // Check if base URL is configured
+            if (string.IsNullOrEmpty(_config.OpenAIBaseUrl))
+            {
+                _logger.LogWarning("OpenAI base URL is not configured");
+                return false;
+            }
+
             var testRequest = new OpenAIRequest
             {
                 Model = _config.DefaultModel,
@@ -129,10 +143,12 @@ public class SpiritualAIService : ISpiritualAIService
             };
 
             await CallOpenAIAsync(testRequest);
+            _logger.LogInformation("OpenAI API test successful");
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "OpenAI API test failed: {Message}", ex.Message);
             return false;
         }
     }
