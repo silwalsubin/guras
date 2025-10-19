@@ -174,30 +174,56 @@ public class AITestController : BaseController
             });
         }
 
-           // Test 2: Service availability check
-           try
-           {
-               var isAvailable = await _aiService.IsServiceAvailableAsync();
-               results.Add(new TestResult
-               {
-                   Test = "Service Availability",
-                   Status = isAvailable ? "PASS" : "FAIL",
-                   Details = isAvailable ? "AI service is available" : "AI service is not available",
-                   Errors = isAvailable ? new string[0] : new[] { "Service availability check failed" }
-               });
-           }
-           catch (Exception ex)
-           {
-               results.Add(new TestResult
-               {
-                   Test = "Service Availability",
-                   Status = "ERROR",
-                   Details = $"Exception during availability check: {ex.Message}",
-                   Errors = new[] { ex.ToString() },
-                   InnerException = ex.InnerException?.ToString(),
-                   StackTrace = ex.StackTrace
-               });
-           }
+        // Test 2: Service availability check
+        try
+        {
+            var isAvailable = await _aiService.IsServiceAvailableAsync();
+            results.Add(new TestResult
+            {
+                Test = "Service Availability",
+                Status = isAvailable ? "PASS" : "FAIL",
+                Details = isAvailable ? "AI service is available" : "AI service is not available",
+                Errors = isAvailable ? new string[0] : new[] { "Service availability check failed" }
+            });
+        }
+        catch (Exception ex)
+        {
+            results.Add(new TestResult
+            {
+                Test = "Service Availability",
+                Status = "ERROR",
+                Details = $"Exception during availability check: {ex.Message}",
+                Errors = new[] { ex.ToString() },
+                InnerException = ex.InnerException?.ToString(),
+                StackTrace = ex.StackTrace
+            });
+        }
+
+        // Test 2.5: HttpClient configuration check
+        try
+        {
+            using var httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri(_aiConfig.OpenAIBaseUrl);
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            
+            results.Add(new TestResult
+            {
+                Test = "HttpClient Configuration",
+                Status = "PASS",
+                Details = $"HttpClient BaseAddress: {httpClient.BaseAddress}, Timeout: {httpClient.Timeout}",
+                Errors = new string[0]
+            });
+        }
+        catch (Exception ex)
+        {
+            results.Add(new TestResult
+            {
+                Test = "HttpClient Configuration",
+                Status = "ERROR",
+                Details = $"Exception during HttpClient config check: {ex.Message}",
+                Errors = new[] { ex.ToString() }
+            });
+        }
 
         // Test 3: Direct API call test
         try

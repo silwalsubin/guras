@@ -20,9 +20,6 @@ public static class AIServicesConfigurationExtensions
             client.Timeout = TimeSpan.FromSeconds(config?.TimeoutSeconds ?? 30);
         });
 
-        // Register AI service
-        services.AddScoped<ISpiritualAIService, SpiritualAIService>();
-
         return services;
     }
 }
