@@ -325,6 +325,64 @@ class ApiService {
       timestamp: string;
     }>('/api/aitest/ping');
   }
+
+  async testAIDetailed(): Promise<ApiResponse<{
+    timestamp: string;
+    configuration: {
+      apiKeyStatus: string;
+      apiKeyLength: number;
+      baseUrl: string;
+      model: string;
+      maxTokens: number;
+      temperature: number;
+      enableFallback: boolean;
+    };
+    tests: Array<{
+      test: string;
+      status: string;
+      details: string;
+      errors: string[];
+      response?: any;
+      innerException?: string;
+      stackTrace?: string;
+    }>;
+    summary: {
+      totalTests: number;
+      passedTests: number;
+      failedTests: number;
+      errorTests: number;
+      overallStatus: string;
+    };
+  }>> {
+    return this.makeRequest<{
+      timestamp: string;
+      configuration: {
+        apiKeyStatus: string;
+        apiKeyLength: number;
+        baseUrl: string;
+        model: string;
+        maxTokens: number;
+        temperature: number;
+        enableFallback: boolean;
+      };
+      tests: Array<{
+        test: string;
+        status: string;
+        details: string;
+        errors: string[];
+        response?: any;
+        innerException?: string;
+        stackTrace?: string;
+      }>;
+      summary: {
+        totalTests: number;
+        passedTests: number;
+        failedTests: number;
+        errorTests: number;
+        overallStatus: string;
+      };
+    }>('/api/aitest/detailed-test');
+  }
 }
 
 export const apiService = new ApiService(); 

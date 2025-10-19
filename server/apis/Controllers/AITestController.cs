@@ -134,6 +134,177 @@ public class AITestController : BaseController
     }
 
     /// <summary>
+    /// Test AI service with detailed error information
+    /// </summary>
+    /// <returns>Detailed test results including exact errors</returns>
+    [HttpGet("detailed-test")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DetailedTest()
+    {
+        var testResults = new
+        {
+            timestamp = DateTime.UtcNow,
+            configuration = new
+            {
+                apiKeyStatus = string.IsNullOrEmpty(_aiConfig.OpenAIApiKey) ? "NOT SET" : 
+                              _aiConfig.OpenAIApiKey.Length > 10 ? 
+                              $"SET (ends with: ...{_aiConfig.OpenAIApiKey.Substring(_aiConfig.OpenAIApiKey.Length - 4)})" : 
+                              "INVALID",
+                apiKeyLength = _aiConfig.OpenAIApiKey?.Length ?? 0,
+                baseUrl = _aiConfig.OpenAIBaseUrl,
+                model = _aiConfig.DefaultModel,
+                maxTokens = _aiConfig.MaxTokens,
+                temperature = _aiConfig.Temperature,
+                enableFallback = _aiConfig.EnableFallback
+            },
+            tests = new List<object>()
+        };
+
+        var results = testResults.tests.ToList();
+
+        // Test 1: Configuration validation
+        try
+        {
+            var configValid = !string.IsNullOrEmpty(_aiConfig.OpenAIApiKey) && 
+                             !string.IsNullOrEmpty(_aiConfig.OpenAIBaseUrl) &&
+                             !string.IsNullOrEmpty(_aiConfig.DefaultModel);
+            
+            results.Add(new
+            {
+                test = "Configuration Validation",
+                status = configValid ? "PASS" : "FAIL",
+                details = configValid ? "All required configuration values are present" : "Missing required configuration values",
+                errors = configValid ? new string[0] : new[]
+                {
+                    string.IsNullOrEmpty(_aiConfig.OpenAIApiKey) ? "API Key is missing" : null,
+                    string.IsNullOrEmpty(_aiConfig.OpenAIBaseUrl) ? "Base URL is missing" : null,
+                    string.IsNullOrEmpty(_aiConfig.DefaultModel) ? "Model is missing" : null
+                }.Where(e => e != null).ToArray()
+            });
+        }
+        catch (Exception ex)
+        {
+            results.Add(new
+            {
+                test = "Configuration Validation",
+                status = "ERROR",
+                details = $"Exception during configuration validation: {ex.Message}",
+                errors = new[] { ex.ToString() }
+            });
+        }
+
+        // Test 2: Service availability check
+        try
+        {
+            var isAvailable = await _aiService.IsServiceAvailableAsync();
+            results.Add(new
+            {
+                test = "Service Availability",
+                status = isAvailable ? "PASS" : "FAIL",
+                details = isAvailable ? "AI service is available" : "AI service is not available",
+                errors = isAvailable ? new string[0] : new[] { "Service availability check failed" }
+            });
+        }
+        catch (Exception ex)
+        {
+            results.Add(new
+            {
+                test = "Service Availability",
+                status = "ERROR",
+                details = $"Exception during availability check: {ex.Message}",
+                errors = new[] { ex.ToString() }
+            });
+        }
+
+        // Test 3: Direct API call test
+        try
+        {
+            var testRequest = new services.ai.Domain.AIRequest
+            {
+                Question = "Hello, this is a test message.",
+                TeacherId = "osho",
+                UserLevel = "beginner",
+                CurrentChallenges = new[] { "testing" },
+                SpiritualGoals = new[] { "learning" },
+                RecentInsights = new string[0],
+                PracticeHistory = new string[0],
+                EmotionalState = "curious",
+                ConversationHistory = new string[0]
+            };
+
+            var response = await _aiService.GenerateResponseAsync(testRequest);
+            results.Add(new
+            {
+                test = "Direct API Call",
+                status = "PASS",
+                details = $"Successfully generated response in {response.ProcessingTimeMs}ms",
+                errors = new string[0],
+                response = new
+                {
+                    response = response.Response,
+                    source = response.Source,
+                    confidence = response.Confidence,
+                    processingTimeMs = response.ProcessingTimeMs
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            results.Add(new
+            {
+                test = "Direct API Call",
+                status = "ERROR",
+                details = $"Exception during direct API call: {ex.Message}",
+                errors = new[] { ex.ToString() },
+                innerException = ex.InnerException?.ToString(),
+                stackTrace = ex.StackTrace
+            });
+        }
+
+        // Test 4: Network connectivity test (if possible)
+        try
+        {
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+            
+            var response = await httpClient.GetAsync(_aiConfig.OpenAIBaseUrl);
+            results.Add(new
+            {
+                test = "Network Connectivity",
+                status = response.IsSuccessStatusCode ? "PASS" : "FAIL",
+                details = $"HTTP {response.StatusCode}: {response.ReasonPhrase}",
+                errors = response.IsSuccessStatusCode ? new string[0] : new[] { $"HTTP {response.StatusCode}: {response.ReasonPhrase}" }
+            });
+        }
+        catch (Exception ex)
+        {
+            results.Add(new
+            {
+                test = "Network Connectivity",
+                status = "ERROR",
+                details = $"Exception during network test: {ex.Message}",
+                errors = new[] { ex.ToString() }
+            });
+        }
+
+        return SuccessResponse(new
+        {
+            timestamp = DateTime.UtcNow,
+            configuration = testResults.configuration,
+            tests = results,
+            summary = new
+            {
+                totalTests = results.Count,
+                passedTests = results.Count(r => r.status == "PASS"),
+                failedTests = results.Count(r => r.status == "FAIL"),
+                errorTests = results.Count(r => r.status == "ERROR"),
+                overallStatus = results.All(r => r.status == "PASS") ? "ALL_PASS" : 
+                              results.Any(r => r.status == "ERROR") ? "ERRORS" : "SOME_FAILED"
+            }
+        });
+    }
+
+    /// <summary>
     /// Simple ping test
     /// </summary>
     /// <returns>Pong response</returns>

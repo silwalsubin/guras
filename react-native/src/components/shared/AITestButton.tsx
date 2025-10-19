@@ -53,31 +53,65 @@ const AITestButton: React.FC<AITestButtonProps> = ({ onPress }) => {
       }
       console.log('✅ Ping successful:', pingResponse.data?.message);
 
-      // Test health
-      const healthResponse = await apiService.testAIHealth();
-      if (!healthResponse.success) {
-        throw new Error('AI service not available');
+      // Run detailed test
+      const detailedResponse = await apiService.testAIDetailed();
+      if (!detailedResponse.success) {
+        throw new Error('Detailed test failed');
       }
-      console.log('✅ Health check successful:', healthResponse.data?.message);
+      console.log('✅ Detailed test completed:', detailedResponse.data?.summary);
 
-      // Display detailed debugging information
-      const healthData = healthResponse.data;
-      const apiKeyInfo = healthData?.apiKeyStatus || 'Unknown';
-      const apiKeyLength = healthData?.apiKeyLength || 0;
-      const model = healthData?.configInfo?.model || 'Unknown';
-      const baseUrl = healthData?.configInfo?.baseUrl || 'Unknown';
+      const testData = detailedResponse.data;
+      if (!testData) {
+        throw new Error('No test data received');
+      }
 
-      Alert.alert(
-        'AI Test Results',
-        `✅ Server: Connected\n` +
-        `🤖 AI Service: ${healthData?.isAvailable ? 'Available' : 'Not Available'}\n` +
-        `🔑 API Key: ${apiKeyInfo}\n` +
-        `📏 Key Length: ${apiKeyLength} chars\n` +
-        `🤖 Model: ${model}\n` +
-        `🌐 Base URL: ${baseUrl}\n\n` +
-        `You can now test AI chat!`,
-        [{ text: 'OK' }]
-      );
+      // Build detailed error message
+      let errorDetails = '';
+      let hasErrors = false;
+
+      testData.tests.forEach((test, index) => {
+        if (test.status === 'ERROR' || test.status === 'FAIL') {
+          hasErrors = true;
+          errorDetails += `\n${index + 1}. ${test.test}: ${test.status}\n`;
+          errorDetails += `   Details: ${test.details}\n`;
+          if (test.errors && test.errors.length > 0) {
+            errorDetails += `   Errors:\n`;
+            test.errors.forEach(error => {
+              errorDetails += `   - ${error}\n`;
+            });
+          }
+          if (test.innerException) {
+            errorDetails += `   Inner Exception: ${test.innerException}\n`;
+          }
+        }
+      });
+
+      // Display results
+      const config = testData.configuration;
+      const summary = testData.summary;
+      
+      const basicInfo = `🔑 API Key: ${config.apiKeyStatus} (${config.apiKeyLength} chars)\n` +
+                       `🤖 Model: ${config.model}\n` +
+                       `🌐 Base URL: ${config.baseUrl}\n` +
+                       `📊 Tests: ${summary.passedTests}/${summary.totalTests} passed\n` +
+                       `🎯 Overall: ${summary.overallStatus}`;
+
+      if (hasErrors) {
+        Alert.alert(
+          'AI Test Results - Issues Found',
+          basicInfo + '\n\n' + '❌ ERRORS FOUND:\n' + errorDetails,
+          [
+            { text: 'OK' },
+            { text: 'View Full Details', onPress: () => showFullErrorDetails(testData) }
+          ]
+        );
+      } else {
+        Alert.alert(
+          'AI Test Results - All Good!',
+          basicInfo + '\n\n✅ All tests passed! You can now test AI chat.',
+          [{ text: 'OK' }]
+        );
+      }
     } catch (error) {
       console.error('❌ AI connectivity test failed:', error);
       Alert.alert(
@@ -88,6 +122,39 @@ const AITestButton: React.FC<AITestButtonProps> = ({ onPress }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const showFullErrorDetails = (testData: any) => {
+    let fullDetails = 'FULL TEST DETAILS:\n\n';
+    
+    testData.tests.forEach((test: any, index: number) => {
+      fullDetails += `${index + 1}. ${test.test}\n`;
+      fullDetails += `   Status: ${test.status}\n`;
+      fullDetails += `   Details: ${test.details}\n`;
+      
+      if (test.errors && test.errors.length > 0) {
+        fullDetails += `   Errors:\n`;
+        test.errors.forEach((error: string) => {
+          fullDetails += `   - ${error}\n`;
+        });
+      }
+      
+      if (test.innerException) {
+        fullDetails += `   Inner Exception: ${test.innerException}\n`;
+      }
+      
+      if (test.stackTrace) {
+        fullDetails += `   Stack Trace: ${test.stackTrace}\n`;
+      }
+      
+      fullDetails += '\n';
+    });
+
+    Alert.alert(
+      'Full Error Details',
+      fullDetails,
+      [{ text: 'OK' }]
+    );
   };
 
   const sendMessage = async () => {
