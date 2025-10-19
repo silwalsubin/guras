@@ -186,8 +186,8 @@ public class SpiritualAIService : ISpiritualAIService
         _httpClient.DefaultRequestHeaders.Clear();
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
 
-        var url = $"{_config.OpenAIBaseUrl}/chat/completions";
-        _logger.LogInformation("Making OpenAI API request to: {Url}", url);
+        var url = "/chat/completions";
+        _logger.LogInformation("Making OpenAI API request to: {BaseUrl}{Url}", _httpClient.BaseAddress, url);
         _logger.LogInformation("Request payload: {Json}", json);
 
         var response = await _httpClient.PostAsync(url, content);
