@@ -98,7 +98,7 @@ jobs:
         # Update appsettings.json with OpenAI API key from secrets
         sed -i "s/\"OpenAIApiKey\": \"\"/\"OpenAIApiKey\": \"${{ secrets.OPENAI_API_KEY }}\"/g" server/apis/appsettings.json
         echo "✅ OpenAI API key injected into appsettings.json"
-        
+
         # Update appsettings.Development.json with OpenAI API key from secrets
         sed -i "s/\"OpenAIApiKey\": \"your-openai-api-key-here\"/\"OpenAIApiKey\": \"${{ secrets.OPENAI_API_KEY }}\"/g" server/apis/appsettings.Development.json
         echo "✅ OpenAI API key injected into appsettings.Development.json"

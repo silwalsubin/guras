@@ -11,14 +11,14 @@ public static class AIServicesConfigurationExtensions
     {
         // Configure AI services
         services.Configure<AIServicesConfiguration>(configuration.GetSection("AIServices"));
-        
+
         // Register HTTP client for OpenAI API
         services.AddHttpClient<ISpiritualAIService, SpiritualAIService>(client =>
         {
             var config = configuration.GetSection("AIServices").Get<AIServicesConfiguration>();
             // Try using a different endpoint to bypass Cloudflare blocking
             var baseUrl = config?.OpenAIBaseUrl ?? "https://api.openai.com/v1";
-            
+
             // If the default URL is being blocked, try alternative endpoints
             if (baseUrl.Contains("api.openai.com"))
             {
@@ -27,7 +27,7 @@ public static class AIServicesConfigurationExtensions
             }
             client.BaseAddress = new Uri(baseUrl);
             client.Timeout = TimeSpan.FromSeconds(config?.TimeoutSeconds ?? 30);
-            
+
             // Add headers to bypass Cloudflare blocking
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
             client.DefaultRequestHeaders.Add("Accept", "application/json, text/plain, */*");
@@ -43,7 +43,7 @@ public static class AIServicesConfigurationExtensions
             client.DefaultRequestHeaders.Add("Sec-Ch-Ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"");
             client.DefaultRequestHeaders.Add("Sec-Ch-Ua-Mobile", "?0");
             client.DefaultRequestHeaders.Add("Sec-Ch-Ua-Platform", "\"macOS\"");
-            
+
             // Log the configuration for debugging
             Console.WriteLine($"AI Service HttpClient configured with BaseAddress: {baseUrl}");
         });
