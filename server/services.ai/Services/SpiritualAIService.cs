@@ -164,7 +164,8 @@ public class SpiritualAIService : ISpiritualAIService
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             _logger.LogInformation("Request payload: {Json}", json);
 
-            _httpClient.DefaultRequestHeaders.Clear();
+            // Remove existing Authorization header if present, then add new one
+            _httpClient.DefaultRequestHeaders.Remove("Authorization");
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
             _logger.LogInformation("Authorization header set");
 
@@ -244,7 +245,8 @@ public class SpiritualAIService : ISpiritualAIService
         var json = JsonConvert.SerializeObject(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        _httpClient.DefaultRequestHeaders.Clear();
+        // Remove existing Authorization header if present, then add new one
+        _httpClient.DefaultRequestHeaders.Remove("Authorization");
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
 
         var url = "chat/completions";
