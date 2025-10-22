@@ -118,14 +118,23 @@ public class SpiritualAIService : ISpiritualAIService
         try
         {
             _logger.LogInformation("=== IsServiceAvailableAsync START ===");
-            
+
             // Check if API key is configured
             if (string.IsNullOrEmpty(_config.OpenAIApiKey))
             {
                 _logger.LogWarning("OpenAI API key is not configured");
                 return false;
             }
-            _logger.LogInformation("API Key configured: {Length} chars", _config.OpenAIApiKey.Length);
+
+            // Validate API key format (OpenAI keys start with 'sk-')
+            if (!_config.OpenAIApiKey.StartsWith("sk-"))
+            {
+                _logger.LogWarning("OpenAI API key has invalid format. Expected to start with 'sk-', got: {KeyPrefix}",
+                    _config.OpenAIApiKey.Substring(0, Math.Min(10, _config.OpenAIApiKey.Length)));
+                return false;
+            }
+
+            _logger.LogInformation("API Key configured: {Length} chars, format valid", _config.OpenAIApiKey.Length);
 
             // Check if base URL is configured
             if (string.IsNullOrEmpty(_config.OpenAIBaseUrl))
