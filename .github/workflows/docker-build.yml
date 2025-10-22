@@ -95,13 +95,21 @@ jobs:
 
     - name: Update appsettings with OpenAI API Key
       run: |
+        # Escape special characters in the API key for sed
+        ESCAPED_KEY=$(printf '%s\n' "${{ secrets.OPENAI_API_KEY }}" | sed -e 's/[\/&]/\\&/g')
+
         # Update appsettings.json with OpenAI API key from secrets
-        sed -i "s/\"OpenAIApiKey\": \"\"/\"OpenAIApiKey\": \"${{ secrets.OPENAI_API_KEY }}\"/g" server/apis/appsettings.json
+        sed -i "s/\"OpenAIApiKey\": \"\"/\"OpenAIApiKey\": \"$ESCAPED_KEY\"/g" server/apis/appsettings.json
         echo "✅ OpenAI API key injected into appsettings.json"
 
         # Update appsettings.Development.json with OpenAI API key from secrets
-        sed -i "s/\"OpenAIApiKey\": \"your-openai-api-key-here\"/\"OpenAIApiKey\": \"${{ secrets.OPENAI_API_KEY }}\"/g" server/apis/appsettings.Development.json
+        sed -i "s/\"OpenAIApiKey\": \"your-openai-api-key-here\"/\"OpenAIApiKey\": \"$ESCAPED_KEY\"/g" server/apis/appsettings.Development.json
         echo "✅ OpenAI API key injected into appsettings.Development.json"
+
+        # Verify the key was injected
+        echo "📋 Verifying appsettings.json:"
+        grep -o '"OpenAIApiKey": "[^"]*"' server/apis/appsettings.json | head -c 50
+        echo "..."
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
