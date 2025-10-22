@@ -60,4 +60,9 @@ variable "target_group_arn" {
 variable "kms_key_arn" {
   description = "KMS key ARN for decrypting secrets"
   type        = string
-} 
+}
+
+variable "openai_api_key_secret_arn" {
+  description = "ARN of the OpenAI API key secret in AWS Secrets Manager"
+  type        = string
+}

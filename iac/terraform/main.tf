@@ -28,6 +28,15 @@ provider "aws" {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+# Retrieve OpenAI API key from AWS Secrets Manager
+data "aws_secretsmanager_secret" "openai_api_key" {
+  name = "guras/openai-api-key"
+}
+
+data "aws_secretsmanager_secret_version" "openai_api_key" {
+  secret_id = data.aws_secretsmanager_secret.openai_api_key.id
+}
+
 # VPC and Networking
 module "vpc" {
   source = "./modules/vpc"
@@ -99,7 +108,8 @@ module "ecs" {
   ecs_tasks_security_group_id = module.vpc.ecs_tasks_security_group_id
   target_group_arn = module.alb.target_group_arn
   kms_key_arn = module.rds.kms_key_arn
-  
+  openai_api_key_secret_arn = data.aws_secretsmanager_secret.openai_api_key.arn
+
   depends_on = [module.vpc, module.ecr, module.alb, module.rds]
 }
 

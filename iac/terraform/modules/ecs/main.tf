@@ -82,7 +82,7 @@ resource "aws_ecs_task_definition" "app" {
       secrets = [
         {
           name      = "AIServices__OpenAIApiKey"
-          valueFrom = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/openai-api-key"
+          valueFrom = var.openai_api_key_secret_arn
         }
       ]
 
