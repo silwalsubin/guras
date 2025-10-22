@@ -52,6 +52,37 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "ASPNETCORE_URLS"
           value = "http://+:80"
+        },
+        {
+          name  = "AIServices__OpenAIBaseUrl"
+          value = "https://api.openai.com/v1"
+        },
+        {
+          name  = "AIServices__DefaultModel"
+          value = "gpt-4"
+        },
+        {
+          name  = "AIServices__MaxTokens"
+          value = "500"
+        },
+        {
+          name  = "AIServices__Temperature"
+          value = "0.7"
+        },
+        {
+          name  = "AIServices__TimeoutSeconds"
+          value = "30"
+        },
+        {
+          name  = "AIServices__EnableFallback"
+          value = "true"
+        }
+      ]
+
+      secrets = [
+        {
+          name      = "AIServices__OpenAIApiKey"
+          valueFrom = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/openai-api-key"
         }
       ]
 
@@ -140,7 +171,8 @@ resource "aws_iam_policy" "ecs_execution_secrets_access" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = [
-          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/db-credentials-*"
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/db-credentials-*",
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:guras/openai-api-key"
         ]
       },
       {
