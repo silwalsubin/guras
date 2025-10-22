@@ -168,10 +168,10 @@ public class SpiritualAIService : ISpiritualAIService
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
             _logger.LogInformation("Authorization header set");
 
-            var url = "/chat/completions";
+            var url = "chat/completions";
             var fullUrl = _httpClient.BaseAddress + url;
             _logger.LogInformation("Making request to: {FullUrl}", fullUrl);
-            
+
             // Log DNS resolution for debugging
             try
             {
@@ -247,7 +247,7 @@ public class SpiritualAIService : ISpiritualAIService
         _httpClient.DefaultRequestHeaders.Clear();
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
 
-        var url = "/chat/completions";
+        var url = "chat/completions";
         _logger.LogInformation("Making OpenAI API request to: {BaseUrl}{Url}", _httpClient.BaseAddress, url);
         _logger.LogInformation("Request payload: {Json}", json);
 
