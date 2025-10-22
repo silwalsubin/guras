@@ -111,6 +111,33 @@ jobs:
         grep -o '"OpenAIApiKey": "[^"]*"' server/apis/appsettings.json | head -c 50
         echo "..."
 
+    - name: Store OpenAI API Key in AWS Secrets Manager
+      run: |
+        ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
+        SECRET_NAME="guras/openai-api-key"
+
+        echo "🔐 Storing OpenAI API key in AWS Secrets Manager..."
+        echo "📍 Environment: $ENVIRONMENT"
+        echo "📍 Secret name: $SECRET_NAME"
+
+        # Check if secret exists
+        if aws secretsmanager describe-secret --secret-id "$SECRET_NAME" --region ${{ env.AWS_REGION }} 2>/dev/null; then
+          echo "📝 Secret exists, updating..."
+          aws secretsmanager update-secret \
+            --secret-id "$SECRET_NAME" \
+            --secret-string "${{ secrets.OPENAI_API_KEY }}" \
+            --region ${{ env.AWS_REGION }}
+          echo "✅ Secret updated successfully"
+        else
+          echo "📝 Secret does not exist, creating..."
+          aws secretsmanager create-secret \
+            --name "$SECRET_NAME" \
+            --secret-string "${{ secrets.OPENAI_API_KEY }}" \
+            --region ${{ env.AWS_REGION }} \
+            --tags Key=Environment,Value=$ENVIRONMENT Key=Application,Value=guras
+          echo "✅ Secret created successfully"
+        fi
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
