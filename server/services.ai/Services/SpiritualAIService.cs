@@ -245,7 +245,10 @@ public class SpiritualAIService : ISpiritualAIService
     {
         var settings = new JsonSerializerSettings
         {
-            ContractResolver = new CamelCasePropertyNamesContractResolver()
+            ContractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new SnakeCaseNamingStrategy()
+            }
         };
         var json = JsonConvert.SerializeObject(request, settings);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -271,8 +274,15 @@ public class SpiritualAIService : ISpiritualAIService
 
         var responseContent = await response.Content.ReadAsStringAsync();
         _logger.LogInformation("OpenAI API success response received");
-        
-        var openAIResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseContent);
+
+        var deserializeSettings = new JsonSerializerSettings
+        {
+            ContractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new SnakeCaseNamingStrategy()
+            }
+        };
+        var openAIResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseContent, deserializeSettings);
 
         if (openAIResponse?.Choices?.Length == 0)
         {
