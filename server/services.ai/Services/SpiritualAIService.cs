@@ -170,13 +170,13 @@ public class SpiritualAIService : ISpiritualAIService
             _logger.LogInformation("Authorization header set");
 
             var url = "/chat/completions";
-            var fullUrl = _httpClient.BaseAddress + url;
+            var fullUrl = new Uri(_httpClient.BaseAddress!, url);
             _logger.LogInformation("Making request to: {FullUrl}", fullUrl);
 
             // Log DNS resolution for debugging
             try
             {
-                var host = new Uri(fullUrl).Host;
+                var host = fullUrl.Host;
                 var addresses = System.Net.Dns.GetHostAddresses(host);
                 _logger.LogInformation("DNS resolution for {Host}: {Addresses}", host, string.Join(", ", addresses.Select(a => a.ToString())));
             }
