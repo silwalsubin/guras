@@ -4,7 +4,7 @@ vpc_cidr = "10.0.0.0/16"
 availability_zones = ["us-east-1a", "us-east-1b"]
 
 # Application settings
-app_image_tag = "1.0.108"
+app_image_tag = "1.0.109"
 ecs_desired_count = 1
 ecs_cpu = 256
 ecs_memory = 512
