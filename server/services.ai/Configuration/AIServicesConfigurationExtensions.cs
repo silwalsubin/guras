@@ -16,15 +16,9 @@ public static class AIServicesConfigurationExtensions
         services.AddHttpClient<ISpiritualAIService, SpiritualAIService>(client =>
         {
             var config = configuration.GetSection("AIServices").Get<AIServicesConfiguration>();
-            // Try using a different endpoint to bypass Cloudflare blocking
-            var baseUrl = config?.OpenAIBaseUrl ?? "https://api.openai.com/v1";
+            // Use just the domain as base URL, with v1 included in the endpoint paths
+            var baseUrl = "https://api.openai.com";
 
-            // If the default URL is being blocked, try alternative endpoints
-            if (baseUrl.Contains("api.openai.com"))
-            {
-                // Try using a proxy service to bypass Cloudflare
-                baseUrl = "https://api.openai.com/v1";
-            }
             client.BaseAddress = new Uri(baseUrl);
             client.Timeout = TimeSpan.FromSeconds(config?.TimeoutSeconds ?? 30);
 

@@ -20,7 +20,7 @@ public class SpiritualAIServiceTests
         _config = new AIServicesConfiguration
         {
             OpenAIApiKey = "sk-test-key-12345",
-            OpenAIBaseUrl = "https://api.openai.com/v1",
+            OpenAIBaseUrl = "https://api.openai.com",
             DefaultModel = "gpt-4",
             MaxTokens = 500,
             Temperature = 0.7,
@@ -41,7 +41,7 @@ public class SpiritualAIServiceTests
         var invalidConfig = new AIServicesConfiguration
         {
             OpenAIApiKey = "invalid-key-without-sk-prefix",
-            OpenAIBaseUrl = "https://api.openai.com/v1",
+            OpenAIBaseUrl = "https://api.openai.com",
             DefaultModel = "gpt-4",
             MaxTokens = 500,
             Temperature = 0.7,
@@ -71,7 +71,7 @@ public class SpiritualAIServiceTests
         var invalidConfig = new AIServicesConfiguration
         {
             OpenAIApiKey = "",
-            OpenAIBaseUrl = "https://api.openai.com/v1",
+            OpenAIBaseUrl = "https://api.openai.com",
             DefaultModel = "gpt-4",
             MaxTokens = 500,
             Temperature = 0.7,
@@ -110,7 +110,7 @@ public class SpiritualAIServiceTests
 
         var httpClient = new HttpClient
         {
-            BaseAddress = new Uri("https://api.openai.com/v1"),
+            BaseAddress = new Uri("https://api.openai.com"),
             Timeout = TimeSpan.FromSeconds(invalidConfig.TimeoutSeconds)
         };
 
@@ -128,8 +128,8 @@ public class SpiritualAIServiceTests
     public void UriConstruction_WithBaseAddressAndRelativePath_ConstructsCorrectUrl()
     {
         // Arrange
-        var baseAddress = new Uri("https://api.openai.com/v1/");
-        var relativePath = "chat/completions";
+        var baseAddress = new Uri("https://api.openai.com");
+        var relativePath = "v1/chat/completions";
 
         // Act
         var fullUrl = new Uri(baseAddress, relativePath);
@@ -142,8 +142,8 @@ public class SpiritualAIServiceTests
     public void UriConstruction_WithTrailingSlashInBase_ConstructsCorrectUrl()
     {
         // Arrange
-        var baseAddress = new Uri("https://api.openai.com/v1/");
-        var relativePath = "chat/completions";
+        var baseAddress = new Uri("https://api.openai.com/");
+        var relativePath = "v1/chat/completions";
 
         // Act
         var fullUrl = new Uri(baseAddress, relativePath);
@@ -156,8 +156,8 @@ public class SpiritualAIServiceTests
     public void UriConstruction_ExtractsHostCorrectly()
     {
         // Arrange
-        var baseAddress = new Uri("https://api.openai.com/v1/");
-        var relativePath = "chat/completions";
+        var baseAddress = new Uri("https://api.openai.com");
+        var relativePath = "v1/chat/completions";
         var fullUrl = new Uri(baseAddress, relativePath);
 
         // Act

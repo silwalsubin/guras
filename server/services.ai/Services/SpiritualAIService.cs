@@ -169,7 +169,7 @@ public class SpiritualAIService : ISpiritualAIService
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
             _logger.LogInformation("Authorization header set");
 
-            var url = "/chat/completions";
+            var url = "v1/chat/completions";
             var fullUrl = new Uri(_httpClient.BaseAddress!, url);
             _logger.LogInformation("Making request to: {FullUrl}", fullUrl);
 
@@ -249,8 +249,8 @@ public class SpiritualAIService : ISpiritualAIService
         _httpClient.DefaultRequestHeaders.Remove("Authorization");
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
 
-        var url = "chat/completions";
-        _logger.LogInformation("Making OpenAI API request to: {BaseUrl}{Url}", _httpClient.BaseAddress, url);
+        var url = "v1/chat/completions";
+        _logger.LogInformation("Making OpenAI API request to: {BaseUrl}/{Url}", _httpClient.BaseAddress, url);
         _logger.LogInformation("Request payload: {Json}", json);
 
         var response = await _httpClient.PostAsync(url, content);
