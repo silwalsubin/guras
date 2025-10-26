@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using services.ai.Configuration;
 using services.ai.Domain;
 using System.Text;
@@ -242,7 +243,11 @@ public class SpiritualAIService : ISpiritualAIService
 
     private async Task<AIResponse> CallOpenAIAsync(OpenAIRequest request)
     {
-        var json = JsonConvert.SerializeObject(request);
+        var settings = new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver()
+        };
+        var json = JsonConvert.SerializeObject(request, settings);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // Remove existing Authorization header if present, then add new one
