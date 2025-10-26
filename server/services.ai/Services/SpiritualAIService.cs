@@ -249,7 +249,7 @@ public class SpiritualAIService : ISpiritualAIService
         _httpClient.DefaultRequestHeaders.Remove("Authorization");
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_config.OpenAIApiKey}");
 
-        var url = "/chat/completions";
+        var url = "chat/completions";
         _logger.LogInformation("Making OpenAI API request to: {BaseUrl}{Url}", _httpClient.BaseAddress, url);
         _logger.LogInformation("Request payload: {Json}", json);
 

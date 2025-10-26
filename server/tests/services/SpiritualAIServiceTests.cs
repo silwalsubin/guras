@@ -156,8 +156,8 @@ public class SpiritualAIServiceTests
     public void UriConstruction_ExtractsHostCorrectly()
     {
         // Arrange
-        var baseAddress = new Uri("https://api.openai.com/v1");
-        var relativePath = "/chat/completions";
+        var baseAddress = new Uri("https://api.openai.com/v1/");
+        var relativePath = "chat/completions";
         var fullUrl = new Uri(baseAddress, relativePath);
 
         // Act
