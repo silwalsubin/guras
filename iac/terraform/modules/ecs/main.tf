@@ -55,7 +55,7 @@ resource "aws_ecs_task_definition" "app" {
         },
         {
           name  = "AIServices__OpenAIBaseUrl"
-          value = "https://api.openai.com/v1"
+          value = "https://api.openai.com"
         },
         {
           name  = "AIServices__DefaultModel"

@@ -347,7 +347,7 @@ public class AITestController : BaseController
             var json = System.Text.Json.JsonSerializer.Serialize(testRequest);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            var openAIUrl = $"{_aiConfig.OpenAIBaseUrl}/chat/completions";
+            var openAIUrl = $"{_aiConfig.OpenAIBaseUrl}/v1/chat/completions";
             var response = await httpClient.PostAsync(openAIUrl, content);
 
             results.Add(new TestResult
