@@ -3,8 +3,16 @@ name: Run Unit Tests
 on:
   push:
     branches: [ '**' ]
+    paths:
+      - 'server/**'
+      - 'database/**'
+      - '.github/workflows/test.yml'
   pull_request:
     branches: [ '**' ]
+    paths:
+      - 'server/**'
+      - 'database/**'
+      - '.github/workflows/test.yml'
   workflow_dispatch:
 
 jobs:
