@@ -11,7 +11,6 @@ import { RootState, AppDispatch } from '@/store';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { COLORS } from '@/config/colors';
 import { AppHeader } from '@/components/shared';
-import QuotesView from './quotes-list/index';
 import AIRecommendedQuote from '@/components/meditation/AIRecommendedQuote';
 import RecommendationsList from '@/components/meditation/RecommendationsList';
 import { fetchRecommendations } from '@/store/recommendationSlice';
@@ -90,11 +89,6 @@ const HomeScreen: React.FC = () => {
         />
       </View>
 
-      {/* Daily Wisdom */}
-      <View style={styles.quoteSection}>
-        <QuotesView />
-      </View>
-
       {/* Personalized Recommendations */}
       <View style={styles.recommendationsSection}>
         <RecommendationsList
@@ -121,11 +115,6 @@ const styles = StyleSheet.create({
     // Don't center all content - let individual sections handle their own alignment
   },
   aiQuoteSection: {
-    paddingHorizontal: 0,
-    marginBottom: 12,
-    width: '100%',
-  },
-  quoteSection: {
     paddingHorizontal: 0,
     marginBottom: 20,
     width: '100%',
