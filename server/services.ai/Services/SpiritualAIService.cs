@@ -274,6 +274,8 @@ public class SpiritualAIService : ISpiritualAIService
 
         var responseContent = await response.Content.ReadAsStringAsync();
         _logger.LogInformation("OpenAI API success response received");
+        _logger.LogInformation("Response content length: {Length}", responseContent.Length);
+        _logger.LogInformation("Response content (first 500 chars): {Content}", responseContent.Substring(0, Math.Min(500, responseContent.Length)));
 
         var deserializeSettings = new JsonSerializerSettings
         {
@@ -282,7 +284,19 @@ public class SpiritualAIService : ISpiritualAIService
                 NamingStrategy = new SnakeCaseNamingStrategy()
             }
         };
-        var openAIResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseContent, deserializeSettings);
+
+        OpenAIResponse? openAIResponse;
+        try
+        {
+            openAIResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseContent, deserializeSettings);
+            _logger.LogInformation("Successfully deserialized OpenAI response");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Failed to deserialize OpenAI response: {Error}", ex.Message);
+            _logger.LogError("Full response content: {Content}", responseContent);
+            throw;
+        }
 
         if (openAIResponse?.Choices?.Length == 0)
         {
@@ -290,7 +304,7 @@ public class SpiritualAIService : ISpiritualAIService
         }
 
         var aiResponse = openAIResponse!.Choices[0].Message.Content;
-        
+
         // Parse the AI response to extract structured data
         return ParseAIResponse(aiResponse);
     }
