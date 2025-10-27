@@ -9,6 +9,7 @@ COPY services.users/services.users.csproj services.users/
 COPY services.teachers/services.teachers.csproj services.teachers/
 COPY services.ai/services.ai.csproj services.ai/
 COPY services.meditation/services.meditation.csproj services.meditation/
+COPY services.journal/services.journal.csproj services.journal/
 COPY orchestration/orchestration.csproj orchestration/
 COPY utilities.aws/utilities.aws.csproj utilities.aws/
 COPY utilities/utilities.csproj utilities/
@@ -25,6 +26,7 @@ COPY services.users/ services.users/
 COPY services.teachers/ services.teachers/
 COPY services.ai/ services.ai/
 COPY services.meditation/ services.meditation/
+COPY services.journal/ services.journal/
 COPY orchestration/ orchestration/
 COPY utilities/ utilities/
 COPY utilities.aws/ utilities.aws/
