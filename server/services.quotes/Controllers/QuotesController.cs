@@ -135,12 +135,12 @@ public class QuotesController : BaseController
             };
 
             _logger.LogInformation("AI-recommended quote: \"{QuoteText}\" by {Author}", quote.Text, quote.Author);
-            return Ok(recommendedQuote);
+            return SuccessResponse(recommendedQuote);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving AI-recommended quote");
-            return StatusCode(500, "An error occurred while retrieving AI-recommended quote");
+            return ErrorResponse("An error occurred while retrieving AI-recommended quote", 500);
         }
     }
 
