@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getThemeColors } from '@/config/colors';
@@ -14,24 +14,11 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const themeColors = getThemeColors(isDarkMode);
 
-  const scrollAnim = useRef(new Animated.Value(0)).current;
-  const titleWidth = useRef(0);
-  const containerWidth = useRef(0);
-  const animationStarted = useRef(false);
 
-  const formatDate = (dateString: string) => {
+
+  const formatTime = (dateString: string) => {
     const d = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (d.toDateString() === today.toDateString()) {
-      return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    } else if (d.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   const getMoodColor = (mood?: string) => {
@@ -49,75 +36,40 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
 
 
 
-  const startScrollAnimation = () => {
-    if (animationStarted.current || titleWidth.current <= containerWidth.current) {
-      return;
-    }
 
-    animationStarted.current = true;
-    const scrollDistance = titleWidth.current - containerWidth.current + 20;
-    const duration = scrollDistance * 30;
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.delay(1000),
-        Animated.timing(scrollAnim, {
-          toValue: -scrollDistance,
-          duration,
-          useNativeDriver: true,
-        }),
-        Animated.delay(500),
-        Animated.timing(scrollAnim, {
-          toValue: 0,
-          duration,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  };
-
-  useEffect(() => {
-    startScrollAnimation();
-  }, []);
 
   return (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: themeColors.cardBackground }]}
-      onPress={() => onPress(entry)}
-      activeOpacity={0.7}
-    >
+    <>
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: themeColors.cardBackground }]}
+        onPress={() => onPress(entry)}
+        activeOpacity={0.7}
+      >
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <View style={[styles.moodIndicator, { backgroundColor: getMoodColor(entry.mood) }]} />
           <View style={{ flex: 1 }}>
-            <View
-              style={styles.titleWrapper}
-              onLayout={(e) => {
-                containerWidth.current = e.nativeEvent.layout.width;
-                startScrollAnimation();
-              }}
+            <Text
+              style={[styles.title, { color: themeColors.textPrimary }]}
+              numberOfLines={0}
             >
-              <Animated.Text
-                style={[
-                  styles.title,
-                  { color: themeColors.textPrimary },
-                  { transform: [{ translateX: scrollAnim }] },
-                ]}
-                onLayout={(e) => {
-                  titleWidth.current = e.nativeEvent.layout.width;
-                }}
-                numberOfLines={1}
-              >
-                {entry.title}
-              </Animated.Text>
-            </View>
-            <Text style={[styles.moodLabel, { color: themeColors.textSecondary }]}>
-              {entry.mood || 'Analyzing mood...'}
+              {entry.title}
             </Text>
+            {entry.mood && (
+              <View
+                style={[
+                  styles.moodBadge,
+                  { backgroundColor: getMoodColor(entry.mood) },
+                ]}
+              >
+                <Text style={styles.moodBadgeText}>
+                  {entry.mood}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
         <Text style={[styles.date, { color: themeColors.textSecondary }]}>
-          {formatDate(entry.createdAt)}
+          {formatTime(entry.createdAt)}
         </Text>
       </View>
 
@@ -140,16 +92,18 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
           )}
         </View>
       )}
-    </TouchableOpacity>
+      </TouchableOpacity>
+      <View style={[styles.separator, { backgroundColor: themeColors.border }]} />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
-    padding: 16,
+    padding: 12,
     marginHorizontal: 16,
-    marginVertical: 8,
+    marginVertical: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -169,31 +123,32 @@ const styles = StyleSheet.create({
     marginRight: 12,
     gap: 10,
   },
-  moodIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 6,
-    flexShrink: 0,
-  },
-  titleWrapper: {
-    overflow: 'hidden',
-    width: '100%',
-  },
   title: {
     fontSize: 16,
     fontWeight: '600',
     lineHeight: 22,
-    flexWrap: 'nowrap',
   },
-  moodLabel: {
-    fontSize: 12,
-    marginTop: 4,
+  moodBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 6,
+  },
+  moodBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF',
     textTransform: 'capitalize',
   },
   date: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  separator: {
+    height: 1,
+    marginHorizontal: 16,
+    marginVertical: 4,
   },
   tagsContainer: {
     flexDirection: 'row',

@@ -19,9 +19,9 @@ const initialState: JournalState = {
 // Async thunks
 export const fetchJournalEntries = createAsyncThunk(
   'journal/fetchEntries',
-  async (userId: string, { rejectWithValue }) => {
+  async ({ userId, search }: { userId: string; search?: string }, { rejectWithValue }) => {
     try {
-      const response = await journalApi.getEntries(userId);
+      const response = await journalApi.getEntries(userId, 1, 20, search);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch journal entries');

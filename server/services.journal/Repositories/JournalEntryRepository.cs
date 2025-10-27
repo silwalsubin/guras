@@ -68,9 +68,9 @@ public class JournalEntryRepository : IJournalEntryRepository
         return entry;
     }
 
-    public async Task<IEnumerable<JournalEntry>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20)
+    public async Task<IEnumerable<JournalEntry>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20, string? search = null)
     {
-        const string sql = @"
+        var sql = @"
             SELECT
                 id as Id,
                 user_id as UserId,
@@ -83,16 +83,28 @@ public class JournalEntryRepository : IJournalEntryRepository
                 updated_at as UpdatedAt,
                 is_deleted as IsDeleted
             FROM journal_entries
-            WHERE user_id = @UserId AND is_deleted = false
-            ORDER BY created_at DESC
+            WHERE user_id = @UserId AND is_deleted = false";
+
+        // Add search filter if provided
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            sql += @" AND (
+                LOWER(title) LIKE LOWER(@SearchTerm) OR
+                LOWER(content) LIKE LOWER(@SearchTerm)
+            )";
+        }
+
+        sql += @" ORDER BY created_at DESC
             LIMIT @PageSize OFFSET @Offset";
 
         var offset = (page - 1) * pageSize;
+        var searchTerm = string.IsNullOrWhiteSpace(search) ? null : $"%{search}%";
 
         using var connection = await _connectionFactory.GetConnectionAsync();
         var entries = await connection.QueryAsync<JournalEntry>(sql, new
         {
             UserId = userId,
+            SearchTerm = searchTerm,
             PageSize = pageSize,
             Offset = offset
         });
@@ -105,6 +117,7 @@ public class JournalEntryRepository : IJournalEntryRepository
         const string sql = @"
             UPDATE journal_entries
             SET
+                title = COALESCE(@Title, title),
                 content = COALESCE(@Content, content),
                 mood = COALESCE(@Mood, mood),
                 mood_score = COALESCE(@MoodScore, mood_score),
@@ -118,6 +131,7 @@ public class JournalEntryRepository : IJournalEntryRepository
         var journalEntry = await connection.QuerySingleOrDefaultAsync<JournalEntry>(sql, new
         {
             Id = id,
+            request.Title,
             request.Content,
             Mood = mood,
             MoodScore = moodScore,

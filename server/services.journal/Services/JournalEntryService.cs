@@ -67,11 +67,11 @@ public class JournalEntryService : IJournalEntryService
         }
     }
 
-    public async Task<IEnumerable<JournalEntryResponse>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20)
+    public async Task<IEnumerable<JournalEntryResponse>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20, string? search = null)
     {
         try
         {
-            var journalEntries = await _repository.GetByUserIdAsync(userId, page, pageSize);
+            var journalEntries = await _repository.GetByUserIdAsync(userId, page, pageSize, search);
             return journalEntries.Select(MapToResponse);
         }
         catch (Exception ex)

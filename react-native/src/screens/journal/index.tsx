@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  TextInput,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
@@ -15,6 +16,7 @@ import { fetchJournalEntries, selectEntry } from '@/store/journalSlice';
 import { setJournalCreateOpen } from '@/store/bottomNavSlice';
 import JournalEntryCard from '@/components/journal/JournalEntryCard';
 import JournalCreateScreen from './JournalCreateScreen';
+import JournalEditScreen from './JournalEditScreen';
 import { JournalEntry } from '@/types/journal';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,10 +28,12 @@ const JournalScreen: React.FC = () => {
   const brandColors = getBrandColors();
 
   const { user } = useAuth();
-  const { entries, isLoading, error } = useSelector((state: RootState) => state.journal);
+  const { entries, selectedEntry, isLoading, error } = useSelector((state: RootState) => state.journal);
 
   const [showCreateScreen, setShowCreateScreen] = useState(false);
+  const [showEditScreen, setShowEditScreen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (user?.uid) {
@@ -40,11 +44,11 @@ const JournalScreen: React.FC = () => {
     }
   }, [user?.uid]);
 
-  const loadEntries = async () => {
+  const loadEntries = async (search?: string) => {
     if (user?.uid) {
-      console.log('📔 Journal: Fetching entries for user:', user.uid);
+      console.log('📔 Journal: Fetching entries for user:', user.uid, search ? `with search: ${search}` : '');
       try {
-        await dispatch(fetchJournalEntries(user.uid));
+        await dispatch(fetchJournalEntries({ userId: user.uid, search }));
       } catch (err) {
         console.error('📔 Journal: Error loading entries:', err);
       }
@@ -59,9 +63,45 @@ const JournalScreen: React.FC = () => {
     setRefreshing(false);
   };
 
+  // Group entries by date
+  const groupEntriesByDate = (entries: JournalEntry[]) => {
+    const grouped: { [key: string]: JournalEntry[] } = {};
+
+    entries.forEach((entry) => {
+      const date = new Date(entry.createdAt);
+      const dateKey = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(entry);
+    });
+
+    // Convert to array and sort by date (newest first)
+    return Object.entries(grouped)
+      .sort(([dateA], [dateB]) => {
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      })
+      .map(([date, items]) => ({ date, items }));
+  };
+
+  const groupedEntries = groupEntriesByDate(entries);
+
   const handleEntryPress = (entry: JournalEntry) => {
     dispatch(selectEntry(entry));
-    // TODO: Navigate to entry detail screen in Phase 2
+    setShowEditScreen(true);
+    dispatch(setJournalCreateOpen(true)); // Hide bottom nav
+  };
+
+  const handleEditClose = () => {
+    setShowEditScreen(false);
+    dispatch(selectEntry(null));
+    dispatch(setJournalCreateOpen(false)); // Show bottom nav
+    loadEntries(); // Refresh list after editing entry
   };
 
   const handleCreateClose = () => {
@@ -100,6 +140,11 @@ const JournalScreen: React.FC = () => {
     </View>
   );
 
+  // If edit screen is open, show it full screen
+  if (showEditScreen && selectedEntry) {
+    return <JournalEditScreen entry={selectedEntry} onClose={handleEditClose} />;
+  }
+
   // If create screen is open, show it full screen
   if (showCreateScreen) {
     return <JournalCreateScreen onClose={handleCreateClose} />;
@@ -110,6 +155,27 @@ const JournalScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.headerContainer}>
         <Text style={[styles.title, { color: themeColors.textPrimary }]}>Journal</Text>
+      </View>
+
+      {/* Search Input */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={[
+            styles.searchInput,
+            {
+              backgroundColor: themeColors.cardBackground,
+              color: themeColors.textPrimary,
+              borderColor: themeColors.border,
+            },
+          ]}
+          placeholder="Search by title or content..."
+          placeholderTextColor={themeColors.textSecondary}
+          value={searchQuery}
+          onChangeText={(text) => {
+            setSearchQuery(text);
+            loadEntries(text);
+          }}
+        />
       </View>
 
       {/* Content */}
@@ -123,10 +189,25 @@ const JournalScreen: React.FC = () => {
         renderEmptyState()
       ) : (
         <FlatList
-          data={entries}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <JournalEntryCard entry={item} onPress={handleEntryPress} />
+          data={groupedEntries}
+          keyExtractor={(item) => item.date}
+          renderItem={({ item: group }) => (
+            <View>
+              {/* Date Header */}
+              <View style={styles.dateHeaderContainer}>
+                <Text style={[styles.dateHeader, { color: themeColors.textSecondary }]}>
+                  {group.date}
+                </Text>
+              </View>
+              {/* Entries for this date */}
+              {group.items.map((entry) => (
+                <JournalEntryCard
+                  key={entry.id}
+                  entry={entry}
+                  onPress={handleEntryPress}
+                />
+              ))}
+            </View>
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -171,6 +252,17 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingVertical: 8,
+  },
+  dateHeaderContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingTop: 12,
+  },
+  dateHeader: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   loadingContainer: {
     flex: 1,
@@ -218,6 +310,17 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
+    fontSize: 14,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     fontSize: 14,
   },
   fab: {

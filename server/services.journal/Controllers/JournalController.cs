@@ -50,7 +50,7 @@ public class JournalController(IJournalEntryService journalEntryService, ILogger
     /// Get all journal entries for the current user
     /// </summary>
     [HttpGet("entries")]
-    public async Task<IActionResult> GetEntries([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetEntries([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null)
     {
         try
         {
@@ -63,9 +63,9 @@ public class JournalController(IJournalEntryService journalEntryService, ILogger
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
-            logger.LogInformation("Fetching journal entries for user: {UserId}, page: {Page}, pageSize: {PageSize}", userId, page, pageSize);
+            logger.LogInformation("Fetching journal entries for user: {UserId}, page: {Page}, pageSize: {PageSize}, search: {Search}", userId, page, pageSize, search);
 
-            var entries = await journalEntryService.GetByUserIdAsync(userId, page, pageSize);
+            var entries = await journalEntryService.GetByUserIdAsync(userId, page, pageSize, search);
             return Ok(entries);
         }
         catch (Exception ex)

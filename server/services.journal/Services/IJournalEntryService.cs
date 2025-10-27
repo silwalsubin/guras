@@ -10,7 +10,7 @@ public interface IJournalEntryService
 {
     Task<JournalEntryResponse> CreateAsync(Guid userId, CreateJournalEntryRequest request);
     Task<JournalEntryResponse?> GetByIdAsync(Guid id);
-    Task<IEnumerable<JournalEntryResponse>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20);
+    Task<IEnumerable<JournalEntryResponse>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20, string? search = null);
     Task<JournalEntryResponse?> UpdateAsync(Guid id, UpdateJournalEntryRequest request);
     Task<bool> DeleteAsync(Guid id);
 }

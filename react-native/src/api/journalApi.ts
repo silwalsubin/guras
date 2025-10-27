@@ -14,13 +14,16 @@ export const journalApi = {
   /**
    * Get all journal entries for a user
    */
-  async getEntries(userId: string, page: number = 1, pageSize: number = 20): Promise<JournalEntry[]> {
+  async getEntries(userId: string, page: number = 1, pageSize: number = 20, search?: string): Promise<JournalEntry[]> {
     try {
-      console.log('📖 Fetching journal entries for user:', userId);
+      console.log('📖 Fetching journal entries for user:', userId, search ? `with search: ${search}` : '');
 
-      const response = await apiService.makeRequest<JournalEntryResponse[]>(
-        `/api/journal/entries?page=${page}&pageSize=${pageSize}`
-      );
+      let url = `/api/journal/entries?page=${page}&pageSize=${pageSize}`;
+      if (search && search.trim()) {
+        url += `&search=${encodeURIComponent(search.trim())}`;
+      }
+
+      const response = await apiService.makeRequest<JournalEntryResponse[]>(url);
 
       if (response.success && response.data) {
         console.log('✅ Entries fetched successfully:', response.data.length);
