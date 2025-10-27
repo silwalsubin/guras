@@ -262,126 +262,46 @@ class ApiService {
     return this.makeRequest<any>('/api/spiritualai/stats');
   }
 
-  // AI Test methods (no authentication required)
-  async testAIChat(message: string): Promise<ApiResponse<{
-    message: string;
-    response: string;
-    source: string;
-    confidence: number;
-    processingTimeMs: number;
-    timestamp: string;
-  }>> {
-    return this.makeRequest<{
-      message: string;
-      response: string;
-      source: string;
-      confidence: number;
-      processingTimeMs: number;
-      timestamp: string;
-    }>('/api/aitest/chat', {
-      method: 'POST',
-      body: JSON.stringify({ message })
-    });
+
+
+  // Meditation Recommendation methods
+  async getPersonalizedRecommendations(count: number = 3): Promise<ApiResponse<any[]>> {
+    return this.makeRequest<any[]>(
+      `/api/meditationrecommendation/personalized?count=${count}`
+    );
   }
 
-  async testAIHealth(): Promise<ApiResponse<{
-    isAvailable: boolean;
-    stats: any;
-    timestamp: string;
-    message: string;
-    apiKeyStatus: string;
-    apiKeyLength: number;
-    configInfo: {
-      model: string;
-      baseUrl: string;
-      maxTokens: number;
-      temperature: number;
-      enableFallback: boolean;
-    };
-  }>> {
-    return this.makeRequest<{
-      isAvailable: boolean;
-      stats: any;
-      timestamp: string;
-      message: string;
-      apiKeyStatus: string;
-      apiKeyLength: number;
-      configInfo: {
-        model: string;
-        baseUrl: string;
-        maxTokens: number;
-        temperature: number;
-        enableFallback: boolean;
-      };
-    }>('/api/aitest/health');
+  async getRecommendationReason(sessionTitle: string): Promise<ApiResponse<{ sessionTitle: string; reason: string }>> {
+    return this.makeRequest<{ sessionTitle: string; reason: string }>(
+      `/api/meditationrecommendation/reason?sessionTitle=${encodeURIComponent(sessionTitle)}`
+    );
   }
 
-  async testAIPing(): Promise<ApiResponse<{
-    message: string;
-    timestamp: string;
-  }>> {
-    return this.makeRequest<{
-      message: string;
-      timestamp: string;
-    }>('/api/aitest/ping');
+  // AI-Recommended Quote methods
+  async getAIRecommendedQuote(): Promise<ApiResponse<any>> {
+    return this.makeRequest<any>('/api/quotes/ai-recommended');
   }
 
-  async testAIDetailed(): Promise<ApiResponse<{
-    timestamp: string;
-    configuration: {
-      apiKeyStatus: string;
-      apiKeyLength: number;
-      baseUrl: string;
-      model: string;
-      maxTokens: number;
-      temperature: number;
-      enableFallback: boolean;
-    };
-    tests: Array<{
-      test: string;
-      status: string;
-      details: string;
-      errors: string[];
-      response?: any;
-      innerException?: string;
-      stackTrace?: string;
-    }>;
-    summary: {
-      totalTests: number;
-      passedTests: number;
-      failedTests: number;
-      errorTests: number;
-      overallStatus: string;
-    };
-  }>> {
-    return this.makeRequest<{
-      timestamp: string;
-      configuration: {
-        apiKeyStatus: string;
-        apiKeyLength: number;
-        baseUrl: string;
-        model: string;
-        maxTokens: number;
-        temperature: number;
-        enableFallback: boolean;
-      };
-      tests: Array<{
-        test: string;
-        status: string;
-        details: string;
-        errors: string[];
-        response?: any;
-        innerException?: string;
-        stackTrace?: string;
-      }>;
-      summary: {
-        totalTests: number;
-        passedTests: number;
-        failedTests: number;
-        errorTests: number;
-        overallStatus: string;
-      };
-    }>('/api/aitest/detailed-test');
+  async getRecommendationsByTime(timeOfDay: string, count: number = 3): Promise<ApiResponse<any[]>> {
+    return this.makeRequest<any[]>(
+      `/api/meditationrecommendation/by-time?timeOfDay=${encodeURIComponent(timeOfDay)}&count=${count}`
+    );
+  }
+
+  async getRecommendationsByEmotion(emotionalState: string, count: number = 3): Promise<ApiResponse<any[]>> {
+    return this.makeRequest<any[]>(
+      `/api/meditationrecommendation/by-emotion?emotionalState=${encodeURIComponent(emotionalState)}&count=${count}`
+    );
+  }
+
+  async logRecommendationEvent(event: any): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest<{ message: string }>(
+      '/api/meditationanalytics/recommendation-event',
+      {
+        method: 'POST',
+        body: JSON.stringify(event)
+      }
+    );
   }
 }
 

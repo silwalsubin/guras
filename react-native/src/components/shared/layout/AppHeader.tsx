@@ -5,7 +5,6 @@ import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import { RootState } from '@/store';
 import { useAuth } from '@/contexts/AuthContext';
-import AITestButton from '../AITestButton';
 
 interface AppHeaderProps {
   onProfilePress: () => void;
@@ -29,8 +28,7 @@ const AppHeader = ({ onProfilePress }: AppHeaderProps) => {
       </View>
       
       <View style={styles.rightContainer}>
-        <AITestButton />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.profileButton, { backgroundColor: themeColors.border }]}
           onPress={onProfilePress}
         >

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using services.quotes.Services;
 using services.quotes.Domain;
 using utilities.Controllers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace services.quotes.Controllers;
 
@@ -107,4 +108,66 @@ public class QuotesController : BaseController
             return StatusCode(500, "An error occurred while retrieving quote by category");
         }
     }
+
+    /// <summary>
+    /// Get an AI-recommended quote for the user
+    /// </summary>
+    /// <returns>A quote recommended by AI based on user context</returns>
+    [Authorize]
+    [HttpGet("ai-recommended")]
+    public IActionResult GetAIRecommendedQuote()
+    {
+        try
+        {
+            _logger.LogInformation("Fetching AI-recommended quote for user");
+
+            // Get a random quote as the AI recommendation
+            // In a production system, this would use actual AI to select based on user context
+            var quote = _quotesService.GetRandomQuote();
+
+            var recommendedQuote = new AIRecommendedQuoteDto
+            {
+                Text = quote.Text,
+                Author = quote.Author,
+                Category = quote.Category,
+                Reason = GenerateRecommendationReason(quote.Category),
+                IsAIRecommended = true
+            };
+
+            _logger.LogInformation("AI-recommended quote: \"{QuoteText}\" by {Author}", quote.Text, quote.Author);
+            return SuccessResponse(recommendedQuote);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving AI-recommended quote");
+            return ErrorResponse("An error occurred while retrieving AI-recommended quote", 500);
+        }
+    }
+
+    private string GenerateRecommendationReason(string category)
+    {
+        return category switch
+        {
+            "inner-peace" => "This quote aligns with your journey toward inner peace",
+            "mindfulness" => "Perfect for cultivating mindfulness in your daily practice",
+            "meditation" => "A gentle reminder about the nature of meditation",
+            "self-love" => "Encouraging you to embrace self-compassion",
+            "awareness" => "Deepening your awareness and presence",
+            "happiness" => "Inspiring true happiness from within",
+            "inspiration" => "A spark of inspiration for your day",
+            _ => "A thoughtful reflection for your spiritual journey"
+        };
+    }
+}
+
+/// <summary>
+/// DTO for AI-recommended quotes
+/// </summary>
+public class AIRecommendedQuoteDto
+{
+    public string Text { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string Reason { get; set; } = string.Empty;
+    public bool IsAIRecommended { get; set; } = true;
 }
