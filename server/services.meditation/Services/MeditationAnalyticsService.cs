@@ -248,9 +248,9 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
 
             return new MeditationStatsDto
             {
-                TotalSessions = result.total_sessions ?? 0,
-                CompletedSessions = result.completed_sessions ?? 0,
-                TotalMinutes = (result.total_minutes_seconds ?? 0) / 60,
+                TotalSessions = (int)(result.total_sessions ?? 0L),
+                CompletedSessions = (int)(result.completed_sessions ?? 0L),
+                TotalMinutes = (int)((result.total_minutes_seconds ?? 0L) / 60),
                 AverageCompletionPercentage = result.avg_completion_percentage ?? 0,
                 AverageRating = result.avg_rating ?? 0,
                 AverageMoodImprovement = result.avg_mood_improvement ?? 0

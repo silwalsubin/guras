@@ -31,6 +31,14 @@ public class MeditationRecommendationController : ControllerBase
     /// </summary>
     private Guid GetUserId()
     {
+        // Try to get application user ID first (database user ID)
+        var applicationUserIdClaim = User.FindFirst("application_user_id")?.Value;
+        if (!string.IsNullOrWhiteSpace(applicationUserIdClaim) && Guid.TryParse(applicationUserIdClaim, out var applicationUserId))
+        {
+            return applicationUserId;
+        }
+
+        // Fallback to NameIdentifier (Firebase UID) - but this won't be a GUID
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
         {
