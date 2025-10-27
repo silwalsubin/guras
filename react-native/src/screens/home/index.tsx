@@ -12,6 +12,7 @@ import { RefreshUtils } from '@/utils/refreshUtils';
 import { COLORS } from '@/config/colors';
 import { AppHeader } from '@/components/shared';
 import QuotesView from './quotes-list/index';
+import AIRecommendedQuote from '@/components/meditation/AIRecommendedQuote';
 import RecommendationsList from '@/components/meditation/RecommendationsList';
 import { fetchRecommendations } from '@/store/recommendationSlice';
 import { MeditationRecommendation } from '@/components/meditation/RecommendationCard';
@@ -82,6 +83,13 @@ const HomeScreen: React.FC = () => {
         onProfilePress={handleProfilePress}
       />
 
+      {/* AI-Recommended Quote */}
+      <View style={styles.aiQuoteSection}>
+        <AIRecommendedQuote
+          onRefresh={() => dispatch(fetchRecommendations(3))}
+        />
+      </View>
+
       {/* Daily Wisdom */}
       <View style={styles.quoteSection}>
         <QuotesView />
@@ -111,6 +119,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     // Don't center all content - let individual sections handle their own alignment
+  },
+  aiQuoteSection: {
+    paddingHorizontal: 0,
+    marginBottom: 12,
+    width: '100%',
   },
   quoteSection: {
     paddingHorizontal: 0,
