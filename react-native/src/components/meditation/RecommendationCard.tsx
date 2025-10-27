@@ -240,17 +240,18 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
+    marginHorizontal: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
   header: {
     flexDirection: 'row',
@@ -264,81 +265,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   themeIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-  },
-  titleText: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  reason: {
-    fontSize: 12,
-    fontWeight: '400',
-  },
-  recommendedBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  metadataRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
-  },
-  metadataItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  metadataText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  difficultyBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  difficultyText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  themeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  themeText: {
-    fontSize: 11,
-    fontWeight: '500',
-    textTransform: 'capitalize',
-  },
-  ctaContainer: {
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  ctaText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  // Compact styles
-  compactContainer: {
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
+    marginRight: 14,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -346,7 +278,94 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.08,
     shadowRadius: 2,
-    elevation: 2,
+    elevation: 1,
+  },
+  titleText: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  reason: {
+    fontSize: 13,
+    fontWeight: '400',
+    lineHeight: 18,
+  },
+  recommendedBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  metadataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+    gap: 10,
+  },
+  metadataItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  metadataText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  difficultyBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 7,
+  },
+  difficultyText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  themeBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 7,
+  },
+  themeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  ctaContainer: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  ctaText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  // Compact styles
+  compactContainer: {
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    marginHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   compactContent: {
     flexDirection: 'row',
@@ -354,35 +373,44 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   compactThemeIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
+    width: 36,
+    height: 36,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   compactInfo: {
     flex: 1,
   },
   compactTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 2,
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 3,
   },
   compactReason: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '400',
+    lineHeight: 16,
   },
   compactDurationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 7,
+    gap: 5,
   },
   compactDurationText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 

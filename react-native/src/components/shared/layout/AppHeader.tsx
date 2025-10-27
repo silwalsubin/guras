@@ -52,9 +52,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between', // Logo on left, buttons on right
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
   logoContainer: {
     alignItems: 'flex-start', // Left-align the logo text
@@ -62,27 +62,37 @@ const styles = StyleSheet.create({
   },
   appName: {
     ...TYPOGRAPHY.LOGO,
+    fontSize: 28,
+    fontWeight: '700',
   },
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   profileButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   profileButtonText: {
-    fontSize: 20,
+    fontSize: 22,
   },
   profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
 });
 

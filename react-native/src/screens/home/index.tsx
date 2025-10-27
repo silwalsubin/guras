@@ -11,6 +11,7 @@ import { RootState, AppDispatch } from '@/store';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { COLORS } from '@/config/colors';
 import { AppHeader } from '@/components/shared';
+import GreetingBanner from '@/components/home/GreetingBanner';
 import AIRecommendedQuote from '@/components/meditation/AIRecommendedQuote';
 import RecommendationsList from '@/components/meditation/RecommendationsList';
 import { fetchRecommendations } from '@/store/recommendationSlice';
@@ -82,6 +83,9 @@ const HomeScreen: React.FC = () => {
         onProfilePress={handleProfilePress}
       />
 
+      {/* Greeting Banner */}
+      <GreetingBanner />
+
       {/* AI-Recommended Quote */}
       <View style={styles.aiQuoteSection}>
         <AIRecommendedQuote
@@ -112,16 +116,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 8,
+    paddingTop: 4,
   },
   aiQuoteSection: {
     paddingHorizontal: 0,
-    marginBottom: 8,
+    marginBottom: 12,
     width: '100%',
   },
   recommendationsSection: {
     paddingHorizontal: 0,
-    marginBottom: 20,
+    marginBottom: 24,
     width: '100%',
   },
   bottomPadding: {

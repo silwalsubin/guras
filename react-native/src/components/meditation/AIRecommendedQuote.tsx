@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -33,6 +35,45 @@ const AIRecommendedQuote: React.FC<AIRecommendedQuoteProps> = ({ onRefresh }) =>
   const [quote, setQuote] = useState<AIQuote | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [swipeAction, setSwipeAction] = useState<'like' | 'dislike' | null>(null);
+
+  const pan = useRef(new Animated.ValueXY()).current;
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
+        useNativeDriver: false,
+      }),
+      onPanResponderRelease: (evt, gestureState) => {
+        const swipeThreshold = 50;
+
+        if (gestureState.dx > swipeThreshold) {
+          // Swiped right - Like
+          Animated.timing(pan.x, {
+            toValue: 500,
+            duration: 300,
+            useNativeDriver: false,
+          }).start();
+          handleLike();
+        } else if (gestureState.dx < -swipeThreshold) {
+          // Swiped left - Dislike
+          Animated.timing(pan.x, {
+            toValue: -500,
+            duration: 300,
+            useNativeDriver: false,
+          }).start();
+          handleDislike();
+        } else {
+          // Reset animation
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     fetchAIQuote();
@@ -60,6 +101,36 @@ const AIRecommendedQuote: React.FC<AIRecommendedQuoteProps> = ({ onRefresh }) =>
   const handleRefresh = async () => {
     await fetchAIQuote();
     onRefresh?.();
+  };
+
+  const handleLike = async () => {
+    setSwipeAction('like');
+    // Log the liked quote for analytics/recommendations
+    if (quote) {
+      console.log('📌 Liked quote:', quote.text);
+      // TODO: Send to backend to track liked quotes for better recommendations
+    }
+    // Fetch next quote after a short delay
+    setTimeout(async () => {
+      await fetchAIQuote();
+      setSwipeAction(null);
+      pan.setValue({ x: 0, y: 0 });
+    }, 600);
+  };
+
+  const handleDislike = async () => {
+    setSwipeAction('dislike');
+    // Log the disliked quote for analytics/recommendations
+    if (quote) {
+      console.log('👎 Disliked quote:', quote.text);
+      // TODO: Send to backend to track disliked quotes to avoid similar content
+    }
+    // Fetch next quote after a short delay
+    setTimeout(async () => {
+      await fetchAIQuote();
+      setSwipeAction(null);
+      pan.setValue({ x: 0, y: 0 });
+    }, 600);
   };
 
   if (loading) {
@@ -110,27 +181,37 @@ const AIRecommendedQuote: React.FC<AIRecommendedQuoteProps> = ({ onRefresh }) =>
 
   return (
     <View style={styles.container}>
-      <View
+      <Animated.View
         style={[
           styles.card,
           { backgroundColor: brandColors.primary + '12' },
+          {
+            transform: [{ translateX: pan.x }],
+            opacity: Animated.add(1, Animated.multiply(Animated.divide(pan.x, 500), -0.3)),
+          },
         ]}
+        {...panResponder.panHandlers}
       >
-        {/* Header with Badge and Refresh */}
-        <View style={styles.header}>
-          <View style={[styles.aiBadge, { backgroundColor: brandColors.primary + '25' }]}>
-            <Icon name="magic" size={11} color={brandColors.primary} />
-            <Text style={[styles.badgeText, { color: brandColors.primary }]}>
-              AI Recommended
-            </Text>
+        {/* Swipe Indicators */}
+        {swipeAction && (
+          <View style={styles.swipeIndicatorContainer}>
+            {swipeAction === 'like' ? (
+              <View style={[styles.swipeIndicator, styles.likeIndicator]}>
+                <Icon name="heart" size={32} color="#10B981" />
+                <Text style={styles.swipeText}>Liked!</Text>
+              </View>
+            ) : (
+              <View style={[styles.swipeIndicator, styles.dislikeIndicator]}>
+                <Icon name="times" size={32} color="#EF4444" />
+                <Text style={styles.swipeText}>Skip</Text>
+              </View>
+            )}
           </View>
-          <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-            <Icon name="refresh" size={14} color={brandColors.primary} />
-          </TouchableOpacity>
-        </View>
+        )}
 
         {/* Quote Text - Main Focus */}
-        <View style={styles.quoteContainer}>
+        <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton} activeOpacity={0.7}>
+          <View style={styles.quoteContainer}>
           <Text style={[styles.quoteText, { color: themeColors.textPrimary }]}>
             "{quote.text}"
           </Text>
@@ -170,21 +251,30 @@ const AIRecommendedQuote: React.FC<AIRecommendedQuoteProps> = ({ onRefresh }) =>
             </Text>
           </View>
         </View>
-      </View>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
+    marginHorizontal: 12,
     marginVertical: 16,
   },
   card: {
     paddingHorizontal: 20,
-    paddingVertical: 24,
-    borderRadius: 16,
+    paddingVertical: 28,
+    borderRadius: 20,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
   loadingContainer: {
     justifyContent: 'center',
@@ -216,38 +306,50 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.BODY_SMALL,
     fontWeight: '600',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  aiBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 14,
-    gap: 6,
-  },
-  badgeText: {
-    ...TYPOGRAPHY.CAPTION,
-    fontWeight: '600',
-    fontSize: 11,
-  },
   refreshButton: {
-    padding: 8,
+    flex: 1,
+  },
+  swipeIndicatorContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  swipeIndicator: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  likeIndicator: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: 16,
+    paddingHorizontal: 30,
+  },
+  dislikeIndicator: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: 16,
+    paddingHorizontal: 30,
+  },
+  swipeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginTop: 8,
+    color: '#10B981',
   },
   quoteContainer: {
     marginBottom: 18,
   },
   quoteText: {
-    fontSize: 18,
-    lineHeight: 28,
+    fontSize: 20,
+    lineHeight: 32,
     fontStyle: 'italic',
     textAlign: 'center',
-    fontWeight: '500',
-    letterSpacing: 0.3,
+    fontWeight: '600',
+    letterSpacing: 0.4,
   },
   authorText: {
     ...TYPOGRAPHY.BODY_SMALL,
