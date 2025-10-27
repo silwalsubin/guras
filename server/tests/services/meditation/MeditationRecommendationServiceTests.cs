@@ -100,11 +100,13 @@ public class MeditationRecommendationServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        
+
         _mockAnalyticsService.Setup(x => x.GetUserPatternsAsync(userId))
             .ReturnsAsync(new MeditationPatternsDto());
         _mockAnalyticsService.Setup(x => x.GetUserStatsAsync(userId))
             .ReturnsAsync(new MeditationStatsDto());
+        _mockAnalyticsService.Setup(x => x.GetUserHistoryAsync(userId, It.IsAny<int>()))
+            .ReturnsAsync(new List<MeditationAnalyticsDto>());
         _mockAIService.Setup(x => x.GenerateRecommendationAsync(It.IsAny<string>()))
             .ThrowsAsync(new Exception("AI Service Error"));
 
@@ -127,10 +129,21 @@ public class MeditationRecommendationServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var sessionTitle = "Morning Mindfulness";
-        var expectedReason = "Based on your preference for mindfulness sessions";
 
-        _mockAIService.Setup(x => x.GenerateRecommendationAsync(It.IsAny<string>()))
-            .ReturnsAsync($"{{\"reason\": \"{expectedReason}\"}}");
+        var patterns = new MeditationPatternsDto
+        {
+            PreferredThemes = new List<PatternItem>
+            {
+                new() { Name = "mindfulness", Count = 5 }
+            }
+        };
+
+        var stats = new MeditationStatsDto { TotalSessions = 5 };
+
+        _mockAnalyticsService.Setup(x => x.GetUserPatternsAsync(userId))
+            .ReturnsAsync(patterns);
+        _mockAnalyticsService.Setup(x => x.GetUserStatsAsync(userId))
+            .ReturnsAsync(stats);
 
         // Act
         var result = await _service.GetRecommendationReasonAsync(userId, sessionTitle);

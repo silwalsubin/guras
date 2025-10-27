@@ -112,17 +112,17 @@ public class MeditationRecommendationService : IMeditationRecommendationService
             TotalMinutes = stats.TotalMinutes,
             AverageRating = stats.AverageRating,
             MoodImprovement = stats.AverageMoodImprovement,
-            PreferredTeachers = patterns.PreferredTeachers.Select(t => t.Name).ToList(),
-            PreferredThemes = patterns.PreferredThemes.Select(t => t.Name).ToList(),
-            BestTimesOfDay = patterns.BestTimesOfDay.Select(t => t.TimeOfDay).ToList(),
-            RecentSessions = history.Select(h => new RecentSessionInfo
+            PreferredTeachers = patterns.PreferredTeachers?.Select(t => t.Name).ToList() ?? new(),
+            PreferredThemes = patterns.PreferredThemes?.Select(t => t.Name).ToList() ?? new(),
+            BestTimesOfDay = patterns.BestTimesOfDay?.Select(t => t.TimeOfDay).ToList() ?? new(),
+            RecentSessions = history?.Select(h => new RecentSessionInfo
             {
                 Title = h.SessionTitle ?? "Unknown",
                 Theme = h.MeditationTheme ?? "general",
                 Duration = h.DurationSeconds ?? 0,
                 Completed = h.Completed,
                 Rating = h.UserRating ?? 0
-            }).ToList()
+            }).ToList() ?? new()
         };
     }
 
@@ -259,13 +259,13 @@ Return ONLY valid JSON array, no other text.";
         if (stats.TotalSessions == 0)
             return "Great for beginners";
 
-        if (patterns.PreferredTeachers.Any())
+        if (patterns?.PreferredTeachers?.Any() == true)
             return $"Based on your preference for {patterns.PreferredTeachers.First().Name}";
 
-        if (patterns.PreferredThemes.Any())
+        if (patterns?.PreferredThemes?.Any() == true)
             return $"Matches your favorite {patterns.PreferredThemes.First().Name} sessions";
 
-        if (patterns.BestTimesOfDay.Any())
+        if (patterns?.BestTimesOfDay?.Any() == true)
             return $"Perfect for {patterns.BestTimesOfDay.First().TimeOfDay}";
 
         return "Personalized for you";
