@@ -82,7 +82,7 @@ class ApiService {
     }
   }
 
-  private async makeRequest<T>(
+  async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {

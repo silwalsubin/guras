@@ -13,4 +13,9 @@ public interface ISpiritualAIService
     /// Generate personalized meditation recommendations based on user context
     /// </summary>
     Task<string> GenerateRecommendationAsync(string prompt);
+
+    /// <summary>
+    /// Generate a short AI title from journal entry content
+    /// </summary>
+    Task<string> GenerateJournalTitleAsync(string content);
 }

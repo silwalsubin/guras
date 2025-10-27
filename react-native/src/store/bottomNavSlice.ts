@@ -2,10 +2,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface BottomNavState {
   isHidden: boolean;
+  journalCreateOpen: boolean;
 }
 
 const initialState: BottomNavState = {
   isHidden: false,
+  journalCreateOpen: false,
 };
 
 const bottomNavSlice = createSlice({
@@ -21,8 +23,11 @@ const bottomNavSlice = createSlice({
     setBottomNavVisibility(state, action: PayloadAction<boolean>) {
       state.isHidden = !action.payload; // true = visible, false = hidden
     },
+    setJournalCreateOpen(state, action: PayloadAction<boolean>) {
+      state.journalCreateOpen = action.payload;
+    },
   },
 });
 
-export const { hideBottomNav, showBottomNav, setBottomNavVisibility } = bottomNavSlice.actions;
+export const { hideBottomNav, showBottomNav, setBottomNavVisibility, setJournalCreateOpen } = bottomNavSlice.actions;
 export default bottomNavSlice.reducer;

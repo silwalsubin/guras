@@ -500,4 +500,55 @@ Remember: You are not just giving advice, you are embodying the wisdom and prese
             }
         };
     }
+
+    public async Task<string> GenerateJournalTitleAsync(string content)
+    {
+        try
+        {
+            _logger.LogInformation("Generating journal title from content");
+
+            // Truncate content to first 500 characters for title generation
+            var truncatedContent = content.Length > 500 ? content.Substring(0, 500) : content;
+
+            // Create OpenAI request for title generation
+            var openAIRequest = new OpenAIRequest
+            {
+                Model = _config.DefaultModel,
+                Messages = new[]
+                {
+                    new OpenAIMessage
+                    {
+                        Role = "system",
+                        Content = "You are a helpful assistant that generates short, concise titles for journal entries. Generate a title that is 5-10 words maximum and captures the essence of the journal entry. Respond with only the title, no quotes or additional text."
+                    },
+                    new OpenAIMessage
+                    {
+                        Role = "user",
+                        Content = $"Generate a title for this journal entry:\n\n{truncatedContent}"
+                    }
+                },
+                MaxTokens = 50,
+                Temperature = 0.7
+            };
+
+            var response = await CallOpenAIAsync(openAIRequest);
+            var title = response.Response.Trim();
+
+            // Ensure title is not too long
+            if (title.Length > 255)
+            {
+                title = title.Substring(0, 252) + "...";
+            }
+
+            _logger.LogInformation("Successfully generated journal title: {Title}", title);
+            return title;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to generate journal title using AI, using fallback");
+            // Fallback: use first 50 characters of content as title
+            var fallbackTitle = content.Length > 50 ? content.Substring(0, 50) + "..." : content;
+            return fallbackTitle;
+        }
+    }
 }

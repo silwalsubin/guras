@@ -23,6 +23,7 @@ import { DownloadProvider } from './src/contexts/DownloadContext';
 import MeditationScreen from './src/screens/meditation';
 import AudioScreen from './src/screens/audio';
 import HomeScreen from './src/screens/home';
+import JournalScreen from './src/screens/journal';
 import { SpiritualTeacherScreen } from './src/screens';
 import BottomNavigation from './src/components/app/navigation/BottomNavigation';
 import MiniMusicPlayer from './src/components/MiniMusicPlayer';
@@ -89,6 +90,8 @@ const MainApp: React.FC = () => {
         return <AudioScreen />;
       case TAB_KEYS.SPIRITUAL:
         return <SpiritualTeacherScreen />;
+      case TAB_KEYS.JOURNAL:
+        return <JournalScreen />;
       case TAB_KEYS.PROFILE:
         return <ProfileScreen />;
       default:

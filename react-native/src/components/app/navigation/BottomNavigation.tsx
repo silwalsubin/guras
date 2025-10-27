@@ -13,14 +13,15 @@ const BottomNavigation: React.FC = () => {
   const insets = useSafeAreaInsets();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const isHidden = useSelector((state: RootState) => state.bottomNav.isHidden);
+  const journalCreateOpen = useSelector((state: RootState) => state.bottomNav.journalCreateOpen);
   const activeTab = useSelector((state: RootState) => state.navigation.activeTab);
   const themeColors = getThemeColors(isDarkMode);
 
   // Animation for hiding/showing
   const translateYAnim = useRef(new Animated.Value(0)).current;
 
-  // Only apply auto-hide behavior on meditation screen
-  const shouldHide = activeTab === TAB_KEYS.MEDITATION && isHidden;
+  // Hide when journal create is open, or on meditation screen with isHidden flag
+  const shouldHide = journalCreateOpen || (activeTab === TAB_KEYS.MEDITATION && isHidden);
 
   // Reset bottom nav state when switching away from meditation
   useEffect(() => {
@@ -70,6 +71,11 @@ const BottomNavigation: React.FC = () => {
       <FooterMenuItem
         tabKey={TAB_KEYS.SPIRITUAL}
         iconName="book-open"
+        iconType="feather"
+      />
+      <FooterMenuItem
+        tabKey={TAB_KEYS.JOURNAL}
+        iconName="edit-3"
         iconType="feather"
       />
       <FooterMenuItem
