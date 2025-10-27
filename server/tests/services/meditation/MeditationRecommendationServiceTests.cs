@@ -44,8 +44,8 @@ public class MeditationRecommendationServiceTests
             new() { Title = "Morning Mindfulness", Theme = "mindfulness", Difficulty = "beginner", Duration = 10 },
             new() { Title = "Stress Relief", Theme = "stress-relief", Difficulty = "intermediate", Duration = 15 }
         };
-        
-        var cacheKey = $"recommendations_{userId}";
+
+        var cacheKey = $"meditation_recommendations_{userId}";
         _memoryCache.Set(cacheKey, cachedRecommendations, TimeSpan.FromHours(1));
 
         // Act
