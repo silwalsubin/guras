@@ -43,6 +43,8 @@ public class OpenAIMessage
 {
     public string Role { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public string? Refusal { get; set; }
+    public object[]? Annotations { get; set; }
 }
 
 public class OpenAIRequest
@@ -62,6 +64,8 @@ public class OpenAIResponse
     public string Model { get; set; } = string.Empty;
     public OpenAIChoice[] Choices { get; set; } = Array.Empty<OpenAIChoice>();
     public OpenAIUsage Usage { get; set; } = new();
+    public string? ServiceTier { get; set; }
+    public string? SystemFingerprint { get; set; }
 }
 
 public class OpenAIChoice
@@ -69,6 +73,7 @@ public class OpenAIChoice
     public int Index { get; set; }
     public OpenAIMessage Message { get; set; } = new();
     public string FinishReason { get; set; } = string.Empty;
+    public object? Logprobs { get; set; }
 }
 
 public class OpenAIUsage
@@ -76,4 +81,6 @@ public class OpenAIUsage
     public int PromptTokens { get; set; }
     public int CompletionTokens { get; set; }
     public int TotalTokens { get; set; }
+    public object? PromptTokensDetails { get; set; }
+    public object? CompletionTokensDetails { get; set; }
 }
