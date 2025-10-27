@@ -125,30 +125,31 @@ const RecommendationsList: React.FC<RecommendationsListProps> = ({
     onRecommendationPress(recommendation);
   };
 
+  // Track recommendation views when recommendations change
+  useEffect(() => {
+    recommendations.forEach((item, index) => {
+      recommendationAnalyticsService.trackRecommendationView(
+        item.title,
+        item.theme,
+        item.difficulty,
+        item.duration,
+        { position: index, reason: item.reason }
+      );
+    });
+  }, [recommendations]);
+
   return (
     <View style={styles.container}>
       {renderHeader()}
       <FlatList
         data={recommendations}
-        renderItem={({ item, index }) => {
-          useEffect(() => {
-            recommendationAnalyticsService.trackRecommendationView(
-              item.title,
-              item.theme,
-              item.difficulty,
-              item.duration,
-              { position: index, reason: item.reason }
-            );
-          }, [item, index]);
-
-          return (
-            <RecommendationCard
-              recommendation={item}
-              onPress={handleCardPress}
-              compact={compact}
-            />
-          );
-        }}
+        renderItem={({ item }) => (
+          <RecommendationCard
+            recommendation={item}
+            onPress={handleCardPress}
+            compact={compact}
+          />
+        )}
         keyExtractor={(item, index) => `${item.title}-${index}`}
         scrollEnabled={false}
         refreshControl={
