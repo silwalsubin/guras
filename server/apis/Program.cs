@@ -6,6 +6,7 @@ using services.users.Configuration;
 using services.notifications.Configuration;
 using services.teachers.Configuration;
 using services.ai.Configuration;
+using services.meditation.Configuration;
 using utilities.Persistence;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
@@ -79,6 +80,7 @@ ApisServiceConfiguration.ConfigureApiServices(builder.Services);
 builder.Services.AddAuthenticationServices();
 builder.Services.AddNotificationsServices();
 builder.Services.AddTeachersServices(builder.Configuration);
+builder.Services.AddMeditationServices();
 builder.Services.AddAIServices(builder.Configuration);
 
 // Configure authorization

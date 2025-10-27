@@ -241,6 +241,46 @@ public class SpiritualAIService : ISpiritualAIService
         };
     }
 
+    public async Task<string> GenerateRecommendationAsync(string prompt)
+    {
+        try
+        {
+            _logger.LogInformation("Generating meditation recommendations using AI");
+
+            // Create OpenAI request for recommendations
+            var openAIRequest = new OpenAIRequest
+            {
+                Model = _config.DefaultModel,
+                Messages = new[]
+                {
+                    new OpenAIMessage
+                    {
+                        Role = "system",
+                        Content = "You are an expert meditation coach. Generate personalized meditation recommendations based on user data. Always respond with valid JSON only, no additional text."
+                    },
+                    new OpenAIMessage
+                    {
+                        Role = "user",
+                        Content = prompt
+                    }
+                },
+                MaxTokens = _config.MaxTokens,
+                Temperature = _config.Temperature,
+                Stop = new[] { "Human:", "User:", "Question:" }
+            };
+
+            var response = await CallOpenAIAsync(openAIRequest);
+
+            _logger.LogInformation("Successfully generated meditation recommendations");
+            return response.Response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating meditation recommendations");
+            throw;
+        }
+    }
+
     private async Task<AIResponse> CallOpenAIAsync(OpenAIRequest request)
     {
         var settings = new JsonSerializerSettings
