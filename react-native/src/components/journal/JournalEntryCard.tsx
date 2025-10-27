@@ -45,6 +45,8 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
     return moodColorMap[mood?.toLowerCase() || ''] || '#999999';
   };
 
+
+
   const previewText = entry.content.substring(0, 80) + (entry.content.length > 80 ? '...' : '');
 
   const startScrollAnimation = () => {
@@ -110,7 +112,7 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
               </Animated.Text>
             </View>
             <Text style={[styles.moodLabel, { color: themeColors.textSecondary }]}>
-              {entry.mood || 'No mood recorded'}
+              {entry.mood || 'Analyzing mood...'}
             </Text>
           </View>
         </View>

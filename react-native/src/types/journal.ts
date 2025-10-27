@@ -7,8 +7,8 @@ export interface JournalEntry {
   userId: string;
   title: string; // AI-generated short title
   content: string;
-  mood?: string; // e.g., 'happy', 'sad', 'anxious', 'calm', 'neutral'
-  moodScore?: number; // 1-10 scale
+  mood?: string; // AI-determined mood
+  moodScore?: number; // AI-determined mood score (1-5)
   tags: string[];
   createdAt: string; // ISO 8601 string for Redux serialization
   updatedAt: string; // ISO 8601 string for Redux serialization
@@ -17,15 +17,11 @@ export interface JournalEntry {
 
 export interface CreateJournalEntryDto {
   content: string;
-  mood?: string;
-  moodScore?: number;
   tags?: string[];
 }
 
 export interface UpdateJournalEntryDto {
   content?: string;
-  mood?: string;
-  moodScore?: number;
   tags?: string[];
 }
 
@@ -34,8 +30,8 @@ export interface JournalEntryResponse {
   userId: string;
   title: string;
   content: string;
-  mood?: string;
-  moodScore?: number;
+  mood?: string; // AI-determined mood
+  moodScore?: number; // AI-determined mood score (1-5)
   tags: string[];
   createdAt: string;
   updatedAt: string;

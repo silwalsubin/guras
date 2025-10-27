@@ -14,7 +14,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { createJournalEntry } from '@/store/journalSlice';
-import MoodSelector from '@/components/journal/MoodSelector';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 interface JournalCreateScreenProps {
@@ -28,14 +27,7 @@ const JournalCreateScreen: React.FC<JournalCreateScreenProps> = ({ onClose }) =>
   const brandColors = getBrandColors();
 
   const [content, setContent] = useState('');
-  const [moodScore, setMoodScore] = useState<number | undefined>();
-  const [moodLabel, setMoodLabel] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleMoodSelect = (score: number, mood: string) => {
-    setMoodScore(score);
-    setMoodLabel(mood);
-  };
 
   const handleSave = async () => {
     if (!content.trim()) {
@@ -50,8 +42,6 @@ const JournalCreateScreen: React.FC<JournalCreateScreenProps> = ({ onClose }) =>
           userId: '', // Will be set by the backend based on auth token
           data: {
             content: content.trim(),
-            mood: moodLabel || undefined,
-            moodScore: moodScore || undefined,
             tags: [],
           },
         })
@@ -92,9 +82,6 @@ const JournalCreateScreen: React.FC<JournalCreateScreenProps> = ({ onClose }) =>
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Mood Selector */}
-        <MoodSelector selectedScore={moodScore} onMoodSelect={handleMoodSelect} />
-
         {/* Content Input */}
         <View style={styles.contentSection}>
           <Text style={[styles.label, { color: themeColors.textPrimary }]}>

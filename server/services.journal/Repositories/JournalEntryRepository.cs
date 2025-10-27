@@ -20,7 +20,7 @@ public class JournalEntryRepository : IJournalEntryRepository
         _logger = logger;
     }
 
-    public async Task<JournalEntry> CreateAsync(Guid userId, CreateJournalEntryRequest request, string title)
+    public async Task<JournalEntry> CreateAsync(Guid userId, CreateJournalEntryRequest request, string title, string? mood = null, int? moodScore = null)
     {
         const string sql = @"
             INSERT INTO journal_entries (
@@ -37,8 +37,8 @@ public class JournalEntryRepository : IJournalEntryRepository
             UserId = userId,
             Title = title,
             request.Content,
-            request.Mood,
-            request.MoodScore,
+            Mood = mood,
+            MoodScore = moodScore,
             Tags = request.Tags ?? Array.Empty<string>()
         });
 
@@ -100,7 +100,7 @@ public class JournalEntryRepository : IJournalEntryRepository
         return entries;
     }
 
-    public async Task<JournalEntry?> UpdateAsync(Guid id, UpdateJournalEntryRequest request)
+    public async Task<JournalEntry?> UpdateAsync(Guid id, UpdateJournalEntryRequest request, string? mood = null, int? moodScore = null)
     {
         const string sql = @"
             UPDATE journal_entries
@@ -119,8 +119,8 @@ public class JournalEntryRepository : IJournalEntryRepository
         {
             Id = id,
             request.Content,
-            request.Mood,
-            request.MoodScore,
+            Mood = mood,
+            MoodScore = moodScore,
             Tags = request.Tags ?? Array.Empty<string>()
         });
 

@@ -6,8 +6,7 @@ namespace services.journal.Requests;
 public class CreateJournalEntryRequest
 {
     public string Content { get; set; } = string.Empty;
-    public string? Mood { get; set; }
-    public int? MoodScore { get; set; }
     public string[]? Tags { get; set; }
+    // Mood and MoodScore are determined by AI, not provided by client
 }
 
