@@ -8,10 +8,10 @@ namespace services.journal.Repositories;
 /// </summary>
 public interface IJournalEntryRepository
 {
-    Task<JournalEntry> CreateAsync(Guid userId, CreateJournalEntryRequest request, string title);
+    Task<JournalEntry> CreateAsync(Guid userId, CreateJournalEntryRequest request, string title, string? mood = null, int? moodScore = null);
     Task<JournalEntry?> GetByIdAsync(Guid id);
-    Task<IEnumerable<JournalEntry>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20);
-    Task<JournalEntry?> UpdateAsync(Guid id, UpdateJournalEntryRequest request);
+    Task<IEnumerable<JournalEntry>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20, string? search = null);
+    Task<JournalEntry?> UpdateAsync(Guid id, UpdateJournalEntryRequest request, string? mood = null, int? moodScore = null);
     Task<bool> DeleteAsync(Guid id);
     Task<bool> ExistsAsync(Guid id);
     Task<int> GetCountByUserIdAsync(Guid userId);
