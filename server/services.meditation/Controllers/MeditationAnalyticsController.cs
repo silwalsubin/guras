@@ -226,7 +226,7 @@ public class MeditationAnalyticsController : ControllerBase
     /// Log recommendation interaction event (view, click, session start, etc.)
     /// </summary>
     [HttpPost("recommendation-event")]
-    public async Task<ActionResult> LogRecommendationEvent(
+    public ActionResult LogRecommendationEvent(
         [FromBody] RecommendationEventRequest request)
     {
         try
