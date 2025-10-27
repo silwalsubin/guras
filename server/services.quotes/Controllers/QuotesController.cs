@@ -115,7 +115,7 @@ public class QuotesController : BaseController
     /// <returns>A quote recommended by AI based on user context</returns>
     [Authorize]
     [HttpGet("ai-recommended")]
-    public ActionResult<AIRecommendedQuoteDto> GetAIRecommendedQuote()
+    public IActionResult GetAIRecommendedQuote()
     {
         try
         {
