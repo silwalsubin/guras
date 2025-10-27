@@ -102,10 +102,6 @@ jobs:
         sed -i "s/\"OpenAIApiKey\": \"\"/\"OpenAIApiKey\": \"$ESCAPED_KEY\"/g" server/apis/appsettings.json
         echo "✅ OpenAI API key injected into appsettings.json"
 
-        # Update appsettings.Development.json with OpenAI API key from secrets
-        sed -i "s/\"OpenAIApiKey\": \"your-openai-api-key-here\"/\"OpenAIApiKey\": \"$ESCAPED_KEY\"/g" server/apis/appsettings.Development.json
-        echo "✅ OpenAI API key injected into appsettings.Development.json"
-
         # Verify the key was injected
         echo "📋 Verifying appsettings.json:"
         grep -o '"OpenAIApiKey": "[^"]*"' server/apis/appsettings.json | head -c 50
