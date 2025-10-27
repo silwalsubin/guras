@@ -179,6 +179,7 @@ server/**/bin/**
 server/**/obj/**
 server/**/.vs/**
 guras-firebase-adminsdk.json
+server/apis/appsettings.Development.json
 
 # Flyway configuration files (contain sensitive database credentials)
 flyway.*.conf
