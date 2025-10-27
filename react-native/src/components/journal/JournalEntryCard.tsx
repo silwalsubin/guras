@@ -47,7 +47,7 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
 
 
 
-  const previewText = entry.content.substring(0, 80) + (entry.content.length > 80 ? '...' : '');
+
 
   const startScrollAnimation = () => {
     if (animationStarted.current || titleWidth.current <= containerWidth.current) {
@@ -120,10 +120,6 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
           {formatDate(entry.createdAt)}
         </Text>
       </View>
-
-      <Text style={[styles.preview, { color: themeColors.textSecondary }]} numberOfLines={2}>
-        {previewText}
-      </Text>
 
       {entry.tags && entry.tags.length > 0 && (
         <View style={styles.tagsContainer}>
@@ -198,11 +194,6 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 12,
     fontWeight: '500',
-  },
-  preview: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 8,
   },
   tagsContainer: {
     flexDirection: 'row',
