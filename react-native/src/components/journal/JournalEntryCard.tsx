@@ -51,6 +51,7 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
   ).current;
 
   const handleDelete = async () => {
+    console.log('🗑️ Delete button pressed for entry:', entry.id);
     Alert.alert(
       'Delete Entry',
       'Are you sure you want to delete this journal entry?',
@@ -59,11 +60,18 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
         {
           text: 'Delete',
           onPress: async () => {
+            console.log('🗑️ Confirming delete for entry:', entry.id);
             setIsDeleting(true);
             try {
               await dispatch(deleteJournalEntry(entry.id)).unwrap();
+              console.log('✅ Entry deleted successfully');
+              // Reset swipe position
+              Animated.spring(pan, {
+                toValue: { x: 0, y: 0 },
+                useNativeDriver: false,
+              }).start();
             } catch (error) {
-              console.error('Error deleting entry:', error);
+              console.error('❌ Error deleting entry:', error);
               Alert.alert('Error', 'Failed to delete journal entry');
             } finally {
               setIsDeleting(false);
@@ -114,7 +122,7 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
               }),
             },
           ]}
-          pointerEvents={pan.x.__getValue() < -10 ? 'auto' : 'none'}
+          pointerEvents="auto"
         >
           <TouchableOpacity
             style={styles.deleteButton}
