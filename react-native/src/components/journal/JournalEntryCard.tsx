@@ -107,7 +107,6 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
           style={[
             styles.deleteButtonBackground,
             {
-              backgroundColor: '#FF6B6B',
               opacity: pan.x.interpolate({
                 inputRange: [-100, 0],
                 outputRange: [1, 0],
@@ -115,13 +114,15 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
               }),
             },
           ]}
+          pointerEvents={pan.x.__getValue() < -10 ? 'auto' : 'none'}
         >
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={handleDelete}
             disabled={isDeleting}
+            activeOpacity={0.8}
           >
-            <FontAwesome name="trash" size={20} color="#FFFFFF" />
+            <FontAwesome name="trash" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </Animated.View>
 
@@ -208,14 +209,17 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    width: 100,
+    width: 80,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FF6B6B',
     borderRadius: 12,
   },
   deleteButton: {
-    width: '100%',
-    height: '100%',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
