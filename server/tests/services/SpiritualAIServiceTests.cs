@@ -21,7 +21,7 @@ public class SpiritualAIServiceTests
         {
             OpenAIApiKey = "sk-test-key-12345",
             OpenAIBaseUrl = "https://api.openai.com",
-            DefaultModel = "gpt-4",
+            DefaultModel = "gpt-4o-mini",
             MaxTokens = 500,
             Temperature = 0.7,
             TimeoutSeconds = 30
@@ -42,7 +42,7 @@ public class SpiritualAIServiceTests
         {
             OpenAIApiKey = "invalid-key-without-sk-prefix",
             OpenAIBaseUrl = "https://api.openai.com",
-            DefaultModel = "gpt-4",
+            DefaultModel = "gpt-4o-mini",
             MaxTokens = 500,
             Temperature = 0.7,
             TimeoutSeconds = 30
@@ -72,7 +72,7 @@ public class SpiritualAIServiceTests
         {
             OpenAIApiKey = "",
             OpenAIBaseUrl = "https://api.openai.com",
-            DefaultModel = "gpt-4",
+            DefaultModel = "gpt-4o-mini",
             MaxTokens = 500,
             Temperature = 0.7,
             TimeoutSeconds = 30
@@ -102,7 +102,7 @@ public class SpiritualAIServiceTests
         {
             OpenAIApiKey = "sk-test-key-12345",
             OpenAIBaseUrl = "",
-            DefaultModel = "gpt-4",
+            DefaultModel = "gpt-4o-mini",
             MaxTokens = 500,
             Temperature = 0.7,
             TimeoutSeconds = 30
