@@ -588,7 +588,8 @@ Remember: You are not just giving advice, you are embodying the wisdom and prese
             // Parse JSON response
             var moodData = JsonConvert.DeserializeObject<dynamic>(responseText);
             var mood = (string)moodData["mood"] ?? "neutral";
-            var score = (int)moodData["score"] ?? 3;
+            var scoreValue = moodData["score"];
+            var score = scoreValue != null ? (int)scoreValue : 3;
 
             // Ensure score is within valid range
             score = Math.Max(1, Math.Min(5, score));
