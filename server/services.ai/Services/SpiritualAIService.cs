@@ -585,8 +585,22 @@ Remember: You are not just giving advice, you are embodying the wisdom and prese
             var response = await CallOpenAIAsync(openAIRequest);
             var responseText = response.Response.Trim();
 
+            // Clean up the response - remove markdown code blocks if present
+            var cleanedResponse = responseText;
+            if (cleanedResponse.Contains("```json"))
+            {
+                cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"```json\s*", "");
+                cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"\s*```", "");
+            }
+            else if (cleanedResponse.Contains("```"))
+            {
+                cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"```\s*", "");
+                cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"\s*```", "");
+            }
+            cleanedResponse = cleanedResponse.Trim();
+
             // Parse JSON response
-            var moodData = JsonConvert.DeserializeObject<dynamic>(responseText);
+            var moodData = JsonConvert.DeserializeObject<dynamic>(cleanedResponse);
             var mood = (string)moodData["mood"] ?? "neutral";
             var scoreValue = moodData["score"];
             var score = scoreValue != null ? (int)scoreValue : 3;

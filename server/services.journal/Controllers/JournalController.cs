@@ -202,7 +202,12 @@ Please provide:
 2. Compassionate guidance or motivation addressing their current condition (2-3 sentences)
 3. A supportive message that feels like advice from a caring friend (2-3 sentences)
 
-Format your response as JSON with keys: 'quote', 'guidance', 'supportiveMessage'";
+IMPORTANT: Respond ONLY with valid JSON (no markdown, no code blocks, no additional text). Use this exact format:
+{{
+  ""quote"": ""the quote here"",
+  ""guidance"": ""the guidance here"",
+  ""supportiveMessage"": ""the supportive message here""
+}}";
 
             // Call AI service to generate guidance
             var aiResponse = await aiService.GenerateRecommendationAsync(prompt);
@@ -214,8 +219,23 @@ Format your response as JSON with keys: 'quote', 'guidance', 'supportiveMessage'
             object parsedGuidance;
             try
             {
+                // Clean up the response - remove markdown code blocks if present
+                var cleanedResponse = aiResponse;
+                if (cleanedResponse.Contains("```json"))
+                {
+                    cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"```json\s*", "");
+                    cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"\s*```", "");
+                }
+                else if (cleanedResponse.Contains("```"))
+                {
+                    cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"```\s*", "");
+                    cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"\s*```", "");
+                }
+
+                cleanedResponse = cleanedResponse.Trim();
+
                 // Try to parse as JSON
-                var parsed = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(aiResponse);
+                var parsed = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(cleanedResponse);
 
                 // Ensure we have the required fields
                 if (parsed != null)

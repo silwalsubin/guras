@@ -196,9 +196,23 @@ Return ONLY valid JSON array, no other text.";
     {
         try
         {
+            // Clean up the response - remove markdown code blocks if present
+            var cleanedResponse = aiResponse;
+            if (cleanedResponse.Contains("```json"))
+            {
+                cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"```json\s*", "");
+                cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"\s*```", "");
+            }
+            else if (cleanedResponse.Contains("```"))
+            {
+                cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"```\s*", "");
+                cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"\s*```", "");
+            }
+            cleanedResponse = cleanedResponse.Trim();
+
             // Extract JSON from response
-            var jsonStart = aiResponse.IndexOf('[');
-            var jsonEnd = aiResponse.LastIndexOf(']') + 1;
+            var jsonStart = cleanedResponse.IndexOf('[');
+            var jsonEnd = cleanedResponse.LastIndexOf(']') + 1;
 
             if (jsonStart < 0 || jsonEnd <= jsonStart)
             {
@@ -206,7 +220,7 @@ Return ONLY valid JSON array, no other text.";
                 return new();
             }
 
-            var jsonString = aiResponse.Substring(jsonStart, jsonEnd - jsonStart);
+            var jsonString = cleanedResponse.Substring(jsonStart, jsonEnd - jsonStart);
             var recommendations = JsonSerializer.Deserialize<List<MeditationRecommendationDto>>(jsonString);
 
             return recommendations?.Take(count).ToList() ?? new();
