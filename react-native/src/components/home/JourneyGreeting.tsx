@@ -48,13 +48,14 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
     const fetchGuidance = async () => {
       if (!user?.uid || journalEntries.length === 0) {
         setIsLoading(false);
+        setGuidance(null);
         return;
       }
 
       try {
         setIsLoading(true);
         const response = await journalGuidanceService.getPersonalizedGuidance(user.uid, entryCount);
-        
+
         if (response.hasEntries) {
           const parsed = journalGuidanceService.parseGuidance(response.guidance);
           setGuidance(parsed);
@@ -70,7 +71,7 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
     };
 
     fetchGuidance();
-  }, [user?.uid, journalEntries.length, entryCount]);
+  }, [user?.uid, journalEntries, entryCount]);
 
   return (
     <View style={styles.container}>
