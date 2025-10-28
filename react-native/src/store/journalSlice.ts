@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { JournalEntry, CreateJournalEntryDto, UpdateJournalEntryDto } from '@/types/journal';
 import { journalApi } from '@/api/journalApi';
+import { journalGuidanceService } from '@/services/journalGuidanceService';
 
 interface JournalState {
   entries: JournalEntry[];
@@ -107,6 +108,11 @@ const journalSlice = createSlice({
       .addCase(createJournalEntry.fulfilled, (state, action) => {
         state.isLoading = false;
         state.entries.unshift(action.payload);
+        // Invalidate personalized guidance cache when new entry is created
+        // We'll get the userId from the action if available, otherwise clear all
+        if (action.meta.arg.userId) {
+          journalGuidanceService.invalidateCacheOnNewEntry(action.meta.arg.userId);
+        }
       })
       .addCase(createJournalEntry.rejected, (state, action) => {
         state.isLoading = false;

@@ -11,12 +11,14 @@ import { RootState, AppDispatch } from '@/store';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { COLORS } from '@/config/colors';
 import { AppHeader } from '@/components/shared';
-import GreetingBanner from '@/components/home/GreetingBanner';
+import JourneyGreeting from '@/components/home/JourneyGreeting';
 import AIRecommendedQuote from '@/components/meditation/AIRecommendedQuote';
 import RecommendationsList from '@/components/meditation/RecommendationsList';
 import { fetchRecommendations } from '@/store/recommendationSlice';
 import { MeditationRecommendation } from '@/components/meditation/RecommendationCard';
 import { recommendationAnalyticsService } from '@/services/recommendationAnalyticsService';
+import { setJournalCreateOpen } from '@/store/bottomNavSlice';
+import JournalCreateScreen from '@/screens/journal/JournalCreateScreen';
 
 const HomeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,6 +26,7 @@ const HomeScreen: React.FC = () => {
   const recommendations = useSelector((state: RootState) => state.recommendations.recommendations);
   const recommendationsLoading = useSelector((state: RootState) => state.recommendations.loading);
   const [refreshing, setRefreshing] = useState(false);
+  const [showJournalCreate, setShowJournalCreate] = useState(false);
 
   useEffect(() => {
     dispatch(fetchRecommendations(3));
@@ -51,6 +54,16 @@ const HomeScreen: React.FC = () => {
     dispatch(setActiveTab(TAB_KEYS.PROFILE));
   }, [dispatch]);
 
+  const handleJournalPromptPress = useCallback(() => {
+    setShowJournalCreate(true);
+    dispatch(setJournalCreateOpen(true));
+  }, [dispatch]);
+
+  const handleJournalCreateClose = useCallback(() => {
+    setShowJournalCreate(false);
+    dispatch(setJournalCreateOpen(false));
+  }, [dispatch]);
+
   const handleRecommendationPress = useCallback((recommendation: MeditationRecommendation) => {
     console.log('Selected recommendation:', recommendation.title);
 
@@ -63,6 +76,11 @@ const HomeScreen: React.FC = () => {
       { source: 'home_screen' }
     );
   }, []);
+
+  // If journal create screen is open, show it full screen
+  if (showJournalCreate) {
+    return <JournalCreateScreen onClose={handleJournalCreateClose} />;
+  }
 
   return (
     <ScrollView
@@ -83,8 +101,11 @@ const HomeScreen: React.FC = () => {
         onProfilePress={handleProfilePress}
       />
 
-      {/* Greeting Banner */}
-      <GreetingBanner />
+      {/* Journey Greeting - Combines greeting with journal/guidance */}
+      <JourneyGreeting
+        onJournalPress={handleJournalPromptPress}
+        entryCount={5}
+      />
 
       {/* AI-Recommended Quote */}
       <View style={styles.aiQuoteSection}>
