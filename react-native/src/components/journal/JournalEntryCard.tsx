@@ -102,10 +102,10 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
   return (
     <>
       <View style={styles.swipeContainer}>
-        {/* Delete button background - only visible when swiped */}
+        {/* Delete button - only visible when swiped */}
         <Animated.View
           style={[
-            styles.deleteButtonBackground,
+            styles.deleteButtonContainer,
             {
               opacity: pan.x.interpolate({
                 inputRange: [-100, 0],
@@ -204,22 +204,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
   },
-  deleteButtonBackground: {
+  deleteButtonContainer: {
     position: 'absolute',
-    right: 0,
+    right: 16,
     top: 0,
     bottom: 0,
-    width: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FF6B6B',
-    borderRadius: 12,
   },
   deleteButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#FF6B6B',
     justifyContent: 'center',
     alignItems: 'center',
   },
