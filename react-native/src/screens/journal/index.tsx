@@ -9,6 +9,7 @@ import {
   RefreshControl,
   TextInput,
 } from 'react-native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
@@ -18,7 +19,6 @@ import JournalEntryCard, { JournalEntryCardRef } from '@/components/journal/Jour
 import JournalCreateScreen from './JournalCreateScreen';
 import JournalEditScreen from './JournalEditScreen';
 import { JournalEntry } from '@/types/journal';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '@/contexts/AuthContext';
 
 const JournalScreen: React.FC = () => {
@@ -71,6 +71,13 @@ const JournalScreen: React.FC = () => {
 
     entries.forEach((entry) => {
       const date = new Date(entry.createdAt);
+
+      // Validate date - skip entries with invalid dates (like year 0001)
+      if (isNaN(date.getTime()) || date.getFullYear() < 1900) {
+        console.warn('⚠️ Skipping entry with invalid date:', entry.id, entry.createdAt);
+        return;
+      }
+
       const dateKey = date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -170,14 +177,13 @@ const JournalScreen: React.FC = () => {
       </View>
 
       {/* Search Input */}
-      <View style={styles.searchContainer}>
+      <View style={[styles.searchContainer, { backgroundColor: themeColors.cardBackground, borderColor: '#E0E0E0' }]}>
+        <FontAwesome name="search" size={16} color={themeColors.textSecondary} />
         <TextInput
           style={[
             styles.searchInput,
             {
-              backgroundColor: themeColors.cardBackground,
               color: themeColors.textPrimary,
-              borderColor: themeColors.border,
             },
           ]}
           placeholder="Search by title or content..."
@@ -188,6 +194,14 @@ const JournalScreen: React.FC = () => {
             loadEntries(text);
           }}
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => {
+            setSearchQuery('');
+            loadEntries('');
+          }}>
+            <FontAwesome name="times" size={16} color={themeColors.textSecondary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Content */}
@@ -265,8 +279,10 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 6,
+    textAlign: 'center',
   },
   listContent: {
     paddingVertical: 8,
@@ -331,14 +347,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   searchContainer: {
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
     paddingVertical: 12,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   searchInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    flex: 1,
+    marginLeft: 10,
     fontSize: 14,
   },
   fab: {

@@ -1,11 +1,12 @@
-import React, { useRef, forwardRef } from 'react';
+import React, { useRef, forwardRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, PanResponder, Alert } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { JournalEntry } from '@/types/journal';
-import { deleteJournalEntry } from '@/store/journalSlice';
+import { deleteJournalEntry, updateJournalEntry } from '@/store/journalSlice';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import EditTitleModal from './EditTitleModal';
 
 export interface JournalEntryCardRef {
   resetSwipe: () => void;
@@ -27,6 +28,9 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
     const pan = useRef(new Animated.ValueXY()).current;
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [isSwiped, setIsSwiped] = React.useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
+    const lastTapRef = useRef<number>(0);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -77,6 +81,42 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
     resetSwipe,
   }), [resetSwipe]);
 
+  const handleTitlePress = () => {
+    const now = Date.now();
+    const DOUBLE_CLICK_DELAY = 300;
+
+    if (lastTapRef.current && now - lastTapRef.current < DOUBLE_CLICK_DELAY) {
+      // Double click detected
+      setShowEditModal(true);
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
+  const handleTitleSave = async (newTitle: string) => {
+    setIsUpdatingTitle(true);
+    try {
+      await dispatch(
+        updateJournalEntry({
+          entryId: entry.id,
+          data: {
+            title: newTitle,
+            content: entry.content,
+            tags: entry.tags,
+          },
+        })
+      ).unwrap();
+      setShowEditModal(false);
+      console.log('✅ Title updated successfully');
+    } catch (error) {
+      console.error('❌ Error updating title:', error);
+      Alert.alert('Error', 'Failed to update title');
+    } finally {
+      setIsUpdatingTitle(false);
+    }
+  };
+
   const handleDelete = async () => {
     console.log('🗑️ Delete button pressed for entry:', entry.id);
     Alert.alert(
@@ -114,6 +154,10 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
 
   const formatTime = (dateString: string) => {
     const d = new Date(dateString);
+    // Validate date - return empty string if invalid
+    if (isNaN(d.getTime()) || d.getFullYear() < 1900) {
+      return '';
+    }
     return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
@@ -183,7 +227,7 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
           >
             <View style={styles.header}>
               <View style={styles.titleContainer}>
-                <View style={{ flex: 1 }}>
+                <TouchableOpacity style={{ flex: 1 }} onPress={handleTitlePress}>
                   <Text
                     style={[styles.title, { color: themeColors.textPrimary }]}
                     numberOfLines={0}
@@ -202,7 +246,7 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
                       </Text>
                     </View>
                   )}
-                </View>
+                </TouchableOpacity>
               </View>
               <Text style={[styles.date, { color: themeColors.textSecondary }]}>
                 {formatTime(entry.createdAt)}
@@ -232,6 +276,14 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
         </Animated.View>
       </View>
       <View style={[styles.separator, { backgroundColor: themeColors.border }]} />
+
+      {/* Edit Title Modal */}
+      <EditTitleModal
+        visible={showEditModal}
+        currentTitle={entry.title}
+        onSave={handleTitleSave}
+        onClose={() => setShowEditModal(false)}
+      />
     </>
   );
   }
