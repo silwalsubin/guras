@@ -102,8 +102,20 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
   return (
     <>
       <View style={styles.swipeContainer}>
-        {/* Delete button background */}
-        <View style={[styles.deleteButtonBackground, { backgroundColor: '#FF6B6B' }]}>
+        {/* Delete button background - only visible when swiped */}
+        <Animated.View
+          style={[
+            styles.deleteButtonBackground,
+            {
+              backgroundColor: '#FF6B6B',
+              opacity: pan.x.interpolate({
+                inputRange: [-100, 0],
+                outputRange: [1, 0],
+                extrapolate: 'clamp',
+              }),
+            },
+          ]}
+        >
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={handleDelete}
@@ -111,7 +123,7 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
           >
             <FontAwesome name="trash" size={20} color="#FFFFFF" />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         {/* Card with swipe animation */}
         <Animated.View
