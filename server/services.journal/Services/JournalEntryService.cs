@@ -39,8 +39,11 @@ public class JournalEntryService : IJournalEntryService
             // Generate AI title from content
             var title = await GenerateTitleAsync(request.Content);
 
+            // Analyze mood from content
+            var (mood, moodScore) = await AnalyzeMoodAsync(request.Content);
+
             // Create the journal entry
-            var journalEntry = await _repository.CreateAsync(userId, request, title);
+            var journalEntry = await _repository.CreateAsync(userId, request, title, mood, moodScore);
 
             _logger.LogInformation("Successfully created journal entry with ID: {JournalEntryId}", journalEntry.Id);
 
@@ -126,6 +129,22 @@ public class JournalEntryService : IJournalEntryService
             _logger.LogWarning(ex, "Failed to generate AI title, using default");
             // Fallback: use first 50 characters of content as title
             return content.Length > 50 ? content.Substring(0, 50) + "..." : content;
+        }
+    }
+
+    private async Task<(string mood, int moodScore)> AnalyzeMoodAsync(string content)
+    {
+        try
+        {
+            // Use AI service to analyze mood from the content
+            var (mood, moodScore) = await _aiService.AnalyzeJournalMoodAsync(content);
+            return (mood, moodScore);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to analyze mood, using default");
+            // Fallback: return neutral mood
+            return ("neutral", 3);
         }
     }
 

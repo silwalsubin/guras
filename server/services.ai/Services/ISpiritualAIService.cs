@@ -18,4 +18,9 @@ public interface ISpiritualAIService
     /// Generate a short AI title from journal entry content
     /// </summary>
     Task<string> GenerateJournalTitleAsync(string content);
+
+    /// <summary>
+    /// Analyze journal entry content and determine mood
+    /// </summary>
+    Task<(string mood, int moodScore)> AnalyzeJournalMoodAsync(string content);
 }

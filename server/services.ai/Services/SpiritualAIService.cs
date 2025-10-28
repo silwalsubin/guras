@@ -551,4 +551,56 @@ Remember: You are not just giving advice, you are embodying the wisdom and prese
             return fallbackTitle;
         }
     }
+
+    public async Task<(string mood, int moodScore)> AnalyzeJournalMoodAsync(string content)
+    {
+        try
+        {
+            _logger.LogInformation("Analyzing mood for journal entry");
+
+            // Truncate content if too long
+            var truncatedContent = content.Length > 1000 ? content.Substring(0, 1000) : content;
+
+            // Create OpenAI request for mood analysis
+            var openAIRequest = new OpenAIRequest
+            {
+                Model = _config.DefaultModel,
+                Messages = new[]
+                {
+                    new OpenAIMessage
+                    {
+                        Role = "system",
+                        Content = "You are an emotion analysis expert. Analyze the emotional tone of the journal entry and respond with ONLY a JSON object in this exact format: {\"mood\": \"mood_name\", \"score\": score_number}. Mood should be one of: happy, sad, anxious, calm, neutral, excited, peaceful, stressed, grateful, hopeful. Score should be 1-5 where 1 is very low intensity and 5 is very high intensity. No additional text."
+                    },
+                    new OpenAIMessage
+                    {
+                        Role = "user",
+                        Content = $"Analyze the mood of this journal entry:\n\n{truncatedContent}"
+                    }
+                },
+                MaxTokens = 100,
+                Temperature = 0.3
+            };
+
+            var response = await CallOpenAIAsync(openAIRequest);
+            var responseText = response.Response.Trim();
+
+            // Parse JSON response
+            var moodData = JsonConvert.DeserializeObject<dynamic>(responseText);
+            var mood = (string)moodData["mood"] ?? "neutral";
+            var score = (int)moodData["score"] ?? 3;
+
+            // Ensure score is within valid range
+            score = Math.Max(1, Math.Min(5, score));
+
+            _logger.LogInformation("Successfully analyzed journal mood: {Mood} (score: {Score})", mood, score);
+            return (mood, score);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to analyze journal mood using AI, using fallback");
+            // Fallback: return neutral mood
+            return ("neutral", 3);
+        }
+    }
 }
