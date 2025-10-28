@@ -163,18 +163,18 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
 
   const getMoodColor = (mood?: string) => {
     const moodColorMap: { [key: string]: string } = {
-      'happy': '#FFD93D',
-      'sad': '#4D96FF',
-      'anxious': '#FF8C42',
-      'calm': '#6BCB77',
-      'neutral': '#999999',
-      'excited': '#FF6B6B',
-      'peaceful': '#6BCB77',
-      'stressed': '#FF8C42',
-      'grateful': '#FFD93D',
-      'hopeful': '#4D96FF',
+      'happy': '#FFA500',
+      'sad': '#5B9FD9',
+      'anxious': '#FF7043',
+      'calm': '#66BB6A',
+      'neutral': '#757575',
+      'excited': '#EF5350',
+      'peaceful': '#81C784',
+      'stressed': '#FF6E40',
+      'grateful': '#FFB74D',
+      'hopeful': '#64B5F6',
     };
-    return moodColorMap[mood?.toLowerCase() || ''] || '#999999';
+    return moodColorMap[mood?.toLowerCase() || ''] || '#757575';
   };
 
 
@@ -349,22 +349,16 @@ const styles = StyleSheet.create({
   },
   moodBadge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    marginTop: 6,
   },
   moodBadgeText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: '#FFFFFF',
     textTransform: 'capitalize',
-    letterSpacing: 0.3,
   },
   date: {
     fontSize: 12,
