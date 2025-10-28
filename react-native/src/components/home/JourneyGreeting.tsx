@@ -75,13 +75,13 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
   return (
     <View style={styles.container}>
       {journalEntries.length === 0 ? (
-        // Empty State - Encourage journaling
+        // Empty State - Greeting + Journal Prompt unified
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={onJournalPress}
           style={styles.mainContent}
         >
-          {/* Greeting Section */}
+          {/* Greeting + Journal Prompt Section */}
           <View style={styles.greetingSection}>
             <Text style={styles.emoji}>{emoji}</Text>
             <View style={styles.greetingTextContainer}>
@@ -89,7 +89,7 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
                 {greeting}, {userName}
               </Text>
               <Text style={[styles.greetingSubtitle, { color: themeColors.textSecondary }]}>
-                Ready to find your peace?
+                Your thoughts matter. Share what's on your mind to receive personalized guidance.
               </Text>
             </View>
           </View>
@@ -102,25 +102,11 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
             ]}
           />
 
-          {/* Empty State Content */}
-          <View style={styles.emptyStateContent}>
-            <FontAwesome
-              name="feather"
-              size={24}
-              color={brandColors.primary}
-              style={styles.emptyIcon}
-            />
-            <Text style={[styles.emptyTitle, { color: themeColors.textPrimary }]}>
-              Start Your Journey
+          {/* CTA */}
+          <View style={styles.ctaSection}>
+            <Text style={[styles.ctaText, { color: brandColors.primary }]}>
+              Write your first entry →
             </Text>
-            <Text style={[styles.emptySubtitle, { color: themeColors.textSecondary }]}>
-              Your thoughts matter. Share what's on your mind to receive personalized guidance.
-            </Text>
-            <View style={styles.ctaButton}>
-              <Text style={[styles.ctaText, { color: brandColors.primary }]}>
-                Write your first entry →
-              </Text>
-            </View>
           </View>
         </TouchableOpacity>
       ) : isLoading ? (
@@ -250,30 +236,9 @@ const styles = StyleSheet.create({
   divider: {
     height: 1.5,
   },
-  // Empty State Styles
-  emptyStateContent: {
-    alignItems: 'center',
-    gap: 16,
-    paddingVertical: 28,
-  },
-  emptyIcon: {
-    marginBottom: 8,
-  },
-  emptyTitle: {
-    ...TYPOGRAPHY.HEADING_4,
-    fontWeight: '700',
-    textAlign: 'center',
-    letterSpacing: 0.3,
-  },
-  emptySubtitle: {
-    ...TYPOGRAPHY.BODY_SMALL,
-    fontWeight: '400',
-    lineHeight: 22,
-    textAlign: 'center',
-    letterSpacing: 0.2,
-  },
-  ctaButton: {
-    marginTop: 12,
+  // CTA Section
+  ctaSection: {
+    paddingVertical: 12,
   },
   ctaText: {
     ...TYPOGRAPHY.BODY_SMALL,
