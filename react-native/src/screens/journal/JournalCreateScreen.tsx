@@ -81,6 +81,7 @@ const JournalCreateScreen: React.FC<JournalCreateScreenProps> = ({ onClose }) =>
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Content Input */}
         <View style={styles.contentSection}>
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 24,
-    paddingBottom: 16,
+    paddingBottom: 100,
   },
   contentSection: {
     marginVertical: 20,
