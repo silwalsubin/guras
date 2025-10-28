@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { RootState, AppDispatch } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { fetchJournalEntries, selectEntry } from '@/store/journalSlice';
 import { setJournalCreateOpen } from '@/store/bottomNavSlice';
-import JournalEntryCard from '@/components/journal/JournalEntryCard';
+import JournalEntryCard, { JournalEntryCardRef } from '@/components/journal/JournalEntryCard';
 import JournalCreateScreen from './JournalCreateScreen';
 import JournalEditScreen from './JournalEditScreen';
 import { JournalEntry } from '@/types/journal';
@@ -34,6 +34,8 @@ const JournalScreen: React.FC = () => {
   const [showEditScreen, setShowEditScreen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [swipedEntryId, setSwipedEntryId] = useState<string | null>(null);
+  const cardRefs = useRef<Map<string, JournalEntryCardRef>>(new Map());
 
   useEffect(() => {
     if (user?.uid) {
@@ -108,6 +110,16 @@ const JournalScreen: React.FC = () => {
     setShowCreateScreen(false);
     dispatch(setJournalCreateOpen(false));
     loadEntries(); // Refresh list after creating entry
+  };
+
+  const handleSwipeStart = (entryId: string) => {
+    // Reset previously swiped item
+    if (swipedEntryId && swipedEntryId !== entryId) {
+      const prevCardRef = cardRefs.current.get(swipedEntryId);
+      prevCardRef?.resetSwipe();
+    }
+    // Set new swiped item
+    setSwipedEntryId(entryId);
   };
 
   const renderEmptyState = () => (
@@ -203,8 +215,14 @@ const JournalScreen: React.FC = () => {
               {group.items.map((entry) => (
                 <JournalEntryCard
                   key={entry.id}
+                  ref={(ref) => {
+                    if (ref) {
+                      cardRefs.current.set(entry.id, ref);
+                    }
+                  }}
                   entry={entry}
                   onPress={handleEntryPress}
+                  onSwipeStart={handleSwipeStart}
                 />
               ))}
             </View>

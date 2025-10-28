@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, forwardRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, PanResponder, Alert } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
@@ -7,19 +7,26 @@ import { JournalEntry } from '@/types/journal';
 import { deleteJournalEntry } from '@/store/journalSlice';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
+export interface JournalEntryCardRef {
+  resetSwipe: () => void;
+}
+
 interface JournalEntryCardProps {
   entry: JournalEntry;
   onPress: (entry: JournalEntry) => void;
+  onSwipeStart?: (entryId: string) => void;
 }
 
-const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
-  const themeColors = getThemeColors(isDarkMode);
-  const brandColors = getBrandColors();
+const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
+  ({ entry, onPress, onSwipeStart }, ref) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+    const themeColors = getThemeColors(isDarkMode);
+    const brandColors = getBrandColors();
 
-  const pan = useRef(new Animated.ValueXY()).current;
-  const [isDeleting, setIsDeleting] = React.useState(false);
+    const pan = useRef(new Animated.ValueXY()).current;
+    const [isDeleting, setIsDeleting] = React.useState(false);
+    const [isSwiped, setIsSwiped] = React.useState(false);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -36,11 +43,15 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
       onPanResponderRelease: (evt, gestureState) => {
         // If swiped more than 50 pixels left, show delete button
         if (gestureState.dx < -50) {
+          setIsSwiped(true);
+          // Notify parent that this item is being swiped
+          onSwipeStart?.(entry.id);
           Animated.spring(pan, {
             toValue: { x: -100, y: 0 },
             useNativeDriver: false,
           }).start();
         } else {
+          setIsSwiped(false);
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
             useNativeDriver: false,
@@ -49,6 +60,22 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
       },
     })
   ).current;
+
+  // Method to reset swipe when another item is swiped
+  const resetSwipe = React.useCallback(() => {
+    if (isSwiped) {
+      setIsSwiped(false);
+      Animated.spring(pan, {
+        toValue: { x: 0, y: 0 },
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isSwiped, pan]);
+
+  // Expose resetSwipe to parent component
+  React.useImperativeHandle(ref, () => ({
+    resetSwipe,
+  }), [resetSwipe]);
 
   const handleDelete = async () => {
     console.log('🗑️ Delete button pressed for entry:', entry.id);
@@ -202,7 +229,12 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onPress }) =
       <View style={[styles.separator, { backgroundColor: themeColors.border }]} />
     </>
   );
-};
+  }
+);
+
+JournalEntryCard.displayName = 'JournalEntryCard';
+
+export default JournalEntryCard;
 
 const styles = StyleSheet.create({
   swipeContainer: {
