@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store';
 import { createJournalEntry } from '@/store/journalSlice';
 import JournalEntryForm from '@/components/journal/JournalEntryForm';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface JournalCreateScreenProps {
   onClose: () => void;
@@ -11,6 +12,7 @@ interface JournalCreateScreenProps {
 
 const JournalCreateScreen: React.FC<JournalCreateScreenProps> = ({ onClose }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const { user } = useAuth();
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,7 +26,7 @@ const JournalCreateScreen: React.FC<JournalCreateScreenProps> = ({ onClose }) =>
     try {
       await dispatch(
         createJournalEntry({
-          userId: '', // Will be set by the backend based on auth token
+          userId: user?.uid || '', // Use actual user ID from auth context
           data: {
             content: content.trim(),
             tags: [],
