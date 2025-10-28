@@ -119,11 +119,16 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
 
   const getMoodColor = (mood?: string) => {
     const moodColorMap: { [key: string]: string } = {
-      'very poor': '#FF6B6B',
-      'poor': '#FF8C42',
-      'fair': '#FFD93D',
-      'good': '#6BCB77',
-      'very good': '#4D96FF',
+      'happy': '#FFD93D',
+      'sad': '#4D96FF',
+      'anxious': '#FF8C42',
+      'calm': '#6BCB77',
+      'neutral': '#999999',
+      'excited': '#FF6B6B',
+      'peaceful': '#6BCB77',
+      'stressed': '#FF8C42',
+      'grateful': '#FFD93D',
+      'hopeful': '#4D96FF',
     };
     return moodColorMap[mood?.toLowerCase() || ''] || '#999999';
   };
