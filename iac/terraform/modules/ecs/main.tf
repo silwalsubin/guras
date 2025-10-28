@@ -59,7 +59,7 @@ resource "aws_ecs_task_definition" "app" {
         },
         {
           name  = "AIServices__DefaultModel"
-          value = "gpt-4"
+          value = "gpt-4o-mini"
         },
         {
           name  = "AIServices__MaxTokens"
