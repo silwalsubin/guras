@@ -54,9 +54,10 @@ module "vpc" {
 # ECR Repository for Docker images
 module "ecr" {
   source = "./modules/ecr"
-  
+
   environment = var.environment
   repository_name = "guras-server"
+  image_retention_count = var.ecr_image_retention_count
 }
 
 # SSL Certificate
@@ -119,7 +120,7 @@ module "ecs" {
 # RDS Database
 module "rds" {
   source = "./modules/rds"
-  
+
   environment = var.environment
   vpc_id = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
@@ -127,20 +128,23 @@ module "rds" {
   db_name = var.db_name
   instance_class = var.db_instance_class
   allocated_storage = var.db_allocated_storage
+  max_allocated_storage = var.rds_max_allocated_storage
   use_public_subnets = var.allow_external_rds_access
-  
+
   rds_security_group_id = module.vpc.rds_security_group_id
-  
+
   depends_on = [module.vpc]
 }
 
 # S3 Bucket for Audio Files
 module "audio_files_bucket" {
   source = "./modules/s3_bucket"
-  
+
   environment   = var.environment
   bucket_name   = "guras-audio-files"
   force_destroy = var.environment != "production" ? true : false
+  enable_versioning = false
+  noncurrent_version_expiration_days = var.s3_noncurrent_version_expiration_days
 }
 
 # Outputs

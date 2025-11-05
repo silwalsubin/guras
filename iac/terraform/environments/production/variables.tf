@@ -96,3 +96,22 @@ variable "enable_vpc_endpoints" {
   type        = bool
   default     = false
 }
+
+# Phase 3 - Optional Cost Optimizations
+variable "ecr_image_retention_count" {
+  description = "Number of ECR images to keep (older images will be expired)"
+  type        = number
+  default     = 10
+}
+
+variable "rds_max_allocated_storage" {
+  description = "RDS maximum allocated storage in GB for auto-scaling"
+  type        = number
+  default     = 50
+}
+
+variable "s3_noncurrent_version_expiration_days" {
+  description = "Number of days to keep noncurrent S3 versions"
+  type        = number
+  default     = 7
+}

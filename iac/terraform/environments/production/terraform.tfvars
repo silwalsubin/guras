@@ -25,3 +25,17 @@ route53_zone_id = "Z03420161UX2FR5OUM4K8"  # Replace with your actual Route53 ho
 # Removing Interface Endpoints (CloudWatch Logs, Secrets Manager, KMS)
 # Saves ~$21.60/month, traffic goes through NAT Gateway instead
 enable_vpc_endpoints = false
+
+# Phase 3 - Optional Cost Optimizations
+# ECR Image Retention - Keep 10 images for production (reduced from 30)
+# Saves ~$0-1/month on image scanning costs
+ecr_image_retention_count = 10
+
+# RDS Max Storage - Limit to 50GB for production (reduced from 100GB)
+# Saves ~$0-1/month if auto-scaling occurs
+rds_max_allocated_storage = 50
+
+# S3 Versioning - Disabled for both environments to save costs
+# Noncurrent versions kept for 7 days (vs 30 days default)
+# Saves ~$0-1/month on storage costs
+s3_noncurrent_version_expiration_days = 7
