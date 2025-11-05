@@ -184,3 +184,12 @@ server/apis/appsettings.Development.json
 # Flyway configuration files (contain sensitive database credentials)
 flyway.*.conf
 flyway.conf
+
+# Terraform
+iac/terraform/**/.terraform/
+iac/terraform/**/.terraform.lock.hcl
+iac/terraform/**/*.tfstate
+iac/terraform/**/*.tfstate.*
+iac/terraform/**/.terraform.tfstate*
+iac/terraform/**/.env
+iac/terraform/**/*.tfvars.json
