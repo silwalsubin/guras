@@ -240,8 +240,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   greeting: {
-    ...TYPOGRAPHY.H3,
-    fontWeight: '700',
+    ...TYPOGRAPHY.H6,
+    fontWeight: '600',
     letterSpacing: 0.3,
   },
   iconContainer: {
