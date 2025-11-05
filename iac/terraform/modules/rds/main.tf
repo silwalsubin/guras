@@ -87,7 +87,7 @@ resource "aws_db_instance" "main" {
   # Enable public accessibility for development
   publicly_accessible = var.use_public_subnets
 
-  backup_retention_period = var.environment == "production" ? 7 : 1
+  backup_retention_period = var.environment == "production" ? 3 : 1
   backup_window          = "03:00-04:00"
   maintenance_window     = "sun:04:00-sun:05:00"
 
@@ -118,12 +118,12 @@ resource "aws_db_parameter_group" "main" {
 
   parameter {
     name  = "log_connections"
-    value = "1"
+    value = var.environment == "production" ? "1" : "0"
   }
 
   parameter {
     name  = "log_disconnections"
-    value = "1"
+    value = var.environment == "production" ? "1" : "0"
   }
 
   tags = {
