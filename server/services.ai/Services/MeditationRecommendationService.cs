@@ -56,29 +56,46 @@ public class MeditationRecommendationService : IMeditationRecommendationService
 
             _logger.LogInformation("Generating recommendations for user {UserId}", userId);
 
-            // Get user's meditation patterns and stats
-            var patterns = await _analyticsService.GetUserPatternsAsync(userId);
-            var stats = await _analyticsService.GetUserStatsAsync(userId);
-            var history = await _analyticsService.GetUserHistoryAsync(userId, 20);
+            try
+            {
+                // Get user's meditation patterns and stats
+                var patterns = await _analyticsService.GetUserPatternsAsync(userId);
+                var stats = await _analyticsService.GetUserStatsAsync(userId);
+                var history = await _analyticsService.GetUserHistoryAsync(userId, 20);
 
-            // Build context for AI
-            var context = BuildRecommendationContext(patterns, stats, history);
+                // Build context for AI
+                var context = BuildRecommendationContext(patterns, stats, history);
 
-            // Generate recommendations using AI
-            var recommendations = await GenerateRecommendationsWithAIAsync(context, count);
+                // Generate recommendations using AI
+                var recommendations = await GenerateRecommendationsWithAIAsync(context, count);
 
-            // Cache for 1 hour
-            var cacheOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromHours(1));
-            _cache.Set(cacheKey, recommendations, cacheOptions);
+                // Cache for 1 hour
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromHours(1));
+                _cache.Set(cacheKey, recommendations, cacheOptions);
 
-            _logger.LogInformation("Generated {Count} recommendations for user {UserId}", recommendations.Count, userId);
-            return recommendations;
+                _logger.LogInformation("Generated {Count} recommendations for user {UserId}", recommendations.Count, userId);
+                return recommendations;
+            }
+            catch (Exception analyticsEx)
+            {
+                _logger.LogWarning(analyticsEx, "Error fetching user analytics for {UserId}, returning default recommendations", userId);
+                // Return default recommendations if analytics data is not available
+                var defaultRecommendations = GetDefaultRecommendations(new RecommendationContext(), count);
+
+                // Cache for 1 hour
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromHours(1));
+                _cache.Set(cacheKey, defaultRecommendations, cacheOptions);
+
+                return defaultRecommendations;
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating recommendations for user {UserId}", userId);
-            throw;
+            // Return default recommendations as last resort
+            return GetDefaultRecommendations(new RecommendationContext(), count);
         }
     }
 
@@ -86,11 +103,19 @@ public class MeditationRecommendationService : IMeditationRecommendationService
     {
         try
         {
-            var patterns = await _analyticsService.GetUserPatternsAsync(userId);
-            var stats = await _analyticsService.GetUserStatsAsync(userId);
+            try
+            {
+                var patterns = await _analyticsService.GetUserPatternsAsync(userId);
+                var stats = await _analyticsService.GetUserStatsAsync(userId);
 
-            var reason = GenerateRecommendationReason(patterns, stats, sessionTitle);
-            return reason;
+                var reason = GenerateRecommendationReason(patterns, stats, sessionTitle);
+                return reason;
+            }
+            catch (Exception analyticsEx)
+            {
+                _logger.LogWarning(analyticsEx, "Error fetching analytics for user {UserId}, using default reason", userId);
+                return "Personalized for you";
+            }
         }
         catch (Exception ex)
         {
@@ -104,17 +129,30 @@ public class MeditationRecommendationService : IMeditationRecommendationService
         MeditationStatsDto stats,
         List<MeditationAnalyticsDto> history)
     {
+        // Handle null stats and patterns gracefully
+        if (stats == null)
+        {
+            _logger.LogWarning("Stats is null, using default values");
+            stats = new MeditationStatsDto();
+        }
+
+        if (patterns == null)
+        {
+            _logger.LogWarning("Patterns is null, using default values");
+            patterns = new MeditationPatternsDto();
+        }
+
         return new RecommendationContext
         {
-            TotalSessions = stats.TotalSessions,
-            CompletedSessions = stats.CompletedSessions,
-            CompletionRate = stats.TotalSessions > 0 ? (double)stats.CompletedSessions / stats.TotalSessions * 100 : 0,
-            TotalMinutes = stats.TotalMinutes,
-            AverageRating = stats.AverageRating,
-            MoodImprovement = stats.AverageMoodImprovement,
-            PreferredTeachers = patterns.PreferredTeachers?.Select(t => t.Name).ToList() ?? new(),
-            PreferredThemes = patterns.PreferredThemes?.Select(t => t.Name).ToList() ?? new(),
-            BestTimesOfDay = patterns.BestTimesOfDay?.Select(t => t.TimeOfDay).ToList() ?? new(),
+            TotalSessions = stats?.TotalSessions ?? 0,
+            CompletedSessions = stats?.CompletedSessions ?? 0,
+            CompletionRate = (stats?.TotalSessions ?? 0) > 0 ? (double)(stats?.CompletedSessions ?? 0) / (stats?.TotalSessions ?? 1) * 100 : 0,
+            TotalMinutes = stats?.TotalMinutes ?? 0,
+            AverageRating = stats?.AverageRating ?? 0,
+            MoodImprovement = stats?.AverageMoodImprovement ?? 0,
+            PreferredTeachers = patterns?.PreferredTeachers?.Select(t => t.Name).ToList() ?? new(),
+            PreferredThemes = patterns?.PreferredThemes?.Select(t => t.Name).ToList() ?? new(),
+            BestTimesOfDay = patterns?.BestTimesOfDay?.Select(t => t.TimeOfDay).ToList() ?? new(),
             RecentSessions = history?.Select(h => new RecentSessionInfo
             {
                 Title = h.SessionTitle ?? "Unknown",

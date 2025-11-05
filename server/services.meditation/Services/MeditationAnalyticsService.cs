@@ -234,7 +234,7 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
         try
         {
             const string sql = @"
-                SELECT 
+                SELECT
                     COUNT(*) as total_sessions,
                     SUM(CASE WHEN completed = true THEN 1 ELSE 0 END) as completed_sessions,
                     SUM(duration_seconds) as total_minutes_seconds,
@@ -244,7 +244,14 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
                 FROM meditation_analytics
                 WHERE user_id = @UserId";
 
-            var result = await _dbConnection.QuerySingleAsync<dynamic>(sql, new { UserId = userId });
+            var result = await _dbConnection.QuerySingleOrDefaultAsync<dynamic>(sql, new { UserId = userId });
+
+            // If no results, return default stats (new user)
+            if (result == null)
+            {
+                _logger.LogInformation("No meditation stats found for user {UserId}, returning default stats", userId);
+                return new MeditationStatsDto();
+            }
 
             return new MeditationStatsDto
             {
