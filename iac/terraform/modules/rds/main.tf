@@ -150,7 +150,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials_with_host" {
 # CloudWatch Log Group for RDS
 resource "aws_cloudwatch_log_group" "rds" {
   name              = "/aws/rds/instance/${aws_db_instance.main.identifier}/postgresql"
-  retention_in_days = 2
+  retention_in_days = 1
 
   tags = {
     Name = "${var.environment}-guras-db-logs"

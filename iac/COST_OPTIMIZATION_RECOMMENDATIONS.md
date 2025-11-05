@@ -12,8 +12,8 @@ Your current infrastructure has several cost-saving opportunities, particularly 
 - **RDS Logs**: 7 days retention (`/aws/rds/instance/{id}/postgresql`)
 
 ### Recommended Change
-- **ECS Logs**: Change to **2 days** retention
-- **RDS Logs**: Change to **2 days** retention
+- **ECS Logs**: Change to **1 day** retention
+- **RDS Logs**: Change to **1 day** retention
 
 ### Cost Impact
 - **Current**: ~$0.50/GB ingested + $0.03/GB stored per month
@@ -29,7 +29,7 @@ Update the following files:
 retention_in_days = 7
 
 # Change to:
-retention_in_days = 2
+retention_in_days = 1
 ```
 
 #### File 2: `iac/terraform/modules/rds/main.tf` (Line 153)
@@ -38,13 +38,14 @@ retention_in_days = 2
 retention_in_days = 7
 
 # Change to:
-retention_in_days = 2
+retention_in_days = 1
 ```
 
 ### Why This Works
-- 2 days is sufficient for debugging recent issues
+- 1 day is sufficient for debugging recent issues
 - Older logs are rarely needed for troubleshooting
 - You can still export logs to S3 for long-term archival if needed
+- AWS CloudWatch only accepts specific retention values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653
 
 ---
 

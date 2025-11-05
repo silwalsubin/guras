@@ -15,7 +15,7 @@ resource "aws_ecs_cluster" "main" {
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/ecs/${var.environment}-guras-app"
-  retention_in_days = 2
+  retention_in_days = 1
 
   tags = {
     Name = "${var.environment}-guras-app-logs"
