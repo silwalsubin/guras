@@ -269,10 +269,10 @@ public class SpiritualAIService : ISpiritualAIService
                 Stop = new[] { "Human:", "User:", "Question:" }
             };
 
-            var response = await CallOpenAIAsync(openAIRequest);
+            var response = await CallOpenAIRawAsync(openAIRequest);
 
             _logger.LogInformation("Successfully generated meditation recommendations");
-            return response.Response;
+            return response;
         }
         catch (Exception ex)
         {
@@ -281,7 +281,10 @@ public class SpiritualAIService : ISpiritualAIService
         }
     }
 
-    private async Task<AIResponse> CallOpenAIAsync(OpenAIRequest request)
+    /// <summary>
+    /// Call OpenAI API and return raw string response (for recommendations and guidance)
+    /// </summary>
+    private async Task<string> CallOpenAIRawAsync(OpenAIRequest request)
     {
         var settings = new JsonSerializerSettings
         {
@@ -303,9 +306,9 @@ public class SpiritualAIService : ISpiritualAIService
         _logger.LogInformation("Request payload: {Json}", json);
 
         var response = await _httpClient.PostAsync(url, content);
-        
+
         _logger.LogInformation("OpenAI API response status: {StatusCode}", response.StatusCode);
-        
+
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync();
@@ -339,15 +342,30 @@ public class SpiritualAIService : ISpiritualAIService
             throw;
         }
 
-        if (openAIResponse?.Choices?.Length == 0)
+        if (openAIResponse?.Choices == null || openAIResponse.Choices.Length == 0)
         {
-            throw new InvalidOperationException("No response from OpenAI API");
+            _logger.LogError("OpenAI response has no choices. Response: {Response}", JsonConvert.SerializeObject(openAIResponse));
+            throw new InvalidOperationException("No response from OpenAI API - empty choices array");
         }
 
-        var aiResponse = openAIResponse!.Choices[0].Message.Content;
+        var aiResponse = openAIResponse.Choices[0].Message?.Content;
+
+        if (string.IsNullOrEmpty(aiResponse))
+        {
+            _logger.LogError("OpenAI response content is empty. Full response: {Response}", JsonConvert.SerializeObject(openAIResponse));
+            throw new InvalidOperationException("No content in OpenAI API response");
+        }
+
+        _logger.LogInformation("Raw AI response: {Response}", aiResponse);
+        return aiResponse;
+    }
+
+    private async Task<AIResponse> CallOpenAIAsync(OpenAIRequest request)
+    {
+        var rawResponse = await CallOpenAIRawAsync(request);
 
         // Parse the AI response to extract structured data
-        return ParseAIResponse(aiResponse);
+        return ParseAIResponse(rawResponse);
     }
 
     private AIResponse ParseAIResponse(string aiResponse)
