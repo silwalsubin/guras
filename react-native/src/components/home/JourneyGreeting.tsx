@@ -87,7 +87,7 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
           <View style={styles.greetingSection}>
             <MaterialCommunityIcons
               name={iconName}
-              size={32}
+              size={24}
               color={getBrandColors().primary}
               style={styles.iconContainer}
             />
@@ -123,7 +123,7 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
           <View style={styles.greetingSection}>
             <MaterialCommunityIcons
               name={iconName}
-              size={32}
+              size={24}
               color={getBrandColors().primary}
               style={styles.iconContainer}
             />
@@ -157,7 +157,7 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
           <View style={styles.greetingSection}>
             <MaterialCommunityIcons
               name={iconName}
-              size={32}
+              size={24}
               color={getBrandColors().primary}
               style={styles.iconContainer}
             />
