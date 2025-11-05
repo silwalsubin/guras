@@ -189,7 +189,7 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
             </Text>
           </View>
 
-          {/* Guidance Section */}
+          {/* Combined Guidance & Supportive Message Section */}
           <View style={styles.guidanceSection}>
             <FontAwesome
               name="lightbulb-o"
@@ -197,22 +197,14 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
               color={brandColors.primary}
               style={styles.guidanceIcon}
             />
-            <Text style={[styles.guidanceText, { color: themeColors.textSecondary }]}>
-              {guidance.guidance}
-            </Text>
-          </View>
-
-          {/* Supportive Message Section */}
-          <View style={styles.supportiveSection}>
-            <FontAwesome
-              name="compass"
-              size={16}
-              color={brandColors.primary}
-              style={styles.supportiveIcon}
-            />
-            <Text style={[styles.supportiveText, { color: themeColors.textSecondary }]}>
-              {guidance.supportiveMessage}
-            </Text>
+            <View style={styles.guidanceTextContainer}>
+              <Text style={[styles.guidanceText, { color: themeColors.textSecondary }]}>
+                {guidance.guidance}
+              </Text>
+              <Text style={[styles.supportiveText, { color: themeColors.textSecondary, marginTop: 12 }]}>
+                {guidance.supportiveMessage}
+              </Text>
+            </View>
           </View>
         </View>
       ) : null}
@@ -304,27 +296,19 @@ const styles = StyleSheet.create({
   guidanceIcon: {
     marginTop: 3,
   },
+  guidanceTextContainer: {
+    flex: 1,
+  },
   guidanceText: {
     ...TYPOGRAPHY.BODY_SMALL,
     fontWeight: '400',
     lineHeight: 24,
-    flex: 1,
     letterSpacing: 0.2,
-  },
-  // Supportive Section
-  supportiveSection: {
-    flexDirection: 'row',
-    gap: 14,
-    paddingVertical: 12,
-  },
-  supportiveIcon: {
-    marginTop: 3,
   },
   supportiveText: {
     ...TYPOGRAPHY.BODY_SMALL,
     fontWeight: '400',
     lineHeight: 24,
-    flex: 1,
     letterSpacing: 0.2,
   },
 });
