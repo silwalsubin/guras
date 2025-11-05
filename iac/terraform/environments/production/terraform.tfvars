@@ -21,4 +21,7 @@ db_allocated_storage = 50
 domain_name = "gurasuniverse.com"
 route53_zone_id = "Z03420161UX2FR5OUM4K8"  # Replace with your actual Route53 hosted zone ID
 
- 
+# VPC Endpoints Configuration - Disabled for cost savings
+# Removing Interface Endpoints (CloudWatch Logs, Secrets Manager, KMS)
+# Saves ~$21.60/month, traffic goes through NAT Gateway instead
+enable_vpc_endpoints = false

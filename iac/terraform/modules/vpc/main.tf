@@ -361,50 +361,9 @@ resource "aws_vpc_endpoint" "s3" {
   }
 }
 
-# VPC Endpoint for CloudWatch Logs
-resource "aws_vpc_endpoint" "logs" {
-  vpc_id              = aws_vpc.main.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.logs"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.private[*].id
-  security_group_ids  = [aws_security_group.vpc_endpoints.id]
-  private_dns_enabled = true
-
-  tags = {
-    Name = "${var.environment}-logs-endpoint"
-  }
-}
-
-# VPC Endpoint for Secrets Manager
-resource "aws_vpc_endpoint" "secretsmanager" {
-  vpc_id              = aws_vpc.main.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.secretsmanager"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.private[*].id
-  security_group_ids  = [aws_security_group.vpc_endpoints.id]
-  private_dns_enabled = true
-
-  tags = {
-    Name = "${var.environment}-secretsmanager-endpoint"
-  }
-}
-
-# VPC Endpoint for KMS
-resource "aws_vpc_endpoint" "kms" {
-  vpc_id              = aws_vpc.main.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.kms"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.private[*].id
-  security_group_ids  = [aws_security_group.vpc_endpoints.id]
-  private_dns_enabled = true
-
-  tags = {
-    Name = "${var.environment}-kms-endpoint"
-  }
-}
-
-# Security Group for VPC Endpoints
+# Security Group for VPC Endpoints (only created if endpoints are enabled)
 resource "aws_security_group" "vpc_endpoints" {
+  count       = var.enable_vpc_endpoints ? 1 : 0
   name_prefix = "${var.environment}-vpc-endpoints-"
   vpc_id      = aws_vpc.main.id
 
@@ -424,6 +383,51 @@ resource "aws_security_group" "vpc_endpoints" {
 
   tags = {
     Name = "${var.environment}-vpc-endpoints-sg"
+  }
+}
+
+# VPC Endpoint for CloudWatch Logs (optional)
+resource "aws_vpc_endpoint" "logs" {
+  count               = var.enable_vpc_endpoints ? 1 : 0
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.logs"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints[0].id]
+  private_dns_enabled = true
+
+  tags = {
+    Name = "${var.environment}-logs-endpoint"
+  }
+}
+
+# VPC Endpoint for Secrets Manager (optional)
+resource "aws_vpc_endpoint" "secretsmanager" {
+  count               = var.enable_vpc_endpoints ? 1 : 0
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.secretsmanager"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints[0].id]
+  private_dns_enabled = true
+
+  tags = {
+    Name = "${var.environment}-secretsmanager-endpoint"
+  }
+}
+
+# VPC Endpoint for KMS (optional)
+resource "aws_vpc_endpoint" "kms" {
+  count               = var.enable_vpc_endpoints ? 1 : 0
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.kms"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints[0].id]
+  private_dns_enabled = true
+
+  tags = {
+    Name = "${var.environment}-kms-endpoint"
   }
 }
 

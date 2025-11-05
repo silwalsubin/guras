@@ -29,3 +29,8 @@ external_rds_access_cidrs = ["99.135.177.6/32"]  # Your specific IP address for 
 # NAT Instance (t3.nano) costs ~$3-5/month vs NAT Gateway (~$32/month)
 use_nat_instance = true
 nat_instance_type = "t3.nano"
+
+# VPC Endpoints Configuration - Disabled for cost savings
+# Removing Interface Endpoints (CloudWatch Logs, Secrets Manager, KMS)
+# Saves ~$21.60/month, traffic goes through NAT Instance instead
+enable_vpc_endpoints = false

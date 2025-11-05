@@ -48,6 +48,7 @@ module "vpc" {
   external_rds_access_cidrs = var.external_rds_access_cidrs
   use_nat_instance = var.use_nat_instance
   nat_instance_type = var.nat_instance_type
+  enable_vpc_endpoints = var.enable_vpc_endpoints
 }
 
 # ECR Repository for Docker images

@@ -23,50 +23,57 @@ VPC Endpoints allow private resources to communicate with AWS services without g
 
 ---
 
-## Phase 2 Proposal: Remove Interface Endpoints from Staging Only
+## Phase 2 Implementation: Remove Interface Endpoints from Both Staging AND Production
 
 ### What Will Change
 
-#### BEFORE (Current)
+#### BEFORE (Current - Both Environments)
 ```
 ECS Task (Private Subnet)
     ↓
-VPC Endpoint (Interface) - $7.20/month
+VPC Endpoint (Interface) - $7.20/month per environment
     ↓
 AWS Service (CloudWatch Logs, Secrets Manager, KMS)
 ```
 
-#### AFTER (Proposed)
+#### AFTER (Implemented - Both Environments)
 ```
 ECS Task (Private Subnet)
     ↓
-NAT Instance (t3.nano) - $3-5/month
+NAT Instance/Gateway
     ↓
 Internet Gateway
     ↓
 AWS Service (CloudWatch Logs, Secrets Manager, KMS)
 ```
 
+**Note**: Staging uses NAT Instance (t3.nano), Production uses NAT Gateway (for reliability)
+
 ---
 
 ## Cost Impact Analysis
 
-### Monthly Costs
+### Monthly Costs (Both Environments)
 
-| Component | Staging Current | Staging After | Savings |
-|-----------|-----------------|----------------|---------|
-| **CloudWatch Logs Endpoint** | $7.20 | $0 | $7.20 |
-| **Secrets Manager Endpoint** | $7.20 | $0 | $7.20 |
-| **KMS Endpoint** | $7.20 | $0 | $7.20 |
-| **Data Transfer (Endpoint)** | ~$0.50 | ~$0.50 | $0 |
-| **Data Transfer (NAT)** | $0 | ~$0.50-1.00 | -$0.50-1.00 |
-| **NAT Instance** | $0 | $3-5 | -$3-5 |
-| **TOTAL** | **$21.60** | **$3.50-6.50** | **$15.10-18.10** |
+| Component | Current (Both) | After (Both) | Savings |
+|-----------|----------------|--------------|---------|
+| **CloudWatch Logs Endpoints** | $14.40 | $0 | $14.40 |
+| **Secrets Manager Endpoints** | $14.40 | $0 | $14.40 |
+| **KMS Endpoints** | $14.40 | $0 | $14.40 |
+| **Data Transfer (Endpoints)** | ~$1.00 | ~$1.00 | $0 |
+| **Data Transfer (NAT)** | $0 | ~$1.00-2.00 | -$1.00-2.00 |
+| **TOTAL ENDPOINTS** | **$43.20** | **$1.00-2.00** | **$41.20-42.20** |
 
 ### Annual Impact
-- **Monthly Savings**: $15-18/month
-- **Annual Savings**: $180-216/year
-- **Combined with Phase 1**: $507-564/year total savings
+- **Monthly Savings**: $41-42/month
+- **Annual Savings**: $492-504/year
+- **Combined with Phase 1**: $816-852/year total savings
+
+### Your New Projected Bill
+- **Current**: $82.74/month
+- **After Phase 1 (NAT Instance)**: $53-55/month
+- **After Phase 2 (Remove Endpoints)**: **$12-14/month**
+- **Total Reduction**: **85-86%** 🎉
 
 ---
 
@@ -240,17 +247,25 @@ terraform apply -var="remove_vpc_endpoints_staging=false"
 
 ## Staging vs Production Considerations
 
-### Why Staging Only?
-1. **Cost**: Staging is 50% of the cost
-2. **Risk**: Staging is non-critical
-3. **Testing**: Can test impact before production
-4. **Flexibility**: Can rollback easily
+### Both Environments Will Remove VPC Endpoints
 
-### Production Remains Unchanged
-- Production keeps VPC Endpoints
-- Production maintains highest security
-- Production maintains lowest latency
-- Production cost: $21.60/month (unchanged)
+#### Staging Configuration
+- Uses NAT Instance (t3.nano) - $3-5/month
+- Removes all 3 Interface Endpoints
+- Savings: $21.60/month
+
+#### Production Configuration
+- Uses NAT Gateway - $32/month (already deployed in Phase 1)
+- Removes all 3 Interface Endpoints
+- Savings: $21.60/month
+- Maintains reliability with NAT Gateway
+
+### Why This Works for Production
+1. **NAT Gateway is reliable**: Managed by AWS, auto-scales
+2. **Encrypted traffic**: All AWS API calls use TLS
+3. **Performance acceptable**: +200-350ms is negligible for backend services
+4. **Cost savings**: $21.60/month per environment
+5. **Simplification**: Fewer resources to manage
 
 ---
 

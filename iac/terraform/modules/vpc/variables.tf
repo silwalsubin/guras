@@ -42,3 +42,9 @@ variable "nat_instance_type" {
   type        = string
   default     = "t3.nano"
 }
+
+variable "enable_vpc_endpoints" {
+  description = "Enable VPC Endpoints (CloudWatch Logs, Secrets Manager, KMS). Set to false to save costs."
+  type        = bool
+  default     = false
+}
