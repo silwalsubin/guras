@@ -30,7 +30,7 @@ output "rds_security_group_id" {
 
 output "vpc_endpoints_security_group_id" {
   description = "VPC endpoints security group ID"
-  value       = aws_security_group.vpc_endpoints.id
+  value       = var.enable_vpc_endpoints ? aws_security_group.vpc_endpoints[0].id : null
 }
 
 output "s3_vpc_endpoint_id" {
@@ -40,15 +40,15 @@ output "s3_vpc_endpoint_id" {
 
 output "secretsmanager_vpc_endpoint_id" {
   description = "Secrets Manager VPC endpoint ID"
-  value       = aws_vpc_endpoint.secretsmanager.id
+  value       = var.enable_vpc_endpoints ? aws_vpc_endpoint.secretsmanager[0].id : null
 }
 
 output "kms_vpc_endpoint_id" {
   description = "KMS VPC endpoint ID"
-  value       = aws_vpc_endpoint.kms.id
+  value       = var.enable_vpc_endpoints ? aws_vpc_endpoint.kms[0].id : null
 }
 
 output "logs_vpc_endpoint_id" {
   description = "CloudWatch Logs VPC endpoint ID"
-  value       = aws_vpc_endpoint.logs.id
-} 
+  value       = var.enable_vpc_endpoints ? aws_vpc_endpoint.logs[0].id : null
+}
