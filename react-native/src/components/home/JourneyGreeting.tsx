@@ -11,6 +11,7 @@ import { RootState } from '@/store';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '@/contexts/AuthContext';
 import { journalGuidanceService, PersonalizedGuidance } from '@/services/journalGuidanceService';
 
@@ -29,15 +30,15 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
   const [guidance, setGuidance] = useState<PersonalizedGuidance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { greeting, emoji, timeOfDay } = useMemo(() => {
+  const { greeting, iconName, iconLibrary, timeOfDay } = useMemo(() => {
     const hour = new Date().getHours();
-    
+
     if (hour < 12) {
-      return { greeting: 'Good Morning', emoji: '🌅', timeOfDay: 'morning' };
+      return { greeting: 'Good Morning', iconName: 'sunrise', iconLibrary: 'MaterialCommunityIcons', timeOfDay: 'morning' };
     } else if (hour < 18) {
-      return { greeting: 'Good Afternoon', emoji: '☀️', timeOfDay: 'afternoon' };
+      return { greeting: 'Good Afternoon', iconName: 'white-balance-sunny', iconLibrary: 'MaterialCommunityIcons', timeOfDay: 'afternoon' };
     } else {
-      return { greeting: 'Good Evening', emoji: '🌙', timeOfDay: 'evening' };
+      return { greeting: 'Good Evening', iconName: 'moon-waning-crescent', iconLibrary: 'MaterialCommunityIcons', timeOfDay: 'evening' };
     }
   }, []);
 
@@ -84,7 +85,12 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
         >
           {/* Greeting + Journal Prompt Section */}
           <View style={styles.greetingSection}>
-            <Text style={styles.emoji}>{emoji}</Text>
+            <MaterialCommunityIcons
+              name={iconName}
+              size={48}
+              color={getBrandColors().primary}
+              style={styles.iconContainer}
+            />
             <View style={styles.greetingTextContainer}>
               <Text style={[styles.greeting, { color: themeColors.textPrimary }]}>
                 {greeting}, {userName}
@@ -115,7 +121,12 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
         <View style={styles.mainContent}>
           {/* Greeting Section */}
           <View style={styles.greetingSection}>
-            <Text style={styles.emoji}>{emoji}</Text>
+            <MaterialCommunityIcons
+              name={iconName}
+              size={48}
+              color={getBrandColors().primary}
+              style={styles.iconContainer}
+            />
             <View style={styles.greetingTextContainer}>
               <Text style={[styles.greeting, { color: themeColors.textPrimary }]}>
                 {greeting}, {userName}
@@ -144,7 +155,12 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
         <View style={styles.mainContent}>
           {/* Greeting Section */}
           <View style={styles.greetingSection}>
-            <Text style={styles.emoji}>{emoji}</Text>
+            <MaterialCommunityIcons
+              name={iconName}
+              size={48}
+              color={getBrandColors().primary}
+              style={styles.iconContainer}
+            />
             <View style={styles.greetingTextContainer}>
               <Text style={[styles.greeting, { color: themeColors.textPrimary }]}>
                 {greeting}, {userName}
@@ -224,9 +240,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   greeting: {
-    ...TYPOGRAPHY.HEADING_3,
+    ...TYPOGRAPHY.H3,
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  iconContainer: {
+    marginTop: 2,
   },
   greetingSubtitle: {
     ...TYPOGRAPHY.BODY_SMALL,
