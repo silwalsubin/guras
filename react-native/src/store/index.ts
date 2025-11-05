@@ -28,7 +28,7 @@ const persistedGuidedMeditationReducer = persistReducer(
     storage: AsyncStorage,
     whitelist: [
       'completedSessions',
-      'totalGuidedSessions', 
+      'totalGuidedSessions',
       'totalGuidedMinutes',
       'enrolledPrograms',
       'programProgress',
@@ -45,6 +45,15 @@ const persistedGuidedMeditationReducer = persistReducer(
   guidedMeditationReducer
 );
 
+const persistedJournalReducer = persistReducer(
+  {
+    key: 'journal',
+    storage: AsyncStorage,
+    whitelist: ['entries'],
+  },
+  journalReducer
+);
+
 const store = configureStore({
   reducer: {
     navigation: navigationReducer,
@@ -56,7 +65,7 @@ const store = configureStore({
     spiritualTeacher: spiritualTeacherReducer,
     teacher: teacherReducer,
     recommendations: recommendationReducer,
-    journal: journalReducer,
+    journal: persistedJournalReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -15,22 +15,29 @@ import JourneyGreeting from '@/components/home/JourneyGreeting';
 import AIRecommendedQuote from '@/components/meditation/AIRecommendedQuote';
 import RecommendationsList from '@/components/meditation/RecommendationsList';
 import { fetchRecommendations } from '@/store/recommendationSlice';
+import { fetchJournalEntries } from '@/store/journalSlice';
 import { MeditationRecommendation } from '@/components/meditation/RecommendationCard';
 import { recommendationAnalyticsService } from '@/services/recommendationAnalyticsService';
 import { setJournalCreateOpen } from '@/store/bottomNavSlice';
 import JournalCreateScreen from '@/screens/journal/JournalCreateScreen';
+import { useAuth } from '@/contexts/AuthContext';
 
 const HomeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const recommendations = useSelector((state: RootState) => state.recommendations.recommendations);
   const recommendationsLoading = useSelector((state: RootState) => state.recommendations.loading);
+  const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [showJournalCreate, setShowJournalCreate] = useState(false);
 
   useEffect(() => {
     dispatch(fetchRecommendations(3));
-  }, [dispatch]);
+    // Load journal entries for the greeting section
+    if (user?.uid) {
+      dispatch(fetchJournalEntries({ userId: user.uid }));
+    }
+  }, [dispatch, user?.uid]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

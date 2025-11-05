@@ -58,7 +58,7 @@ public class JournalController(IJournalEntryService journalEntryService, ISpirit
             var userIdClaim = User.FindFirst("application_user_id")?.Value;
             if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
-                return Unauthorized("Application user ID not found in token");
+                return UnauthorizedResponse("Application user ID not found in token");
             }
 
             if (page < 1) page = 1;
@@ -67,12 +67,12 @@ public class JournalController(IJournalEntryService journalEntryService, ISpirit
             logger.LogInformation("Fetching journal entries for user: {UserId}, page: {Page}, pageSize: {PageSize}, search: {Search}", userId, page, pageSize, search);
 
             var entries = await journalEntryService.GetByUserIdAsync(userId, page, pageSize, search);
-            return Ok(entries);
+            return SuccessResponse(entries);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error fetching journal entries");
-            return StatusCode(500, new { Error = "Internal server error" });
+            return ErrorResponse("Failed to fetch journal entries", 500);
         }
     }
 
