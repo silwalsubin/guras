@@ -29,4 +29,16 @@ variable "bastion_security_group_id" {
   description = "Bastion host security group ID for RDS access"
   type        = string
   default     = null
-} 
+}
+
+variable "use_nat_instance" {
+  description = "Use NAT Instance (t3.nano) instead of NAT Gateway for cost savings"
+  type        = bool
+  default     = false
+}
+
+variable "nat_instance_type" {
+  description = "Instance type for NAT Instance"
+  type        = string
+  default     = "t3.nano"
+}

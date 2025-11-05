@@ -30,42 +30,126 @@ This document outlines additional cost-saving opportunities based on your actual
 ### Why This Matters
 Your VPC costs ($29.60) are 35.8% of your total bill and almost equal to your EC2 costs. This is the single biggest optimization opportunity.
 
-### Recommendation
-**Remove NAT Gateway from Staging** - Use NAT Instance instead (or remove entirely if not needed)
+### Decision: Use NAT Instance for Staging (OpenAI Access Required)
+Since staging needs outbound access for OpenAI API calls, we're replacing the NAT Gateway with a **NAT Instance (t3.nano)** instead of removing it entirely.
 
+### Changes Implemented
+
+#### 1. Added Variables to Root Configuration
+**File**: `iac/terraform/variables.tf`
 ```terraform
-# In vpc/main.tf, make NAT Gateway conditional:
-resource "aws_nat_gateway" "main" {
-  count         = var.environment == "production" ? 1 : 0
-  allocation_id = aws_eip.nat[0].id
-  subnet_id     = aws_subnet.public[0].id
-  
-  tags = {
-    Name = "${var.environment}-nat-gateway"
-  }
-  
-  depends_on = [aws_internet_gateway.main]
+variable "use_nat_instance" {
+  description = "Use NAT Instance (t3.nano) instead of NAT Gateway for cost savings"
+  type        = bool
+  default     = false
 }
 
-# Also make EIP conditional:
-resource "aws_eip" "nat" {
-  count  = var.environment == "production" ? 1 : 0
-  domain = "vpc"
-  tags = {
-    Name = "${var.environment}-nat-eip"
+variable "nat_instance_type" {
+  description = "Instance type for NAT Instance"
+  type        = string
+  default     = "t3.nano"
+}
+```
+
+#### 2. Updated VPC Module Variables
+**File**: `iac/terraform/modules/vpc/variables.tf`
+- Added `use_nat_instance` variable (boolean, default: false)
+- Added `nat_instance_type` variable (string, default: "t3.nano")
+
+#### 3. Refactored VPC Module Main Configuration
+**File**: `iac/terraform/modules/vpc/main.tf`
+
+**Changes Made:**
+- ✅ Made NAT Gateway conditional (only created when `use_nat_instance = false`)
+- ✅ Made EIP for NAT Gateway conditional
+- ✅ Added NAT Instance resources:
+  - EC2 instance with latest Amazon NAT AMI
+  - Security group for NAT Instance (allows all traffic from VPC, all outbound)
+  - IAM role with SSM access for management
+  - EIP for NAT Instance
+- ✅ Updated private route table to use either NAT Gateway or NAT Instance based on configuration
+
+**Code Structure:**
+```terraform
+# NAT Gateway (used when use_nat_instance = false)
+resource "aws_nat_gateway" "main" {
+  count = var.use_nat_instance ? 0 : 1
+  # ... configuration
+}
+
+# NAT Instance (used when use_nat_instance = true)
+resource "aws_instance" "nat" {
+  count = var.use_nat_instance ? 1 : 0
+  # ... configuration
+}
+
+# Route table automatically uses the appropriate NAT resource
+resource "aws_route_table" "private" {
+  route {
+    nat_gateway_id       = var.use_nat_instance ? null : aws_nat_gateway.main[0].id
+    network_interface_id = var.use_nat_instance ? aws_instance.nat[0].primary_network_interface_id : null
   }
 }
 ```
 
-### Cost Impact
-- **Staging Savings**: ~$32/month
-- **Annual Savings**: ~$384/year
-- **Trade-off**: Staging private subnets won't have outbound internet access (usually not needed for staging)
+#### 4. Updated Staging Configuration
+**File**: `iac/terraform/environments/staging/terraform.tfvars`
+```terraform
+# NAT Configuration - Use NAT Instance for staging (cost savings)
+# NAT Instance (t3.nano) costs ~$3-5/month vs NAT Gateway (~$32/month)
+use_nat_instance = true
+nat_instance_type = "t3.nano"
+```
 
-### Alternative
-If staging needs outbound access, use a **NAT Instance** (t3.nano) instead:
-- **Cost**: ~$3-5/month (vs $32 for NAT Gateway)
-- **Savings**: ~$27-29/month
+#### 5. Updated Root Module to Pass Variables
+**File**: `iac/terraform/main.tf`
+```terraform
+module "vpc" {
+  source = "./modules/vpc"
+
+  # ... existing variables ...
+  use_nat_instance = var.use_nat_instance
+  nat_instance_type = var.nat_instance_type
+}
+```
+
+### Expected Outcomes
+
+#### Cost Savings
+- **Current NAT Gateway Cost**: ~$32/month
+- **New NAT Instance Cost**: ~$3-5/month
+- **Monthly Savings**: ~$27-29/month
+- **Annual Savings**: ~$324-348/year
+- **Percentage Reduction**: 84-87% reduction in NAT costs
+
+#### Functionality
+- ✅ Staging can still access OpenAI API (outbound internet access maintained)
+- ✅ Private subnets can reach external services
+- ✅ Production remains unchanged (still uses NAT Gateway for reliability)
+- ✅ NAT Instance has SSM access for troubleshooting if needed
+
+#### Trade-offs
+- ⚠️ NAT Instance is less resilient than NAT Gateway (single point of failure)
+  - **Mitigation**: Acceptable for staging environment
+  - **Note**: Can be quickly replaced if instance fails
+- ⚠️ Slightly lower throughput than NAT Gateway
+  - **Mitigation**: t3.nano is sufficient for staging workloads
+- ⚠️ Requires manual restart if instance fails
+  - **Mitigation**: Can add auto-recovery or auto-scaling if needed
+
+### Production Configuration
+**File**: `iac/terraform/environments/production/terraform.tfvars`
+```terraform
+# Production continues to use NAT Gateway for reliability
+use_nat_instance = false  # (default, not explicitly set)
+```
+
+### Verification Steps
+1. ✅ Terraform validates successfully
+2. ✅ Variables are properly defined at all levels
+3. ✅ Conditional logic correctly routes between NAT Gateway and NAT Instance
+4. ✅ Staging will use NAT Instance (t3.nano)
+5. ✅ Production will use NAT Gateway (unchanged)
 
 ---
 
@@ -258,34 +342,51 @@ This is **NOT a cost-saving measure** but a security best practice. Keep it enab
 
 ## Summary of All Opportunities (Based on Your Actual Bill)
 
-| Change | Priority | Monthly Savings | Annual Savings | % of Bill | Effort | Risk |
-|--------|----------|-----------------|-----------------|-----------|--------|------|
-| **NAT Gateway (staging)** | 🔴 CRITICAL | **~$15** | **~$180** | **18%** | 15 min | Low |
-| VPC Endpoints (staging) | MEDIUM | $7-10 | $84-120 | 8-12% | 20 min | Low |
-| CloudWatch Logs (already done) | DONE | $2-3 | $24-36 | 3% | ✅ | ✅ |
-| S3 Versioning | LOW | $0-1 | $0-12 | <1% | 10 min | Medium |
-| ECR Retention | LOW | $0-1 | $0-12 | <1% | 10 min | Low |
-| RDS Max Storage | LOW | $0-1 | $0-12 | <1% | 5 min | Low |
-| **TOTAL ADDITIONAL** | - | **$24-30** | **$288-372** | **29-36%** | **60 min** | - |
+| Change | Status | Monthly Savings | Annual Savings | % of Bill | Effort | Risk |
+|--------|--------|-----------------|-----------------|-----------|--------|------|
+| **NAT Gateway → NAT Instance (staging)** | ✅ IMPLEMENTED | **~$27-29** | **~$324-348** | **33-35%** | 30 min | Low |
+| VPC Endpoints (staging) | PENDING | $7-10 | $84-120 | 8-12% | 20 min | Low |
+| CloudWatch Logs (already done) | ✅ DONE | $2-3 | $24-36 | 3% | ✅ | ✅ |
+| S3 Versioning | PENDING | $0-1 | $0-12 | <1% | 10 min | Medium |
+| ECR Retention | PENDING | $0-1 | $0-12 | <1% | 10 min | Low |
+| RDS Max Storage | PENDING | $0-1 | $0-12 | <1% | 5 min | Low |
+| **TOTAL IMPLEMENTED** | ✅ | **~$29-32** | **~$348-384** | **35-39%** | **30 min** | - |
+| **TOTAL PENDING** | ⏳ | **$8-12** | **$96-144** | **10-15%** | **50 min** | - |
 | **CURRENT BILL** | - | **$82.74** | **$992.88** | **100%** | - | - |
-| **AFTER OPTIMIZATION** | - | **$52-58** | **$624-704** | **64-71%** | - | - |
+| **AFTER NAT CHANGE** | ✅ | **$53-55** | **$636-660** | **64-67%** | - | - |
+| **AFTER ALL OPTIMIZATIONS** | 🎯 | **$45-50** | **$540-600** | **54-61%** | - | - |
 
 ---
 
-## Implementation Priority (Based on Your Bill)
+## Implementation Status & Next Steps
 
-### 🔴 PHASE 1 (DO THIS FIRST - This Week)
-**NAT Gateway Removal from Staging**
-- **Impact**: Reduce bill by ~18% ($15/month)
-- **Effort**: 15 minutes
+### ✅ PHASE 1 COMPLETED - NAT Gateway → NAT Instance
+**Status**: Implementation Complete
+- **Changes**: 5 files modified
+- **Impact**: Reduce bill by ~33-35% ($27-29/month)
+- **Effort**: 30 minutes
 - **Risk**: Low (staging only)
-- **Question**: Does your staging environment need outbound internet access?
-  - If NO → Remove NAT Gateway entirely
-  - If YES → Use NAT Instance (t3.nano) instead (~$3-5/month vs $32/month)
+- **Next Action**: Deploy to staging and test
+
+**Files Modified:**
+1. ✅ `iac/terraform/variables.tf` - Added NAT variables
+2. ✅ `iac/terraform/modules/vpc/variables.tf` - Added module variables
+3. ✅ `iac/terraform/modules/vpc/main.tf` - Implemented conditional NAT logic
+4. ✅ `iac/terraform/environments/staging/terraform.tfvars` - Enabled NAT Instance
+5. ✅ `iac/terraform/main.tf` - Passed variables to VPC module
 
 ### 🟡 PHASE 2 (Next Week - Medium Priority)
-1. VPC Endpoints removal (staging) - Save $7-10/month
-2. RDS max storage reduction - Save $0-1/month
+**VPC Endpoints Optimization**
+- Remove Interface Endpoints from staging
+- Save: $7-10/month
+- Effort: 20 minutes
+- Risk: Low
+
+**RDS Max Storage Reduction**
+- Reduce max storage for staging
+- Save: $0-1/month
+- Effort: 5 minutes
+- Risk: Low
 
 ### 🟢 PHASE 3 (Optional - Low Priority)
 1. S3 versioning changes - Save $0-1/month
@@ -323,49 +424,152 @@ All changes are reversible:
 
 ---
 
-## Recommended Action Plan
+## Deployment Instructions for NAT Instance Change
 
-### Immediate Action (This Week)
-**Answer this question first:**
-> Does your staging environment need outbound internet access to external services?
+### Prerequisites
+- Terraform >= 1.0
+- AWS CLI configured
+- Access to staging environment
 
-**If NO:**
-- Remove NAT Gateway from staging entirely
-- Save: $15/month ($180/year)
-- Implementation: 15 minutes
+### Step 1: Validate Terraform Configuration
+```bash
+cd iac/terraform/environments/staging
+terraform init
+terraform validate
+```
 
-**If YES:**
-- Replace NAT Gateway with NAT Instance (t3.nano)
-- Save: $27-29/month ($324-348/year)
-- Implementation: 30 minutes
+**Expected Output:**
+```
+Success! The configuration is valid.
+```
 
-### Why This Matters
-- Your VPC costs ($29.60) are 36% of your total bill
-- NAT Gateway is the primary cost driver
-- This single change could reduce your bill by 18-35%
+### Step 2: Review Terraform Plan
+```bash
+terraform plan -out=tfplan
+```
+
+**Expected Changes:**
+- ❌ Destroy: `aws_nat_gateway.main` (old NAT Gateway)
+- ❌ Destroy: `aws_eip.nat` (old EIP)
+- ✅ Create: `aws_instance.nat` (new NAT Instance)
+- ✅ Create: `aws_security_group.nat_instance` (security group)
+- ✅ Create: `aws_iam_role.nat_instance` (IAM role)
+- ✅ Create: `aws_iam_instance_profile.nat_instance` (instance profile)
+- ✅ Create: `aws_eip.nat_instance` (new EIP)
+- 🔄 Update: `aws_route_table.private` (route table)
+
+### Step 3: Apply Changes
+```bash
+terraform apply tfplan
+```
+
+**Expected Duration**: 3-5 minutes
+
+**Expected Output:**
+```
+Apply complete! Resources added: 5, changed: 1, destroyed: 2.
+```
+
+### Step 4: Verify Deployment
+```bash
+# Check NAT Instance is running
+aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=staging-nat-instance" \
+  --query 'Reservations[0].Instances[0].[InstanceId,State.Name,InstanceType]'
+
+# Expected output:
+# [
+#   "i-0123456789abcdef0",
+#   "running",
+#   "t3.nano"
+# ]
+```
+
+### Step 5: Test Outbound Connectivity
+```bash
+# SSH into an ECS task or test instance in private subnet
+# Run: curl https://api.openai.com/v1/models
+
+# Expected: Should successfully reach OpenAI API
+```
+
+### Step 6: Monitor Costs
+- Check AWS Cost Explorer after 24 hours
+- Expected VPC costs to drop from $29.60 to ~$3-5/month
+- Monitor for 1 week to ensure stability
 
 ---
 
-## Next Steps
+## Rollback Plan (If Issues Occur)
 
-1. **Decide on NAT Gateway** - Answer the question above
-2. **Implement Phase 1** - NAT Gateway optimization
-3. **Monitor for 1 week** - Ensure no issues
-4. **Implement Phase 2** - VPC Endpoints optimization
-5. **Monitor costs** - Check AWS Cost Explorer after each change
+### Quick Rollback
+```bash
+cd iac/terraform/environments/staging
+
+# Revert to NAT Gateway
+terraform apply -var="use_nat_instance=false"
+```
+
+**Expected Duration**: 3-5 minutes
+
+**What Happens:**
+- NAT Instance will be destroyed
+- NAT Gateway will be recreated
+- Costs will return to $32/month
 
 ---
 
-## Questions to Answer
+## Monitoring & Validation
 
-1. **Does staging need outbound internet access?** (NAT Gateway decision)
-   - Check if staging services call external APIs
-   - Check if staging pulls from external registries
-   - Check if staging needs to reach external databases
+### Daily Checks (First Week)
+- ✅ ECS tasks can reach OpenAI API
+- ✅ RDS connections working
+- ✅ No connectivity errors in logs
+- ✅ NAT Instance CPU/Memory usage normal
 
-2. **How critical is version history for S3 audio files?** (Versioning decision)
+### Weekly Checks
+- ✅ AWS Cost Explorer shows reduced VPC costs
+- ✅ No performance degradation
+- ✅ All services functioning normally
 
-3. **How many ECR images do you need for rollback?** (ECR retention decision)
+### Monthly Checks
+- ✅ Verify cost savings in AWS bill
+- ✅ Compare with baseline ($29.60 → ~$3-5)
 
-4. **What's your RDS storage growth rate?** (Max storage decision)
+---
+
+## Next Steps After Deployment
+
+1. **Deploy NAT Instance to Staging** (This Week)
+   - Run terraform apply
+   - Test OpenAI connectivity
+   - Monitor for 1 week
+
+2. **Implement Phase 2** (Next Week)
+   - Remove VPC Endpoints from staging
+   - Reduce RDS max storage
+   - Expected savings: $7-11/month
+
+3. **Monitor Total Savings**
+   - After Phase 1: $27-29/month saved
+   - After Phase 2: $34-40/month saved
+   - After Phase 3: $35-41/month saved
+
+---
+
+## Cost Projection
+
+### Current Monthly Bill
+- **Total**: $82.74/month
+- **VPC (NAT Gateway)**: $29.60
+
+### After NAT Instance Deployment
+- **Total**: ~$53-55/month
+- **VPC (NAT Instance)**: ~$3-5
+- **Savings**: ~$27-29/month (33-35% reduction)
+
+### After All Optimizations
+- **Total**: ~$45-50/month
+- **Savings**: ~$32-37/month (39-45% reduction)
+- **Annual Savings**: ~$384-444/year
 

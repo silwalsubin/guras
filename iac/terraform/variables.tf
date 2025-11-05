@@ -89,4 +89,16 @@ variable "external_rds_access_cidrs" {
   description = "CIDR blocks allowed to access RDS externally"
   type        = list(string)
   default     = []
-} 
+}
+
+variable "use_nat_instance" {
+  description = "Use NAT Instance (t3.nano) instead of NAT Gateway for cost savings"
+  type        = bool
+  default     = false
+}
+
+variable "nat_instance_type" {
+  description = "Instance type for NAT Instance"
+  type        = string
+  default     = "t3.nano"
+}

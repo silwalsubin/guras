@@ -40,12 +40,14 @@ data "aws_secretsmanager_secret_version" "openai_api_key" {
 # VPC and Networking
 module "vpc" {
   source = "./modules/vpc"
-  
+
   environment = var.environment
   vpc_cidr    = var.vpc_cidr
   azs         = var.availability_zones
   allow_external_rds_access = var.allow_external_rds_access
   external_rds_access_cidrs = var.external_rds_access_cidrs
+  use_nat_instance = var.use_nat_instance
+  nat_instance_type = var.nat_instance_type
 }
 
 # ECR Repository for Docker images

@@ -81,8 +81,9 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# NAT Gateway
+# NAT Gateway (used when use_nat_instance = false)
 resource "aws_eip" "nat" {
+  count  = var.use_nat_instance ? 0 : 1
   domain = "vpc"
   tags = {
     Name = "${var.environment}-nat-eip"
@@ -90,11 +91,122 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
+  count         = var.use_nat_instance ? 0 : 1
+  allocation_id = aws_eip.nat[0].id
   subnet_id     = aws_subnet.public[0].id
 
   tags = {
     Name = "${var.environment}-nat-gateway"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+# NAT Instance (used when use_nat_instance = true)
+# Get the latest NAT AMI
+data "aws_ami" "nat" {
+  count       = var.use_nat_instance ? 1 : 0
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-vpc-nat-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+# Security group for NAT Instance
+resource "aws_security_group" "nat_instance" {
+  count       = var.use_nat_instance ? 1 : 0
+  name_prefix = "${var.environment}-nat-instance-"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = [var.vpc_cidr]
+    description = "All traffic from VPC"
+  }
+
+  egress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "All outbound traffic"
+  }
+
+  tags = {
+    Name = "${var.environment}-nat-instance-sg"
+  }
+}
+
+# NAT Instance
+resource "aws_instance" "nat" {
+  count                = var.use_nat_instance ? 1 : 0
+  ami                  = data.aws_ami.nat[0].id
+  instance_type        = var.nat_instance_type
+  subnet_id            = aws_subnet.public[0].id
+  security_groups      = [aws_security_group.nat_instance[0].id]
+  source_dest_check    = false
+  iam_instance_profile = aws_iam_instance_profile.nat_instance[0].name
+
+  tags = {
+    Name = "${var.environment}-nat-instance"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+# IAM role for NAT Instance (for SSM access)
+resource "aws_iam_role" "nat_instance" {
+  count = var.use_nat_instance ? 1 : 0
+  name  = "${var.environment}-nat-instance-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.environment}-nat-instance-role"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "nat_instance_ssm" {
+  count      = var.use_nat_instance ? 1 : 0
+  role       = aws_iam_role.nat_instance[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "nat_instance" {
+  count = var.use_nat_instance ? 1 : 0
+  name  = "${var.environment}-nat-instance-profile"
+  role  = aws_iam_role.nat_instance[0].name
+}
+
+# Elastic IP for NAT Instance
+resource "aws_eip" "nat_instance" {
+  count    = var.use_nat_instance ? 1 : 0
+  instance = aws_instance.nat[0].id
+  domain   = "vpc"
+
+  tags = {
+    Name = "${var.environment}-nat-instance-eip"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -105,8 +217,9 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
+    cidr_block           = "0.0.0.0/0"
+    nat_gateway_id       = var.use_nat_instance ? null : aws_nat_gateway.main[0].id
+    network_interface_id = var.use_nat_instance ? aws_instance.nat[0].primary_network_interface_id : null
   }
 
   tags = {

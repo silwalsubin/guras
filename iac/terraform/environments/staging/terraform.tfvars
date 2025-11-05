@@ -25,4 +25,7 @@ route53_zone_id = "Z03420161UX2FR5OUM4K8"  # Replace with your actual Route53 ho
 allow_external_rds_access = true
 external_rds_access_cidrs = ["99.135.177.6/32"]  # Your specific IP address for secure access
 
- 
+# NAT Configuration - Use NAT Instance for staging (cost savings)
+# NAT Instance (t3.nano) costs ~$3-5/month vs NAT Gateway (~$32/month)
+use_nat_instance = true
+nat_instance_type = "t3.nano"
