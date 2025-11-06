@@ -7,11 +7,11 @@ namespace tests.services.users;
 
 public class UserServiceIntegrationTests
 {
-    private readonly UserService _userService;
+    private readonly IUserService _userService;
 
     public UserServiceIntegrationTests()
     {
-        _userService = TestServiceProvider.GetService<UserService>();
+        _userService = TestServiceProvider.GetService<IUserService>();
     }
 
     [Fact]
