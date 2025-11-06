@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using services.audio.Data;
 using services.audio.Repositories;
 using services.audio.Services;
+using utilities.Persistence;
 
 namespace services.audio.Configuration;
 
@@ -14,8 +15,7 @@ public static class AudioServicesConfigurationExtensions
         // Register DbContext
         services.AddDbContext<AudioFilesDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(configuration.GetDatabaseConnectionString());
         });
 
         // Register repositories

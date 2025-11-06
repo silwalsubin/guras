@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using services.teachers.Data;
 using services.teachers.Repositories;
 using services.teachers.Services;
+using utilities.Persistence;
 
 namespace services.teachers.Configuration;
 
@@ -14,8 +15,7 @@ public static class TeachersServicesConfigurationExtensions
         // Register DbContext
         services.AddDbContext<TeachersDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(configuration.GetDatabaseConnectionString());
         });
 
         // Register repositories

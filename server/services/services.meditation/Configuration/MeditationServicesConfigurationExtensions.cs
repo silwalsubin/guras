@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using services.meditation.Data;
 using services.meditation.Repositories;
 using services.meditation.Services;
+using utilities.Persistence;
 
 namespace services.meditation.Configuration;
 
@@ -14,8 +15,7 @@ public static class MeditationServicesConfigurationExtensions
         // Register DbContext
         services.AddDbContext<MeditationAnalyticsDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(configuration.GetDatabaseConnectionString());
         });
 
         // Register repositories

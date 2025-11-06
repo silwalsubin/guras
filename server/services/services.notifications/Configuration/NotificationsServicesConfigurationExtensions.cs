@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using services.notifications.Data;
 using services.notifications.Repositories;
 using services.notifications.Services;
+using utilities.Persistence;
 
 namespace services.notifications.Configuration;
 
@@ -14,8 +15,7 @@ public static class NotificationsServicesConfigurationExtensions
         // Register DbContext
         services.AddDbContext<NotificationsDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(configuration.GetDatabaseConnectionString());
         });
 
         // Register repositories

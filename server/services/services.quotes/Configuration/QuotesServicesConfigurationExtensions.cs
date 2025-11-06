@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using services.quotes.Data;
 using services.quotes.Repositories;
 using services.quotes.Services;
+using utilities.Persistence;
 
 namespace services.quotes.Configuration;
 
@@ -14,8 +15,7 @@ public static class QuotesServicesConfigurationExtensions
         // Register DbContext
         services.AddDbContext<QuotesDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(configuration.GetDatabaseConnectionString());
         });
 
         // Register repositories

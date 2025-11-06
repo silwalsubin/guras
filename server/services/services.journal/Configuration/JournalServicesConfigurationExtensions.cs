@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using services.journal.Data;
 using services.journal.Repositories;
 using services.journal.Services;
+using utilities.Persistence;
 
 namespace services.journal.Configuration;
 
@@ -20,8 +21,7 @@ public static class JournalServicesConfigurationExtensions
         // Register DbContext
         services.AddDbContext<JournalEntriesDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(configuration.GetDatabaseConnectionString());
         });
 
         // Register repositories

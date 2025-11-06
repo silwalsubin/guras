@@ -157,8 +157,7 @@ public static class [ServiceName]ServicesConfigurationExtensions
         // Register DbContext
         services.AddDbContext<[ServiceName]DbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(configuration.GetDatabaseConnectionString());
         });
 
         // Register repositories

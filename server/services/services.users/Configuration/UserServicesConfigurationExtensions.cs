@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using services.users.Data;
 using services.users.Repositories;
 using services.users.Services;
+using utilities.Persistence;
 
 namespace services.users.Configuration;
 
@@ -14,8 +15,7 @@ public static class UserServicesConfigurationExtensions
         // Register DbContext
         services.AddDbContext<UsersDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(configuration.GetDatabaseConnectionString());
         });
 
         // Register repositories
