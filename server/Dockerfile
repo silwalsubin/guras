@@ -5,34 +5,34 @@ WORKDIR /src
 # Copy the solution file and restore dependencies
 COPY guras.sln ./
 COPY apis/apis.csproj apis/
-COPY services.users/services.users.csproj services.users/
-COPY services.teachers/services.teachers.csproj services.teachers/
+COPY services/services.users/services.users.csproj services/services.users/
+COPY services/services.teachers/services.teachers.csproj services/services.teachers/
 COPY utilities.ai/utilities.ai.csproj utilities.ai/
-COPY services.meditation/services.meditation.csproj services.meditation/
-COPY services.journal/services.journal.csproj services.journal/
+COPY services/services.meditation/services.meditation.csproj services/services.meditation/
+COPY services/services.journal/services.journal.csproj services/services.journal/
 COPY orchestration/orchestration.csproj orchestration/
 COPY utilities.aws/utilities.aws.csproj utilities.aws/
 COPY utilities/utilities.csproj utilities/
-COPY services.quotes/services.quotes.csproj services.quotes/
-COPY services.notifications/services.notifications.csproj services.notifications/
-COPY services.audio/services.audio.csproj services.audio/
+COPY services/services.quotes/services.quotes.csproj services/services.quotes/
+COPY services/services.notifications/services.notifications.csproj services/services.notifications/
+COPY services/services.audio/services.audio.csproj services/services.audio/
 COPY orchestration.backgroundServices/orchestration.backgroundServices.csproj orchestration.backgroundServices/
 COPY tests/tests.csproj tests/
 RUN dotnet restore
 
 # Copy the rest of the source code
 COPY apis/ apis/
-COPY services.users/ services.users/
-COPY services.teachers/ services.teachers/
+COPY services/services.users/ services/services.users/
+COPY services/services.teachers/ services/services.teachers/
 COPY utilities.ai/ utilities.ai/
-COPY services.meditation/ services.meditation/
-COPY services.journal/ services.journal/
+COPY services/services.meditation/ services/services.meditation/
+COPY services/services.journal/ services/services.journal/
 COPY orchestration/ orchestration/
 COPY utilities/ utilities/
 COPY utilities.aws/ utilities.aws/
-COPY services.quotes/ services.quotes/
-COPY services.notifications/ services.notifications/
-COPY services.audio/ services.audio/
+COPY services/services.quotes/ services/services.quotes/
+COPY services/services.notifications/ services/services.notifications/
+COPY services/services.audio/ services/services.audio/
 COPY orchestration.backgroundServices/ orchestration.backgroundServices/
 COPY tests/ tests/
 

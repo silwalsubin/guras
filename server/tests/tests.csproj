@@ -27,7 +27,7 @@
     <ItemGroup>
         <ProjectReference Include="..\apis\apis.csproj" />
         <ProjectReference Include="..\utilities\utilities.csproj" />
-        <ProjectReference Include="..\services.teachers\services.teachers.csproj" />
+        <ProjectReference Include="..\services\services.teachers\services.teachers.csproj" />
     </ItemGroup>
 
     <ItemGroup>

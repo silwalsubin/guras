@@ -18,8 +18,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\utilities\utilities.csproj" />
-        <ProjectReference Include="..\utilities.aws\utilities.aws.csproj" />
+        <ProjectReference Include="..\..\utilities\utilities.csproj" />
+        <ProjectReference Include="..\..\utilities.aws\utilities.aws.csproj" />
     </ItemGroup>
 
 </Project>

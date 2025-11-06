@@ -3,29 +3,29 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36603.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.users", "services.users\services.users.csproj", "{61EBE0A4-A8B3-40D3-AAB8-A47A1F5B98B7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.users", "services\services.users\services.users.csproj", "{61EBE0A4-A8B3-40D3-AAB8-A47A1F5B98B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.quotes", "services.quotes\services.quotes.csproj", "{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.quotes", "services\services.quotes\services.quotes.csproj", "{8A6D7C5F-4CDE-4159-BC12-DE88F3308C22}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orchestration.backgroundServices", "orchestration.backgroundServices\orchestration.backgroundServices.csproj", "{E3B77DBC-A8A8-4875-9969-3B6F51BC30C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.notifications", "services.notifications\services.notifications.csproj", "{05593189-D052-466C-A0B4-FD9B60BD6E10}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.notifications", "services\services.notifications\services.notifications.csproj", "{05593189-D052-466C-A0B4-FD9B60BD6E10}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities", "utilities\utilities.csproj", "{8662C11D-FE1A-4F90-9482-5671AEB1BFCE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities.aws", "utilities.aws\utilities.aws.csproj", "{C9F0BA0D-E304-46C5-BBDB-AAA7CD41CFD0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.audio", "services.audio\services.audio.csproj", "{8A6D7C5F-4CDE-4159-BC12-DE88F3308C25}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.audio", "services\services.audio\services.audio.csproj", "{8A6D7C5F-4CDE-4159-BC12-DE88F3308C25}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests", "tests\tests.csproj", "{682B8A30-C3F0-411F-BAA1-FB7E9BC5927A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.teachers", "services.teachers\services.teachers.csproj", "{89C66615-5E35-E6AB-B9D3-D210EE26CD82}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.teachers", "services\services.teachers\services.teachers.csproj", "{89C66615-5E35-E6AB-B9D3-D210EE26CD82}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities.ai", "utilities.ai\utilities.ai.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.meditation", "services.meditation\services.meditation.csproj", "{B5C3D4E5-F6A7-8901-BCDE-F12345678901}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.meditation", "services\services.meditation\services.meditation.csproj", "{B5C3D4E5-F6A7-8901-BCDE-F12345678901}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.journal", "services.journal\services.journal.csproj", "{C6D4E5F6-A7B8-9012-CDEF-123456789012}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.journal", "services\services.journal\services.journal.csproj", "{C6D4E5F6-A7B8-9012-CDEF-123456789012}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apis", "apis\apis.csproj", "{362A281D-1FEA-B036-C52B-9441E2CE94CA}"
 EndProject
