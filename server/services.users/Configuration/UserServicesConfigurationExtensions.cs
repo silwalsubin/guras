@@ -22,7 +22,7 @@ public static class UserServicesConfigurationExtensions
         services.AddScoped<IUserRepository, UserRepository>();
 
         // Register services
-        services.AddScoped<UserService>();
+        services.AddScoped<IUserService, UserService>();
 
         return services;
     }

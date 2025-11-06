@@ -1,11 +1,10 @@
 using Microsoft.Extensions.Logging;
 using services.users.Domain;
 using services.users.Repositories;
-using services.users.Services;
 
 namespace services.users.Services;
 
-public class UserService(IUserRepository userRepository, ILogger<UserService> logger)
+public class UserService(IUserRepository userRepository, ILogger<UserService> logger) : IUserService
 {
     public async Task<User?> GetUserByIdAsync(Guid userId)
     {

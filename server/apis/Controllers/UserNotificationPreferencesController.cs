@@ -5,13 +5,14 @@ using services.notifications.Services;
 using services.notifications.Domain;
 using apis.Requests;
 using apis.Extensions;
+using utilities.Controllers;
 
 namespace apis.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class UserNotificationPreferencesController : ControllerBase
+public class UserNotificationPreferencesController : BaseController
 {
     private readonly ILogger<UserNotificationPreferencesController> _logger;
     private readonly IUserNotificationPreferencesService _preferencesService;
@@ -35,7 +36,7 @@ public class UserNotificationPreferencesController : ControllerBase
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(new { message = "User not authenticated" });
+                return UnauthorizedResponse("User not authenticated");
             }
 
             var preferences = await _preferencesService.GetUserPreferencesAsync(userId);
@@ -66,12 +67,12 @@ public class UserNotificationPreferencesController : ControllerBase
                 updatedAt = preferences.UpdatedAt
             };
 
-            return Ok(response);
+            return SuccessResponse(response);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting user notification preferences");
-            return StatusCode(500, new { message = "Internal server error" });
+            return ErrorResponse("Internal server error", 500);
         }
     }
 
@@ -87,26 +88,26 @@ public class UserNotificationPreferencesController : ControllerBase
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { Error = ex.Message });
+                return ValidationErrorResponse(ex.Message);
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(new { message = "User not authenticated" });
+                return UnauthorizedResponse("User not authenticated");
             }
 
             // Parse frequency
             if (!Enum.TryParse<NotificationFrequency>(request.Frequency, true, out var frequency))
             {
-                return BadRequest(new { message = "Invalid frequency value" });
+                return ValidationErrorResponse("Invalid frequency value", "frequency");
             }
 
             // Parse quiet hours
             if (!TimeSpan.TryParse(request.QuietHours.Start, out var startTime) ||
                 !TimeSpan.TryParse(request.QuietHours.End, out var endTime))
             {
-                return BadRequest(new { message = "Invalid quiet hours format. Use HH:MM format." });
+                return ValidationErrorResponse("Invalid quiet hours format. Use HH:MM format.", "quietHours");
             }
 
             var preferences = new UserNotificationPreferences
@@ -137,12 +138,12 @@ public class UserNotificationPreferencesController : ControllerBase
                 updatedAt = updatedPreferences.UpdatedAt
             };
 
-            return Ok(response);
+            return SuccessResponse(response);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating user notification preferences");
-            return StatusCode(500, new { message = "Internal server error" });
+            return ErrorResponse("Internal server error", 500);
         }
     }
 
@@ -154,26 +155,26 @@ public class UserNotificationPreferencesController : ControllerBase
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
-                return Task.FromResult<IActionResult>(Unauthorized(new { message = "User not authenticated" }));
+                return Task.FromResult<IActionResult>(UnauthorizedResponse("User not authenticated"));
             }
 
             // Get user's FCM tokens
             var userTokens = _tokenService.GetUserTokens();
             if (!userTokens.TryGetValue(userId, out var tokens) || !tokens.Any())
             {
-                return Task.FromResult<IActionResult>(BadRequest(new { message = "No FCM tokens found for user" }));
+                return Task.FromResult<IActionResult>(ErrorResponse("No FCM tokens found for user", 400));
             }
 
             // Send test notification
             // This would typically call the notification service
             _logger.LogInformation("Test notification requested for user {UserId}", userId);
 
-            return Task.FromResult<IActionResult>(Ok(new { message = "Test notification sent", tokenCount = tokens.Count }));
+            return Task.FromResult<IActionResult>(SuccessResponse(new { message = "Test notification sent", tokenCount = tokens.Count }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending test notification");
-            return Task.FromResult<IActionResult>(StatusCode(500, new { message = "Internal server error" }));
+            return Task.FromResult<IActionResult>(ErrorResponse("Internal server error", 500));
         }
     }
 }

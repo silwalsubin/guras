@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using services.users.Data;
 using utilities.aws.Utilities;
+using utilities.Controllers;
 
 namespace apis.Controllers;
 
@@ -12,14 +13,14 @@ public class HeartBeatController(
     ILogger<HeartBeatController> logger,
     UsersDbContext dbContext,
     AudioFilesUtility audioFilesUtility
-) : ControllerBase
+) : BaseController
 {
     [HttpGet]
     [AllowAnonymous]
-    public ActionResult<string> GetApplicationHeartBeat()
+    public IActionResult GetApplicationHeartBeat()
     {
         logger.LogInformation("Heart Beat endpoint called");
-        return Ok("Heart Beat Successful");
+        return SuccessResponse("Heart Beat Successful");
     }
 
     [HttpGet("DbConnection")]
@@ -29,12 +30,12 @@ public class HeartBeatController(
         try
         {
             var sqlServerTime = await dbContext.Database.SqlQueryRaw<DateTime>("SELECT NOW()").FirstOrDefaultAsync();
-            return Ok(sqlServerTime);
+            return SuccessResponse(sqlServerTime);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Database connection heartbeat failed");
-            return StatusCode(500, "Database connection failed");
+            return ErrorResponse("Database connection failed", 500);
         }
     }
 
@@ -46,6 +47,6 @@ public class HeartBeatController(
         // Try to list files in the bucket (this will test connectivity and permissions)
         var files = await audioFilesUtility.ListFilesAsync("");
         var fileCount = files.Count();
-        return Ok(fileCount);
+        return SuccessResponse(fileCount);
     }
 }

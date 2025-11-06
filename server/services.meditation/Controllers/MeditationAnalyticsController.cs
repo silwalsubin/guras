@@ -4,6 +4,7 @@ using services.meditation.Domain;
 using services.meditation.Services;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
+using utilities.Controllers;
 
 namespace services.meditation.Controllers;
 
@@ -13,7 +14,7 @@ namespace services.meditation.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class MeditationAnalyticsController : ControllerBase
+public class MeditationAnalyticsController : BaseController
 {
     private readonly IMeditationAnalyticsService _analyticsService;
     private readonly ILogger<MeditationAnalyticsController> _logger;
@@ -27,9 +28,9 @@ public class MeditationAnalyticsController : ControllerBase
     }
 
     /// <summary>
-    /// Get the current user's ID from claims
+    /// Get the current user's ID from claims as a Guid
     /// </summary>
-    private Guid GetUserId()
+    private Guid GetUserIdGuid()
     {
         // Try to get application user ID first (database user ID)
         var applicationUserIdClaim = User.FindFirst("application_user_id")?.Value;
@@ -51,22 +52,26 @@ public class MeditationAnalyticsController : ControllerBase
     /// Log the start of a meditation session
     /// </summary>
     [HttpPost("session-start")]
-    public async Task<ActionResult<Guid>> LogSessionStart([FromBody] CreateMeditationAnalyticsDto request)
+    public async Task<IActionResult> LogSessionStart([FromBody] CreateMeditationAnalyticsDto request)
     {
         try
         {
-            var userId = GetUserId();
+            var userId = GetUserIdGuid();
             var sessionId = Guid.NewGuid().ToString();
 
             _logger.LogInformation("Logging meditation session start for user {UserId}", userId);
 
             var analyticsId = await _analyticsService.LogSessionStartAsync(userId, sessionId, request);
-            return Ok(new { analyticsId, sessionId });
+            return SuccessResponse(new { analyticsId, sessionId });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error logging meditation session start");
-            return StatusCode(500, new { error = "Failed to log session start" });
+            return ErrorResponse("Failed to log session start", 500);
         }
     }
 
@@ -74,25 +79,29 @@ public class MeditationAnalyticsController : ControllerBase
     /// Log the completion of a meditation session
     /// </summary>
     [HttpPost("session-completion/{analyticsId}")]
-    public async Task<ActionResult> LogSessionCompletion(Guid analyticsId, [FromBody] CreateMeditationAnalyticsDto request)
+    public async Task<IActionResult> LogSessionCompletion(Guid analyticsId, [FromBody] CreateMeditationAnalyticsDto request)
     {
         try
         {
-            var userId = GetUserId();
+            var userId = GetUserIdGuid();
             _logger.LogInformation("Logging meditation session completion for user {UserId}, analytics {AnalyticsId}", userId, analyticsId);
 
             var result = await _analyticsService.LogSessionCompletionAsync(analyticsId, request);
             if (!result)
             {
-                return NotFound(new { error = "Analytics record not found" });
+                return NotFoundResponse("Analytics record not found");
             }
 
-            return Ok(new { message = "Session completion logged successfully" });
+            return SuccessResponse(new { message = "Session completion logged successfully" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error logging meditation session completion");
-            return StatusCode(500, new { error = "Failed to log session completion" });
+            return ErrorResponse("Failed to log session completion", 500);
         }
     }
 
@@ -100,20 +109,24 @@ public class MeditationAnalyticsController : ControllerBase
     /// Get user's meditation history
     /// </summary>
     [HttpGet("history")]
-    public async Task<ActionResult<List<MeditationAnalyticsDto>>> GetUserHistory([FromQuery] int limit = 50)
+    public async Task<IActionResult> GetUserHistory([FromQuery] int limit = 50)
     {
         try
         {
-            var userId = GetUserId();
+            var userId = GetUserIdGuid();
             _logger.LogInformation("Retrieving meditation history for user {UserId}", userId);
 
             var history = await _analyticsService.GetUserHistoryAsync(userId, limit);
-            return Ok(history);
+            return SuccessResponse(history);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving meditation history");
-            return StatusCode(500, new { error = "Failed to retrieve history" });
+            return ErrorResponse("Failed to retrieve history", 500);
         }
     }
 
@@ -121,20 +134,24 @@ public class MeditationAnalyticsController : ControllerBase
     /// Get user's meditation patterns for AI analysis
     /// </summary>
     [HttpGet("patterns")]
-    public async Task<ActionResult<MeditationPatternsDto>> GetUserPatterns()
+    public async Task<IActionResult> GetUserPatterns()
     {
         try
         {
-            var userId = GetUserId();
+            var userId = GetUserIdGuid();
             _logger.LogInformation("Retrieving meditation patterns for user {UserId}", userId);
 
             var patterns = await _analyticsService.GetUserPatternsAsync(userId);
-            return Ok(patterns);
+            return SuccessResponse(patterns);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving meditation patterns");
-            return StatusCode(500, new { error = "Failed to retrieve patterns" });
+            return ErrorResponse("Failed to retrieve patterns", 500);
         }
     }
 
@@ -142,20 +159,24 @@ public class MeditationAnalyticsController : ControllerBase
     /// Get user's meditation statistics
     /// </summary>
     [HttpGet("stats")]
-    public async Task<ActionResult<MeditationStatsDto>> GetUserStats()
+    public async Task<IActionResult> GetUserStats()
     {
         try
         {
-            var userId = GetUserId();
+            var userId = GetUserIdGuid();
             _logger.LogInformation("Retrieving meditation stats for user {UserId}", userId);
 
             var stats = await _analyticsService.GetUserStatsAsync(userId);
-            return Ok(stats);
+            return SuccessResponse(stats);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving meditation stats");
-            return StatusCode(500, new { error = "Failed to retrieve stats" });
+            return ErrorResponse("Failed to retrieve stats", 500);
         }
     }
 
@@ -163,13 +184,13 @@ public class MeditationAnalyticsController : ControllerBase
     /// Update emotional state for a meditation session
     /// </summary>
     [HttpPut("emotional-state/{analyticsId}")]
-    public async Task<ActionResult> UpdateEmotionalState(
+    public async Task<IActionResult> UpdateEmotionalState(
         Guid analyticsId,
         [FromBody] UpdateEmotionalStateRequest request)
     {
         try
         {
-            var userId = GetUserId();
+            var userId = GetUserIdGuid();
             _logger.LogInformation("Updating emotional state for user {UserId}, analytics {AnalyticsId}", userId, analyticsId);
 
             var result = await _analyticsService.UpdateEmotionalStateAsync(
@@ -181,15 +202,19 @@ public class MeditationAnalyticsController : ControllerBase
 
             if (!result)
             {
-                return NotFound(new { error = "Analytics record not found" });
+                return NotFoundResponse("Analytics record not found");
             }
 
-            return Ok(new { message = "Emotional state updated successfully" });
+            return SuccessResponse(new { message = "Emotional state updated successfully" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating emotional state");
-            return StatusCode(500, new { error = "Failed to update emotional state" });
+            return ErrorResponse("Failed to update emotional state", 500);
         }
     }
 
@@ -197,28 +222,32 @@ public class MeditationAnalyticsController : ControllerBase
     /// Add user feedback (rating and notes) to a meditation session
     /// </summary>
     [HttpPut("feedback/{analyticsId}")]
-    public async Task<ActionResult> AddUserFeedback(
+    public async Task<IActionResult> AddUserFeedback(
         Guid analyticsId,
         [FromBody] AddUserFeedbackRequest request)
     {
         try
         {
-            var userId = GetUserId();
+            var userId = GetUserIdGuid();
             _logger.LogInformation("Adding user feedback for user {UserId}, analytics {AnalyticsId}", userId, analyticsId);
 
             var result = await _analyticsService.AddUserFeedbackAsync(analyticsId, request.Rating, request.Notes);
 
             if (!result)
             {
-                return NotFound(new { error = "Analytics record not found" });
+                return NotFoundResponse("Analytics record not found");
             }
 
-            return Ok(new { message = "Feedback added successfully" });
+            return SuccessResponse(new { message = "Feedback added successfully" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error adding user feedback");
-            return StatusCode(500, new { error = "Failed to add feedback" });
+            return ErrorResponse("Failed to add feedback", 500);
         }
     }
 
@@ -226,12 +255,12 @@ public class MeditationAnalyticsController : ControllerBase
     /// Log recommendation interaction event (view, click, session start, etc.)
     /// </summary>
     [HttpPost("recommendation-event")]
-    public ActionResult LogRecommendationEvent(
+    public IActionResult LogRecommendationEvent(
         [FromBody] RecommendationEventRequest request)
     {
         try
         {
-            var userId = GetUserId();
+            var userId = GetUserIdGuid();
             _logger.LogInformation(
                 "Logging recommendation event for user {UserId}: {EventType} - {RecommendationTitle}",
                 userId, request.EventType, request.RecommendationTitle);
@@ -241,12 +270,16 @@ public class MeditationAnalyticsController : ControllerBase
                 "Recommendation Event Details: Theme={Theme}, Difficulty={Difficulty}, Duration={Duration}s, Timestamp={Timestamp}",
                 request.RecommendationTheme, request.RecommendationDifficulty, request.RecommendationDuration, request.Timestamp);
 
-            return Ok(new { message = "Recommendation event logged successfully" });
+            return SuccessResponse(new { message = "Recommendation event logged successfully" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error logging recommendation event");
-            return StatusCode(500, new { error = "Failed to log recommendation event" });
+            return ErrorResponse("Failed to log recommendation event", 500);
         }
     }
 }

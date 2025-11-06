@@ -12,7 +12,7 @@ using utilities.Controllers;
 namespace services.users.Controllers;
 
 [Route("api/[controller]")]
-public class AuthController(ILogger<AuthController> logger, IUserAuthService userAuthService, UserService userService)
+public class AuthController(ILogger<AuthController> logger, IUserAuthService userAuthService, IUserService userService)
     : BaseController
 {
     [HttpPost("signup")]

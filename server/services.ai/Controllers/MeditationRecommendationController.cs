@@ -4,6 +4,7 @@ using services.ai.Services;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
 using System;
+using utilities.Controllers;
 
 namespace services.ai.Controllers;
 
@@ -13,7 +14,7 @@ namespace services.ai.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class MeditationRecommendationController : ControllerBase
+public class MeditationRecommendationController : BaseController
 {
     private readonly IMeditationRecommendationService _recommendationService;
     private readonly ILogger<MeditationRecommendationController> _logger;
@@ -27,9 +28,9 @@ public class MeditationRecommendationController : ControllerBase
     }
 
     /// <summary>
-    /// Get the current user's ID from claims
+    /// Get the current user's ID from claims (returns Guid)
     /// </summary>
-    private Guid GetUserId()
+    private Guid GetUserGuid()
     {
         // Try to get application user ID first (database user ID)
         var applicationUserIdClaim = User.FindFirst("application_user_id")?.Value;
@@ -53,17 +54,17 @@ public class MeditationRecommendationController : ControllerBase
     /// <param name="count">Number of recommendations to return (default: 3, max: 10)</param>
     /// <returns>List of personalized meditation recommendations</returns>
     [HttpGet("personalized")]
-    public async Task<ActionResult<List<MeditationRecommendationDto>>> GetPersonalizedRecommendations([FromQuery] int count = 3)
+    public async Task<IActionResult> GetPersonalizedRecommendations([FromQuery] int count = 3)
     {
         try
         {
             // Validate count parameter
             if (count < 1 || count > 10)
             {
-                return BadRequest(new { error = "Count must be between 1 and 10" });
+                return ValidationErrorResponse("Count must be between 1 and 10");
             }
 
-            var userId = GetUserId();
+            var userId = GetUserGuid();
             _logger.LogInformation("Fetching {Count} personalized recommendations for user {UserId}", count, userId);
 
             var recommendations = await _recommendationService.GenerateRecommendationsAsync(userId, count);
@@ -71,21 +72,21 @@ public class MeditationRecommendationController : ControllerBase
             if (!recommendations.Any())
             {
                 _logger.LogWarning("No recommendations generated for user {UserId}", userId);
-                return Ok(new List<MeditationRecommendationDto>());
+                return SuccessResponse(new List<MeditationRecommendationDto>());
             }
 
             _logger.LogInformation("Successfully generated {Count} recommendations for user {UserId}", recommendations.Count, userId);
-            return Ok(recommendations);
+            return SuccessResponse(recommendations);
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning(ex, "Unauthorized access attempt");
-            return Unauthorized(new { error = "Unauthorized" });
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching personalized recommendations");
-            return StatusCode(500, new { error = "Failed to generate recommendations" });
+            return ErrorResponse("Failed to generate recommendations", 500);
         }
     }
 
@@ -95,21 +96,21 @@ public class MeditationRecommendationController : ControllerBase
     /// <param name="sessionTitle">Title of the meditation session</param>
     /// <returns>Explanation of why this session is recommended</returns>
     [HttpGet("reason")]
-    public async Task<ActionResult<RecommendationReasonDto>> GetRecommendationReason([FromQuery] string sessionTitle)
+    public async Task<IActionResult> GetRecommendationReason([FromQuery] string sessionTitle)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(sessionTitle))
             {
-                return BadRequest(new { error = "Session title is required" });
+                return ValidationErrorResponse("Session title is required");
             }
 
-            var userId = GetUserId();
+            var userId = GetUserGuid();
             _logger.LogInformation("Fetching recommendation reason for session '{SessionTitle}' for user {UserId}", sessionTitle, userId);
 
             var reason = await _recommendationService.GetRecommendationReasonAsync(userId, sessionTitle);
 
-            return Ok(new RecommendationReasonDto
+            return SuccessResponse(new RecommendationReasonDto
             {
                 SessionTitle = sessionTitle,
                 Reason = reason
@@ -118,12 +119,12 @@ public class MeditationRecommendationController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning(ex, "Unauthorized access attempt");
-            return Unauthorized(new { error = "Unauthorized" });
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching recommendation reason");
-            return StatusCode(500, new { error = "Failed to fetch recommendation reason" });
+            return ErrorResponse("Failed to fetch recommendation reason", 500);
         }
     }
 
@@ -134,7 +135,7 @@ public class MeditationRecommendationController : ControllerBase
     /// <param name="count">Number of recommendations (default: 3)</param>
     /// <returns>Recommendations optimized for the specified time</returns>
     [HttpGet("by-time")]
-    public async Task<ActionResult<List<MeditationRecommendationDto>>> GetRecommendationsByTime(
+    public async Task<IActionResult> GetRecommendationsByTime(
         [FromQuery] string timeOfDay,
         [FromQuery] int count = 3)
     {
@@ -144,15 +145,15 @@ public class MeditationRecommendationController : ControllerBase
             var validTimes = new[] { "morning", "afternoon", "evening", "night" };
             if (string.IsNullOrWhiteSpace(timeOfDay) || !validTimes.Contains(timeOfDay.ToLower()))
             {
-                return BadRequest(new { error = "Invalid time of day. Must be: morning, afternoon, evening, or night" });
+                return ValidationErrorResponse("Invalid time of day. Must be: morning, afternoon, evening, or night");
             }
 
             if (count < 1 || count > 10)
             {
-                return BadRequest(new { error = "Count must be between 1 and 10" });
+                return ValidationErrorResponse("Count must be between 1 and 10");
             }
 
-            var userId = GetUserId();
+            var userId = GetUserGuid();
             _logger.LogInformation("Fetching {Count} recommendations for {TimeOfDay} for user {UserId}", count, timeOfDay, userId);
 
             var recommendations = await _recommendationService.GenerateRecommendationsAsync(userId, count);
@@ -160,17 +161,17 @@ public class MeditationRecommendationController : ControllerBase
             // Filter recommendations for the specified time (in a real implementation, this would be more sophisticated)
             var filteredRecommendations = recommendations.Take(count).ToList();
 
-            return Ok(filteredRecommendations);
+            return SuccessResponse(filteredRecommendations);
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning(ex, "Unauthorized access attempt");
-            return Unauthorized(new { error = "Unauthorized" });
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching recommendations by time");
-            return StatusCode(500, new { error = "Failed to fetch recommendations" });
+            return ErrorResponse("Failed to fetch recommendations", 500);
         }
     }
 
@@ -181,7 +182,7 @@ public class MeditationRecommendationController : ControllerBase
     /// <param name="count">Number of recommendations (default: 3)</param>
     /// <returns>Recommendations tailored to the emotional state</returns>
     [HttpGet("by-emotion")]
-    public async Task<ActionResult<List<MeditationRecommendationDto>>> GetRecommendationsByEmotion(
+    public async Task<IActionResult> GetRecommendationsByEmotion(
         [FromQuery] string emotionalState,
         [FromQuery] int count = 3)
     {
@@ -189,15 +190,15 @@ public class MeditationRecommendationController : ControllerBase
         {
             if (string.IsNullOrWhiteSpace(emotionalState))
             {
-                return BadRequest(new { error = "Emotional state is required" });
+                return ValidationErrorResponse("Emotional state is required");
             }
 
             if (count < 1 || count > 10)
             {
-                return BadRequest(new { error = "Count must be between 1 and 10" });
+                return ValidationErrorResponse("Count must be between 1 and 10");
             }
 
-            var userId = GetUserId();
+            var userId = GetUserGuid();
             _logger.LogInformation("Fetching {Count} recommendations for emotional state '{EmotionalState}' for user {UserId}", 
                 count, emotionalState, userId);
 
@@ -206,17 +207,17 @@ public class MeditationRecommendationController : ControllerBase
             // Filter recommendations based on emotional state (in a real implementation, this would be more sophisticated)
             var filteredRecommendations = recommendations.Take(count).ToList();
 
-            return Ok(filteredRecommendations);
+            return SuccessResponse(filteredRecommendations);
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning(ex, "Unauthorized access attempt");
-            return Unauthorized(new { error = "Unauthorized" });
+            return UnauthorizedResponse("User ID not found in claims");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching recommendations by emotion");
-            return StatusCode(500, new { error = "Failed to fetch recommendations" });
+            return ErrorResponse("Failed to fetch recommendations", 500);
         }
     }
 }
