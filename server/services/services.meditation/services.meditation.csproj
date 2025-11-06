@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\utilities\utilities.csproj" />
-    <ProjectReference Include="..\..\utilities.ai\utilities.ai.csproj" />
+    <ProjectReference Include="..\..\utilities\utilities\utilities.csproj" />
+    <ProjectReference Include="..\..\utilities\utilities.ai\utilities.ai.csproj" />
   </ItemGroup>
 
 </Project>

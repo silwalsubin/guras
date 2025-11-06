@@ -28,12 +28,12 @@
       <ProjectReference Include="..\services\services.notifications\services.notifications.csproj" />
       <ProjectReference Include="..\services\services.audio\services.audio.csproj" />
       <ProjectReference Include="..\services\services.teachers\services.teachers.csproj" />
-      <ProjectReference Include="..\utilities.ai\utilities.ai.csproj" />
+      <ProjectReference Include="..\utilities\utilities.ai\utilities.ai.csproj" />
       <ProjectReference Include="..\services\services.meditation\services.meditation.csproj" />
       <ProjectReference Include="..\services\services.journal\services.journal.csproj" />
       <ProjectReference Include="..\orchestration.backgroundServices\orchestration.backgroundServices.csproj" />
       <ProjectReference Include="..\services\services.users\services.users.csproj" />
-      <ProjectReference Include="..\utilities.aws\utilities.aws.csproj" />
+      <ProjectReference Include="..\utilities\utilities.aws\utilities.aws.csproj" />
     </ItemGroup>
 
 </Project>

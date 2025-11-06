@@ -11,9 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orchestration.backgroundSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.notifications", "services\services.notifications\services.notifications.csproj", "{05593189-D052-466C-A0B4-FD9B60BD6E10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities", "utilities\utilities.csproj", "{8662C11D-FE1A-4F90-9482-5671AEB1BFCE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities", "utilities\utilities\utilities.csproj", "{8662C11D-FE1A-4F90-9482-5671AEB1BFCE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities.aws", "utilities.aws\utilities.aws.csproj", "{C9F0BA0D-E304-46C5-BBDB-AAA7CD41CFD0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities.aws", "utilities\utilities.aws\utilities.aws.csproj", "{C9F0BA0D-E304-46C5-BBDB-AAA7CD41CFD0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.audio", "services\services.audio\services.audio.csproj", "{8A6D7C5F-4CDE-4159-BC12-DE88F3308C25}"
 EndProject
@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests", "tests\tests.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.teachers", "services\services.teachers\services.teachers.csproj", "{89C66615-5E35-E6AB-B9D3-D210EE26CD82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities.ai", "utilities.ai\utilities.ai.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities.ai", "utilities\utilities.ai\utilities.ai.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services.meditation", "services\services.meditation\services.meditation.csproj", "{B5C3D4E5-F6A7-8901-BCDE-F12345678901}"
 EndProject
