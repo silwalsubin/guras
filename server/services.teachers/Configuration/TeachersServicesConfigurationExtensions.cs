@@ -7,7 +7,7 @@ using services.teachers.Services;
 
 namespace services.teachers.Configuration;
 
-public static class TeachersServiceConfiguration
+public static class TeachersServicesConfigurationExtensions
 {
     public static IServiceCollection AddTeachersServices(this IServiceCollection services, IConfiguration configuration)
     {

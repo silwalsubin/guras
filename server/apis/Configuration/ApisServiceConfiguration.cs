@@ -11,7 +11,7 @@ public static class ApisServiceConfiguration
 {
     public static IServiceCollection ConfigureApiServices(this IServiceCollection services, IConfiguration configuration)
     {
-        AuthenticationServicesConfiguration.ConfigureServices(services);
+        AuthenticationServicesConfigurationExtensions.ConfigureServices(services);
         services.AddAwsUtilities();
         services.AddQuotesServices(configuration);
         services.AddNotificationsServices(configuration);

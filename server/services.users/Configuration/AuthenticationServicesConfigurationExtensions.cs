@@ -5,7 +5,7 @@ using services.users.Services;
 
 namespace services.users.Configuration;
 
-public static class AuthenticationServicesConfiguration
+public static class AuthenticationServicesConfigurationExtensions
 {
     public static IServiceCollection ConfigureServices(this IServiceCollection services)
     {

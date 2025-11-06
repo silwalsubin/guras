@@ -7,7 +7,7 @@ using services.users.Services;
 
 namespace services.users.Configuration;
 
-public static class UserServicesConfiguration
+public static class UserServicesConfigurationExtensions
 {
     public static IServiceCollection AddUserServices(this IServiceCollection services, IConfiguration configuration)
     {

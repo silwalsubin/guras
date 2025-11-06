@@ -7,7 +7,7 @@ using services.audio.Services;
 
 namespace services.audio.Configuration;
 
-public static class AudioServicesConfiguration
+public static class AudioServicesConfigurationExtensions
 {
     public static IServiceCollection AddAudioServices(this IServiceCollection services, IConfiguration configuration)
     {

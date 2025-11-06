@@ -72,14 +72,14 @@ public static class [ServiceName]ServicesConfiguration[Extensions]
 ```
 
 **Examples:**
-- `services.users.Configuration.UserServicesConfiguration.AddUserServices(IConfiguration)`
-- `services.teachers.Configuration.TeachersServiceConfiguration.AddTeachersServices(IConfiguration)`
+- `services.users.Configuration.UserServicesConfigurationExtensions.AddUserServices(IConfiguration)`
+- `services.teachers.Configuration.TeachersServicesConfigurationExtensions.AddTeachersServices(IConfiguration)`
 - `services.ai.Configuration.AIServicesConfigurationExtensions.AddAIServices(IConfiguration)`
-- `services.audio.Configuration.AudioServicesConfiguration.AddAudioServices(IConfiguration)`
+- `services.audio.Configuration.AudioServicesConfigurationExtensions.AddAudioServices(IConfiguration)`
 - `services.journal.Configuration.JournalServicesConfigurationExtensions.AddJournalServices(IConfiguration)`
 - `services.meditation.Configuration.MeditationServicesConfigurationExtensions.AddMeditationServices(IConfiguration)`
-- `services.notifications.Configuration.NotificationsServicesConfiguration.AddNotificationsServices(IConfiguration)`
-- `services.quotes.Configuration.QuotesServicesConfiguration.AddQuotesServices(IConfiguration)`
+- `services.notifications.Configuration.NotificationsServicesConfigurationExtensions.AddNotificationsServices(IConfiguration)`
+- `services.quotes.Configuration.QuotesServicesConfigurationExtensions.AddQuotesServices(IConfiguration)`
 
 ### 3. Dependency Injection Patterns
 
@@ -201,25 +201,38 @@ All projects use:
 
 ### 1. Configuration Class Naming
 
-**Issue:** Inconsistent naming conventions for configuration classes.
+**Status:** ✅ **RESOLVED** - All configuration classes now use the `[Service]ServicesConfigurationExtensions` pattern.
 
-**Patterns Found:**
-- `[Service]ServiceConfiguration` (services.teachers)
-- `[Service]ServicesConfiguration` (services.audio, services.notifications, services.quotes)
-- `[Service]ServicesConfigurationExtensions` (services.ai, services.journal, services.meditation)
-- `[Service]ServicesConfiguration` + `AuthenticationServicesConfiguration` (services.users has two separate classes)
+**Current State:**
+All services now use the standardized naming:
+- `UserServicesConfigurationExtensions` (services.users)
+- `TeachersServicesConfigurationExtensions` (services.teachers)
+- `AudioServicesConfigurationExtensions` (services.audio)
+- `QuotesServicesConfigurationExtensions` (services.quotes)
+- `NotificationsServicesConfigurationExtensions` (services.notifications)
+- `AuthenticationServicesConfigurationExtensions` (services.users)
+- `MeditationServicesConfigurationExtensions` (services.meditation)
+- `JournalServicesConfigurationExtensions` (services.journal)
+- `AIServicesConfigurationExtensions` (services.ai)
 
-**Recommendation:** Standardize to `[Service]ServicesConfigurationExtensions` for consistency.
+**Note:** Fixed `TeachersServiceConfiguration` → `TeachersServicesConfigurationExtensions` (also changed Service → Services for consistency).
 
 ### 2. Configuration Method Naming
 
-**Issue:** Inconsistent method names for service registration.
+**Status:** ✅ **RESOLVED** - All configuration methods now use the `Add[Service]Services()` pattern.
 
-**Patterns Found:**
-- `Add[Service]Services()` - Most common (users, teachers, audio, journal, meditation, notifications, ai)
-- `ConfigureServices()` - services.quotes, services.users.AuthenticationServicesConfiguration
+**Current State:**
+All services use the standardized method naming:
+- `AddUserServices(IConfiguration)`
+- `AddTeachersServices(IConfiguration)`
+- `AddAudioServices(IConfiguration)`
+- `AddQuotesServices(IConfiguration)` (previously used `ConfigureServices()`)
+- `AddNotificationsServices(IConfiguration)`
+- `AddMeditationServices(IConfiguration)`
+- `AddJournalServices(IConfiguration)`
+- `AddAIServices(IConfiguration)`
 
-**Recommendation:** Standardize to `Add[Service]Services()` pattern.
+**Note:** `AuthenticationServicesConfigurationExtensions.ConfigureServices()` is kept as-is since it's a legacy method for backward compatibility. The main authentication setup uses `AddAuthenticationServices()`.
 
 ### 3. Data Access Technology
 
@@ -417,8 +430,8 @@ All service configuration methods now accept `IConfiguration`:
 5. **✅ Standardized EF Core Packages:** All services use consistent EF Core package versions (8.0.0)
 
 ### Remaining Recommendations
-1. **Standardize Configuration Naming:** Use `[Service]ServicesConfigurationExtensions` pattern
-2. **Standardize Method Naming:** Use `Add[Service]Services()` pattern (✅ mostly done, services.quotes uses `AddQuotesServices()`)
+1. **✅ Standardize Configuration Naming:** All configuration classes now use `[Service]ServicesConfigurationExtensions` pattern
+2. **✅ Standardize Method Naming:** All services use `Add[Service]Services()` pattern
 3. **Standardize Folder Names:** Use `Repositories/` and `Domain/` consistently
    - services.users still uses `Persistence/` instead of `Repositories/`
 4. **Standardize Controller Base:** Use `BaseController` consistently or document exceptions

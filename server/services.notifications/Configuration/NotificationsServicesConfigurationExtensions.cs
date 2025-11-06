@@ -7,7 +7,7 @@ using services.notifications.Services;
 
 namespace services.notifications.Configuration;
 
-public static class NotificationsServicesConfiguration
+public static class NotificationsServicesConfigurationExtensions
 {
     public static IServiceCollection AddNotificationsServices(this IServiceCollection services, IConfiguration configuration)
     {

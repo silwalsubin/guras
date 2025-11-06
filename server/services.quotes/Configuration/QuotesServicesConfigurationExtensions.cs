@@ -7,7 +7,7 @@ using services.quotes.Services;
 
 namespace services.quotes.Configuration;
 
-public static class QuotesServicesConfiguration
+public static class QuotesServicesConfigurationExtensions
 {
     public static IServiceCollection AddQuotesServices(this IServiceCollection services, IConfiguration configuration)
     {
