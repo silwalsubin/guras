@@ -1,14 +1,31 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using services.notifications.Data;
+using services.notifications.Repositories;
 using services.notifications.Services;
 
 namespace services.notifications.Configuration;
 
 public static class NotificationsServicesConfiguration
 {
-    public static IServiceCollection AddNotificationsServices(this IServiceCollection services)
+    public static IServiceCollection AddNotificationsServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // Register DbContext
+        services.AddDbContext<NotificationsDbContext>(options =>
+        {
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            options.UseNpgsql(connectionString);
+        });
+
+        // Register repositories
+        services.AddScoped<INotificationTokenRepository, NotificationTokenRepository>();
+        services.AddScoped<IUserNotificationPreferencesRepository, UserNotificationPreferencesRepository>();
+
+        // Register services
         services.AddScoped<INotificationTokenService, NotificationTokenService>();
         services.AddScoped<IUserNotificationPreferencesService, UserNotificationPreferencesService>();
+
         return services;
     }
 }

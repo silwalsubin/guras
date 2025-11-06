@@ -1,74 +1,161 @@
-using Dapper;
-using utilities.Persistence.ConnectionFactories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using services.users.Data;
+using services.users.Domain;
+using services.users.Models;
+using services.users.Services;
 
 namespace services.users.Persistence;
 
-public class UserRepository(IDbConnectionFactory dbConnectionFactory) : IUserRepository
+public class UserRepository : IUserRepository
 {
-    public async Task<UserRecord?> GetByUserIdAsync(Guid userId)
+    private readonly UsersDbContext _context;
+    private readonly ILogger<UserRepository> _logger;
+
+    public UserRepository(UsersDbContext context, ILogger<UserRepository> logger)
     {
-        using var connection = await dbConnectionFactory.GetConnectionAsync();
-        const string sql = @"
-            SELECT user_id as UserId, email as Email, name as Name, firebase_user_id as FireBaseUserId, 
-                   created_at as CreatedAt, updated_at as UpdatedAt 
-            FROM users WHERE user_id = @UserId";
-        return await connection.QuerySingleOrDefaultAsync<UserRecord>(sql, new { UserId = userId });
+        _context = context;
+        _logger = logger;
     }
 
-    public async Task<UserRecord?> GetByEmailAsync(string email)
+    public async Task<User?> GetByUserIdAsync(Guid userId)
     {
-        using var connection = await dbConnectionFactory.GetConnectionAsync();
-        const string sql = @"
-            SELECT user_id as UserId, email as Email, name as Name, firebase_user_id as FireBaseUserId, 
-                   created_at as CreatedAt, updated_at as UpdatedAt 
-            FROM users WHERE email = @Email";
-        return await connection.QuerySingleOrDefaultAsync<UserRecord>(sql, new { Email = email });
+        try
+        {
+            _logger.LogInformation("Retrieving user by ID: {UserId} using Entity Framework", userId);
+            var entity = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            return entity?.ToDomain();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving user by ID: {UserId}", userId);
+            throw;
+        }
     }
 
-    public async Task<UserRecord?> GetByFirebaseUidAsync(string fireBaseUserId)
+    public async Task<User?> GetByEmailAsync(string email)
     {
-        using var connection = await dbConnectionFactory.GetConnectionAsync();
-        const string sql = @"
-            SELECT user_id as UserId, email as Email, name as Name, firebase_user_id as FireBaseUserId, 
-                   created_at as CreatedAt, updated_at as UpdatedAt 
-            FROM users WHERE firebase_user_id = @fireBaseUserId";
-        return await connection.QuerySingleOrDefaultAsync<UserRecord>(sql, new { FireBaseUserId = fireBaseUserId });
+        try
+        {
+            _logger.LogInformation("Retrieving user by email: {Email} using Entity Framework", email);
+            var entity = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
+
+            return entity?.ToDomain();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving user by email: {Email}", email);
+            throw;
+        }
     }
 
-    public async Task CreateAsync(UserRecord user)
+    public async Task<User?> GetByFirebaseUidAsync(string fireBaseUserId)
     {
-        using var connection = await dbConnectionFactory.GetConnectionAsync();
-        const string sql = @"
-            INSERT INTO users (user_id, email, name, firebase_user_id, created_at, updated_at) 
-            VALUES (@UserId, @Email, @Name, @FireBaseUserId, @CreatedAt, @UpdatedAt);
-        ";
-        await connection.ExecuteAsync(sql, user);
+        try
+        {
+            _logger.LogInformation("Retrieving user by Firebase UID using Entity Framework");
+            var entity = await _context.Users
+                .FirstOrDefaultAsync(u => u.FireBaseUserId == fireBaseUserId);
+
+            return entity?.ToDomain();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving user by Firebase UID");
+            throw;
+        }
     }
 
-    public async Task<UserRecord> UpdateAsync(UserRecord user)
+    public async Task CreateAsync(User user)
     {
-        using var connection = await dbConnectionFactory.GetConnectionAsync();
-        const string sql = @"
-            UPDATE users 
-            SET email = @Email, name = @Name, firebase_user_id = @FireBaseUserId, updated_at = @UpdatedAt 
-            WHERE user_id = @UserId";
-        await connection.ExecuteAsync(sql, user);
-        return user;
+        try
+        {
+            _logger.LogInformation("Creating user: {Email} using Entity Framework", user.Email);
+
+            var entity = user.ToEntity();
+            _context.Users.Add(entity);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Successfully created user: {Email} with ID: {UserId}",
+                user.Email, entity.UserId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating user: {Email}", user.Email);
+            throw;
+        }
+    }
+
+    public async Task<User> UpdateAsync(User user)
+    {
+        try
+        {
+            _logger.LogInformation("Updating user: {UserId} using Entity Framework", user.UserId);
+
+            var entity = await _context.Users.FindAsync(user.UserId);
+            if (entity == null)
+            {
+                _logger.LogWarning("User not found for update: {UserId}", user.UserId);
+                throw new InvalidOperationException($"User with ID {user.UserId} not found");
+            }
+
+            // Update entity properties
+            entity.Email = user.Email;
+            entity.Name = user.Name;
+            entity.FireBaseUserId = user.FireBaseUserId;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Successfully updated user: {UserId}", user.UserId);
+            return entity.ToDomain();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user: {UserId}", user.UserId);
+            throw;
+        }
     }
 
     public async Task<bool> ExistsAsync(string email)
     {
-        using var connection = await dbConnectionFactory.GetConnectionAsync();
-        const string sql = "SELECT COUNT(1) FROM users WHERE email = @Email";
-        var count = await connection.ExecuteScalarAsync<int>(sql, new { Email = email });
-        return count > 0;
+        try
+        {
+            return await _context.Users.AnyAsync(u => u.Email == email);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking if user exists: {Email}", email);
+            throw;
+        }
     }
 
     public async Task<bool> DeleteAsync(Guid userId)
     {
-        using var connection = await dbConnectionFactory.GetConnectionAsync();
-        const string sql = "DELETE FROM users WHERE user_id = @UserId";
-        var rowsAffected = await connection.ExecuteAsync(sql, new { UserId = userId });
-        return rowsAffected > 0;
+        try
+        {
+            _logger.LogInformation("Deleting user: {UserId} using Entity Framework", userId);
+
+            var entity = await _context.Users.FindAsync(userId);
+            if (entity == null)
+            {
+                _logger.LogWarning("User not found for deletion: {UserId}", userId);
+                return false;
+            }
+
+            _context.Users.Remove(entity);
+            var result = await _context.SaveChangesAsync();
+
+            _logger.LogInformation("User deletion result: {Result} for ID: {UserId}", result > 0, userId);
+            return result > 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting user: {UserId}", userId);
+            throw;
+        }
     }
 }

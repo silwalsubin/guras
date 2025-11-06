@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using services.audio.Domain;
 using services.audio.Models;
 using services.audio.Repositories;
 using utilities.aws.Utilities;

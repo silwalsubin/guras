@@ -25,11 +25,11 @@ public class QuotesController : BaseController
     /// </summary>
     /// <returns>List of all quotes</returns>
     [HttpGet]
-    public ActionResult<List<QuoteData>> GetAllQuotes()
+    public async Task<ActionResult<List<QuoteData>>> GetAllQuotes()
     {
         try
         {
-            var quotes = _quotesService.GetAllQuotes();
+            var quotes = await _quotesService.GetAllQuotes();
             _logger.LogInformation("Retrieved {Count} quotes", quotes.Count);
             return Ok(quotes);
         }
@@ -45,11 +45,11 @@ public class QuotesController : BaseController
     /// </summary>
     /// <returns>A random quote</returns>
     [HttpGet("random")]
-    public ActionResult<QuoteData> GetRandomQuote()
+    public async Task<ActionResult<QuoteData>> GetRandomQuote()
     {
         try
         {
-            var quote = _quotesService.GetRandomQuote();
+            var quote = await _quotesService.GetRandomQuote();
             _logger.LogInformation("Retrieved random quote: \"{QuoteText}\" by {Author}", quote.Text, quote.Author);
             return Ok(quote);
         }
@@ -66,11 +66,11 @@ public class QuotesController : BaseController
     /// <param name="category">The category to filter by</param>
     /// <returns>List of quotes in the specified category</returns>
     [HttpGet("category/{category}")]
-    public ActionResult<List<QuoteData>> GetQuotesByCategory(string category)
+    public async Task<ActionResult<List<QuoteData>>> GetQuotesByCategory(string category)
     {
         try
         {
-            var quotes = _quotesService.GetQuotesByCategory(category);
+            var quotes = await _quotesService.GetQuotesByCategory(category);
             _logger.LogInformation("Retrieved {Count} quotes for category '{Category}'", quotes.Count, category);
             return Ok(quotes);
         }
@@ -87,11 +87,11 @@ public class QuotesController : BaseController
     /// <param name="category">The category to filter by</param>
     /// <returns>A quote from the specified category or null if not found</returns>
     [HttpGet("category/{category}/single")]
-    public ActionResult<QuoteData?> GetQuoteByCategory(string category)
+    public async Task<ActionResult<QuoteData?>> GetQuoteByCategory(string category)
     {
         try
         {
-            var quote = _quotesService.GetQuoteByCategory(category);
+            var quote = await _quotesService.GetQuoteByCategory(category);
             if (quote == null)
             {
                 _logger.LogWarning("No quote found for category: {Category}", category);
@@ -115,7 +115,7 @@ public class QuotesController : BaseController
     /// <returns>A quote recommended by AI based on user context</returns>
     [Authorize]
     [HttpGet("ai-recommended")]
-    public IActionResult GetAIRecommendedQuote()
+    public async Task<IActionResult> GetAIRecommendedQuote()
     {
         try
         {
@@ -123,7 +123,7 @@ public class QuotesController : BaseController
 
             // Get a random quote as the AI recommendation
             // In a production system, this would use actual AI to select based on user context
-            var quote = _quotesService.GetRandomQuote();
+            var quote = await _quotesService.GetRandomQuote();
 
             var recommendedQuote = new AIRecommendedQuoteDto
             {

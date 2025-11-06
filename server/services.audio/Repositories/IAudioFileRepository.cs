@@ -1,3 +1,4 @@
+using services.audio.Domain;
 using services.audio.Models;
 
 namespace services.audio.Repositories;

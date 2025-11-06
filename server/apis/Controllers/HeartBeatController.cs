@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Dapper;
+using Microsoft.EntityFrameworkCore;
+using services.users.Data;
 using utilities.aws.Utilities;
-using utilities.Persistence.ConnectionFactories;
 
 namespace apis.Controllers;
 
@@ -10,7 +10,7 @@ namespace apis.Controllers;
 [Route("api/[controller]")]
 public class HeartBeatController(
     ILogger<HeartBeatController> logger,
-    IDbConnectionFactory dbConnectionFactory,
+    UsersDbContext dbContext,
     AudioFilesUtility audioFilesUtility
 ) : ControllerBase
 {
@@ -26,9 +26,16 @@ public class HeartBeatController(
     [AllowAnonymous]
     public async Task<IActionResult> GetDbConnectionHeartBeat()
     {
-        using var connection = await dbConnectionFactory.GetConnectionAsync();
-        var sqlServerTime = await connection.QuerySingleAsync<DateTime>("SELECT NOW()");
-        return Ok(sqlServerTime);
+        try
+        {
+            var sqlServerTime = await dbContext.Database.SqlQueryRaw<DateTime>("SELECT NOW()").FirstOrDefaultAsync();
+            return Ok(sqlServerTime);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Database connection heartbeat failed");
+            return StatusCode(500, "Database connection failed");
+        }
     }
 
     [HttpGet("S3Connection")]

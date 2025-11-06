@@ -107,7 +107,7 @@ public class NotificationSchedulerBackgroundService : BackgroundService
             }
 
             // Get a random quote for this notification
-            var quote = quotesService.GetRandomQuote();
+            var quote = await quotesService.GetRandomQuote();
             _logger.LogInformation($"Sending quote notification to user {userPreferences.UserId} with {tokens.Count} tokens. Quote: \"{quote.Text}\" - {quote.Author}");
 
             var messages = tokens.Select(token => new Message()

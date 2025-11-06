@@ -26,7 +26,7 @@ public class UserServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var expectedUser = new UserRecord
+        var expectedUser = new User
         {
             UserId = userId,
             Email = "test@example.com",
@@ -54,7 +54,7 @@ public class UserServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         _mockUserRepository.Setup(r => r.GetByUserIdAsync(userId))
-            .ReturnsAsync((UserRecord?)null);
+            .ReturnsAsync((User?)null);
 
         // Act
         var result = await _userService.GetUserByIdAsync(userId);
@@ -69,7 +69,7 @@ public class UserServiceTests
     {
         // Arrange
         var email = "test@example.com";
-        var expectedUser = new UserRecord
+        var expectedUser = new User
         {
             UserId = Guid.NewGuid(),
             Email = email,
@@ -96,7 +96,7 @@ public class UserServiceTests
     {
         // Arrange
         var firebaseUserId = "firebase123";
-        var expectedUser = new UserRecord
+        var expectedUser = new User
         {
             UserId = Guid.NewGuid(),
             Email = "test@example.com",
@@ -130,9 +130,9 @@ public class UserServiceTests
         };
 
         _mockUserRepository.Setup(r => r.GetByEmailAsync(payload.Email!))
-            .ReturnsAsync((UserRecord?)null);
+            .ReturnsAsync((User?)null);
 
-        _mockUserRepository.Setup(r => r.CreateAsync(It.IsAny<UserRecord>()))
+        _mockUserRepository.Setup(r => r.CreateAsync(It.IsAny<User>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -141,7 +141,7 @@ public class UserServiceTests
         // Assert
         result.Should().NotBeEmpty();
         _mockUserRepository.Verify(r => r.GetByEmailAsync(payload.Email!), Times.Once);
-        _mockUserRepository.Verify(r => r.CreateAsync(It.Is<UserRecord>(u =>
+        _mockUserRepository.Verify(r => r.CreateAsync(It.Is<User>(u =>
             u.Email == payload.Email &&
             u.Name == payload.Name &&
             u.FireBaseUserId == payload.FireBaseUserId &&
@@ -162,7 +162,7 @@ public class UserServiceTests
             FireBaseUserId = "firebase789"
         };
 
-        var existingUser = new UserRecord
+        var existingUser = new User
         {
             UserId = Guid.NewGuid(),
             Email = payload.Email,
@@ -181,7 +181,7 @@ public class UserServiceTests
 
         exception.Message.Should().Contain($"User with email {payload.Email} already exists");
         _mockUserRepository.Verify(r => r.GetByEmailAsync(payload.Email!), Times.Once);
-        _mockUserRepository.Verify(r => r.CreateAsync(It.IsAny<UserRecord>()), Times.Never);
+        _mockUserRepository.Verify(r => r.CreateAsync(It.IsAny<User>()), Times.Never);
     }
 
     [Theory]
@@ -219,7 +219,7 @@ public class UserServiceTests
             FireBaseUserId = "newfirebase123"
         };
 
-        var existingUser = new UserRecord
+        var existingUser = new User
         {
             UserId = userId,
             Email = "old@example.com",
@@ -232,7 +232,7 @@ public class UserServiceTests
         _mockUserRepository.Setup(r => r.GetByUserIdAsync(userId))
             .ReturnsAsync(existingUser);
 
-        _mockUserRepository.Setup(r => r.UpdateAsync(It.IsAny<UserRecord>()))
+        _mockUserRepository.Setup(r => r.UpdateAsync(It.IsAny<User>()))
             .ReturnsAsync(existingUser);
 
         // Act
@@ -240,7 +240,7 @@ public class UserServiceTests
 
         // Assert
         _mockUserRepository.Verify(r => r.GetByUserIdAsync(userId), Times.Once);
-        _mockUserRepository.Verify(r => r.UpdateAsync(It.Is<UserRecord>(u =>
+        _mockUserRepository.Verify(r => r.UpdateAsync(It.Is<User>(u =>
             u.UserId == userId &&
             u.Email == payload.Email &&
             u.Name == payload.Name &&
@@ -263,7 +263,7 @@ public class UserServiceTests
         };
 
         _mockUserRepository.Setup(r => r.GetByUserIdAsync(userId))
-            .ReturnsAsync((UserRecord?)null);
+            .ReturnsAsync((User?)null);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -271,7 +271,7 @@ public class UserServiceTests
 
         exception.Message.Should().Contain($"User with ID {userId} not found");
         _mockUserRepository.Verify(r => r.GetByUserIdAsync(userId), Times.Once);
-        _mockUserRepository.Verify(r => r.UpdateAsync(It.IsAny<UserRecord>()), Times.Never);
+        _mockUserRepository.Verify(r => r.UpdateAsync(It.IsAny<User>()), Times.Never);
     }
 
     [Theory]
@@ -288,7 +288,7 @@ public class UserServiceTests
             FireBaseUserId = "newfirebase123"
         };
 
-        var existingUser = new UserRecord
+        var existingUser = new User
         {
             UserId = userId,
             Email = "old@example.com",
@@ -347,7 +347,7 @@ public class UserServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var existingUser = new UserRecord
+        var existingUser = new User
         {
             UserId = userId,
             Email = "test@example.com",
@@ -378,7 +378,7 @@ public class UserServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         _mockUserRepository.Setup(r => r.GetByUserIdAsync(userId))
-            .ReturnsAsync((UserRecord?)null);
+            .ReturnsAsync((User?)null);
 
         // Act
         var result = await _userService.DeleteUserAsync(userId);

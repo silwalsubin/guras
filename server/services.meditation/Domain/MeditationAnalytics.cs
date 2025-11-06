@@ -171,6 +171,42 @@ public class MeditationAnalytics
 }
 
 /// <summary>
+/// DTO for user meditation patterns
+/// </summary>
+public class MeditationPatternsDto
+{
+    public List<PatternItem> PreferredTeachers { get; set; } = new();
+    public List<PatternItem> PreferredThemes { get; set; } = new();
+    public List<TimePatternItem> BestTimesOfDay { get; set; } = new();
+}
+
+public class PatternItem
+{
+    public string Name { get; set; } = string.Empty;
+    public int Count { get; set; }
+}
+
+public class TimePatternItem
+{
+    public string TimeOfDay { get; set; } = string.Empty;
+    public int Count { get; set; }
+    public double AverageCompletion { get; set; }
+}
+
+/// <summary>
+/// DTO for user meditation statistics
+/// </summary>
+public class MeditationStatsDto
+{
+    public int TotalSessions { get; set; }
+    public int CompletedSessions { get; set; }
+    public int TotalMinutes { get; set; }
+    public double AverageCompletionPercentage { get; set; }
+    public double AverageRating { get; set; }
+    public double AverageMoodImprovement { get; set; }
+}
+
+/// <summary>
 /// DTO for creating a new meditation analytics record
 /// </summary>
 public class CreateMeditationAnalyticsDto

@@ -1,12 +1,14 @@
+using services.users.Domain;
+
 namespace services.users.Persistence;
 
 public interface IUserRepository
 {
-    Task<UserRecord?> GetByUserIdAsync(Guid userId);
-    Task<UserRecord?> GetByEmailAsync(string email);
-    Task<UserRecord?> GetByFirebaseUidAsync(string fireBaseUserId);
-    Task CreateAsync(UserRecord user);
-    Task<UserRecord> UpdateAsync(UserRecord user);
+    Task<User?> GetByUserIdAsync(Guid userId);
+    Task<User?> GetByEmailAsync(string email);
+    Task<User?> GetByFirebaseUidAsync(string fireBaseUserId);
+    Task CreateAsync(User user);
+    Task<User> UpdateAsync(User user);
     Task<bool> ExistsAsync(string email);
     Task<bool> DeleteAsync(Guid userId);
 }

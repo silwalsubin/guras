@@ -4,8 +4,8 @@ namespace services.quotes.Services;
 
 public interface IQuotesService
 {
-    QuoteData GetRandomQuote();
-    List<QuoteData> GetAllQuotes();
-    QuoteData? GetQuoteByCategory(string category);
-    List<QuoteData> GetQuotesByCategory(string category);
+    Task<QuoteData> GetRandomQuote();
+    Task<List<QuoteData>> GetAllQuotes();
+    Task<QuoteData?> GetQuoteByCategory(string category);
+    Task<List<QuoteData>> GetQuotesByCategory(string category);
 }

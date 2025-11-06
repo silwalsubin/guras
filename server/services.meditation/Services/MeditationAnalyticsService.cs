@@ -1,7 +1,7 @@
-using Dapper;
-using services.meditation.Domain;
-using System.Data;
 using Microsoft.Extensions.Logging;
+using services.meditation.Domain;
+using services.meditation.Repositories;
+using services.meditation.Services;
 
 namespace services.meditation.Services;
 
@@ -48,12 +48,12 @@ public interface IMeditationAnalyticsService
 
 public class MeditationAnalyticsService : IMeditationAnalyticsService
 {
-    private readonly IDbConnection _dbConnection;
+    private readonly IMeditationAnalyticsRepository _repository;
     private readonly ILogger<MeditationAnalyticsService> _logger;
 
-    public MeditationAnalyticsService(IDbConnection dbConnection, ILogger<MeditationAnalyticsService> logger)
+    public MeditationAnalyticsService(IMeditationAnalyticsRepository repository, ILogger<MeditationAnalyticsService> logger)
     {
-        _dbConnection = dbConnection;
+        _repository = repository;
         _logger = logger;
     }
 
@@ -61,52 +61,13 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
     {
         try
         {
-            var id = Guid.NewGuid();
-            var now = DateTime.UtcNow;
+            analyticsData.TimeOfDay = GetTimeOfDay(analyticsData.SessionStartTime);
+            analyticsData.DayOfWeek = analyticsData.SessionStartTime.DayOfWeek.ToString();
 
-            const string sql = @"
-                INSERT INTO meditation_analytics (
-                    id, user_id, session_id, session_title, teacher_id, teacher_name, 
-                    music_id, music_name, session_start_time, planned_duration_seconds,
-                    meditation_theme, difficulty_level, is_program_session, program_id, program_day,
-                    emotional_state_before, emotional_state_before_score, time_of_day, day_of_week,
-                    created_at, updated_at
-                ) VALUES (
-                    @Id, @UserId, @SessionId, @SessionTitle, @TeacherId, @TeacherName,
-                    @MusicId, @MusicName, @SessionStartTime, @PlannedDurationSeconds,
-                    @MeditationTheme, @DifficultyLevel, @IsProgramSession, @ProgramId, @ProgramDay,
-                    @EmotionalStateBeforeType, @EmotionalStateBeforeScore, @TimeOfDay, @DayOfWeek,
-                    @CreatedAt, @UpdatedAt
-                )";
-
-            var parameters = new
-            {
-                Id = id,
-                UserId = userId,
-                SessionId = sessionId,
-                analyticsData.SessionTitle,
-                analyticsData.TeacherId,
-                analyticsData.TeacherName,
-                analyticsData.MusicId,
-                analyticsData.MusicName,
-                SessionStartTime = analyticsData.SessionStartTime,
-                analyticsData.PlannedDurationSeconds,
-                analyticsData.MeditationTheme,
-                analyticsData.DifficultyLevel,
-                analyticsData.IsProgramSession,
-                analyticsData.ProgramId,
-                analyticsData.ProgramDay,
-                analyticsData.EmotionalStateBeforeType,
-                analyticsData.EmotionalStateBeforeScore,
-                TimeOfDay = GetTimeOfDay(analyticsData.SessionStartTime),
-                DayOfWeek = analyticsData.SessionStartTime.DayOfWeek.ToString(),
-                CreatedAt = now,
-                UpdatedAt = now
-            };
-
-            await _dbConnection.ExecuteAsync(sql, parameters);
+            var analytics = analyticsData.ToDomain(userId);
+            var created = await _repository.CreateAsync(analytics);
             _logger.LogInformation("Logged meditation session start for user {UserId}, session {SessionId}", userId, sessionId);
-            return id;
+            return created.Id;
         }
         catch (Exception ex)
         {
@@ -119,33 +80,24 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
     {
         try
         {
-            const string sql = @"
-                UPDATE meditation_analytics
-                SET 
-                    session_end_time = @SessionEndTime,
-                    duration_seconds = @DurationSeconds,
-                    completed = @Completed,
-                    completion_percentage = @CompletionPercentage,
-                    paused_count = @PausedCount,
-                    total_pause_duration_seconds = @TotalPauseDurationSeconds,
-                    updated_at = @UpdatedAt
-                WHERE id = @Id";
-
-            var parameters = new
+            var existing = await _repository.GetByIdAsync(analyticsId);
+            if (existing == null)
             {
-                Id = analyticsId,
-                completionData.SessionEndTime,
-                completionData.DurationSeconds,
-                completionData.Completed,
-                completionData.CompletionPercentage,
-                completionData.PausedCount,
-                completionData.TotalPauseDurationSeconds,
-                UpdatedAt = DateTime.UtcNow
-            };
+                _logger.LogWarning("Meditation analytics not found for completion: {AnalyticsId}", analyticsId);
+                return false;
+            }
 
-            var result = await _dbConnection.ExecuteAsync(sql, parameters);
+            existing.SessionEndTime = completionData.SessionEndTime;
+            existing.DurationSeconds = completionData.DurationSeconds;
+            existing.Completed = completionData.Completed;
+            existing.CompletionPercentage = completionData.CompletionPercentage;
+            existing.PausedCount = completionData.PausedCount;
+            existing.TotalPauseDurationSeconds = completionData.TotalPauseDurationSeconds;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            var result = await _repository.UpdateAsync(existing);
             _logger.LogInformation("Logged meditation session completion for analytics {AnalyticsId}", analyticsId);
-            return result > 0;
+            return result;
         }
         catch (Exception ex)
         {
@@ -158,19 +110,27 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
     {
         try
         {
-            const string sql = @"
-                SELECT 
-                    id, user_id, session_id, session_title, teacher_name, music_name,
-                    session_start_time, duration_seconds, meditation_theme, difficulty_level,
-                    completed, completion_percentage, emotional_state_before_score,
-                    emotional_state_after_score, user_rating, created_at
-                FROM meditation_analytics
-                WHERE user_id = @UserId
-                ORDER BY session_start_time DESC
-                LIMIT @Limit";
-
-            var result = await _dbConnection.QueryAsync<MeditationAnalyticsDto>(sql, new { UserId = userId, Limit = limit });
-            return result.ToList();
+            var analytics = await _repository.GetByUserIdAsync(userId, limit);
+            return analytics.Select(a => new MeditationAnalyticsDto
+            {
+                Id = a.Id,
+                UserId = a.UserId,
+                SessionId = a.SessionId,
+                SessionTitle = a.SessionTitle,
+                TeacherName = a.TeacherName,
+                MusicName = a.MusicName,
+                SessionStartTime = a.SessionStartTime,
+                DurationSeconds = a.DurationSeconds,
+                MeditationTheme = a.MeditationTheme,
+                DifficultyLevel = a.DifficultyLevel,
+                Completed = a.Completed,
+                CompletionPercentage = a.CompletionPercentage,
+                EmotionalStateBeforeScore = a.EmotionalStateBeforeScore,
+                EmotionalStateAfterScore = a.EmotionalStateAfterScore,
+                UserRating = a.UserRating,
+                TimeOfDay = a.TimeOfDay,
+                CreatedAt = a.CreatedAt
+            }).ToList();
         }
         catch (Exception ex)
         {
@@ -183,44 +143,7 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
     {
         try
         {
-            // Get preferred teachers
-            const string teachersSql = @"
-                SELECT teacher_name, COUNT(*) as count
-                FROM meditation_analytics
-                WHERE user_id = @UserId AND completed = true
-                GROUP BY teacher_name
-                ORDER BY count DESC
-                LIMIT 5";
-
-            var teachers = await _dbConnection.QueryAsync<(string name, int count)>(teachersSql, new { UserId = userId });
-
-            // Get preferred themes
-            const string themesSql = @"
-                SELECT meditation_theme, COUNT(*) as count
-                FROM meditation_analytics
-                WHERE user_id = @UserId AND completed = true
-                GROUP BY meditation_theme
-                ORDER BY count DESC
-                LIMIT 5";
-
-            var themes = await _dbConnection.QueryAsync<(string name, int count)>(themesSql, new { UserId = userId });
-
-            // Get best times of day
-            const string timesSql = @"
-                SELECT time_of_day, COUNT(*) as count, AVG(completion_percentage) as avg_completion
-                FROM meditation_analytics
-                WHERE user_id = @UserId
-                GROUP BY time_of_day
-                ORDER BY avg_completion DESC";
-
-            var times = await _dbConnection.QueryAsync<(string timeOfDay, int count, double avgCompletion)>(timesSql, new { UserId = userId });
-
-            return new MeditationPatternsDto
-            {
-                PreferredTeachers = teachers.Select(t => new PatternItem { Name = t.name, Count = t.count }).ToList(),
-                PreferredThemes = themes.Select(t => new PatternItem { Name = t.name, Count = t.count }).ToList(),
-                BestTimesOfDay = times.Select(t => new TimePatternItem { TimeOfDay = t.timeOfDay, Count = t.count, AverageCompletion = t.avgCompletion }).ToList()
-            };
+            return await _repository.GetUserPatternsAsync(userId);
         }
         catch (Exception ex)
         {
@@ -233,35 +156,7 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
     {
         try
         {
-            const string sql = @"
-                SELECT
-                    COUNT(*) as total_sessions,
-                    SUM(CASE WHEN completed = true THEN 1 ELSE 0 END) as completed_sessions,
-                    SUM(duration_seconds) as total_minutes_seconds,
-                    AVG(completion_percentage) as avg_completion_percentage,
-                    AVG(user_rating) as avg_rating,
-                    AVG(emotional_state_after_score - emotional_state_before_score) as avg_mood_improvement
-                FROM meditation_analytics
-                WHERE user_id = @UserId";
-
-            var result = await _dbConnection.QuerySingleOrDefaultAsync<dynamic>(sql, new { UserId = userId });
-
-            // If no results, return default stats (new user)
-            if (result == null)
-            {
-                _logger.LogInformation("No meditation stats found for user {UserId}, returning default stats", userId);
-                return new MeditationStatsDto();
-            }
-
-            return new MeditationStatsDto
-            {
-                TotalSessions = (int)(result.total_sessions ?? 0L),
-                CompletedSessions = (int)(result.completed_sessions ?? 0L),
-                TotalMinutes = (int)((result.total_minutes_seconds ?? 0L) / 60),
-                AverageCompletionPercentage = result.avg_completion_percentage ?? 0,
-                AverageRating = result.avg_rating ?? 0,
-                AverageMoodImprovement = result.avg_mood_improvement ?? 0
-            };
+            return await _repository.GetUserStatsAsync(userId);
         }
         catch (Exception ex)
         {
@@ -274,27 +169,20 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
     {
         try
         {
-            const string sql = @"
-                UPDATE meditation_analytics
-                SET 
-                    emotional_state_before = @EmotionalStateBefore,
-                    emotional_state_before_score = @ScoreBefore,
-                    emotional_state_after = @EmotionalStateAfter,
-                    emotional_state_after_score = @ScoreAfter,
-                    updated_at = @UpdatedAt
-                WHERE id = @Id";
-
-            var result = await _dbConnection.ExecuteAsync(sql, new
+            var existing = await _repository.GetByIdAsync(analyticsId);
+            if (existing == null)
             {
-                Id = analyticsId,
-                EmotionalStateBefore = emotionalStateBefore,
-                ScoreBefore = scoreBefore,
-                EmotionalStateAfter = emotionalStateAfter,
-                ScoreAfter = scoreAfter,
-                UpdatedAt = DateTime.UtcNow
-            });
+                _logger.LogWarning("Meditation analytics not found for emotional state update: {AnalyticsId}", analyticsId);
+                return false;
+            }
 
-            return result > 0;
+            existing.EmotionalStateBeforeType = emotionalStateBefore;
+            existing.EmotionalStateBeforeScore = scoreBefore;
+            existing.EmotionalStateAfterType = emotionalStateAfter;
+            existing.EmotionalStateAfterScore = scoreAfter;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            return await _repository.UpdateAsync(existing);
         }
         catch (Exception ex)
         {
@@ -307,23 +195,18 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
     {
         try
         {
-            const string sql = @"
-                UPDATE meditation_analytics
-                SET 
-                    user_rating = @Rating,
-                    user_notes = @Notes,
-                    updated_at = @UpdatedAt
-                WHERE id = @Id";
-
-            var result = await _dbConnection.ExecuteAsync(sql, new
+            var existing = await _repository.GetByIdAsync(analyticsId);
+            if (existing == null)
             {
-                Id = analyticsId,
-                Rating = rating,
-                Notes = notes,
-                UpdatedAt = DateTime.UtcNow
-            });
+                _logger.LogWarning("Meditation analytics not found for feedback: {AnalyticsId}", analyticsId);
+                return false;
+            }
 
-            return result > 0;
+            existing.UserRating = rating;
+            existing.UserNotes = notes;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            return await _repository.UpdateAsync(existing);
         }
         catch (Exception ex)
         {
@@ -343,41 +226,5 @@ public class MeditationAnalyticsService : IMeditationAnalyticsService
             _ => "night"
         };
     }
-}
-
-/// <summary>
-/// DTO for user meditation patterns
-/// </summary>
-public class MeditationPatternsDto
-{
-    public List<PatternItem> PreferredTeachers { get; set; } = new();
-    public List<PatternItem> PreferredThemes { get; set; } = new();
-    public List<TimePatternItem> BestTimesOfDay { get; set; } = new();
-}
-
-public class PatternItem
-{
-    public string Name { get; set; } = string.Empty;
-    public int Count { get; set; }
-}
-
-public class TimePatternItem
-{
-    public string TimeOfDay { get; set; } = string.Empty;
-    public int Count { get; set; }
-    public double AverageCompletion { get; set; }
-}
-
-/// <summary>
-/// DTO for user meditation statistics
-/// </summary>
-public class MeditationStatsDto
-{
-    public int TotalSessions { get; set; }
-    public int CompletedSessions { get; set; }
-    public int TotalMinutes { get; set; }
-    public double AverageCompletionPercentage { get; set; }
-    public double AverageRating { get; set; }
-    public double AverageMoodImprovement { get; set; }
 }
 

@@ -1,8 +1,10 @@
-using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using services.journal.Data;
 using services.journal.Domain;
+using services.journal.Models;
 using services.journal.Requests;
-using utilities.Persistence.ConnectionFactories;
+using services.journal.Services;
 
 namespace services.journal.Repositories;
 
@@ -11,180 +13,182 @@ namespace services.journal.Repositories;
 /// </summary>
 public class JournalEntryRepository : IJournalEntryRepository
 {
-    private readonly IDbConnectionFactory _connectionFactory;
+    private readonly JournalEntriesDbContext _context;
     private readonly ILogger<JournalEntryRepository> _logger;
 
-    public JournalEntryRepository(IDbConnectionFactory connectionFactory, ILogger<JournalEntryRepository> logger)
+    public JournalEntryRepository(JournalEntriesDbContext context, ILogger<JournalEntryRepository> logger)
     {
-        _connectionFactory = connectionFactory;
+        _context = context;
         _logger = logger;
     }
 
     public async Task<JournalEntry> CreateAsync(Guid userId, CreateJournalEntryRequest request, string title, string? mood = null, int? moodScore = null)
     {
-        const string sql = @"
-            INSERT INTO journal_entries (
-                id, user_id, title, content, mood, mood_score, tags, created_at, updated_at, is_deleted
-            ) VALUES (
-                @Id, @UserId, @Title, @Content, @Mood, @MoodScore, @Tags, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false
-            ) RETURNING *";
-
-        using var connection = await _connectionFactory.GetConnectionAsync();
-
-        var journalEntry = await connection.QuerySingleAsync<JournalEntry>(sql, new
+        try
         {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            Title = title,
-            request.Content,
-            Mood = mood,
-            MoodScore = moodScore,
-            Tags = request.Tags ?? Array.Empty<string>()
-        });
+            _logger.LogInformation("Creating journal entry for user: {UserId} using Entity Framework", userId);
 
-        _logger.LogInformation("Created journal entry with ID: {JournalEntryId} for user: {UserId}", journalEntry.Id, userId);
-        return journalEntry;
+            var journalEntry = request.ToDomain(userId, title, mood, moodScore);
+            var entity = journalEntry.ToEntity();
+            _context.JournalEntries.Add(entity);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Created journal entry with ID: {JournalEntryId} for user: {UserId}", journalEntry.Id, userId);
+            return entity.ToDomain();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating journal entry for user: {UserId}", userId);
+            throw;
+        }
     }
 
     public async Task<JournalEntry?> GetByIdAsync(Guid id)
     {
-        const string sql = @"
-            SELECT
-                id as Id,
-                user_id as UserId,
-                title as Title,
-                content as Content,
-                mood as Mood,
-                mood_score as MoodScore,
-                tags as Tags,
-                created_at as CreatedAt,
-                updated_at as UpdatedAt,
-                is_deleted as IsDeleted
-            FROM journal_entries
-            WHERE id = @Id AND is_deleted = false";
+        try
+        {
+            _logger.LogInformation("Retrieving journal entry by ID: {JournalEntryId} using Entity Framework", id);
+            var entity = await _context.JournalEntries
+                .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
 
-        using var connection = await _connectionFactory.GetConnectionAsync();
-        var entry = await connection.QuerySingleOrDefaultAsync<JournalEntry>(sql, new { Id = id });
-        return entry;
+            return entity?.ToDomain();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving journal entry by ID: {JournalEntryId}", id);
+            throw;
+        }
     }
 
     public async Task<IEnumerable<JournalEntry>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20, string? search = null)
     {
-        var sql = @"
-            SELECT
-                id as Id,
-                user_id as UserId,
-                title as Title,
-                content as Content,
-                mood as Mood,
-                mood_score as MoodScore,
-                tags as Tags,
-                created_at as CreatedAt,
-                updated_at as UpdatedAt,
-                is_deleted as IsDeleted
-            FROM journal_entries
-            WHERE user_id = @UserId AND is_deleted = false";
-
-        // Add search filter if provided
-        if (!string.IsNullOrWhiteSpace(search))
+        try
         {
-            sql += @" AND (
-                LOWER(title) LIKE LOWER(@SearchTerm) OR
-                LOWER(content) LIKE LOWER(@SearchTerm)
-            )";
+            _logger.LogInformation("Retrieving journal entries for user: {UserId} using Entity Framework", userId);
+
+            var query = _context.JournalEntries
+                .Where(e => e.UserId == userId && !e.IsDeleted);
+
+            // Add search filter if provided
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchLower = search.ToLower();
+                query = query.Where(e =>
+                    e.Title.ToLower().Contains(searchLower) ||
+                    e.Content.ToLower().Contains(searchLower));
+            }
+
+            var offset = (page - 1) * pageSize;
+            var entities = await query
+                .OrderByDescending(e => e.CreatedAt)
+                .Skip(offset)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return entities.Select(e => e.ToDomain());
         }
-
-        sql += @" ORDER BY created_at DESC
-            LIMIT @PageSize OFFSET @Offset";
-
-        var offset = (page - 1) * pageSize;
-        var searchTerm = string.IsNullOrWhiteSpace(search) ? null : $"%{search}%";
-
-        using var connection = await _connectionFactory.GetConnectionAsync();
-        var entries = await connection.QueryAsync<JournalEntry>(sql, new
+        catch (Exception ex)
         {
-            UserId = userId,
-            SearchTerm = searchTerm,
-            PageSize = pageSize,
-            Offset = offset
-        });
-
-        return entries;
+            _logger.LogError(ex, "Error retrieving journal entries for user: {UserId}", userId);
+            throw;
+        }
     }
 
     public async Task<JournalEntry?> UpdateAsync(Guid id, UpdateJournalEntryRequest request, string? mood = null, int? moodScore = null)
     {
-        const string sql = @"
-            UPDATE journal_entries
-            SET
-                title = COALESCE(@Title, title),
-                content = COALESCE(@Content, content),
-                mood = COALESCE(@Mood, mood),
-                mood_score = COALESCE(@MoodScore, mood_score),
-                tags = COALESCE(@Tags, tags),
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = @Id AND is_deleted = false
-            RETURNING *";
-
-        using var connection = await _connectionFactory.GetConnectionAsync();
-
-        var journalEntry = await connection.QuerySingleOrDefaultAsync<JournalEntry>(sql, new
+        try
         {
-            Id = id,
-            request.Title,
-            request.Content,
-            Mood = mood,
-            MoodScore = moodScore,
-            Tags = request.Tags ?? Array.Empty<string>()
-        });
+            _logger.LogInformation("Updating journal entry: {JournalEntryId} using Entity Framework", id);
 
-        if (journalEntry != null)
-        {
+            var entity = await _context.JournalEntries
+                .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
+
+            if (entity == null)
+            {
+                _logger.LogWarning("Journal entry not found for update: {JournalEntryId}", id);
+                return null;
+            }
+
+            // Update entity properties
+            if (request.Title != null)
+                entity.Title = request.Title;
+            if (request.Content != null)
+                entity.Content = request.Content;
+            if (mood != null)
+                entity.Mood = mood;
+            if (moodScore != null)
+                entity.MoodScore = moodScore;
+            if (request.Tags != null)
+                entity.Tags = request.Tags;
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
             _logger.LogInformation("Updated journal entry with ID: {JournalEntryId}", id);
+            return entity.ToDomain();
         }
-
-        return journalEntry;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating journal entry: {JournalEntryId}", id);
+            throw;
+        }
     }
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        const string sql = @"
-            UPDATE journal_entries
-            SET is_deleted = true, updated_at = CURRENT_TIMESTAMP
-            WHERE id = @Id AND is_deleted = false";
-
-        using var connection = await _connectionFactory.GetConnectionAsync();
-        var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
-
-        if (rowsAffected > 0)
+        try
         {
-            _logger.LogInformation("Soft deleted journal entry with ID: {JournalEntryId}", id);
-        }
+            _logger.LogInformation("Soft deleting journal entry: {JournalEntryId} using Entity Framework", id);
 
-        return rowsAffected > 0;
+            var entity = await _context.JournalEntries
+                .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
+
+            if (entity == null)
+            {
+                _logger.LogWarning("Journal entry not found for deletion: {JournalEntryId}", id);
+                return false;
+            }
+
+            entity.IsDeleted = true;
+            entity.UpdatedAt = DateTime.UtcNow;
+            var result = await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Soft deleted journal entry with ID: {JournalEntryId}", id);
+            return result > 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting journal entry: {JournalEntryId}", id);
+            throw;
+        }
     }
 
     public async Task<bool> ExistsAsync(Guid id)
     {
-        const string sql = @"
-            SELECT EXISTS(
-                SELECT 1 FROM journal_entries
-                WHERE id = @Id AND is_deleted = false
-            )";
-
-        using var connection = await _connectionFactory.GetConnectionAsync();
-        return await connection.ExecuteScalarAsync<bool>(sql, new { Id = id });
+        try
+        {
+            return await _context.JournalEntries
+                .AnyAsync(e => e.Id == id && !e.IsDeleted);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking if journal entry exists: {JournalEntryId}", id);
+            throw;
+        }
     }
 
     public async Task<int> GetCountByUserIdAsync(Guid userId)
     {
-        const string sql = @"
-            SELECT COUNT(*)
-            FROM journal_entries
-            WHERE user_id = @UserId AND is_deleted = false";
-
-        using var connection = await _connectionFactory.GetConnectionAsync();
-        return await connection.ExecuteScalarAsync<int>(sql, new { UserId = userId });
+        try
+        {
+            return await _context.JournalEntries
+                .CountAsync(e => e.UserId == userId && !e.IsDeleted);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting journal entry count for user: {UserId}", userId);
+            throw;
+        }
     }
 }
 

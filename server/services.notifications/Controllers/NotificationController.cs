@@ -613,7 +613,7 @@ namespace services.notifications.Controllers
                 }
 
                 // Get a random quote
-                var quote = quotesService.GetRandomQuote();
+                var quote = await quotesService.GetRandomQuote();
 
                 // Send notification immediately (same logic as background service)
                 var messages = tokens.Select(token => new Message()

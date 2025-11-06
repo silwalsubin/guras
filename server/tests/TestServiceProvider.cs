@@ -21,7 +21,7 @@ public static class TestServiceProvider
             .Get<DbConfiguration>();
         RunEnvironment.SetToDevelopment();
         var services = new ServiceCollection();
-        services.ConfigureApiServices();
+        services.ConfigureApiServices(configuration);
         services.AddLogging(builder =>
         {
             builder.AddConsole();

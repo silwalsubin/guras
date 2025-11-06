@@ -1,94 +1,123 @@
 using Microsoft.Extensions.Logging;
+using services.notifications.Repositories;
 
 namespace services.notifications.Services;
 
 public class NotificationTokenService : INotificationTokenService
 {
+    private readonly INotificationTokenRepository _repository;
     private readonly ILogger<NotificationTokenService> _logger;
 
-    // In-memory storage for FCM tokens with user associations (for testing - replace with database in production)
-    private static readonly Dictionary<string, List<string>> _userTokens = new(); // userId -> List<token>
-    private static readonly Dictionary<string, string> _tokenUsers = new(); // token -> userId
-    private static readonly object _lock = new();
-
-    public NotificationTokenService(ILogger<NotificationTokenService> logger)
+    public NotificationTokenService(INotificationTokenRepository repository, ILogger<NotificationTokenService> logger)
     {
+        _repository = repository;
         _logger = logger;
+    }
+
+    public async Task<List<string>> GetStoredTokensAsync()
+    {
+        try
+        {
+            var tokens = await _repository.GetAllTokensAsync();
+            _logger.LogDebug("Retrieved {Count} stored tokens", tokens.Count);
+            return tokens;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving stored tokens");
+            throw;
+        }
     }
 
     public List<string> GetStoredTokens()
     {
-        lock (_lock)
-        {
-            var tokens = _tokenUsers.Keys.ToList();
-            _logger.LogDebug("Retrieved {Count} stored tokens", tokens.Count);
-            return tokens;
-        }
+        // Synchronous wrapper for backward compatibility
+        return GetStoredTokensAsync().GetAwaiter().GetResult();
     }
 
-    // Static method to get registered tokens (for backward compatibility)
     public static List<string> GetStoredTokensStatic()
     {
-        lock (_lock)
+        // This method is kept for backward compatibility but should be avoided
+        // In a real implementation, this would need access to the service
+        return new List<string>();
+    }
+
+    public async Task RegisterTokenAsync(string token, string platform, string userId)
+    {
+        try
         {
-            return _tokenUsers.Keys.ToList();
+            await _repository.RegisterTokenAsync(token, platform, userId);
+            var stats = await _repository.GetTokenStatisticsAsync();
+            _logger.LogInformation("FCM Token stored for user {UserId}: {TokenPrefix}... (Total users: {TotalUsers}, Total tokens: {TotalTokens})",
+                userId, token.Length > 20 ? token[..20] : token, stats.totalUsers, stats.totalTokens);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error registering token for user {UserId}", userId);
+            throw;
         }
     }
 
-    // Methods to manage tokens (used by NotificationController)
     public void RegisterToken(string token, string platform, string userId)
     {
-        lock (_lock)
+        // Synchronous wrapper for backward compatibility
+        RegisterTokenAsync(token, platform, userId).GetAwaiter().GetResult();
+    }
+
+    public async Task<Dictionary<string, List<string>>> GetUserTokensAsync()
+    {
+        try
         {
-            // Remove token from previous user if it exists
-            if (_tokenUsers.ContainsKey(token))
-            {
-                var previousUserId = _tokenUsers[token];
-                if (_userTokens.ContainsKey(previousUserId))
-                {
-                    _userTokens[previousUserId].Remove(token);
-                    if (_userTokens[previousUserId].Count == 0)
-                    {
-                        _userTokens.Remove(previousUserId);
-                    }
-                }
-                _logger.LogInformation("Token reassigned from user {PreviousUserId} to user {UserId}", previousUserId, userId);
-            }
-
-            // Add token to new user
-            if (!_userTokens.ContainsKey(userId))
-            {
-                _userTokens[userId] = new List<string>();
-            }
-            _userTokens[userId].Add(token);
-            _tokenUsers[token] = userId;
-
-            _logger.LogInformation("FCM Token stored for user {UserId}: {TokenPrefix}... (Total users: {TotalUsers}, Total tokens: {TotalTokens})",
-                userId, token[..20], _userTokens.Count, _tokenUsers.Count);
+            return await _repository.GetUserTokensAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving user tokens");
+            throw;
         }
     }
 
     public Dictionary<string, List<string>> GetUserTokens()
     {
-        lock (_lock)
+        // Synchronous wrapper for backward compatibility
+        return GetUserTokensAsync().GetAwaiter().GetResult();
+    }
+
+    public async Task<Dictionary<string, string>> GetTokenUsersAsync()
+    {
+        try
         {
-            return new Dictionary<string, List<string>>(_userTokens);
+            return await _repository.GetTokenUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving token users");
+            throw;
         }
     }
 
     public Dictionary<string, string> GetTokenUsers()
     {
-        lock (_lock)
+        // Synchronous wrapper for backward compatibility
+        return GetTokenUsersAsync().GetAwaiter().GetResult();
+    }
+
+    public async Task<(int totalUsers, int totalTokens)> GetTokenStatisticsAsync()
+    {
+        try
         {
-            return new Dictionary<string, string>(_tokenUsers);
+            return await _repository.GetTokenStatisticsAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving token statistics");
+            throw;
         }
     }
 
     public (int totalUsers, int totalTokens) GetTokenStatistics()
     {
-        lock (_lock)
-        {
-            return (_userTokens.Count, _tokenUsers.Count);
-        }
+        // Synchronous wrapper for backward compatibility
+        return GetTokenStatisticsAsync().GetAwaiter().GetResult();
     }
 }

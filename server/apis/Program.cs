@@ -76,14 +76,14 @@ builder.Services.AddCors(options =>
     });
 });
 
-ApisServiceConfiguration.ConfigureApiServices(builder.Services);
+ApisServiceConfiguration.ConfigureApiServices(builder.Services, builder.Configuration);
 
 builder.Services.AddAuthenticationServices();
-builder.Services.AddNotificationsServices();
+builder.Services.AddNotificationsServices(builder.Configuration);
 builder.Services.AddTeachersServices(builder.Configuration);
-builder.Services.AddMeditationServices();
+builder.Services.AddMeditationServices(builder.Configuration);
 builder.Services.AddAIServices(builder.Configuration);
-builder.Services.AddJournalServices();
+builder.Services.AddJournalServices(builder.Configuration);
 
 // Configure authorization
 builder.Services.AddAuthorization();
