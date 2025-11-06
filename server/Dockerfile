@@ -10,13 +10,12 @@ COPY services/services.teachers/services.teachers.csproj services/services.teach
 COPY utilities/utilities.ai/utilities.ai.csproj utilities/utilities.ai/
 COPY services/services.meditation/services.meditation.csproj services/services.meditation/
 COPY services/services.journal/services.journal.csproj services/services.journal/
-COPY orchestration/orchestration.csproj orchestration/
 COPY utilities/utilities.aws/utilities.aws.csproj utilities/utilities.aws/
 COPY utilities/utilities/utilities.csproj utilities/utilities/
 COPY services/services.quotes/services.quotes.csproj services/services.quotes/
 COPY services/services.notifications/services.notifications.csproj services/services.notifications/
 COPY services/services.audio/services.audio.csproj services/services.audio/
-COPY orchestration.backgroundServices/orchestration.backgroundServices.csproj orchestration.backgroundServices/
+COPY orchestration/orchestration.backgroundServices/orchestration.backgroundServices.csproj orchestration/orchestration.backgroundServices/
 COPY tests/tests.csproj tests/
 RUN dotnet restore
 
@@ -33,7 +32,6 @@ COPY utilities/utilities.aws/ utilities/utilities.aws/
 COPY services/services.quotes/ services/services.quotes/
 COPY services/services.notifications/ services/services.notifications/
 COPY services/services.audio/ services/services.audio/
-COPY orchestration.backgroundServices/ orchestration.backgroundServices/
 COPY tests/ tests/
 
 # Build the application

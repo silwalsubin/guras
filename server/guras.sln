@@ -27,7 +27,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities.aws", "utilities\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "utilities.ai", "utilities\utilities.ai\utilities.ai.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orchestration.backgroundServices", "orchestration.backgroundServices\orchestration.backgroundServices.csproj", "{E3B77DBC-A8A8-4875-9969-3B6F51BC30C0}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Orchestration", "Orchestration", "{F3C4D5E6-F7A8-9012-BCDE-F12345678903}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "orchestration.backgroundServices", "orchestration\orchestration.backgroundServices\orchestration.backgroundServices.csproj", "{E3B77DBC-A8A8-4875-9969-3B6F51BC30C0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apis", "apis\apis.csproj", "{362A281D-1FEA-B036-C52B-9441E2CE94CA}"
 EndProject
@@ -106,6 +108,7 @@ Global
 		{8662C11D-FE1A-4F90-9482-5671AEB1BFCE} = {F2B3C4D5-E6F7-8901-BCDE-F12345678902}
 		{C9F0BA0D-E304-46C5-BBDB-AAA7CD41CFD0} = {F2B3C4D5-E6F7-8901-BCDE-F12345678902}
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {F2B3C4D5-E6F7-8901-BCDE-F12345678902}
+		{E3B77DBC-A8A8-4875-9969-3B6F51BC30C0} = {F3C4D5E6-F7A8-9012-BCDE-F12345678903}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A45F76E0-2C3E-4DFB-B1BB-48454DBF4346}
