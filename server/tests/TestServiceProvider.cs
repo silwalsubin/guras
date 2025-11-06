@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using utilities.HostEnvironment;
 using utilities.Persistence;
+using utilities.Persistence.ConnectionFactories;
 
 namespace tests;
 
@@ -20,8 +21,12 @@ public static class TestServiceProvider
             .GetSection("DbConfiguration")
             .Get<DbConfiguration>();
         RunEnvironment.SetToDevelopment();
+        
+        // Create connection factory for tests (uses local configuration)
+        var connectionFactory = new LocalDbConnectionFactory(dbConfiguration!);
+        
         var services = new ServiceCollection();
-        services.ConfigureApiServices(configuration);
+        services.ConfigureApiServices(configuration, connectionFactory);
         services.AddLogging(builder =>
         {
             builder.AddConsole();

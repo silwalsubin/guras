@@ -5,17 +5,18 @@ using services.audio.Data;
 using services.audio.Repositories;
 using services.audio.Services;
 using utilities.Persistence;
+using utilities.Persistence.ConnectionFactories;
 
 namespace services.audio.Configuration;
 
 public static class AudioServicesConfigurationExtensions
 {
-    public static IServiceCollection AddAudioServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAudioServices(this IServiceCollection services, IConfiguration configuration, IDbConnectionFactory connectionFactory)
     {
         // Register DbContext
         services.AddDbContext<AudioFilesDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetDatabaseConnectionString());
+            options.UseNpgsql(connectionFactory.GetConnectionString());
         });
 
         // Register repositories

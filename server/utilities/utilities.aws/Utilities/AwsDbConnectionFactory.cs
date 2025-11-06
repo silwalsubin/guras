@@ -12,4 +12,13 @@ public class AwsDbConnectionFactory : IDbConnectionFactory
         var dbConfiguration = await secretName.GetSecretValueAsync<DbConfiguration>();
         return dbConfiguration.GetConnection();
     }
+
+    public string GetConnectionString()
+    {
+        // Synchronous call required for EF Core configuration
+        // This will load from AWS Secrets Manager synchronously
+        var secretName = "guras/db-credentials";
+        var dbConfiguration = secretName.GetSecretValueAsync<DbConfiguration>().GetAwaiter().GetResult();
+        return dbConfiguration.GetConnectionString();
+    }
 }

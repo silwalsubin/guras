@@ -152,12 +152,13 @@ public static class [ServiceName]ServicesConfigurationExtensions
 {
     public static IServiceCollection Add[ServiceName]Services(
         this IServiceCollection services, 
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IDbConnectionFactory connectionFactory)
     {
         // Register DbContext
         services.AddDbContext<[ServiceName]DbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetDatabaseConnectionString());
+            options.UseNpgsql(connectionFactory.GetConnectionString());
         });
 
         // Register repositories

@@ -5,17 +5,18 @@ using services.meditation.Data;
 using services.meditation.Repositories;
 using services.meditation.Services;
 using utilities.Persistence;
+using utilities.Persistence.ConnectionFactories;
 
 namespace services.meditation.Configuration;
 
 public static class MeditationServicesConfigurationExtensions
 {
-    public static IServiceCollection AddMeditationServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddMeditationServices(this IServiceCollection services, IConfiguration configuration, IDbConnectionFactory connectionFactory)
     {
         // Register DbContext
         services.AddDbContext<MeditationAnalyticsDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetDatabaseConnectionString());
+            options.UseNpgsql(connectionFactory.GetConnectionString());
         });
 
         // Register repositories

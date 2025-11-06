@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Npgsql;
 
 namespace utilities.Persistence;
@@ -14,19 +13,6 @@ public static class DbConfigurationExtensions
             return SslMode.Disable;
         }
         return SslMode.Require;
-    }
-
-    /// <summary>
-    /// Gets the database connection string from the configuration's DbConfiguration section.
-    /// </summary>
-    /// <param name="configuration">The configuration instance.</param>
-    /// <param name="sslMode">Optional SSL mode override. If not provided, will be automatically determined based on server name.</param>
-    /// <returns>The database connection string.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when DbConfiguration is missing or invalid.</exception>
-    public static string GetDatabaseConnectionString(this IConfiguration configuration, SslMode? sslMode = null)
-    {
-        var dbConfiguration = configuration.GetSection("DbConfiguration").Get<DbConfiguration>();
-        return dbConfiguration.GetConnectionString(sslMode);
     }
 
     public static NpgsqlConnection GetConnection(this DbConfiguration dbConfiguration, SslMode? sslMode = null)

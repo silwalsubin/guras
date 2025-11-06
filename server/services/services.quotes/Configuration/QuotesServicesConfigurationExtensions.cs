@@ -5,17 +5,18 @@ using services.quotes.Data;
 using services.quotes.Repositories;
 using services.quotes.Services;
 using utilities.Persistence;
+using utilities.Persistence.ConnectionFactories;
 
 namespace services.quotes.Configuration;
 
 public static class QuotesServicesConfigurationExtensions
 {
-    public static IServiceCollection AddQuotesServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddQuotesServices(this IServiceCollection services, IConfiguration configuration, IDbConnectionFactory connectionFactory)
     {
         // Register DbContext
         services.AddDbContext<QuotesDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetDatabaseConnectionString());
+            options.UseNpgsql(connectionFactory.GetConnectionString());
         });
 
         // Register repositories

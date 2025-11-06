@@ -13,14 +13,7 @@ public static class AwsServicesConfiguration
         services.AddScoped<IAmazonS3, AmazonS3Client>();
         services.AddScoped<IS3Service, S3Service>();
         services.AddScoped<AudioFilesUtility>();
-        if (RunEnvironment.IsProduction())
-        {
-            services.AddScoped<IDbConnectionFactory, AwsDbConnectionFactory>();
-        }
-        else
-        {
-            services.AddScoped<IDbConnectionFactory, LocalDbConnectionFactory>();
-        }
+        // Note: IDbConnectionFactory is registered in Program.cs as a singleton
         return services;
     }
 }

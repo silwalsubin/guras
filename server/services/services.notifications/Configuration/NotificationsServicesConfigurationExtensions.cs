@@ -5,17 +5,18 @@ using services.notifications.Data;
 using services.notifications.Repositories;
 using services.notifications.Services;
 using utilities.Persistence;
+using utilities.Persistence.ConnectionFactories;
 
 namespace services.notifications.Configuration;
 
 public static class NotificationsServicesConfigurationExtensions
 {
-    public static IServiceCollection AddNotificationsServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddNotificationsServices(this IServiceCollection services, IConfiguration configuration, IDbConnectionFactory connectionFactory)
     {
         // Register DbContext
         services.AddDbContext<NotificationsDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetDatabaseConnectionString());
+            options.UseNpgsql(connectionFactory.GetConnectionString());
         });
 
         // Register repositories

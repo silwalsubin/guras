@@ -9,16 +9,30 @@ using utilities.ai.Configuration;
 using services.meditation.Configuration;
 using services.journal.Configuration;
 using utilities.Persistence;
+using utilities.Persistence.ConnectionFactories;
+using utilities.HostEnvironment;
+using utilities.aws.Utilities;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var dbConfiguration = builder.Configuration
-    .GetSection("DbConfiguration")
-    .Get<DbConfiguration>();
-
-builder.Services.AddSingleton(dbConfiguration!);
+// Create and register connection factory based on environment
+// Production uses AWS Secrets Manager, local/dev uses appsettings
+IDbConnectionFactory connectionFactory;
+if (RunEnvironment.IsProduction())
+{
+    connectionFactory = new AwsDbConnectionFactory();
+}
+else
+{
+    var dbConfiguration = builder.Configuration
+        .GetSection("DbConfiguration")
+        .Get<DbConfiguration>();
+    builder.Services.AddSingleton(dbConfiguration!);
+    connectionFactory = new LocalDbConnectionFactory(dbConfiguration!);
+}
+builder.Services.AddSingleton(connectionFactory);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -76,14 +90,14 @@ builder.Services.AddCors(options =>
     });
 });
 
-ApisServiceConfiguration.ConfigureApiServices(builder.Services, builder.Configuration);
+ApisServiceConfiguration.ConfigureApiServices(builder.Services, builder.Configuration, connectionFactory);
 
 builder.Services.AddAuthenticationServices();
-builder.Services.AddNotificationsServices(builder.Configuration);
-builder.Services.AddTeachersServices(builder.Configuration);
-builder.Services.AddMeditationServices(builder.Configuration);
+builder.Services.AddNotificationsServices(builder.Configuration, connectionFactory);
+builder.Services.AddTeachersServices(builder.Configuration, connectionFactory);
+builder.Services.AddMeditationServices(builder.Configuration, connectionFactory);
 builder.Services.AddAIServices(builder.Configuration);
-builder.Services.AddJournalServices(builder.Configuration);
+builder.Services.AddJournalServices(builder.Configuration, connectionFactory);
 
 // Configure authorization
 builder.Services.AddAuthorization();

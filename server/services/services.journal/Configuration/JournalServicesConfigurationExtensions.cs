@@ -5,6 +5,7 @@ using services.journal.Data;
 using services.journal.Repositories;
 using services.journal.Services;
 using utilities.Persistence;
+using utilities.Persistence.ConnectionFactories;
 
 namespace services.journal.Configuration;
 
@@ -16,12 +17,12 @@ public static class JournalServicesConfigurationExtensions
     /// <summary>
     /// Add journal services to the dependency injection container
     /// </summary>
-    public static IServiceCollection AddJournalServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddJournalServices(this IServiceCollection services, IConfiguration configuration, IDbConnectionFactory connectionFactory)
     {
         // Register DbContext
         services.AddDbContext<JournalEntriesDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetDatabaseConnectionString());
+            options.UseNpgsql(connectionFactory.GetConnectionString());
         });
 
         // Register repositories

@@ -5,17 +5,18 @@ using services.teachers.Data;
 using services.teachers.Repositories;
 using services.teachers.Services;
 using utilities.Persistence;
+using utilities.Persistence.ConnectionFactories;
 
 namespace services.teachers.Configuration;
 
 public static class TeachersServicesConfigurationExtensions
 {
-    public static IServiceCollection AddTeachersServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddTeachersServices(this IServiceCollection services, IConfiguration configuration, IDbConnectionFactory connectionFactory)
     {
         // Register DbContext
         services.AddDbContext<TeachersDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetDatabaseConnectionString());
+            options.UseNpgsql(connectionFactory.GetConnectionString());
         });
 
         // Register repositories
