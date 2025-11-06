@@ -252,23 +252,31 @@ All services follow the same EF Core pattern:
 
 ### 4. Repository Folder Naming
 
-**Issue:** Inconsistent folder names for data access layer.
+**Status:** ✅ **RESOLVED** - All services now use `Repositories/` folder.
 
 **Current State:**
-- `Repositories/` - services.audio, services.journal, services.teachers
-- `Persistence/` - services.users
+- `Repositories/` - All services (users, audio, journal, teachers, meditation, notifications, quotes)
+- `Persistence/` - Only in utilities project (not a service, so acceptable)
 
-**Recommendation:** Standardize to `Repositories/` for consistency.
+**Note:** Renamed `services.users/Persistence/` to `services.users/Repositories/` and updated all namespace references.
 
 ### 5. Domain vs Models Folder
 
-**Issue:** Mixed naming for domain models.
+**Status:** ✅ **RESOLVED** - Clear separation of concerns established.
 
 **Current State:**
-- `Domain/` - services.users, services.journal, services.meditation, services.notifications, services.quotes, services.teachers
-- `Models/` - services.audio (also has `Domain/` folder structure in some places)
+All services follow a consistent pattern:
+- `Domain/` - Contains clean domain models (e.g., `AudioFile`, `User`, `Quote`, `JournalEntry`)
+- `Models/` - Contains:
+  - Entity models for EF Core (e.g., `AudioFileEntity`, `UserEntity`, `QuoteEntity`)
+  - Request/Response DTOs (e.g., `CreateAudioFileRequest`, `AudioFileResponse`)
 
-**Recommendation:** Standardize to `Domain/` folder for domain entities and DTOs.
+**Structure:**
+- Domain models: Pure business logic models without database concerns
+- Entity models: Database table mappings for EF Core
+- DTOs: API request/response contracts
+
+This separation provides clear boundaries between domain logic, data persistence, and API contracts.
 
 ### 6. EF Core Package Versions
 
@@ -362,8 +370,8 @@ All service configuration methods now accept `IConfiguration`:
 ## Service-Specific Observations
 
 ### services.users
-- Uses `Persistence/` folder instead of `Repositories/`
-- Has two separate configuration classes (`UserServicesConfiguration` and `AuthenticationServicesConfiguration`)
+- Uses `Repositories/` folder (standardized from `Persistence/`)
+- Has two separate configuration classes (`UserServicesConfigurationExtensions` and `AuthenticationServicesConfigurationExtensions`)
 - `UserService` has no interface
 - Uses Entity Framework Core with `UsersDbContext`
 - Domain model: `User` (replaced `UserRecord`)
@@ -432,8 +440,7 @@ All service configuration methods now accept `IConfiguration`:
 ### Remaining Recommendations
 1. **✅ Standardize Configuration Naming:** All configuration classes now use `[Service]ServicesConfigurationExtensions` pattern
 2. **✅ Standardize Method Naming:** All services use `Add[Service]Services()` pattern
-3. **Standardize Folder Names:** Use `Repositories/` and `Domain/` consistently
-   - services.users still uses `Persistence/` instead of `Repositories/`
+3. **✅ Standardize Folder Names:** All services use `Repositories/` and `Domain/` consistently
 4. **Standardize Controller Base:** Use `BaseController` consistently or document exceptions
 5. **Add Missing Interfaces:** Create interfaces for services that don't have them
    - `UserService` still has no interface

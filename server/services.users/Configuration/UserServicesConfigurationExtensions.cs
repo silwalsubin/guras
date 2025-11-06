@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using services.users.Data;
-using services.users.Persistence;
+using services.users.Repositories;
 using services.users.Services;
 
 namespace services.users.Configuration;

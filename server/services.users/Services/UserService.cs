@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using services.users.Domain;
-using services.users.Persistence;
+using services.users.Repositories;
 using services.users.Services;
 
 namespace services.users.Services;

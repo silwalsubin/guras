@@ -2,7 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using services.users.Domain;
-using services.users.Persistence;
+using services.users.Repositories;
 using services.users.Services;
 using Xunit;
 

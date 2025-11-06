@@ -5,7 +5,7 @@ using services.users.Domain;
 using services.users.Models;
 using services.users.Services;
 
-namespace services.users.Persistence;
+namespace services.users.Repositories;
 
 public class UserRepository : IUserRepository
 {
@@ -159,3 +159,4 @@ public class UserRepository : IUserRepository
         }
     }
 }
+

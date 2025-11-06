@@ -1,6 +1,6 @@
 using services.users.Domain;
 
-namespace services.users.Persistence;
+namespace services.users.Repositories;
 
 public interface IUserRepository
 {
@@ -12,3 +12,4 @@ public interface IUserRepository
     Task<bool> ExistsAsync(string email);
     Task<bool> DeleteAsync(Guid userId);
 }
+
