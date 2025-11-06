@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\utilities\utilities.csproj" />
-    <ProjectReference Include="..\services.meditation\services.meditation.csproj" />
   </ItemGroup>
 
 </Project>

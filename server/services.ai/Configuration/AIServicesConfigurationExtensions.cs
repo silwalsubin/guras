@@ -51,10 +51,7 @@ public static class AIServicesConfigurationExtensions
             };
         });
 
-        // Register meditation recommendation service
-        services.AddScoped<IMeditationRecommendationService, MeditationRecommendationService>();
-
-        // Add memory cache for caching recommendations
+        // Add memory cache for caching (used by meditation recommendation service)
         services.AddMemoryCache();
 
         return services;

@@ -1,28 +1,14 @@
-using services.ai.Domain;
-using services.meditation.Services;
 using services.meditation.Domain;
+using services.ai.Services;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace services.ai.Services;
+namespace services.meditation.Services;
 
 /// <summary>
 /// Service for generating AI-powered personalized meditation recommendations
 /// </summary>
-public interface IMeditationRecommendationService
-{
-    /// <summary>
-    /// Generate personalized meditation recommendations for a user
-    /// </summary>
-    Task<List<MeditationRecommendationDto>> GenerateRecommendationsAsync(Guid userId, int count = 3);
-
-    /// <summary>
-    /// Get recommendation reason/explanation
-    /// </summary>
-    Task<string> GetRecommendationReasonAsync(Guid userId, string sessionTitle);
-}
-
 public class MeditationRecommendationService : IMeditationRecommendationService
 {
     private readonly IMeditationAnalyticsService _analyticsService;
@@ -348,17 +334,5 @@ public class RecentSessionInfo
     public int Duration { get; set; }
     public bool Completed { get; set; }
     public int Rating { get; set; }
-}
-
-/// <summary>
-/// DTO for meditation recommendations
-/// </summary>
-public class MeditationRecommendationDto
-{
-    public string Title { get; set; } = string.Empty;
-    public string Theme { get; set; } = string.Empty;
-    public string Difficulty { get; set; } = "beginner";
-    public int Duration { get; set; } = 10;
-    public string Reason { get; set; } = "Personalized for you";
 }
 

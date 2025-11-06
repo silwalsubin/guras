@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using services.ai.Services;
+using services.meditation.Services;
+using services.meditation.Domain;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
-using System;
 using utilities.Controllers;
 
-namespace services.ai.Controllers;
+namespace services.meditation.Controllers;
 
 /// <summary>
 /// Controller for meditation recommendation endpoints
@@ -220,26 +220,5 @@ public class MeditationRecommendationController : BaseController
             return ErrorResponse("Failed to fetch recommendations", 500);
         }
     }
-}
-
-/// <summary>
-/// DTO for meditation recommendations
-/// </summary>
-public class MeditationRecommendationDto
-{
-    public string Title { get; set; } = string.Empty;
-    public string Theme { get; set; } = string.Empty;
-    public string Difficulty { get; set; } = "beginner";
-    public int Duration { get; set; } = 10;
-    public string Reason { get; set; } = "Personalized for you";
-}
-
-/// <summary>
-/// DTO for recommendation reason response
-/// </summary>
-public class RecommendationReasonDto
-{
-    public string SessionTitle { get; set; } = string.Empty;
-    public string Reason { get; set; } = string.Empty;
 }
 
