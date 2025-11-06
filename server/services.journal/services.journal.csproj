@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../utilities/utilities.csproj" />
-    <ProjectReference Include="../services.ai/services.ai.csproj" />
+    <ProjectReference Include="../utilities.ai/utilities.ai.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,11 +2,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using services.ai.Configuration;
-using services.ai.Domain;
+using utilities.ai.Configuration;
+using utilities.ai.Domain;
 using System.Text;
 
-namespace services.ai.Services;
+namespace utilities.ai.Services;
 
 public class SpiritualAIService : ISpiritualAIService
 {

@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using services.ai.Domain;
-using services.ai.Services;
+using utilities.ai.Domain;
+using utilities.ai.Services;
 using utilities.Controllers;
 
-namespace services.ai.Controllers;
+namespace utilities.ai.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

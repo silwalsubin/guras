@@ -1,6 +1,6 @@
-using services.ai.Domain;
+using utilities.ai.Domain;
 
-namespace services.ai.Services;
+namespace utilities.ai.Services;
 
 public interface ISpiritualAIService
 {

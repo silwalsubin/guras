@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using services.ai.Configuration;
-using services.ai.Services;
+using utilities.ai.Configuration;
+using utilities.ai.Services;
 using System.Net;
 
-namespace services.ai.Configuration;
+namespace utilities.ai.Configuration;
 
 public static class AIServicesConfigurationExtensions
 {

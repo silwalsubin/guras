@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using services.journal.Requests;
 using services.journal.Services;
-using services.ai.Services;
+using utilities.ai.Services;
 using utilities.Controllers;
 
 namespace services.journal.Controllers;

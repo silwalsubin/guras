@@ -1,5 +1,5 @@
 using services.meditation.Domain;
-using services.ai.Services;
+using utilities.ai.Services;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;

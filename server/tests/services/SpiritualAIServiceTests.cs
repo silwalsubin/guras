@@ -2,8 +2,8 @@ using System.Net;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using services.ai.Configuration;
-using services.ai.Services;
+using utilities.ai.Configuration;
+using utilities.ai.Services;
 using Xunit;
 using FluentAssertions;
 

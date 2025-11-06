@@ -3,7 +3,7 @@ using services.journal.Domain;
 using services.journal.Repositories;
 using services.journal.Requests;
 using services.journal.Responses;
-using services.ai.Services;
+using utilities.ai.Services;
 
 namespace services.journal.Services;
 

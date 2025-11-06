@@ -3,7 +3,7 @@ using Xunit;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using services.ai.Services;
+using utilities.ai.Services;
 using services.meditation.Services;
 using services.meditation.Domain;
 

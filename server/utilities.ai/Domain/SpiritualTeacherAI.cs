@@ -1,4 +1,4 @@
-namespace services.ai.Domain;
+namespace utilities.ai.Domain;
 
 public class SpiritualTeacherAI
 {

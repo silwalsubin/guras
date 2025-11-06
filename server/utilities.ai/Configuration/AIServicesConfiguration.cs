@@ -1,4 +1,4 @@
-namespace services.ai.Configuration;
+namespace utilities.ai.Configuration;
 
 public class AIServicesConfiguration
 {

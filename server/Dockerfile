@@ -7,7 +7,7 @@ COPY guras.sln ./
 COPY apis/apis.csproj apis/
 COPY services.users/services.users.csproj services.users/
 COPY services.teachers/services.teachers.csproj services.teachers/
-COPY services.ai/services.ai.csproj services.ai/
+COPY utilities.ai/utilities.ai.csproj utilities.ai/
 COPY services.meditation/services.meditation.csproj services.meditation/
 COPY services.journal/services.journal.csproj services.journal/
 COPY orchestration/orchestration.csproj orchestration/
@@ -24,7 +24,7 @@ RUN dotnet restore
 COPY apis/ apis/
 COPY services.users/ services.users/
 COPY services.teachers/ services.teachers/
-COPY services.ai/ services.ai/
+COPY utilities.ai/ utilities.ai/
 COPY services.meditation/ services.meditation/
 COPY services.journal/ services.journal/
 COPY orchestration/ orchestration/

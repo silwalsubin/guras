@@ -5,7 +5,7 @@ using orchestration.backgroundServices.BackgroundServices;
 using services.users.Configuration;
 using services.notifications.Configuration;
 using services.teachers.Configuration;
-using services.ai.Configuration;
+using utilities.ai.Configuration;
 using services.meditation.Configuration;
 using services.journal.Configuration;
 using utilities.Persistence;

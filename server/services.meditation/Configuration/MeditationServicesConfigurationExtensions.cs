@@ -24,7 +24,7 @@ public static class MeditationServicesConfigurationExtensions
         // Register services
         services.AddScoped<IMeditationAnalyticsService, MeditationAnalyticsService>();
         
-        // Register meditation recommendation service (requires ISpiritualAIService from services.ai)
+        // Register meditation recommendation service (requires ISpiritualAIService from utilities.ai)
         services.AddScoped<IMeditationRecommendationService, MeditationRecommendationService>();
         
         // Add memory cache for recommendation caching

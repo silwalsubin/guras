@@ -14,9 +14,9 @@ This document analyzes the architecture, common patterns, and inconsistencies ac
 5. **services.meditation** - Meditation analytics and tracking
 6. **services.notifications** - Notification management
 7. **services.quotes** - Quote service
-8. **services.ai** - AI services (spiritual teacher AI, meditation recommendations)
 
 ### Infrastructure Projects
+8. **utilities.ai** - AI utilities (OpenAI integration, spiritual teacher AI) - Cross-cutting utility
 9. **utilities** - Shared utilities and persistence abstractions
 10. **utilities.aws** - AWS-specific utilities (S3, Secrets Manager)
 11. **orchestration.backgroundServices** - Background services (notification scheduler)
@@ -53,7 +53,7 @@ Most services follow a consistent folder structure:
 - services.quotes
 
 **Services with variations:**
-- services.ai - No repository layer, uses HTTP clients
+- utilities.ai - No repository layer, uses HTTP clients
 
 ### 2. Configuration Classes
 
@@ -74,7 +74,7 @@ public static class [ServiceName]ServicesConfiguration[Extensions]
 **Examples:**
 - `services.users.Configuration.UserServicesConfigurationExtensions.AddUserServices(IConfiguration)`
 - `services.teachers.Configuration.TeachersServicesConfigurationExtensions.AddTeachersServices(IConfiguration)`
-- `services.ai.Configuration.AIServicesConfigurationExtensions.AddAIServices(IConfiguration)`
+- `utilities.ai.Configuration.AIServicesConfigurationExtensions.AddAIServices(IConfiguration)`
 - `services.audio.Configuration.AudioServicesConfigurationExtensions.AddAudioServices(IConfiguration)`
 - `services.journal.Configuration.JournalServicesConfigurationExtensions.AddJournalServices(IConfiguration)`
 - `services.meditation.Configuration.MeditationServicesConfigurationExtensions.AddMeditationServices(IConfiguration)`
@@ -148,8 +148,8 @@ All controllers extend `BaseController` from utilities for standardized API resp
 - services.meditation.Controllers.MeditationAnalyticsController
 - services.notifications.Controllers.NotificationController
 - services.quotes.Controllers.QuotesController
-- services.ai.Controllers.SpiritualAIController
-- services.ai.Controllers.MeditationRecommendationController
+- utilities.ai.Controllers.SpiritualAIController
+- services.meditation.Controllers.MeditationRecommendationController
 - apis.Controllers.UserNotificationPreferencesController
 - apis.Controllers.HeartBeatController
 
@@ -246,8 +246,8 @@ All controllers extend `BaseController` for consistent API response formatting:
 **Issue:** Some services have direct project references to other services.
 
 **Current State:**
-- services.ai references services.meditation
-- services.journal references services.ai
+- services.journal references utilities.ai
+- services.meditation references utilities.ai
 - services.notifications references services.quotes
 - orchestration.backgroundServices references services.quotes and services.notifications
 
@@ -281,7 +281,7 @@ All controllers extend `BaseController` for consistent API response formatting:
 ### services.journal
 - Standard repository pattern with Entity Framework Core
 - Uses `JournalEntriesDbContext`
-- Has AI integration (references services.ai)
+- Has AI integration (references utilities.ai)
 - Well-structured with clear separation of concerns
 
 ### services.meditation
@@ -303,11 +303,11 @@ All controllers extend `BaseController` for consistent API response formatting:
 - Database-backed with initial seed data
 - All service methods are now asynchronous
 
-### services.ai
+### utilities.ai
 - Uses HTTP clients for external API calls
 - Complex configuration with multiple HTTP clients
-- References services.meditation
 - Has configuration class separate from extensions
+- Cross-cutting utility used by services.journal and services.meditation
 
 ### orchestration.backgroundServices
 - Background service pattern
