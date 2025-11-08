@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { PieChart } from 'react-native-svg-charts';
 import { getBrandColors, getThemeColors } from '@/config/colors';
 import { EmotionTriggerData } from '@/data/mockEmotionTriggersData';
@@ -44,7 +44,18 @@ const EmotionDonutChart: React.FC<EmotionDonutChartProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.chartWrapper}>
-        <View style={styles.chartContainer}>
+        <View
+          style={[
+            styles.chartContainer,
+            {
+              shadowColor: isDarkMode ? 'rgba(255,255,255,0.15)' : '#000',
+              shadowOffset: { width: 0, height: 16 },
+              shadowOpacity: 0.4,
+              shadowRadius: 32,
+              elevation: 30,
+            },
+          ]}
+        >
           <PieChart
             style={styles.chart}
             data={chartData}
@@ -129,6 +140,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+  },
+  shadow3D: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.4,
+    shadowRadius: 32,
+    elevation: 30,
   },
   chart: {
     height: 240,
