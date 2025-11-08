@@ -18,6 +18,7 @@ import {
   Trigger,
   mockEmotionTriggersData,
 } from '@/data/mockEmotionTriggersData';
+import EmotionDonutChart from '@/components/home/EmotionDonutChart';
 
 interface EmotionTriggersScreenProps {
   onClose: () => void;
@@ -35,6 +36,18 @@ const getEmotionIcon = (emotion: string): string => {
   return icons[emotion] || 'heart-outline';
 };
 
+const getEmotionColor = (emotion: string): string => {
+  const colors: Record<string, string> = {
+    Happy: '#10B981', // Primary green
+    Anxious: '#F59E0B', // Warning amber
+    Calm: '#3B82F6', // Info blue
+    Sad: '#8B5CF6', // Purple
+    Excited: '#EC4899', // Pink
+    Angry: '#EF4444', // Error red
+  };
+  return colors[emotion] || '#10B981';
+};
+
 const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
   onClose,
 }) => {
@@ -43,7 +56,7 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
   const brandColors = getBrandColors();
   const [refreshing, setRefreshing] = useState(false);
   const [expandedEmotions, setExpandedEmotions] = useState<Set<string>>(
-    new Set([mockEmotionTriggersData.emotions[0]?.emotion])
+    new Set()
   );
 
   const onRefresh = useCallback(async () => {
@@ -63,24 +76,11 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
     setExpandedEmotions(newExpanded);
   };
 
-  const renderEmotionCard = (emotionData: EmotionTriggerData) => {
+  const renderEmotionCard = (emotionData: EmotionTriggerData, index: number) => {
     const isExpanded = expandedEmotions.has(emotionData.emotion);
 
     return (
-      <View
-        key={emotionData.emotion}
-        style={[
-          styles.emotionCard,
-          {
-            backgroundColor: isDarkMode
-              ? 'rgba(255,255,255,0.05)'
-              : 'rgba(0,0,0,0.02)',
-            borderColor: isDarkMode
-              ? 'rgba(255,255,255,0.1)'
-              : 'rgba(0,0,0,0.08)',
-          },
-        ]}
-      >
+      <View key={emotionData.emotion}>
         {/* Header - Always visible */}
         <TouchableOpacity
           onPress={() => toggleEmotionExpand(emotionData.emotion)}
@@ -93,15 +93,15 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
                 styles.emotionIconContainer,
                 {
                   backgroundColor: isDarkMode
-                    ? 'rgba(16, 185, 129, 0.15)'
-                    : 'rgba(16, 185, 129, 0.1)',
+                    ? `${getEmotionColor(emotionData.emotion)}20`
+                    : `${getEmotionColor(emotionData.emotion)}15`,
                 },
               ]}
             >
               <MaterialCommunityIcons
                 name={getEmotionIcon(emotionData.emotion)}
                 size={28}
-                color={brandColors.primary}
+                color={getEmotionColor(emotionData.emotion)}
               />
             </View>
             <View style={styles.emotionHeaderInfo}>
@@ -124,16 +124,6 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
             </View>
           </View>
           <View style={styles.emotionHeaderRight}>
-            <View
-              style={[
-                styles.moodScoreBadge,
-                { backgroundColor: getMoodColor(emotionData.moodScore) },
-              ]}
-            >
-              <Text style={styles.moodScoreText}>
-                {emotionData.moodScore}
-              </Text>
-            </View>
             <MaterialCommunityIcons
               name={isExpanded ? 'chevron-up' : 'chevron-down'}
               size={24}
@@ -144,18 +134,7 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
 
         {/* Expanded Content */}
         {isExpanded && (
-          <>
-            <View
-              style={[
-                styles.divider,
-                {
-                  backgroundColor: isDarkMode
-                    ? 'rgba(255,255,255,0.1)'
-                    : 'rgba(0,0,0,0.08)',
-                },
-              ]}
-            />
-            <View style={styles.triggersContainer}>
+          <View style={styles.triggersContainer}>
               <Text
                 style={[
                   styles.triggersTitle,
@@ -172,14 +151,24 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
                     isDarkMode={isDarkMode}
                     themeColors={themeColors}
                     brandColors={brandColors}
+                    emotionColor={getEmotionColor(emotionData.emotion)}
                   />
                 )}
                 keyExtractor={(item) => item.id}
                 scrollEnabled={false}
               />
-            </View>
-          </>
+          </View>
         )}
+        <View
+          style={[
+            styles.horizontalDivider,
+            {
+              backgroundColor: isDarkMode
+                ? 'rgba(255,255,255,0.1)'
+                : 'rgba(0,0,0,0.08)',
+            },
+          ]}
+        />
       </View>
     );
   };
@@ -244,74 +233,18 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
           />
         }
       >
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <View
-            style={[
-              styles.statCard,
-              {
-                backgroundColor: isDarkMode
-                  ? 'rgba(255,255,255,0.05)'
-                  : 'rgba(0,0,0,0.02)',
-                borderColor: isDarkMode
-                  ? 'rgba(255,255,255,0.1)'
-                  : 'rgba(0,0,0,0.08)',
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.statValue,
-                { color: brandColors.primary },
-              ]}
-            >
-              {mockEmotionTriggersData.totalEntries}
-            </Text>
-            <Text
-              style={[
-                styles.statLabel,
-                { color: themeColors.textSecondary },
-              ]}
-            >
-              Total Entries
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.statCard,
-              {
-                backgroundColor: isDarkMode
-                  ? 'rgba(255,255,255,0.05)'
-                  : 'rgba(0,0,0,0.02)',
-                borderColor: isDarkMode
-                  ? 'rgba(255,255,255,0.1)'
-                  : 'rgba(0,0,0,0.08)',
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.statValue,
-                { color: brandColors.primary },
-              ]}
-            >
-              {mockEmotionTriggersData.emotions.length}
-            </Text>
-            <Text
-              style={[
-                styles.statLabel,
-                { color: themeColors.textSecondary },
-              ]}
-            >
-              Emotions
-            </Text>
-          </View>
+        {/* Donut Chart */}
+        <View style={styles.chartSection}>
+          <EmotionDonutChart
+            emotions={mockEmotionTriggersData.emotions}
+            isDarkMode={isDarkMode}
+          />
         </View>
 
         {/* Emotions List */}
         <View style={styles.emotionsListContainer}>
-          {mockEmotionTriggersData.emotions.map((emotion) =>
-            renderEmotionCard(emotion)
+          {mockEmotionTriggersData.emotions.map((emotion, index) =>
+            renderEmotionCard(emotion, index)
           )}
         </View>
 
@@ -327,6 +260,7 @@ interface TriggerItemProps {
   isDarkMode: boolean;
   themeColors: any;
   brandColors: any;
+  emotionColor: string;
 }
 
 const TriggerItem: React.FC<TriggerItemProps> = ({
@@ -334,6 +268,7 @@ const TriggerItem: React.FC<TriggerItemProps> = ({
   isDarkMode,
   themeColors,
   brandColors,
+  emotionColor,
 }) => {
   const getCategoryIcon = (category: string) => {
     const icons: Record<string, string> = {
@@ -353,11 +288,11 @@ const TriggerItem: React.FC<TriggerItemProps> = ({
         styles.triggerItem,
         {
           backgroundColor: isDarkMode
-            ? 'rgba(16, 185, 129, 0.08)'
-            : 'rgba(16, 185, 129, 0.06)',
+            ? `${emotionColor}14`
+            : `${emotionColor}0F`,
           borderColor: isDarkMode
-            ? 'rgba(16, 185, 129, 0.15)'
-            : 'rgba(16, 185, 129, 0.12)',
+            ? `${emotionColor}26`
+            : `${emotionColor}1F`,
         },
       ]}
     >
@@ -365,7 +300,7 @@ const TriggerItem: React.FC<TriggerItemProps> = ({
         <MaterialCommunityIcons
           name={getCategoryIcon(trigger.category)}
           size={20}
-          color={brandColors.primary}
+          color={emotionColor}
           style={styles.triggerItemIcon}
         />
         <View style={styles.triggerInfo}>
@@ -393,15 +328,15 @@ const TriggerItem: React.FC<TriggerItemProps> = ({
           styles.confidenceBadge,
           {
             backgroundColor: isDarkMode
-              ? 'rgba(16, 185, 129, 0.12)'
-              : 'rgba(16, 185, 129, 0.1)',
+              ? `${emotionColor}1F`
+              : `${emotionColor}19`,
           },
         ]}
       >
         <Text
           style={[
             styles.confidenceValue,
-            { color: brandColors.primary },
+            { color: emotionColor },
           ]}
         >
           {trigger.confidenceScore}%
@@ -447,45 +382,20 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  statsContainer: {
-    flexDirection: 'row',
+  chartSection: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    ...TYPOGRAPHY.BODY_BOLD,
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
+    paddingVertical: 16,
   },
   emotionsListContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  emotionCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
   emotionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
   },
   emotionHeaderLeft: {
     flexDirection: 'row',
@@ -528,9 +438,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  divider: {
+  horizontalDivider: {
     height: 1,
-    marginHorizontal: 16,
+    marginHorizontal: 0,
   },
   triggersContainer: {
     paddingHorizontal: 16,
@@ -581,7 +491,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   bottomPadding: {
-    height: 24,
+    height: 80,
   },
 });
 
