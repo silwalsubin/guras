@@ -36,6 +36,7 @@
     "react-native-linear-gradient": "^2.8.3",
     "react-native-safe-area-context": "^5.5.0",
     "react-native-svg": "^15.12.1",
+    "react-native-svg-charts": "^5.4.0",
     "react-native-track-player": "^4.1.1",
     "react-native-vector-icons": "^10.3.0",
     "react-native-video": "^6.16.1",

@@ -13,13 +13,16 @@ import { COLORS } from '@/config/colors';
 import { AppHeader } from '@/components/shared';
 import JourneyGreeting from '@/components/home/JourneyGreeting';
 import RecommendationsList from '@/components/meditation/RecommendationsList';
+import EmotionTriggersWidget from '@/components/home/EmotionTriggersWidget';
 import { fetchRecommendations } from '@/store/recommendationSlice';
 import { fetchJournalEntries } from '@/store/journalSlice';
 import { MeditationRecommendation } from '@/components/meditation/RecommendationCard';
 import { recommendationAnalyticsService } from '@/services/recommendationAnalyticsService';
 import { setJournalCreateOpen } from '@/store/bottomNavSlice';
 import JournalCreateScreen from '@/screens/journal/JournalCreateScreen';
+import EmotionTriggersScreen from '@/screens/home/EmotionTriggersScreen';
 import { useAuth } from '@/contexts/AuthContext';
+import { mockEmotionTriggersData } from '@/data/mockEmotionTriggersData';
 
 const HomeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -29,6 +32,7 @@ const HomeScreen: React.FC = () => {
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [showJournalCreate, setShowJournalCreate] = useState(false);
+  const [showEmotionTriggers, setShowEmotionTriggers] = useState(false);
 
   useEffect(() => {
     dispatch(fetchRecommendations(3));
@@ -70,6 +74,14 @@ const HomeScreen: React.FC = () => {
     dispatch(setJournalCreateOpen(false));
   }, [dispatch]);
 
+  const handleEmotionTriggersPress = useCallback(() => {
+    setShowEmotionTriggers(true);
+  }, []);
+
+  const handleEmotionTriggersClose = useCallback(() => {
+    setShowEmotionTriggers(false);
+  }, []);
+
   const handleRecommendationPress = useCallback((recommendation: MeditationRecommendation) => {
     console.log('Selected recommendation:', recommendation.title);
 
@@ -82,6 +94,11 @@ const HomeScreen: React.FC = () => {
       { source: 'home_screen' }
     );
   }, []);
+
+  // If emotion triggers screen is open, show it full screen
+  if (showEmotionTriggers) {
+    return <EmotionTriggersScreen onClose={handleEmotionTriggersClose} />;
+  }
 
   // If journal create screen is open, show it full screen
   if (showJournalCreate) {
@@ -111,6 +128,14 @@ const HomeScreen: React.FC = () => {
       <JourneyGreeting
         onJournalPress={handleJournalPromptPress}
         entryCount={5}
+      />
+
+      {/* Emotion Triggers Widget */}
+      <EmotionTriggersWidget
+        topEmotion={mockEmotionTriggersData.emotions[0] || null}
+        allEmotions={mockEmotionTriggersData.emotions}
+        onPress={handleEmotionTriggersPress}
+        totalEntries={mockEmotionTriggersData.totalEntries}
       />
 
       {/* Personalized Recommendations */}
