@@ -34,7 +34,7 @@ const JourneyGreeting: React.FC<JourneyGreetingProps> = ({ onJournalPress, entry
     const hour = new Date().getHours();
 
     if (hour < 12) {
-      return { greeting: 'Good Morning', iconName: 'sunrise', iconLibrary: 'MaterialCommunityIcons', timeOfDay: 'morning' };
+      return { greeting: 'Good Morning', iconName: 'weather-sunset-up', iconLibrary: 'MaterialCommunityIcons', timeOfDay: 'morning' };
     } else if (hour < 18) {
       return { greeting: 'Good Afternoon', iconName: 'white-balance-sunny', iconLibrary: 'MaterialCommunityIcons', timeOfDay: 'afternoon' };
     } else {
