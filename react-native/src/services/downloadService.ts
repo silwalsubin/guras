@@ -285,6 +285,14 @@ class DownloadService {
 
   async getAllDownloadedFiles(): Promise<LocalAudioFile[]> {
     try {
+      await this.checkInitialization();
+
+      const exists = await RNFS.exists(this.downloadDir);
+      if (!exists) {
+        await this.ensureDownloadDirectory();
+        return [];
+      }
+
       const metadataFiles = await RNFS.readDir(this.downloadDir);
       const audioFiles: LocalAudioFile[] = [];
 
@@ -351,6 +359,14 @@ class DownloadService {
 
   async getDownloadedSize(): Promise<number> {
     try {
+      await this.checkInitialization();
+
+      const exists = await RNFS.exists(this.downloadDir);
+      if (!exists) {
+        await this.ensureDownloadDirectory();
+        return 0;
+      }
+
       const files = await RNFS.readDir(this.downloadDir);
       let totalSize = 0;
 
