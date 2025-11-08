@@ -12,7 +12,6 @@ COPY services/services.meditation/services.meditation.csproj services/services.m
 COPY services/services.journal/services.journal.csproj services/services.journal/
 COPY utilities/utilities.aws/utilities.aws.csproj utilities/utilities.aws/
 COPY utilities/utilities/utilities.csproj utilities/utilities/
-COPY services/services.quotes/services.quotes.csproj services/services.quotes/
 COPY services/services.notifications/services.notifications.csproj services/services.notifications/
 COPY services/services.audio/services.audio.csproj services/services.audio/
 COPY orchestration/orchestration.backgroundServices/orchestration.backgroundServices.csproj orchestration/orchestration.backgroundServices/
@@ -29,7 +28,6 @@ COPY services/services.journal/ services/services.journal/
 COPY orchestration/ orchestration/
 COPY utilities/ utilities/
 COPY utilities/utilities.aws/ utilities/utilities.aws/
-COPY services/services.quotes/ services/services.quotes/
 COPY services/services.notifications/ services/services.notifications/
 COPY services/services.audio/ services/services.audio/
 COPY tests/ tests/

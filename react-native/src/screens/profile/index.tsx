@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,10 +16,7 @@ import { setDarkMode } from '@/store/themeSlice';
 import { getThemeColors, getBrandColors, COLORS, colorUtils } from '@/config/colors';
 import { RefreshUtils } from '@/utils/refreshUtils';
 import { ProfileAvatar, AchievementBadge } from '@/components/shared';
-import NotificationSettings from './components/NotificationSettings';
 import SignOutButton from './components/SignOutButton';
-import notificationService from '@/services/notificationService';
-import { NotificationPreferences } from '@/store/quotesSlice';
 import { useAuth } from '@/contexts/AuthContext';
 
 const ProfileScreen: React.FC = () => {
@@ -29,14 +26,8 @@ const ProfileScreen: React.FC = () => {
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
   
-  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>({
-    enabled: true,
-    frequency: 'daily',
-    quietHours: { start: '22:00', end: '08:00' }
-  });
 
   // Mock achievements data
   const mockAchievements = [
@@ -90,35 +81,8 @@ const ProfileScreen: React.FC = () => {
     },
   ];
 
-  useEffect(() => {
-    loadNotificationPreferences();
-  }, []);
-
-  const loadNotificationPreferences = async () => {
-    try {
-      const preferences = await notificationService.getNotificationPreferences();
-      setNotificationPreferences(preferences);
-    } catch (error) {
-      console.error('Error loading notification preferences:', error);
-    }
-  };
-
   const toggleTheme = () => {
     dispatch(setDarkMode(!isDarkMode));
-  };
-
-  const toggleNotificationSettings = () => {
-    setShowNotificationSettings(!showNotificationSettings);
-  };
-
-  const handleNotificationPreferenceChange = async (preferences: NotificationPreferences) => {
-    try {
-      setNotificationPreferences(preferences);
-      await notificationService.setNotificationPreferences(preferences);
-    } catch (error) {
-      console.error('Error updating notification preferences:', error);
-      Alert.alert('Error', 'Failed to update notification preferences');
-    }
   };
 
   const onRefresh = useCallback(async () => {
@@ -128,8 +92,6 @@ const ProfileScreen: React.FC = () => {
       
       if (result.success) {
         // Profile refreshed successfully
-        // Reload local state
-        await loadNotificationPreferences();
       } else {
         console.warn('⚠️ Some items failed to refresh:', result.errors);
       }
@@ -235,39 +197,22 @@ const ProfileScreen: React.FC = () => {
         </View>
       </View>
 
+      {/* Notifications Feature Placeholder */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
           Notifications
         </Text>
-        
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
             <Text style={[styles.settingLabel, { color: themeColors.textPrimary }]}>
-              Push Notifications
+              Stay Tuned
             </Text>
             <Text style={[styles.settingDescription, { color: themeColors.textSecondary }]}>
-              {notificationPreferences.enabled 
-                ? `Enabled - ${notificationPreferences.frequency} updates`
-                : 'Disabled'
-              }
+              Personalised alerts will return in a future update.
             </Text>
           </View>
-          <TouchableOpacity
-            style={[styles.settingsButton, { backgroundColor: brandColors.primary }]}
-            onPress={toggleNotificationSettings}
-          >
-            <Text style={styles.settingsButtonText}>Configure</Text>
-          </TouchableOpacity>
         </View>
       </View>
-
-      {showNotificationSettings && (
-        <View style={styles.notificationSettingsContainer}>
-          <NotificationSettings />
-        </View>
-      )}
-
-
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>

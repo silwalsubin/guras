@@ -1,5 +1,4 @@
 using services.users.Configuration;
-using services.quotes.Configuration;
 using services.notifications.Configuration;
 using services.audio.Configuration;
 using utilities.aws.Configuration;
@@ -14,7 +13,6 @@ public static class ApisServiceConfiguration
     {
         AuthenticationServicesConfigurationExtensions.ConfigureServices(services);
         services.AddAwsUtilities();
-        services.AddQuotesServices(configuration, connectionFactory);
         services.AddNotificationsServices(configuration, connectionFactory);
         services.AddUserServices(configuration, connectionFactory);
         services.AddAudioServices(configuration, connectionFactory);

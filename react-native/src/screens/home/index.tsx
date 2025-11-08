@@ -12,7 +12,6 @@ import { RefreshUtils } from '@/utils/refreshUtils';
 import { COLORS } from '@/config/colors';
 import { AppHeader } from '@/components/shared';
 import JourneyGreeting from '@/components/home/JourneyGreeting';
-import AIRecommendedQuote from '@/components/meditation/AIRecommendedQuote';
 import RecommendationsList from '@/components/meditation/RecommendationsList';
 import { fetchRecommendations } from '@/store/recommendationSlice';
 import { fetchJournalEntries } from '@/store/journalSlice';
@@ -114,13 +113,6 @@ const HomeScreen: React.FC = () => {
         entryCount={5}
       />
 
-      {/* AI-Recommended Quote */}
-      <View style={styles.aiQuoteSection}>
-        <AIRecommendedQuote
-          onRefresh={() => dispatch(fetchRecommendations(3))}
-        />
-      </View>
-
       {/* Personalized Recommendations */}
       <View style={styles.recommendationsSection}>
         <RecommendationsList
@@ -145,11 +137,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 4,
-  },
-  aiQuoteSection: {
-    paddingHorizontal: 0,
-    marginBottom: 12,
-    width: '100%',
   },
   recommendationsSection: {
     paddingHorizontal: 0,

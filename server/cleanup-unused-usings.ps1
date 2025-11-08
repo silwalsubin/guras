@@ -12,9 +12,6 @@ dotnet format server/services.teachers/services.teachers.csproj --verbosity mini
 Write-Host "Cleaning up services.users project..." -ForegroundColor Yellow
 dotnet format server/services.users/services.users.csproj --verbosity minimal
 
-Write-Host "Cleaning up services.quotes project..." -ForegroundColor Yellow
-dotnet format server/services.quotes/services.quotes.csproj --verbosity minimal
-
 Write-Host "Cleaning up services.notifications project..." -ForegroundColor Yellow
 dotnet format server/services.notifications/services.notifications.csproj --verbosity minimal
 

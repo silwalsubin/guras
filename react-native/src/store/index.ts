@@ -3,7 +3,6 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import navigationReducer from './navigationSlice';
 import themeReducer from './themeSlice';
-import quotesReducer from './quotesSlice';
 import meditationReducer from './meditationSliceNew';
 import guidedMeditationReducer from './guidedMeditationSlice';
 import bottomNavReducer from './bottomNavSlice';
@@ -58,7 +57,6 @@ const store = configureStore({
   reducer: {
     navigation: navigationReducer,
     theme: themeReducer,
-    quotes: quotesReducer,
     meditation: persistedMeditationReducer,
     guidedMeditation: persistedGuidedMeditationReducer,
     bottomNav: bottomNavReducer,

@@ -277,11 +277,6 @@ class ApiService {
     );
   }
 
-  // AI-Recommended Quote methods
-  async getAIRecommendedQuote(): Promise<ApiResponse<any>> {
-    return this.makeRequest<any>('/api/quotes/ai-recommended');
-  }
-
   async getRecommendationsByTime(timeOfDay: string, count: number = 3): Promise<ApiResponse<any[]>> {
     return this.makeRequest<any[]>(
       `/api/meditationrecommendation/by-time?timeOfDay=${encodeURIComponent(timeOfDay)}&count=${count}`

@@ -24,7 +24,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\services\services.quotes\services.quotes.csproj" />
       <ProjectReference Include="..\services\services.notifications\services.notifications.csproj" />
       <ProjectReference Include="..\services\services.audio\services.audio.csproj" />
       <ProjectReference Include="..\services\services.teachers\services.teachers.csproj" />

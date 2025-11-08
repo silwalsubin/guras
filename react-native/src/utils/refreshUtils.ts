@@ -1,8 +1,4 @@
-import quotesService from '@/services/quotesService';
-import notificationService from '@/services/notificationService';
-
 export interface RefreshOptions {
-  refreshQuotes?: boolean;
   refreshNotifications?: boolean;
   refreshProgress?: boolean;
   refreshUserData?: boolean;
@@ -24,15 +20,6 @@ export class RefreshUtils {
   static async refreshHomeScreen(): Promise<RefreshResult> {
     const errors: string[] = [];
     
-    try {
-      // Refresh daily quote
-      await quotesService.updateQuoteIfNeeded();
-      console.log('✅ Daily quote refreshed');
-    } catch (error) {
-      console.error('Error refreshing daily quote:', error);
-      errors.push('Failed to refresh daily quote');
-    }
-
     // TODO: Add more refresh logic for:
     // - Refresh progress data
     // - Update recent sessions
@@ -51,15 +38,6 @@ export class RefreshUtils {
   static async refreshLearnScreen(): Promise<RefreshResult> {
     const errors: string[] = [];
     
-    try {
-      // Refresh daily wisdom quote
-      await quotesService.updateQuoteIfNeeded();
-      console.log('✅ Daily wisdom refreshed');
-    } catch (error) {
-      console.error('Error refreshing daily wisdom:', error);
-      errors.push('Failed to refresh daily wisdom');
-    }
-
     // TODO: Add more refresh logic for:
     // - Refresh featured content
     // - Check for new courses/teachings
@@ -78,15 +56,6 @@ export class RefreshUtils {
   static async refreshProfileScreen(): Promise<RefreshResult> {
     const errors: string[] = [];
     
-    try {
-      // Refresh notification preferences
-      await notificationService.getNotificationPreferences();
-      console.log('✅ Notification preferences refreshed');
-    } catch (error) {
-      console.error('Error refreshing notification preferences:', error);
-      errors.push('Failed to refresh notification preferences');
-    }
-
     try {
       // Simulate a small delay to make refresh feel more substantial
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -114,16 +83,6 @@ export class RefreshUtils {
   static async refreshNotificationSettings(): Promise<RefreshResult> {
     const errors: string[] = [];
     
-    try {
-      // Reload preferences and check permission
-      await notificationService.getNotificationPreferences();
-      await notificationService.hasPermission();
-      console.log('✅ Notification settings refreshed');
-    } catch (error) {
-      console.error('Error refreshing notification settings:', error);
-      errors.push('Failed to refresh notification settings');
-    }
-
     return {
       success: errors.length === 0,
       message: errors.length === 0 ? 'Notification settings refreshed successfully' : 'Some items failed to refresh',
@@ -137,25 +96,8 @@ export class RefreshUtils {
   static async refreshWithOptions(options: RefreshOptions): Promise<RefreshResult> {
     const errors: string[] = [];
     
-    if (options.refreshQuotes) {
-      try {
-        await quotesService.updateQuoteIfNeeded();
-        console.log('✅ Quotes refreshed');
-      } catch (error) {
-        console.error('Error refreshing quotes:', error);
-        errors.push('Failed to refresh quotes');
-      }
-    }
-
     if (options.refreshNotifications) {
-      try {
-        await notificationService.getNotificationPreferences();
-        await notificationService.hasPermission();
-        console.log('✅ Notifications refreshed');
-      } catch (error) {
-        console.error('Error refreshing notifications:', error);
-        errors.push('Failed to refresh notifications');
-      }
+      console.log('ℹ️ Notifications refresh skipped: feature unavailable');
     }
 
     // TODO: Add more refresh options as needed
