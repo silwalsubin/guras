@@ -221,7 +221,7 @@ jobs:
       working-directory: ./react-native
       run: |
         echo "📦 Installing dependencies for version ${{ steps.version.outputs.version }}"
-        npm ci
+        npm ci --legacy-peer-deps
         
     - name: Install iOS dependencies
       working-directory: ./react-native/ios
