@@ -118,6 +118,12 @@ public class JournalOrchestrationService : IJournalOrchestrationService
             Emotions = new List<services.emotions.Domain.EmotionResponse>()
         };
 
+        // Log emotion IDs for debugging
+        _logger.LogInformation("Enriching journal entry {JournalEntryId} with {EmotionCount} emotions: {EmotionIds}",
+            journalEntry.Id,
+            journalEntry.EmotionIds?.Count ?? 0,
+            journalEntry.EmotionIds != null ? string.Join(", ", journalEntry.EmotionIds) : "none");
+
         // Fetch emotion data for each emotion ID
         if (journalEntry.EmotionIds != null && journalEntry.EmotionIds.Count > 0)
         {
@@ -128,7 +134,12 @@ public class JournalOrchestrationService : IJournalOrchestrationService
                     var emotion = await _emotionService.GetEmotionByIdAsync(emotionId);
                     if (emotion != null)
                     {
+                        _logger.LogInformation("Successfully fetched emotion {EmotionId}: {EmotionName}", emotionId, emotion.Name);
                         response.Emotions.Add(emotion);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Emotion not found for ID: {EmotionId}", emotionId);
                     }
                 }
                 catch (Exception ex)
@@ -137,6 +148,10 @@ public class JournalOrchestrationService : IJournalOrchestrationService
                 }
             }
         }
+
+        _logger.LogInformation("Journal entry {JournalEntryId} enriched with {EnrichedEmotionCount} emotions",
+            journalEntry.Id,
+            response.Emotions.Count);
 
         return response;
     }
