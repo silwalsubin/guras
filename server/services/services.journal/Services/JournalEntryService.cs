@@ -3,6 +3,7 @@ using services.journal.Domain;
 using services.journal.Repositories;
 using services.journal.Requests;
 using services.journal.Responses;
+using utilities.ai.Services;
 
 namespace services.journal.Services;
 
@@ -12,13 +13,16 @@ namespace services.journal.Services;
 public class JournalEntryService : IJournalEntryService
 {
     private readonly IJournalEntryRepository _repository;
+    private readonly ISpiritualAIService _aiService;
     private readonly ILogger<JournalEntryService> _logger;
 
     public JournalEntryService(
         IJournalEntryRepository repository,
+        ISpiritualAIService aiService,
         ILogger<JournalEntryService> logger)
     {
         _repository = repository;
+        _aiService = aiService;
         _logger = logger;
     }
 
@@ -32,8 +36,8 @@ public class JournalEntryService : IJournalEntryService
                 throw new ArgumentException("Content is required");
             }
 
-            // Generate title from content
-            var title = GenerateTitle(request.Content);
+            // Generate title from content using AI
+            var title = await GenerateTitleAsync(request.Content);
 
             // Create the journal entry (emotions are handled by orchestration layer)
             var journalEntry = await _repository.CreateAsync(userId, request, title, null, null);
@@ -144,10 +148,19 @@ public class JournalEntryService : IJournalEntryService
         }
     }
 
-    private static string GenerateTitle(string content)
+    private async Task<string> GenerateTitleAsync(string content)
     {
-        // Use first 50 characters of content as title
-        return content.Length > 50 ? content.Substring(0, 50) + "..." : content;
+        try
+        {
+            _logger.LogInformation("Generating AI title for journal entry");
+            return await _aiService.GenerateJournalTitleAsync(content);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to generate AI title, using fallback");
+            // Fallback: use first 50 characters of content as title
+            return content.Length > 50 ? content.Substring(0, 50) + "..." : content;
+        }
     }
 
     private static JournalEntryResponse MapToResponse(JournalEntry entry)
