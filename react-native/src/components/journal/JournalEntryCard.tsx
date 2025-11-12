@@ -25,16 +25,7 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
     const themeColors = getThemeColors(isDarkMode);
     const brandColors = getBrandColors();
 
-    // Log emotions for debugging
-    React.useEffect(() => {
-      if (entry.emotions && entry.emotions.length > 0) {
-        console.log('😊 JournalEntryCard emotions:', {
-          entryId: entry.id,
-          emotionCount: entry.emotions.length,
-          emotions: entry.emotions.map(e => ({ id: e.id, name: e.name }))
-        });
-      }
-    }, [entry.id, entry.emotions]);
+
 
     const pan = useRef(new Animated.ValueXY()).current;
     const [isDeleting, setIsDeleting] = React.useState(false);
@@ -235,16 +226,6 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
               </View>
               <Text style={[styles.date, { color: themeColors.textSecondary }]}>
                 {formatTime(entry.createdAt)}
-              </Text>
-            </View>
-
-            {/* DEBUG: Show raw emotions data */}
-            <View style={{ marginBottom: 8, padding: 8, backgroundColor: '#f0f0f0', borderRadius: 4 }}>
-              <Text style={{ fontSize: 10, color: '#666', marginBottom: 4 }}>
-                DEBUG - Emotions: {JSON.stringify(entry.emotions)}
-              </Text>
-              <Text style={{ fontSize: 10, color: '#666' }}>
-                Entry ID: {entry.id}
               </Text>
             </View>
 
