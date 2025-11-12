@@ -161,21 +161,7 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
     return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getMoodColor = (mood?: string) => {
-    const moodColorMap: { [key: string]: string } = {
-      'happy': '#FFA500',
-      'sad': '#5B9FD9',
-      'anxious': '#FF7043',
-      'calm': '#66BB6A',
-      'neutral': '#757575',
-      'excited': '#EF5350',
-      'peaceful': '#81C784',
-      'stressed': '#FF6E40',
-      'grateful': '#FFB74D',
-      'hopeful': '#64B5F6',
-    };
-    return moodColorMap[mood?.toLowerCase() || ''] || '#757575';
-  };
+
 
 
 
@@ -234,24 +220,31 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
                   >
                     {entry.title}
                   </Text>
-                  {entry.mood && (
-                    <View
-                      style={[
-                        styles.moodBadge,
-                        { backgroundColor: getMoodColor(entry.mood) },
-                      ]}
-                    >
-                      <Text style={styles.moodBadgeText}>
-                        {entry.mood}
-                      </Text>
-                    </View>
-                  )}
                 </TouchableOpacity>
               </View>
               <Text style={[styles.date, { color: themeColors.textSecondary }]}>
                 {formatTime(entry.createdAt)}
               </Text>
             </View>
+
+            {/* Emotion Badges */}
+            {entry.emotions && entry.emotions.length > 0 && (
+              <View style={styles.emotionBadgesContainer}>
+                {entry.emotions.map((emotion) => (
+                  <View
+                    key={emotion.id}
+                    style={[
+                      styles.emotionBadge,
+                      { backgroundColor: emotion.color },
+                    ]}
+                  >
+                    <Text style={styles.emotionBadgeText}>
+                      {emotion.name}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
 
             {entry.tags && entry.tags.length > 0 && (
               <View style={styles.tagsContainer}>
@@ -347,16 +340,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 22,
   },
-  moodBadge: {
-    alignSelf: 'flex-start',
+  emotionBadgesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  emotionBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
-    marginTop: 6,
   },
-  moodBadgeText: {
+  emotionBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#FFFFFF',
     textTransform: 'capitalize',
   },
