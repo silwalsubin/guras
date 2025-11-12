@@ -146,6 +146,31 @@ public class JournalOrchestrationController(IJournalOrchestrationService journal
             return ErrorResponse("Failed to delete journal entry", 500);
         }
     }
+
+    /// <summary>
+    /// Analyze journal content and determine which emotions best describe it using AI
+    /// </summary>
+    [HttpPost("analyze-emotions")]
+    public async Task<IActionResult> AnalyzeEmotions([FromBody] AnalyzeEmotionsRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Content))
+            {
+                return BadRequest(new { Error = "Content is required" });
+            }
+
+            logger.LogInformation("Analyzing emotions for journal content");
+
+            var emotionIds = await journalOrchestrationService.AnalyzeJournalEmotionsAsync(request.Content);
+            return SuccessResponse(new { emotionIds });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error analyzing emotions");
+            return ErrorResponse("Failed to analyze emotions", 500);
+        }
+    }
 }
 
 /// <summary>
@@ -166,5 +191,13 @@ public class UpdateJournalEntryWithEmotionsRequest
     public string? Content { get; set; }
     public List<string>? EmotionIds { get; set; }
     public string[]? Tags { get; set; }
+}
+
+/// <summary>
+/// Request model for analyzing emotions in journal content
+/// </summary>
+public class AnalyzeEmotionsRequest
+{
+    public string Content { get; set; } = string.Empty;
 }
 

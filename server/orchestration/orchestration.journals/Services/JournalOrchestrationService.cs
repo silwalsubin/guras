@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using orchestration.journals.Responses;
 using services.emotions.Services;
 using services.journal.Requests;
 using services.journal.Services;
+using utilities.ai.Services;
 
 namespace orchestration.journals.Services;
 
@@ -13,15 +15,18 @@ public class JournalOrchestrationService : IJournalOrchestrationService
 {
     private readonly IJournalEntryService _journalService;
     private readonly IEmotionService _emotionService;
+    private readonly ISpiritualAIService _aiService;
     private readonly ILogger<JournalOrchestrationService> _logger;
 
     public JournalOrchestrationService(
         IJournalEntryService journalService,
         IEmotionService emotionService,
+        ISpiritualAIService aiService,
         ILogger<JournalOrchestrationService> logger)
     {
         _journalService = journalService;
         _emotionService = emotionService;
+        _aiService = aiService;
         _logger = logger;
     }
 
@@ -136,6 +141,104 @@ public class JournalOrchestrationService : IJournalOrchestrationService
         }
 
         return response;
+    }
+
+    public async Task<List<string>> AnalyzeJournalEmotionsAsync(string content)
+    {
+        try
+        {
+            _logger.LogInformation("Analyzing journal content to determine emotions");
+
+            // Get all available emotions
+            var allEmotions = await _emotionService.GetAllEmotionsAsync();
+            if (allEmotions == null || !allEmotions.Any())
+            {
+                _logger.LogWarning("No emotions available for analysis");
+                return new List<string>();
+            }
+
+            // Create a list of emotion names for the AI prompt
+            var emotionNames = allEmotions.Select(e => e.Name).ToList();
+            var emotionList = string.Join(", ", emotionNames);
+
+            // Truncate content if too long
+            var truncatedContent = content.Length > 1000 ? content.Substring(0, 1000) : content;
+
+            // Create prompt for AI to analyze emotions
+            var prompt = $@"Analyze the following journal entry and determine which emotions best describe it.
+
+Available emotions: {emotionList}
+
+Journal Entry:
+{truncatedContent}
+
+Based on the content, select the top 2-3 emotions that best describe the emotional state expressed in this journal entry.
+
+IMPORTANT: Respond ONLY with valid JSON (no markdown, no code blocks, no additional text). Use this exact format:
+{{
+  ""emotions"": [""emotion1"", ""emotion2"", ""emotion3""]
+}}
+
+Only include emotions from the available list above. If you cannot determine emotions, return an empty array.";
+
+            // Call AI service to analyze emotions
+            var aiResponse = await _aiService.GenerateRecommendationAsync(prompt);
+
+            _logger.LogInformation("AI Response for emotion analysis: {Response}", aiResponse);
+
+            // Parse the AI response to extract emotion IDs
+            var emotionIds = new List<string>();
+            try
+            {
+                // Clean up the response - remove markdown code blocks if present
+                var cleanedResponse = aiResponse;
+                if (cleanedResponse.Contains("```json"))
+                {
+                    cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"```json\s*", "");
+                    cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"\s*```", "");
+                }
+                else if (cleanedResponse.Contains("```"))
+                {
+                    cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"```\s*", "");
+                    cleanedResponse = System.Text.RegularExpressions.Regex.Replace(cleanedResponse, @"\s*```", "");
+                }
+
+                cleanedResponse = cleanedResponse.Trim();
+
+                // Try to parse as JSON
+                var parsed = JsonConvert.DeserializeObject<dynamic>(cleanedResponse);
+
+                if (parsed != null && parsed["emotions"] != null)
+                {
+                    var emotions = parsed["emotions"];
+                    foreach (var emotionName in emotions)
+                    {
+                        var emotionNameStr = emotionName.ToString();
+                        // Find the emotion ID by name
+                        var emotion = allEmotions.FirstOrDefault(e =>
+                            e.Name.Equals(emotionNameStr, StringComparison.OrdinalIgnoreCase));
+
+                        if (emotion != null)
+                        {
+                            emotionIds.Add(emotion.Id);
+                        }
+                    }
+                }
+            }
+            catch (Exception parseEx)
+            {
+                _logger.LogWarning(parseEx, "Failed to parse AI emotion analysis response");
+                // Return empty list if parsing fails
+            }
+
+            _logger.LogInformation("Successfully analyzed journal emotions. Found {Count} emotions", emotionIds.Count);
+            return emotionIds;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error analyzing journal emotions");
+            throw;
+        }
     }
 }
 
