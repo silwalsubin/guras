@@ -124,7 +124,6 @@ public class JournalOrchestrationService : IJournalOrchestrationService
             UserId = journalEntry.UserId,
             Title = journalEntry.Title,
             Content = journalEntry.Content,
-            Tags = journalEntry.Tags,
             CreatedAt = journalEntry.CreatedAt,
             UpdatedAt = journalEntry.UpdatedAt,
             IsDeleted = journalEntry.IsDeleted,

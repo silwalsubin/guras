@@ -22,10 +22,6 @@ public class JournalEntriesDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.ToTable("journal_entries");
 
-            // Configure string arrays for PostgreSQL
-            entity.Property(e => e.Tags)
-                .HasColumnType("text[]");
-
             // Configure indexes
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.CreatedAt);

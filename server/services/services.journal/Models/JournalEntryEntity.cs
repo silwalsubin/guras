@@ -23,9 +23,6 @@ public class JournalEntryEntity
     [Column("content")]
     public string Content { get; set; } = string.Empty;
 
-    [Column("tags")]
-    public string[]? Tags { get; set; }
-
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 

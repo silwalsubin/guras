@@ -13,11 +13,10 @@ public class JournalEntryWithEmotionsResponse
     public string Content { get; set; } = string.Empty;
     public string? Mood { get; set; }
     public int? MoodScore { get; set; }
-    public string[]? Tags { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
-    
+
     /// <summary>
     /// Emotions associated with this journal entry with full emotion data
     /// </summary>

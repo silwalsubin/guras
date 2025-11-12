@@ -14,7 +14,6 @@ public static class JournalEntryMappingService
             UserId = journalEntry.UserId,
             Title = journalEntry.Title,
             Content = journalEntry.Content,
-            Tags = journalEntry.Tags,
             CreatedAt = journalEntry.CreatedAt,
             UpdatedAt = journalEntry.UpdatedAt,
             IsDeleted = journalEntry.IsDeleted
@@ -39,7 +38,6 @@ public static class JournalEntryMappingService
             UserId = entity.UserId,
             Title = entity.Title,
             Content = entity.Content,
-            Tags = entity.Tags,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsDeleted = entity.IsDeleted,
@@ -55,7 +53,6 @@ public static class JournalEntryMappingService
             UserId = userId,
             Title = title,
             Content = request.Content,
-            Tags = Array.Empty<string>(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             IsDeleted = false

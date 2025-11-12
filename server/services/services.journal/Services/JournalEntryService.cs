@@ -123,7 +123,6 @@ public class JournalEntryService : IJournalEntryService
             UserId = entry.UserId,
             Title = entry.Title,
             Content = entry.Content,
-            Tags = entry.Tags,
             CreatedAt = entry.CreatedAt,
             UpdatedAt = entry.UpdatedAt,
             IsDeleted = entry.IsDeleted,
