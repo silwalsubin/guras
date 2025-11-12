@@ -13,5 +13,6 @@ public interface IJournalEntryService
     Task<IEnumerable<JournalEntryResponse>> GetByUserIdAsync(Guid userId, int page = 1, int pageSize = 20, string? search = null);
     Task<JournalEntryResponse?> UpdateAsync(Guid id, UpdateJournalEntryRequest request);
     Task<bool> DeleteAsync(Guid id);
+    Task<bool> SaveEmotionsAsync(Guid journalEntryId, List<string> emotionIds);
 }
 

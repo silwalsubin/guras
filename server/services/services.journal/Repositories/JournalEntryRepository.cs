@@ -186,5 +186,54 @@ public class JournalEntryRepository : IJournalEntryRepository
             throw;
         }
     }
+
+    public async Task<bool> SaveEmotionsAsync(Guid journalEntryId, List<string> emotionIds)
+    {
+        try
+        {
+            _logger.LogInformation("Saving {EmotionCount} emotions for journal entry {JournalEntryId}", emotionIds.Count, journalEntryId);
+
+            // Check if entry exists
+            var entryExists = await _context.JournalEntries.AnyAsync(e => e.Id == journalEntryId && !e.IsDeleted);
+            if (!entryExists)
+            {
+                _logger.LogWarning("Journal entry not found for saving emotions: {JournalEntryId}", journalEntryId);
+                return false;
+            }
+
+            // Remove existing emotions for this entry
+            var existingEmotions = await _context.JournalEntryEmotions
+                .Where(e => e.JournalEntryId == journalEntryId)
+                .ToListAsync();
+
+            if (existingEmotions.Count > 0)
+            {
+                _logger.LogInformation("Removing {ExistingEmotionCount} existing emotions for journal entry {JournalEntryId}", existingEmotions.Count, journalEntryId);
+                _context.JournalEntryEmotions.RemoveRange(existingEmotions);
+            }
+
+            // Add new emotions
+            foreach (var emotionId in emotionIds)
+            {
+                var emotionEntity = new JournalEntryEmotionEntity
+                {
+                    Id = Guid.NewGuid(),
+                    JournalEntryId = journalEntryId,
+                    EmotionId = emotionId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.JournalEntryEmotions.Add(emotionEntity);
+            }
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Successfully saved {EmotionCount} emotions for journal entry {JournalEntryId}", emotionIds.Count, journalEntryId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving emotions for journal entry {JournalEntryId}", journalEntryId);
+            throw;
+        }
+    }
 }
 

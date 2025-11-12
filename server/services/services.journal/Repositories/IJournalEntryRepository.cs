@@ -15,5 +15,6 @@ public interface IJournalEntryRepository
     Task<bool> DeleteAsync(Guid id);
     Task<bool> ExistsAsync(Guid id);
     Task<int> GetCountByUserIdAsync(Guid userId);
+    Task<bool> SaveEmotionsAsync(Guid journalEntryId, List<string> emotionIds);
 }
 

@@ -270,13 +270,12 @@ Only include emotions from the available list above. If you cannot determine emo
     {
         try
         {
-            // This method would need access to the journal entry repository to save emotions
-            // For now, this is a placeholder that logs the intent
-            // In a real implementation, you would inject IJournalEntryRepository and call a method to save emotions
             _logger.LogInformation("Saving {EmotionCount} emotions to journal entry {JournalEntryId}: {EmotionIds}",
                 emotionIds.Count,
                 journalEntryId,
                 string.Join(", ", emotionIds));
+
+            await _journalService.SaveEmotionsAsync(journalEntryId, emotionIds);
         }
         catch (Exception ex)
         {

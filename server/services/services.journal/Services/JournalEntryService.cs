@@ -109,6 +109,25 @@ public class JournalEntryService : IJournalEntryService
         }
     }
 
+    public async Task<bool> SaveEmotionsAsync(Guid journalEntryId, List<string> emotionIds)
+    {
+        try
+        {
+            _logger.LogInformation("Saving {EmotionCount} emotions for journal entry {JournalEntryId}", emotionIds.Count, journalEntryId);
+            var success = await _repository.SaveEmotionsAsync(journalEntryId, emotionIds);
+            if (success)
+            {
+                _logger.LogInformation("Successfully saved emotions for journal entry: {JournalEntryId}", journalEntryId);
+            }
+            return success;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving emotions for journal entry: {JournalEntryId}", journalEntryId);
+            throw;
+        }
+    }
+
     private static string GenerateTitle(string content)
     {
         // Use first 50 characters of content as title
