@@ -114,10 +114,6 @@ public class JournalEntryRepository : IJournalEntryRepository
                 entity.Title = request.Title;
             if (request.Content != null)
                 entity.Content = request.Content;
-            if (mood != null)
-                entity.Mood = mood;
-            if (moodScore != null)
-                entity.MoodScore = moodScore;
             if (request.Tags != null)
                 entity.Tags = request.Tags;
             entity.UpdatedAt = DateTime.UtcNow;

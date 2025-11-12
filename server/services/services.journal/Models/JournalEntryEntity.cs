@@ -23,13 +23,6 @@ public class JournalEntryEntity
     [Column("content")]
     public string Content { get; set; } = string.Empty;
 
-    [MaxLength(50)]
-    [Column("mood")]
-    public string? Mood { get; set; }
-
-    [Column("mood_score")]
-    public int? MoodScore { get; set; }
-
     [Column("tags")]
     public string[]? Tags { get; set; }
 

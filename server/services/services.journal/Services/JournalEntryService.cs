@@ -123,8 +123,6 @@ public class JournalEntryService : IJournalEntryService
             UserId = entry.UserId,
             Title = entry.Title,
             Content = entry.Content,
-            Mood = entry.Mood,
-            MoodScore = entry.MoodScore,
             Tags = entry.Tags,
             CreatedAt = entry.CreatedAt,
             UpdatedAt = entry.UpdatedAt,

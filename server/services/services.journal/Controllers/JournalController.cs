@@ -185,17 +185,13 @@ public class JournalController(IJournalEntryService journalEntryService, ISpirit
             }
 
             // Build context from entries
-            var entriesText = string.Join("\n\n", entries.Select(e => $"Title: {e.Title}\nMood: {e.Mood}\nContent: {e.Content}"));
-            var moods = entries.Where(e => !string.IsNullOrEmpty(e.Mood)).Select(e => e.Mood).ToList();
-            var moodSummary = moods.Any() ? string.Join(", ", moods.Distinct()) : "neutral";
+            var entriesText = string.Join("\n\n", entries.Select(e => $"Title: {e.Title}\nContent: {e.Content}"));
 
             // Create prompt for AI to generate personalized guidance
             var prompt = $@"Based on the following recent journal entries from a user, generate personalized spiritual guidance that feels like advice from a caring friend.
 
 Recent Journal Entries:
 {entriesText}
-
-Detected Moods: {moodSummary}
 
 Please provide:
 1. A relevant spiritual quote that resonates with their current emotional state

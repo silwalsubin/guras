@@ -111,8 +111,6 @@ public class JournalOrchestrationService : IJournalOrchestrationService
             UserId = journalEntry.UserId,
             Title = journalEntry.Title,
             Content = journalEntry.Content,
-            Mood = journalEntry.Mood,
-            MoodScore = journalEntry.MoodScore,
             Tags = journalEntry.Tags,
             CreatedAt = journalEntry.CreatedAt,
             UpdatedAt = journalEntry.UpdatedAt,

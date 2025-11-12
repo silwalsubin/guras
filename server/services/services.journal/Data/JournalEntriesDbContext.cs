@@ -34,7 +34,6 @@ public class JournalEntriesDbContext : DbContext
             // Configure constraints
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Content).IsRequired();
-            entity.Property(e => e.Mood).HasMaxLength(50);
             entity.Property(e => e.UserId).IsRequired();
 
             // Configure default values
