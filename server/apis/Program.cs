@@ -100,7 +100,7 @@ builder.Services.AddTeachersServices(builder.Configuration, connectionFactory);
 builder.Services.AddMeditationServices(builder.Configuration, connectionFactory);
 builder.Services.AddAIServices(builder.Configuration);
 builder.Services.AddJournalServices(builder.Configuration, connectionFactory);
-builder.Services.AddEmotionsServices();
+builder.Services.AddEmotionsServices(connectionFactory);
 builder.Services.AddJournalOrchestrationServices();
 
 // Configure authorization

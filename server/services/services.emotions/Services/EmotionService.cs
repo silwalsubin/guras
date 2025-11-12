@@ -1,99 +1,40 @@
 using services.emotions.Domain;
+using services.emotions.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace services.emotions.Services;
 
 public class EmotionService : IEmotionService
 {
+    private readonly IEmotionRepository _repository;
     private readonly ILogger<EmotionService> _logger;
 
-    // Hardcoded emotions stored in memory
-    private readonly List<Emotion> _emotions = new()
+    public EmotionService(IEmotionRepository repository, ILogger<EmotionService> logger)
     {
-        new Emotion
-        {
-            Id = "happy",
-            Name = "Happy",
-            Color = "#10B981",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        },
-        new Emotion
-        {
-            Id = "calm",
-            Name = "Calm",
-            Color = "#3B82F6",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        },
-        new Emotion
-        {
-            Id = "anxious",
-            Name = "Anxious",
-            Color = "#F59E0B",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        },
-        new Emotion
-        {
-            Id = "sad",
-            Name = "Sad",
-            Color = "#8B5CF6",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        },
-        new Emotion
-        {
-            Id = "excited",
-            Name = "Excited",
-            Color = "#EC4899",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        },
-        new Emotion
-        {
-            Id = "angry",
-            Name = "Angry",
-            Color = "#EF4444",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        },
-    };
-
-    public EmotionService(ILogger<EmotionService> logger)
-    {
+        _repository = repository;
         _logger = logger;
     }
 
-    public Task<List<EmotionResponse>> GetAllEmotionsAsync()
+    public async Task<List<EmotionResponse>> GetAllEmotionsAsync()
     {
-        _logger.LogInformation("Fetching all emotions");
-        var responses = _emotions
-            .Where(e => e.IsActive)
-            .Select(MapToResponse)
-            .ToList();
-        return Task.FromResult(responses);
+        _logger.LogInformation("Fetching all emotions from database");
+        var emotions = await _repository.GetAllAsync();
+        var responses = emotions.Select(MapToResponse).ToList();
+        return responses;
     }
 
-    public Task<EmotionResponse?> GetEmotionByIdAsync(string id)
+    public async Task<EmotionResponse?> GetEmotionByIdAsync(string id)
     {
         _logger.LogInformation("Fetching emotion by ID: {EmotionId}", id);
-        var emotion = _emotions.FirstOrDefault(e => e.Id == id && e.IsActive);
-        return Task.FromResult(emotion != null ? MapToResponse(emotion) : null);
+        var emotion = await _repository.GetByIdAsync(id);
+        return emotion != null ? MapToResponse(emotion) : null;
     }
 
-    public Task<EmotionResponse?> GetEmotionByNameAsync(string name)
+    public async Task<EmotionResponse?> GetEmotionByNameAsync(string name)
     {
         _logger.LogInformation("Fetching emotion by name: {EmotionName}", name);
-        var emotion = _emotions.FirstOrDefault(e =>
-            e.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && e.IsActive);
-        return Task.FromResult(emotion != null ? MapToResponse(emotion) : null);
+        var emotion = await _repository.GetByNameAsync(name);
+        return emotion != null ? MapToResponse(emotion) : null;
     }
 
     public async Task<string?> GetEmotionColorAsync(string emotionName)
@@ -110,7 +51,6 @@ public class EmotionService : IEmotionService
             Id = emotion.Id,
             Name = emotion.Name,
             Color = emotion.Color,
-            Description = emotion.Description,
             IsActive = emotion.IsActive,
             CreatedAt = emotion.CreatedAt,
             UpdatedAt = emotion.UpdatedAt,
