@@ -25,6 +25,17 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
     const themeColors = getThemeColors(isDarkMode);
     const brandColors = getBrandColors();
 
+    // Log emotions for debugging
+    React.useEffect(() => {
+      if (entry.emotions && entry.emotions.length > 0) {
+        console.log('😊 JournalEntryCard emotions:', {
+          entryId: entry.id,
+          emotionCount: entry.emotions.length,
+          emotions: entry.emotions.map(e => ({ id: e.id, name: e.name }))
+        });
+      }
+    }, [entry.id, entry.emotions]);
+
     const pan = useRef(new Animated.ValueXY()).current;
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [isSwiped, setIsSwiped] = React.useState(false);

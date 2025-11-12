@@ -27,6 +27,14 @@ export const journalApi = {
 
       if (response.success && response.data) {
         console.log('✅ Entries fetched successfully:', response.data.length);
+        // Log first entry's emotions for debugging
+        if (response.data.length > 0) {
+          console.log('📊 First entry emotions:', {
+            id: response.data[0].id,
+            emotionCount: response.data[0].emotions?.length ?? 0,
+            emotions: response.data[0].emotions?.map(e => ({ id: e.id, name: e.name })) ?? []
+          });
+        }
         return response.data.map(convertResponseToEntry);
       } else {
         console.error('❌ API Error:', response.error?.message);
