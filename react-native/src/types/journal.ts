@@ -22,14 +22,12 @@ export interface JournalEntry {
 
 export interface CreateJournalEntryDto {
   content: string;
-  tags?: string[];
-  emotionIds?: string[]; // IDs of emotions associated with this entry
+  // Emotions are determined by AI analysis, not provided by client
 }
 
 export interface UpdateJournalEntryDto {
   content?: string;
-  tags?: string[];
-  emotionIds?: string[];
+  // Emotions are determined by AI analysis, not provided by client
 }
 
 export interface JournalEntryResponse {

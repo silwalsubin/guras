@@ -91,9 +91,7 @@ public class JournalOrchestrationController(IJournalOrchestrationService journal
 
             var entry = await journalOrchestrationService.CreateJournalEntryWithEmotionsAsync(
                 userId,
-                request.Content,
-                request.EmotionIds,
-                request.Tags
+                request.Content
             );
 
             return SuccessResponse(entry);
@@ -179,8 +177,6 @@ public class JournalOrchestrationController(IJournalOrchestrationService journal
 public class CreateJournalEntryWithEmotionsRequest
 {
     public string Content { get; set; } = string.Empty;
-    public List<string>? EmotionIds { get; set; }
-    public string[]? Tags { get; set; }
 }
 
 /// <summary>
@@ -189,8 +185,6 @@ public class CreateJournalEntryWithEmotionsRequest
 public class UpdateJournalEntryWithEmotionsRequest
 {
     public string? Content { get; set; }
-    public List<string>? EmotionIds { get; set; }
-    public string[]? Tags { get; set; }
 }
 
 /// <summary>

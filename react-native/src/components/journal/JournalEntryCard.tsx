@@ -238,6 +238,16 @@ const JournalEntryCard = forwardRef<JournalEntryCardRef, JournalEntryCardProps>(
               </Text>
             </View>
 
+            {/* DEBUG: Show raw emotions data */}
+            <View style={{ marginBottom: 8, padding: 8, backgroundColor: '#f0f0f0', borderRadius: 4 }}>
+              <Text style={{ fontSize: 10, color: '#666', marginBottom: 4 }}>
+                DEBUG - Emotions: {JSON.stringify(entry.emotions)}
+              </Text>
+              <Text style={{ fontSize: 10, color: '#666' }}>
+                Entry ID: {entry.id}
+              </Text>
+            </View>
+
             {/* Emotion Badges */}
             {entry.emotions && entry.emotions.length > 0 && (
               <View style={styles.emotionBadgesContainer}>

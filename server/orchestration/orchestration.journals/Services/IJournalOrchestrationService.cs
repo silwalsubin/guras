@@ -23,9 +23,7 @@ public interface IJournalOrchestrationService
     /// </summary>
     Task<JournalEntryWithEmotionsResponse> CreateJournalEntryWithEmotionsAsync(
         Guid userId,
-        string content,
-        List<string>? emotionIds = null,
-        string[]? tags = null);
+        string content);
 
     /// <summary>
     /// Analyze journal content and determine which emotions best describe it using AI

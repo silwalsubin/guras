@@ -29,10 +29,11 @@ export const journalApi = {
         console.log('✅ Entries fetched successfully:', response.data.length);
         // Log first entry's emotions for debugging
         if (response.data.length > 0) {
+          console.log('📊 First entry full response:', JSON.stringify(response.data[0], null, 2));
           console.log('📊 First entry emotions:', {
             id: response.data[0].id,
             emotionCount: response.data[0].emotions?.length ?? 0,
-            emotions: response.data[0].emotions?.map(e => ({ id: e.id, name: e.name })) ?? []
+            emotions: response.data[0].emotions?.map(e => ({ id: e.id, name: e.name, color: e.color })) ?? []
           });
         }
         return response.data.map(convertResponseToEntry);
@@ -71,7 +72,7 @@ export const journalApi = {
    */
   async createEntry(userId: string, data: CreateJournalEntryDto): Promise<JournalEntry> {
     try {
-      console.log('📝 Creating journal entry with data:', { content: data.content?.substring(0, 50), emotionIds: data.emotionIds });
+      console.log('📝 Creating journal entry with data:', { content: data.content?.substring(0, 50) });
 
       const response = await apiService.makeRequest<JournalEntryResponse>(
         '/api/journal-orchestration/entries',

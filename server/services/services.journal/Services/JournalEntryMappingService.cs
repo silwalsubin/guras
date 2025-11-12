@@ -55,7 +55,7 @@ public static class JournalEntryMappingService
             UserId = userId,
             Title = title,
             Content = request.Content,
-            Tags = request.Tags ?? Array.Empty<string>(),
+            Tags = Array.Empty<string>(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             IsDeleted = false

@@ -116,8 +116,6 @@ public class JournalEntryRepository : IJournalEntryRepository
                 entity.Title = request.Title;
             if (request.Content != null)
                 entity.Content = request.Content;
-            if (request.Tags != null)
-                entity.Tags = request.Tags;
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
