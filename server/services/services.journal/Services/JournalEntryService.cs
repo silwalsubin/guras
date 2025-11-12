@@ -3,7 +3,6 @@ using services.journal.Domain;
 using services.journal.Repositories;
 using services.journal.Requests;
 using services.journal.Responses;
-using utilities.ai.Services;
 
 namespace services.journal.Services;
 
@@ -13,16 +12,13 @@ namespace services.journal.Services;
 public class JournalEntryService : IJournalEntryService
 {
     private readonly IJournalEntryRepository _repository;
-    private readonly ISpiritualAIService _aiService;
     private readonly ILogger<JournalEntryService> _logger;
 
     public JournalEntryService(
         IJournalEntryRepository repository,
-        ISpiritualAIService aiService,
         ILogger<JournalEntryService> logger)
     {
         _repository = repository;
-        _aiService = aiService;
         _logger = logger;
     }
 
@@ -36,14 +32,11 @@ public class JournalEntryService : IJournalEntryService
                 throw new ArgumentException("Content is required");
             }
 
-            // Generate AI title from content
-            var title = await GenerateTitleAsync(request.Content);
+            // Generate title from content
+            var title = GenerateTitle(request.Content);
 
-            // Analyze mood from content
-            var (mood, moodScore) = await AnalyzeMoodAsync(request.Content);
-
-            // Create the journal entry
-            var journalEntry = await _repository.CreateAsync(userId, request, title, mood, moodScore);
+            // Create the journal entry (emotions are handled by orchestration layer)
+            var journalEntry = await _repository.CreateAsync(userId, request, title, null, null);
 
             _logger.LogInformation("Successfully created journal entry with ID: {JournalEntryId}", journalEntry.Id);
 
@@ -116,36 +109,10 @@ public class JournalEntryService : IJournalEntryService
         }
     }
 
-    private async Task<string> GenerateTitleAsync(string content)
+    private static string GenerateTitle(string content)
     {
-        try
-        {
-            // Use AI service to generate a short title from the content
-            var title = await _aiService.GenerateJournalTitleAsync(content);
-            return title;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to generate AI title, using default");
-            // Fallback: use first 50 characters of content as title
-            return content.Length > 50 ? content.Substring(0, 50) + "..." : content;
-        }
-    }
-
-    private async Task<(string mood, int moodScore)> AnalyzeMoodAsync(string content)
-    {
-        try
-        {
-            // Use AI service to analyze mood from the content
-            var (mood, moodScore) = await _aiService.AnalyzeJournalMoodAsync(content);
-            return (mood, moodScore);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to analyze mood, using default");
-            // Fallback: return neutral mood
-            return ("neutral", 3);
-        }
+        // Use first 50 characters of content as title
+        return content.Length > 50 ? content.Substring(0, 50) + "..." : content;
     }
 
     private static JournalEntryResponse MapToResponse(JournalEntry entry)
