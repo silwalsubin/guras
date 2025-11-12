@@ -32,6 +32,7 @@
       <ProjectReference Include="..\services\services.journal\services.journal.csproj" />
       <ProjectReference Include="..\services\services.emotions\services.emotions.csproj" />
       <ProjectReference Include="..\orchestration\orchestration.backgroundServices\orchestration.backgroundServices.csproj" />
+      <ProjectReference Include="..\orchestration\orchestration.journals\orchestration.journals.csproj" />
       <ProjectReference Include="..\services\services.users\services.users.csproj" />
       <ProjectReference Include="..\utilities\utilities.aws\utilities.aws.csproj" />
     </ItemGroup>

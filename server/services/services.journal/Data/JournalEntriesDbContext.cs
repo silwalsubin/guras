@@ -10,6 +10,7 @@ public class JournalEntriesDbContext : DbContext
     }
 
     public DbSet<JournalEntryEntity> JournalEntries { get; set; }
+    public DbSet<JournalEntryEmotionEntity> JournalEntryEmotions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +41,30 @@ public class JournalEntriesDbContext : DbContext
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            // Configure relationship with JournalEntryEmotion
+            entity.HasMany(e => e.Emotions)
+                .WithOne(je => je.JournalEntry)
+                .HasForeignKey(je => je.JournalEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure JournalEntryEmotionEntity
+        modelBuilder.Entity<JournalEntryEmotionEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("journal_entry_emotions");
+
+            // Configure constraints
+            entity.Property(e => e.JournalEntryId).IsRequired();
+            entity.Property(e => e.EmotionId).IsRequired().HasMaxLength(50);
+
+            // Configure indexes
+            entity.HasIndex(e => e.JournalEntryId);
+            entity.HasIndex(e => e.EmotionId);
+
+            // Configure default values
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
     }
 

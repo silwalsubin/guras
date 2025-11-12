@@ -12,13 +12,13 @@ const convertResponseToEntry = (response: JournalEntryResponse): JournalEntry =>
 
 export const journalApi = {
   /**
-   * Get all journal entries for a user
+   * Get all journal entries for a user (with emotions from orchestration layer)
    */
   async getEntries(userId: string, page: number = 1, pageSize: number = 20, search?: string): Promise<JournalEntry[]> {
     try {
       console.log('📖 Fetching journal entries for user:', userId, search ? `with search: ${search}` : '');
 
-      let url = `/api/journal/entries?page=${page}&pageSize=${pageSize}`;
+      let url = `/api/journal-orchestration/entries?page=${page}&pageSize=${pageSize}`;
       if (search && search.trim()) {
         url += `&search=${encodeURIComponent(search.trim())}`;
       }
@@ -39,12 +39,12 @@ export const journalApi = {
   },
 
   /**
-   * Get a specific journal entry
+   * Get a specific journal entry (with emotions from orchestration layer)
    */
   async getEntry(entryId: string): Promise<JournalEntry> {
     try {
       const response = await apiService.makeRequest<JournalEntryResponse>(
-        `/api/journal/entries/${entryId}`
+        `/api/journal-orchestration/entries/${entryId}`
       );
 
       if (response.success && response.data) {
@@ -59,14 +59,14 @@ export const journalApi = {
   },
 
   /**
-   * Create a new journal entry
+   * Create a new journal entry with emotions (via orchestration layer)
    */
   async createEntry(userId: string, data: CreateJournalEntryDto): Promise<JournalEntry> {
     try {
-      console.log('📝 Creating journal entry with data:', { content: data.content?.substring(0, 50), mood: data.mood, moodScore: data.moodScore });
+      console.log('📝 Creating journal entry with data:', { content: data.content?.substring(0, 50), emotionIds: data.emotionIds });
 
       const response = await apiService.makeRequest<JournalEntryResponse>(
-        '/api/journal/entries',
+        '/api/journal-orchestration/entries',
         { method: 'POST', body: JSON.stringify(data) }
       );
 
@@ -88,12 +88,12 @@ export const journalApi = {
   },
 
   /**
-   * Update a journal entry
+   * Update a journal entry with emotions (via orchestration layer)
    */
   async updateEntry(entryId: string, data: UpdateJournalEntryDto): Promise<JournalEntry> {
     try {
       const response = await apiService.makeRequest<JournalEntryResponse>(
-        `/api/journal/entries/${entryId}`,
+        `/api/journal-orchestration/entries/${entryId}`,
         { method: 'PUT', body: JSON.stringify(data) }
       );
 
@@ -114,7 +114,7 @@ export const journalApi = {
   async deleteEntry(entryId: string): Promise<void> {
     try {
       const response = await apiService.makeRequest<void>(
-        `/api/journal/entries/${entryId}`,
+        `/api/journal-orchestration/entries/${entryId}`,
         { method: 'DELETE' }
       );
 

@@ -2,6 +2,7 @@ using apis.Configuration;
 using apis.Filters;
 using apis.Middleware;
 using orchestration.backgroundServices.BackgroundServices;
+using orchestration.journals.Configuration;
 using services.users.Configuration;
 using services.notifications.Configuration;
 using services.teachers.Configuration;
@@ -100,6 +101,7 @@ builder.Services.AddMeditationServices(builder.Configuration, connectionFactory)
 builder.Services.AddAIServices(builder.Configuration);
 builder.Services.AddJournalServices(builder.Configuration, connectionFactory);
 builder.Services.AddEmotionsServices();
+builder.Services.AddJournalOrchestrationServices();
 
 // Configure authorization
 builder.Services.AddAuthorization();

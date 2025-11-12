@@ -41,5 +41,8 @@ public class JournalEntryEntity
 
     [Column("is_deleted")]
     public bool IsDeleted { get; set; }
+
+    // Navigation property
+    public ICollection<JournalEntryEmotionEntity> Emotions { get; set; } = new List<JournalEntryEmotionEntity>();
 }
 
