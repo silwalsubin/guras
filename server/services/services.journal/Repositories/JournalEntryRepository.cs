@@ -49,6 +49,7 @@ public class JournalEntryRepository : IJournalEntryRepository
         {
             _logger.LogInformation("Retrieving journal entry by ID: {JournalEntryId} using Entity Framework", id);
             var entity = await _context.JournalEntries
+                .Include(e => e.Emotions)
                 .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
 
             return entity?.ToDomain();
@@ -67,6 +68,7 @@ public class JournalEntryRepository : IJournalEntryRepository
             _logger.LogInformation("Retrieving journal entries for user: {UserId} using Entity Framework", userId);
 
             var query = _context.JournalEntries
+                .Include(e => e.Emotions)
                 .Where(e => e.UserId == userId && !e.IsDeleted);
 
             // Add search filter if provided

@@ -126,7 +126,8 @@ public class JournalEntryService : IJournalEntryService
             Tags = entry.Tags,
             CreatedAt = entry.CreatedAt,
             UpdatedAt = entry.UpdatedAt,
-            IsDeleted = entry.IsDeleted
+            IsDeleted = entry.IsDeleted,
+            EmotionIds = entry.Emotions?.Select(e => e.EmotionId).ToList() ?? new List<string>()
         };
     }
 }

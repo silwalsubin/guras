@@ -23,6 +23,16 @@ public static class JournalEntryMappingService
 
     public static JournalEntry ToDomain(this JournalEntryEntity entity)
     {
+        var emotions = entity.Emotions?
+            .Select(e => new Domain.JournalEntryEmotion
+            {
+                Id = e.Id,
+                JournalEntryId = e.JournalEntryId,
+                EmotionId = e.EmotionId,
+                CreatedAt = e.CreatedAt
+            })
+            .ToList() ?? new List<Domain.JournalEntryEmotion>();
+
         return new JournalEntry
         {
             Id = entity.Id,
@@ -32,7 +42,8 @@ public static class JournalEntryMappingService
             Tags = entity.Tags,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
-            IsDeleted = entity.IsDeleted
+            IsDeleted = entity.IsDeleted,
+            Emotions = emotions
         };
     }
 
