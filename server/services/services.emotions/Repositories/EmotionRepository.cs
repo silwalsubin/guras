@@ -10,6 +10,7 @@ public interface IEmotionRepository
     Task<List<Emotion>> GetAllAsync();
     Task<Emotion?> GetByIdAsync(string id);
     Task<Emotion?> GetByNameAsync(string name);
+    Task<List<Emotion>> GetByIdsAsync(List<string> ids);
 }
 
 public class EmotionRepository : IEmotionRepository
@@ -44,6 +45,15 @@ public class EmotionRepository : IEmotionRepository
             .FirstOrDefaultAsync(e => e.Name == name && e.IsActive);
 
         return entity != null ? MapToDomain(entity) : null;
+    }
+
+    public async Task<List<Emotion>> GetByIdsAsync(List<string> ids)
+    {
+        var entities = await _context.Emotions
+            .Where(e => ids.Contains(e.Id) && e.IsActive)
+            .ToListAsync();
+
+        return entities.Select(MapToDomain).ToList();
     }
 
     private static Emotion MapToDomain(EmotionEntity entity)

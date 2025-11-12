@@ -44,6 +44,14 @@ public class EmotionService : IEmotionService
         return emotion?.Color;
     }
 
+    public async Task<List<EmotionResponse>> GetEmotionsByIdsAsync(List<string> ids)
+    {
+        _logger.LogInformation("Fetching emotions by IDs: {EmotionIds}", string.Join(", ", ids));
+        var emotions = await _repository.GetByIdsAsync(ids);
+        var responses = emotions.Select(MapToResponse).ToList();
+        return responses;
+    }
+
     private static EmotionResponse MapToResponse(Emotion emotion)
     {
         return new EmotionResponse

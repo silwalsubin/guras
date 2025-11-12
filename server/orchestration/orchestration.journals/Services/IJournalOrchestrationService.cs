@@ -29,5 +29,10 @@ public interface IJournalOrchestrationService
     /// Analyze journal content and determine which emotions best describe it using AI
     /// </summary>
     Task<List<string>> AnalyzeJournalEmotionsAsync(string content);
+
+    /// <summary>
+    /// Get emotion statistics for a user
+    /// </summary>
+    Task<EmotionStatisticsResponse> GetUserEmotionStatisticsAsync(Guid userId);
 }
 

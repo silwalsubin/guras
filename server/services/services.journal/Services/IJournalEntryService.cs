@@ -1,3 +1,4 @@
+using services.journal.Domain;
 using services.journal.Requests;
 using services.journal.Responses;
 
@@ -14,5 +15,6 @@ public interface IJournalEntryService
     Task<JournalEntryResponse?> UpdateAsync(Guid id, UpdateJournalEntryRequest request);
     Task<bool> DeleteAsync(Guid id);
     Task<bool> SaveEmotionsAsync(Guid journalEntryId, List<string> emotionIds);
+    Task<List<EmotionCount>> GetUserEmotionCountsAsync(Guid userId);
 }
 

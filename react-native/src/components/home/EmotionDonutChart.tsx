@@ -28,16 +28,21 @@ const EmotionDonutChart: React.FC<EmotionDonutChartProps> = ({
 
   // Prepare chart data
   const chartData = useMemo(() => {
-    return emotions.map((emotion, index) => ({
-      key: `emotion-${emotion.emotion}-${index}`,
-      value: emotion.frequency,
-      svg: {
-        fill: emotionColors[emotion.emotion] || brandColors.primary,
-      },
-      emotion: emotion.emotion,
-      frequency: emotion.frequency,
-    }));
-  }, [emotions]);
+    return emotions.map((emotion, index) => {
+      // Check if emotion has a color property (from API) or use hardcoded palette
+      const emotionColor = (emotion as any).emotionColor || emotionColors[emotion.emotion] || brandColors.primary;
+
+      return {
+        key: `emotion-${emotion.emotion}-${index}`,
+        value: emotion.frequency,
+        svg: {
+          fill: emotionColor,
+        },
+        emotion: emotion.emotion,
+        frequency: emotion.frequency,
+      };
+    });
+  }, [emotions, brandColors.primary]);
 
   const totalEmotions = emotions.length;
 

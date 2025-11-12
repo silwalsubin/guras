@@ -128,6 +128,22 @@ public class JournalEntryService : IJournalEntryService
         }
     }
 
+    public async Task<List<EmotionCount>> GetUserEmotionCountsAsync(Guid userId)
+    {
+        try
+        {
+            _logger.LogInformation("Getting emotion counts for user: {UserId}", userId);
+            var emotionCounts = await _repository.GetUserEmotionCountsAsync(userId);
+            _logger.LogInformation("Retrieved {EmotionCountCount} emotion counts for user: {UserId}", emotionCounts.Count, userId);
+            return emotionCounts;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting emotion counts for user: {UserId}", userId);
+            throw;
+        }
+    }
+
     private static string GenerateTitle(string content)
     {
         // Use first 50 characters of content as title

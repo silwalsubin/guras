@@ -42,3 +42,16 @@ export interface JournalEntryResponse {
   isDeleted: boolean;
 }
 
+export interface EmotionDetailResponse {
+  emotionId: string;
+  emotionName: string;
+  emotionColor: string;
+  count: number;
+}
+
+export interface EmotionStatisticsResponse {
+  emotions: EmotionDetailResponse[];
+  totalEntries: number;
+  calculatedAt: string;
+}
+

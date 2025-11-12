@@ -1,5 +1,5 @@
-import { JournalEntry, CreateJournalEntryDto, UpdateJournalEntryDto, JournalEntryResponse } from '@/types/journal';
-import { apiService, ApiResponse } from '@/services/api';
+import { JournalEntry, CreateJournalEntryDto, UpdateJournalEntryDto, JournalEntryResponse, EmotionStatisticsResponse } from '@/types/journal';
+import { apiService } from '@/services/api';
 
 const convertResponseToEntry = (response: JournalEntryResponse): JournalEntry => {
   return {
@@ -132,6 +132,34 @@ export const journalApi = {
       }
     } catch (error) {
       console.error('Error deleting journal entry:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get emotion statistics for the current user
+   */
+  async getEmotionStatistics(): Promise<EmotionStatisticsResponse> {
+    try {
+      console.log('📊 Fetching emotion statistics');
+
+      const response = await apiService.makeRequest<EmotionStatisticsResponse>(
+        '/api/journal-orchestration/statistics/emotions'
+      );
+
+      if (response.success && response.data) {
+        console.log('✅ Emotion statistics fetched successfully:', {
+          totalEntries: response.data.totalEntries,
+          emotionCount: response.data.emotions.length,
+          calculatedAt: response.data.calculatedAt
+        });
+        return response.data;
+      } else {
+        console.error('❌ API Error:', response.error?.message);
+        throw new Error(response.error?.message || 'Failed to fetch emotion statistics');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching emotion statistics:', error);
       throw error;
     }
   },

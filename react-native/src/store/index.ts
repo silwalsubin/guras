@@ -10,6 +10,7 @@ import spiritualTeacherReducer from './spiritualTeacherSlice';
 import teacherReducer from './teacherSlice';
 import recommendationReducer from './recommendationSlice';
 import journalReducer from './journalSlice';
+import emotionStatisticsReducer from './emotionStatisticsSlice';
 
 // Create persisted reducers
 const persistedMeditationReducer = persistReducer(
@@ -64,6 +65,7 @@ const store = configureStore({
     teacher: teacherReducer,
     recommendations: recommendationReducer,
     journal: persistedJournalReducer,
+    emotionStatistics: emotionStatisticsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -235,5 +235,32 @@ public class JournalEntryRepository : IJournalEntryRepository
             throw;
         }
     }
+
+    public async Task<List<EmotionCount>> GetUserEmotionCountsAsync(Guid userId)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving emotion counts for user: {UserId}", userId);
+
+            var emotionCounts = await _context.JournalEntryEmotions
+                .Where(jee => jee.JournalEntry!.UserId == userId && !jee.JournalEntry.IsDeleted)
+                .GroupBy(jee => jee.EmotionId)
+                .Select(g => new EmotionCount
+                {
+                    EmotionId = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(ec => ec.Count)
+                .ToListAsync();
+
+            _logger.LogInformation("Retrieved {EmotionCountCount} emotion counts for user: {UserId}", emotionCounts.Count, userId);
+            return emotionCounts;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving emotion counts for user: {UserId}", userId);
+            throw;
+        }
+    }
 }
 

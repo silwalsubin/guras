@@ -16,6 +16,7 @@ import RecommendationsList from '@/components/meditation/RecommendationsList';
 import EmotionTriggersWidget from '@/components/home/EmotionTriggersWidget';
 import { fetchRecommendations } from '@/store/recommendationSlice';
 import { fetchJournalEntries } from '@/store/journalSlice';
+import { fetchEmotionStatistics } from '@/store/emotionStatisticsSlice';
 import { MeditationRecommendation } from '@/components/meditation/RecommendationCard';
 import { recommendationAnalyticsService } from '@/services/recommendationAnalyticsService';
 import { setJournalCreateOpen } from '@/store/bottomNavSlice';
@@ -29,6 +30,8 @@ const HomeScreen: React.FC = () => {
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const recommendations = useSelector((state: RootState) => state.recommendations.recommendations);
   const recommendationsLoading = useSelector((state: RootState) => state.recommendations.loading);
+  const emotionStatistics = useSelector((state: RootState) => state.emotionStatistics.data);
+  const emotionStatisticsLoading = useSelector((state: RootState) => state.emotionStatistics.isLoading);
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [showJournalCreate, setShowJournalCreate] = useState(false);
@@ -39,6 +42,8 @@ const HomeScreen: React.FC = () => {
     // Load journal entries for the greeting section
     if (user?.uid) {
       dispatch(fetchJournalEntries({ userId: user.uid }));
+      // Fetch emotion statistics for the donut chart
+      dispatch(fetchEmotionStatistics());
     }
   }, [dispatch, user?.uid]);
 
@@ -49,6 +54,7 @@ const HomeScreen: React.FC = () => {
 
       if (result.success) {
         dispatch(fetchRecommendations(3));
+        dispatch(fetchEmotionStatistics());
       } else {
         console.warn('⚠️ Some items failed to refresh:', result.errors);
       }
@@ -132,10 +138,36 @@ const HomeScreen: React.FC = () => {
 
       {/* Emotion Triggers Widget */}
       <EmotionTriggersWidget
-        topEmotion={mockEmotionTriggersData.emotions[0] || null}
-        allEmotions={mockEmotionTriggersData.emotions}
+        topEmotion={
+          emotionStatistics && emotionStatistics.emotions.length > 0
+            ? {
+                emotion: emotionStatistics.emotions[0].emotionName,
+                moodScore: 3,
+                emoji: '😊',
+                triggers: [],
+                entryCount: emotionStatistics.emotions[0].count,
+                frequency: Math.round(
+                  (emotionStatistics.emotions[0].count / emotionStatistics.totalEntries) * 100
+                ),
+              }
+            : null
+        }
+        allEmotions={
+          emotionStatistics
+            ? emotionStatistics.emotions.map((emotion) => ({
+                emotion: emotion.emotionName,
+                moodScore: 3,
+                emoji: '😊',
+                triggers: [],
+                entryCount: emotion.count,
+                frequency: Math.round(
+                  (emotion.count / emotionStatistics.totalEntries) * 100
+                ),
+              }))
+            : mockEmotionTriggersData.emotions
+        }
         onPress={handleEmotionTriggersPress}
-        totalEntries={mockEmotionTriggersData.totalEntries}
+        totalEntries={emotionStatistics?.totalEntries || mockEmotionTriggersData.totalEntries}
       />
 
       {/* Personalized Recommendations */}

@@ -169,6 +169,32 @@ public class JournalOrchestrationController(IJournalOrchestrationService journal
             return ErrorResponse("Failed to analyze emotions", 500);
         }
     }
+
+    /// <summary>
+    /// Get emotion statistics for the current user
+    /// </summary>
+    [HttpGet("statistics/emotions")]
+    public async Task<IActionResult> GetEmotionStatistics()
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst("application_user_id")?.Value;
+            if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return UnauthorizedResponse("Application user ID not found in token");
+            }
+
+            logger.LogInformation("Fetching emotion statistics for user: {UserId}", userId);
+
+            var statistics = await journalOrchestrationService.GetUserEmotionStatisticsAsync(userId);
+            return SuccessResponse(statistics);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching emotion statistics");
+            return ErrorResponse("Failed to fetch emotion statistics", 500);
+        }
+    }
 }
 
 /// <summary>

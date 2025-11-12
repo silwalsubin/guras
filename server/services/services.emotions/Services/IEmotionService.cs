@@ -23,5 +23,10 @@ public interface IEmotionService
     /// Get color for an emotion by name
     /// </summary>
     Task<string?> GetEmotionColorAsync(string emotionName);
+
+    /// <summary>
+    /// Get emotions by list of IDs
+    /// </summary>
+    Task<List<EmotionResponse>> GetEmotionsByIdsAsync(List<string> ids);
 }
 

@@ -283,5 +283,76 @@ Only include emotions from the available list above. If you cannot determine emo
             throw;
         }
     }
+
+    public async Task<EmotionStatisticsResponse> GetUserEmotionStatisticsAsync(Guid userId)
+    {
+        try
+        {
+            _logger.LogInformation("Getting emotion statistics for user: {UserId}", userId);
+
+            // Get emotion counts from journal service
+            var emotionCounts = await _journalService.GetUserEmotionCountsAsync(userId);
+
+            if (emotionCounts.Count == 0)
+            {
+                _logger.LogInformation("No emotions found for user: {UserId}", userId);
+                return new EmotionStatisticsResponse
+                {
+                    Emotions = new List<EmotionDetailResponse>(),
+                    TotalEntries = 0,
+                    CalculatedAt = DateTime.UtcNow
+                };
+            }
+
+            // Get emotion IDs from counts
+            var emotionIds = emotionCounts.Select(ec => ec.EmotionId).ToList();
+
+            // Get emotion details from emotion service
+            var emotions = await _emotionService.GetEmotionsByIdsAsync(emotionIds);
+
+            // Create a map of emotion ID to emotion details for quick lookup
+            var emotionMap = emotions.ToDictionary(e => e.Id);
+
+            // Assemble the response
+            var emotionDetails = new List<EmotionDetailResponse>();
+            var totalEntries = 0;
+
+            foreach (var count in emotionCounts)
+            {
+                if (emotionMap.TryGetValue(count.EmotionId, out var emotion))
+                {
+                    emotionDetails.Add(new EmotionDetailResponse
+                    {
+                        EmotionId = count.EmotionId,
+                        EmotionName = emotion.Name,
+                        EmotionColor = emotion.Color,
+                        Count = count.Count
+                    });
+                    totalEntries += count.Count;
+                }
+                else
+                {
+                    _logger.LogWarning("Emotion not found for ID: {EmotionId}", count.EmotionId);
+                }
+            }
+
+            var response = new EmotionStatisticsResponse
+            {
+                Emotions = emotionDetails,
+                TotalEntries = totalEntries,
+                CalculatedAt = DateTime.UtcNow
+            };
+
+            _logger.LogInformation("Retrieved emotion statistics for user: {UserId}. Total entries: {TotalEntries}, Unique emotions: {EmotionCount}",
+                userId, totalEntries, emotionDetails.Count);
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting emotion statistics for user: {UserId}", userId);
+            throw;
+        }
+    }
 }
 
