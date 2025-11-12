@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,16 +8,17 @@ import {
   FlatList,
   RefreshControl,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
-import { RootState } from '@/store';
+import { RootState, AppDispatch } from '@/store';
 import {
   EmotionTriggerData,
   Trigger,
   mockEmotionTriggersData,
 } from '@/data/mockEmotionTriggersData';
+import { fetchEmotionStatistics } from '@/store/emotionStatisticsSlice';
 import EmotionDonutChart from '@/components/home/EmotionDonutChart';
 
 interface EmotionTriggersScreenProps {
@@ -51,7 +52,10 @@ const getEmotionColor = (emotion: string): string => {
 const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
   onClose,
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  const emotionStatistics = useSelector((state: RootState) => state.emotionStatistics.data);
+  const emotionStatisticsLoading = useSelector((state: RootState) => state.emotionStatistics.isLoading);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
   const [refreshing, setRefreshing] = useState(false);
@@ -59,12 +63,19 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
     new Set()
   );
 
+  // Fetch emotion statistics on mount
+  useEffect(() => {
+    dispatch(fetchEmotionStatistics());
+  }, [dispatch]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setRefreshing(false);
-  }, []);
+    try {
+      await dispatch(fetchEmotionStatistics());
+    } finally {
+      setRefreshing(false);
+    }
+  }, [dispatch]);
 
   const toggleEmotionExpand = (emotion: string) => {
     const newExpanded = new Set(expandedEmotions);
@@ -236,14 +247,39 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
         {/* Donut Chart */}
         <View style={styles.chartSection}>
           <EmotionDonutChart
-            emotions={mockEmotionTriggersData.emotions}
+            emotions={
+              emotionStatistics
+                ? emotionStatistics.emotions.map((emotion) => ({
+                    emotion: emotion.emotionName,
+                    moodScore: 3,
+                    emoji: '😊',
+                    triggers: [],
+                    entryCount: emotion.count,
+                    frequency: Math.round(
+                      (emotion.count / emotionStatistics.totalEntries) * 100
+                    ),
+                  }))
+                : mockEmotionTriggersData.emotions
+            }
             isDarkMode={isDarkMode}
           />
         </View>
 
         {/* Emotions List */}
         <View style={styles.emotionsListContainer}>
-          {mockEmotionTriggersData.emotions.map((emotion, index) =>
+          {(emotionStatistics
+            ? emotionStatistics.emotions.map((emotion) => ({
+                emotion: emotion.emotionName,
+                moodScore: 3,
+                emoji: '😊',
+                triggers: [],
+                entryCount: emotion.count,
+                frequency: Math.round(
+                  (emotion.count / emotionStatistics.totalEntries) * 100
+                ),
+              }))
+            : mockEmotionTriggersData.emotions
+          ).map((emotion, index) =>
             renderEmotionCard(emotion, index)
           )}
         </View>
