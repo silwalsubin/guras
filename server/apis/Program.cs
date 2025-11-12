@@ -8,6 +8,7 @@ using services.teachers.Configuration;
 using utilities.ai.Configuration;
 using services.meditation.Configuration;
 using services.journal.Configuration;
+using services.emotions.Configuration;
 using utilities.Persistence;
 using utilities.Persistence.ConnectionFactories;
 using utilities.HostEnvironment;
@@ -98,6 +99,7 @@ builder.Services.AddTeachersServices(builder.Configuration, connectionFactory);
 builder.Services.AddMeditationServices(builder.Configuration, connectionFactory);
 builder.Services.AddAIServices(builder.Configuration);
 builder.Services.AddJournalServices(builder.Configuration, connectionFactory);
+builder.Services.AddEmotionsServices();
 
 // Configure authorization
 builder.Services.AddAuthorization();

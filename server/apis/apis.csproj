@@ -30,6 +30,7 @@
       <ProjectReference Include="..\utilities\utilities.ai\utilities.ai.csproj" />
       <ProjectReference Include="..\services\services.meditation\services.meditation.csproj" />
       <ProjectReference Include="..\services\services.journal\services.journal.csproj" />
+      <ProjectReference Include="..\services\services.emotions\services.emotions.csproj" />
       <ProjectReference Include="..\orchestration\orchestration.backgroundServices\orchestration.backgroundServices.csproj" />
       <ProjectReference Include="..\services\services.users\services.users.csproj" />
       <ProjectReference Include="..\utilities\utilities.aws\utilities.aws.csproj" />

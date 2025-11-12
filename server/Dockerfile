@@ -10,6 +10,7 @@ COPY services/services.teachers/services.teachers.csproj services/services.teach
 COPY utilities/utilities.ai/utilities.ai.csproj utilities/utilities.ai/
 COPY services/services.meditation/services.meditation.csproj services/services.meditation/
 COPY services/services.journal/services.journal.csproj services/services.journal/
+COPY services/services.emotions/services.emotions.csproj services/services.emotions/
 COPY utilities/utilities.aws/utilities.aws.csproj utilities/utilities.aws/
 COPY utilities/utilities/utilities.csproj utilities/utilities/
 COPY services/services.notifications/services.notifications.csproj services/services.notifications/
@@ -25,6 +26,7 @@ COPY services/services.teachers/ services/services.teachers/
 COPY utilities/utilities.ai/ utilities/utilities.ai/
 COPY services/services.meditation/ services/services.meditation/
 COPY services/services.journal/ services/services.journal/
+COPY services/services.emotions/ services/services.emotions/
 COPY orchestration/ orchestration/
 COPY utilities/ utilities/
 COPY utilities/utilities.aws/ utilities/utilities.aws/
