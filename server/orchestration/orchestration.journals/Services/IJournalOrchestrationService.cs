@@ -34,5 +34,10 @@ public interface IJournalOrchestrationService
     /// Get emotion statistics for a user
     /// </summary>
     Task<EmotionStatisticsResponse> GetUserEmotionStatisticsAsync(Guid userId);
+
+    /// <summary>
+    /// Get emotion statistics for a user within a specific date range
+    /// </summary>
+    Task<EmotionStatisticsResponse> GetUserEmotionStatisticsAsync(Guid userId, DateTime startDate, DateTime endDate);
 }
 

@@ -40,6 +40,7 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
   totalEntries,
 }) => {
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
+  const emotionStatistics = useSelector((state: RootState) => state.emotionStatistics.data);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
 
@@ -125,6 +126,7 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
           ]}
         >
           Based on {totalEntries} {totalEntries === 1 ? 'entry' : 'entries'}
+          {emotionStatistics?.dateRange?.periodLabel && ` • ${emotionStatistics.dateRange.periodLabel}`}
         </Text>
       </View>
 

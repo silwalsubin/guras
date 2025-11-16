@@ -18,8 +18,10 @@ import {
   Trigger,
   mockEmotionTriggersData,
 } from '@/data/mockEmotionTriggersData';
-import { fetchEmotionStatistics } from '@/store/emotionStatisticsSlice';
+import { fetchEmotionStatistics, setSelectedDateRange } from '@/store/emotionStatisticsSlice';
+import { calculateDateRange, DateRangeOption } from '@/constants/dateRanges';
 import EmotionDonutChart from '@/components/home/EmotionDonutChart';
+import DateRangeSelector from '@/components/common/DateRangeSelector';
 
 interface EmotionTriggersScreenProps {
   onClose: () => void;
@@ -56,6 +58,7 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const emotionStatistics = useSelector((state: RootState) => state.emotionStatistics.data);
   const emotionStatisticsLoading = useSelector((state: RootState) => state.emotionStatistics.isLoading);
+  const selectedDateRange = useSelector((state: RootState) => state.emotionStatistics.selectedDateRange);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
   const [refreshing, setRefreshing] = useState(false);
@@ -68,14 +71,21 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
     dispatch(fetchEmotionStatistics());
   }, [dispatch]);
 
+  const handleDateRangeChange = useCallback((option: DateRangeOption) => {
+    dispatch(setSelectedDateRange(option));
+    const { startDate, endDate } = calculateDateRange(option);
+    dispatch(fetchEmotionStatistics({ startDate, endDate }));
+  }, [dispatch]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await dispatch(fetchEmotionStatistics());
+      const { startDate, endDate } = calculateDateRange(selectedDateRange);
+      await dispatch(fetchEmotionStatistics({ startDate, endDate }));
     } finally {
       setRefreshing(false);
     }
-  }, [dispatch]);
+  }, [dispatch, selectedDateRange]);
 
   const toggleEmotionExpand = (emotion: string) => {
     const newExpanded = new Set(expandedEmotions);
@@ -244,6 +254,13 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
           />
         }
       >
+        {/* Date Range Selector */}
+        <DateRangeSelector
+          selectedOption={selectedDateRange}
+          onSelect={handleDateRangeChange}
+          isDarkMode={isDarkMode}
+        />
+
         {/* Donut Chart */}
         <View style={styles.chartSection}>
           <EmotionDonutChart
@@ -264,6 +281,20 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
             isDarkMode={isDarkMode}
           />
         </View>
+
+        {/* Stats Section */}
+        {emotionStatistics && (
+          <View style={styles.statsSection}>
+            <Text
+              style={[
+                styles.statsText,
+                { color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' },
+              ]}
+            >
+              Based on {emotionStatistics.totalEntries} {emotionStatistics.totalEntries === 1 ? 'entry' : 'entries'} • {emotionStatistics.dateRange?.periodLabel}
+            </Text>
+          </View>
+        )}
 
         {/* Emotions List */}
         <View style={styles.emotionsListContainer}>
@@ -421,6 +452,15 @@ const styles = StyleSheet.create({
   chartSection: {
     paddingHorizontal: 16,
     paddingVertical: 16,
+  },
+  statsSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  statsText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   emotionsListContainer: {
     paddingHorizontal: 0,

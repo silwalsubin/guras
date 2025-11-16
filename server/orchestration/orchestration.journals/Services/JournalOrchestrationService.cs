@@ -290,17 +290,42 @@ Only include emotions from the available list above. If you cannot determine emo
         {
             _logger.LogInformation("Getting emotion statistics for user: {UserId}", userId);
 
-            // Get emotion counts from journal service
-            var emotionCounts = await _journalService.GetUserEmotionCountsAsync(userId);
+            // Default to last 7 days
+            var endDate = DateTime.UtcNow.Date.AddDays(1); // End of today
+            var startDate = endDate.AddDays(-7); // 7 days ago
+
+            return await GetUserEmotionStatisticsAsync(userId, startDate, endDate);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting emotion statistics for user: {UserId}", userId);
+            throw;
+        }
+    }
+
+    public async Task<EmotionStatisticsResponse> GetUserEmotionStatisticsAsync(Guid userId, DateTime startDate, DateTime endDate)
+    {
+        try
+        {
+            _logger.LogInformation("Getting emotion statistics for user: {UserId} between {StartDate} and {EndDate}", userId, startDate, endDate);
+
+            // Get emotion counts from journal service with date range
+            var emotionCounts = await _journalService.GetUserEmotionCountsAsync(userId, startDate, endDate);
 
             if (emotionCounts.Count == 0)
             {
-                _logger.LogInformation("No emotions found for user: {UserId}", userId);
+                _logger.LogInformation("No emotions found for user: {UserId} in date range", userId);
                 return new EmotionStatisticsResponse
                 {
                     Emotions = new List<EmotionDetailResponse>(),
                     TotalEntries = 0,
-                    CalculatedAt = DateTime.UtcNow
+                    CalculatedAt = DateTime.UtcNow,
+                    DateRange = new DateRangeResponse
+                    {
+                        StartDate = startDate,
+                        EndDate = endDate,
+                        PeriodLabel = GetPeriodLabel(startDate, endDate)
+                    }
                 };
             }
 
@@ -340,7 +365,13 @@ Only include emotions from the available list above. If you cannot determine emo
             {
                 Emotions = emotionDetails,
                 TotalEntries = totalEntries,
-                CalculatedAt = DateTime.UtcNow
+                CalculatedAt = DateTime.UtcNow,
+                DateRange = new DateRangeResponse
+                {
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    PeriodLabel = GetPeriodLabel(startDate, endDate)
+                }
             };
 
             _logger.LogInformation("Retrieved emotion statistics for user: {UserId}. Total entries: {TotalEntries}, Unique emotions: {EmotionCount}",
@@ -350,9 +381,22 @@ Only include emotions from the available list above. If you cannot determine emo
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting emotion statistics for user: {UserId}", userId);
+            _logger.LogError(ex, "Error getting emotion statistics for user: {UserId} in date range", userId);
             throw;
         }
+    }
+
+    private string GetPeriodLabel(DateTime startDate, DateTime endDate)
+    {
+        var daysDifference = (endDate - startDate).Days;
+
+        return daysDifference switch
+        {
+            7 => "Last 7 days",
+            30 => "Last 30 days",
+            90 => "Last 90 days",
+            _ => daysDifference > 365 ? "All time" : $"Last {daysDifference} days"
+        };
     }
 }
 

@@ -137,21 +137,27 @@ export const journalApi = {
   },
 
   /**
-   * Get emotion statistics for the current user
+   * Get emotion statistics for the current user with optional date range
    */
-  async getEmotionStatistics(): Promise<EmotionStatisticsResponse> {
+  async getEmotionStatistics(startDate?: string, endDate?: string): Promise<EmotionStatisticsResponse> {
     try {
-      console.log('📊 Fetching emotion statistics');
+      let url = '/api/journal-orchestration/statistics/emotions';
 
-      const response = await apiService.makeRequest<EmotionStatisticsResponse>(
-        '/api/journal-orchestration/statistics/emotions'
-      );
+      if (startDate && endDate) {
+        url += `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+        console.log('📊 Fetching emotion statistics for date range:', { startDate, endDate });
+      } else {
+        console.log('📊 Fetching emotion statistics (default: last 7 days)');
+      }
+
+      const response = await apiService.makeRequest<EmotionStatisticsResponse>(url);
 
       if (response.success && response.data) {
         console.log('✅ Emotion statistics fetched successfully:', {
           totalEntries: response.data.totalEntries,
           emotionCount: response.data.emotions.length,
-          calculatedAt: response.data.calculatedAt
+          calculatedAt: response.data.calculatedAt,
+          dateRange: response.data.dateRange?.periodLabel
         });
         return response.data;
       } else {

@@ -174,7 +174,7 @@ public class JournalOrchestrationController(IJournalOrchestrationService journal
     /// Get emotion statistics for the current user
     /// </summary>
     [HttpGet("statistics/emotions")]
-    public async Task<IActionResult> GetEmotionStatistics()
+    public async Task<IActionResult> GetEmotionStatistics([FromQuery] string? startDate = null, [FromQuery] string? endDate = null)
     {
         try
         {
@@ -186,8 +186,21 @@ public class JournalOrchestrationController(IJournalOrchestrationService journal
 
             logger.LogInformation("Fetching emotion statistics for user: {UserId}", userId);
 
-            var statistics = await journalOrchestrationService.GetUserEmotionStatisticsAsync(userId);
-            return SuccessResponse(statistics);
+            // If date range is provided, parse and use it; otherwise use default (last 7 days)
+            if (!string.IsNullOrWhiteSpace(startDate) && !string.IsNullOrWhiteSpace(endDate))
+            {
+                if (!DateTime.TryParse(startDate, out var parsedStartDate) || !DateTime.TryParse(endDate, out var parsedEndDate))
+                {
+                    return BadRequest(new { Error = "Invalid date format. Use ISO 8601 format (e.g., 2024-11-09)" });
+                }
+
+                logger.LogInformation("Fetching emotion statistics with date range: {StartDate} to {EndDate}", parsedStartDate, parsedEndDate);
+                var statistics = await journalOrchestrationService.GetUserEmotionStatisticsAsync(userId, parsedStartDate, parsedEndDate);
+                return SuccessResponse(statistics);
+            }
+
+            var defaultStatistics = await journalOrchestrationService.GetUserEmotionStatisticsAsync(userId);
+            return SuccessResponse(defaultStatistics);
         }
         catch (Exception ex)
         {

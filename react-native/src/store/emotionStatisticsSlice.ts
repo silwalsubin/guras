@@ -1,12 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { EmotionStatisticsResponse } from '@/types/journal';
 import { journalApi } from '@/api/journalApi';
+import { DateRangeOption, getDefaultDateRange } from '@/constants/dateRanges';
 
 interface EmotionStatisticsState {
   data: EmotionStatisticsResponse | null;
   isLoading: boolean;
   error: string | null;
   lastFetchedAt: string | null;
+  selectedDateRange: DateRangeOption;
 }
 
 const initialState: EmotionStatisticsState = {
@@ -14,14 +16,21 @@ const initialState: EmotionStatisticsState = {
   isLoading: false,
   error: null,
   lastFetchedAt: null,
+  selectedDateRange: getDefaultDateRange(),
 };
 
-// Async thunk to fetch emotion statistics
+// Async thunk to fetch emotion statistics with optional date range
 export const fetchEmotionStatistics = createAsyncThunk(
   'emotionStatistics/fetch',
-  async (_, { rejectWithValue }) => {
+  async (
+    params?: { startDate?: string; endDate?: string },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await journalApi.getEmotionStatistics();
+      const response = await journalApi.getEmotionStatistics(
+        params?.startDate,
+        params?.endDate
+      );
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch emotion statistics');
@@ -39,6 +48,9 @@ const emotionStatisticsSlice = createSlice({
     clearData: (state) => {
       state.data = null;
       state.lastFetchedAt = null;
+    },
+    setSelectedDateRange: (state, action) => {
+      state.selectedDateRange = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -59,6 +71,6 @@ const emotionStatisticsSlice = createSlice({
   },
 });
 
-export const { clearError, clearData } = emotionStatisticsSlice.actions;
+export const { clearError, clearData, setSelectedDateRange } = emotionStatisticsSlice.actions;
 export default emotionStatisticsSlice.reducer;
 

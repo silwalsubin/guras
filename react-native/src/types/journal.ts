@@ -49,9 +49,16 @@ export interface EmotionDetailResponse {
   count: number;
 }
 
+export interface DateRange {
+  startDate: string;
+  endDate: string;
+  periodLabel: string;
+}
+
 export interface EmotionStatisticsResponse {
   emotions: EmotionDetailResponse[];
   totalEntries: number;
   calculatedAt: string;
+  dateRange: DateRange;
 }
 

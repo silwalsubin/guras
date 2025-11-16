@@ -262,5 +262,35 @@ public class JournalEntryRepository : IJournalEntryRepository
             throw;
         }
     }
+
+    public async Task<List<EmotionCount>> GetUserEmotionCountsAsync(Guid userId, DateTime startDate, DateTime endDate)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving emotion counts for user: {UserId} between {StartDate} and {EndDate}", userId, startDate, endDate);
+
+            var emotionCounts = await _context.JournalEntryEmotions
+                .Where(jee => jee.JournalEntry!.UserId == userId
+                    && !jee.JournalEntry.IsDeleted
+                    && jee.JournalEntry.CreatedAt >= startDate
+                    && jee.JournalEntry.CreatedAt <= endDate)
+                .GroupBy(jee => jee.EmotionId)
+                .Select(g => new EmotionCount
+                {
+                    EmotionId = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(ec => ec.Count)
+                .ToListAsync();
+
+            _logger.LogInformation("Retrieved {EmotionCountCount} emotion counts for user: {UserId} in date range", emotionCounts.Count, userId);
+            return emotionCounts;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving emotion counts for user: {UserId} in date range", userId);
+            throw;
+        }
+    }
 }
 

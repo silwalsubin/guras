@@ -148,6 +148,22 @@ public class JournalEntryService : IJournalEntryService
         }
     }
 
+    public async Task<List<EmotionCount>> GetUserEmotionCountsAsync(Guid userId, DateTime startDate, DateTime endDate)
+    {
+        try
+        {
+            _logger.LogInformation("Getting emotion counts for user: {UserId} between {StartDate} and {EndDate}", userId, startDate, endDate);
+            var emotionCounts = await _repository.GetUserEmotionCountsAsync(userId, startDate, endDate);
+            _logger.LogInformation("Retrieved {EmotionCountCount} emotion counts for user: {UserId} in date range", emotionCounts.Count, userId);
+            return emotionCounts;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting emotion counts for user: {UserId} in date range", userId);
+            throw;
+        }
+    }
+
     private async Task<string> GenerateTitleAsync(string content)
     {
         try
