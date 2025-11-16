@@ -201,20 +201,8 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
         { backgroundColor: themeColors.background },
       ]}
     >
-      {/* Header */}
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: isDarkMode
-              ? 'rgba(255,255,255,0.05)'
-              : 'rgba(0,0,0,0.02)',
-            borderBottomColor: isDarkMode
-              ? 'rgba(255,255,255,0.1)'
-              : 'rgba(0,0,0,0.08)',
-          },
-        ]}
-      >
+      {/* Header - Back button only */}
+      <View style={styles.header}>
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
           <MaterialCommunityIcons
             name="chevron-left"
@@ -222,24 +210,6 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
             color={brandColors.primary}
           />
         </TouchableOpacity>
-        <View style={styles.headerTitle}>
-          <Text
-            style={[
-              styles.title,
-              { color: themeColors.textPrimary },
-            ]}
-          >
-            Your emotional state
-          </Text>
-          <Text
-            style={[
-              styles.subtitle,
-              { color: themeColors.textSecondary },
-            ]}
-          >
-            What triggers your emotions
-          </Text>
-        </View>
       </View>
 
       {/* Content */}
@@ -428,23 +398,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
   },
   backButton: {
     padding: 8,
     marginLeft: -8,
-  },
-  headerTitle: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  title: {
-    ...TYPOGRAPHY.BODY_BOLD,
-    fontSize: 18,
-  },
-  subtitle: {
-    fontSize: 13,
-    marginTop: 2,
   },
   content: {
     flex: 1,
