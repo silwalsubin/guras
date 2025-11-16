@@ -17,5 +17,6 @@ public interface IJournalEntryRepository
     Task<int> GetCountByUserIdAsync(Guid userId);
     Task<bool> SaveEmotionsAsync(Guid journalEntryId, List<string> emotionIds);
     Task<List<EmotionCount>> GetUserEmotionCountsAsync(Guid userId);
+    Task<List<EmotionCount>> GetUserEmotionCountsAsync(Guid userId, DateTime startDate, DateTime endDate);
 }
 
