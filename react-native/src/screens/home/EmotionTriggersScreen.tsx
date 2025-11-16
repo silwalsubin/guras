@@ -201,7 +201,7 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
         { backgroundColor: themeColors.background },
       ]}
     >
-      {/* Header - Back button only */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
           <MaterialCommunityIcons
@@ -210,6 +210,14 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
             color={brandColors.primary}
           />
         </TouchableOpacity>
+        <Text
+          style={[
+            styles.title,
+            { color: themeColors.textPrimary },
+          ]}
+        >
+          Your emotional state
+        </Text>
       </View>
 
       {/* Content */}
@@ -398,10 +406,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    gap: 12,
   },
   backButton: {
     padding: 8,
     marginLeft: -8,
+  },
+  title: {
+    ...TYPOGRAPHY.BODY_BOLD,
+    fontSize: 18,
   },
   content: {
     flex: 1,
