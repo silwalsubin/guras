@@ -108,33 +108,11 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header - No bar styling */}
-      <View style={styles.headerSection}>
-        <Text
-          style={[
-            styles.title,
-            { color: themeColors.textPrimary },
-          ]}
-        >
-          Your emotional state
-        </Text>
-        <Text
-          style={[
-            styles.subtitle,
-            { color: themeColors.textSecondary },
-          ]}
-        >
-          What triggers your emotions
-        </Text>
-      </View>
-
-      {/* Content */}
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={onPress}
-        style={styles.wrapper}
-      >
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
+      style={styles.wrapper}
+    >
         {/* Date Range Selector */}
         <DateRangeSelector
           selectedOption={selectedDateRange}
@@ -180,8 +158,7 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
             },
           ]}
         />
-      </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -265,21 +242,6 @@ const TriggerBadge: React.FC<TriggerBadgeProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  headerSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  title: {
-    ...TYPOGRAPHY.BODY_BOLD,
-    fontSize: 18,
-  },
-  subtitle: {
-    fontSize: 13,
-    marginTop: 2,
-  },
   wrapper: {
     marginHorizontal: 16,
     marginVertical: 12,
