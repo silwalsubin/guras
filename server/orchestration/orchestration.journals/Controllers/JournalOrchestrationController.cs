@@ -194,6 +194,10 @@ public class JournalOrchestrationController(IJournalOrchestrationService journal
                     return BadRequest(new { Error = "Invalid date format. Use ISO 8601 format (e.g., 2024-11-09)" });
                 }
 
+                // Ensure dates are marked as UTC for PostgreSQL compatibility
+                parsedStartDate = DateTime.SpecifyKind(parsedStartDate, DateTimeKind.Utc);
+                parsedEndDate = DateTime.SpecifyKind(parsedEndDate, DateTimeKind.Utc);
+
                 logger.LogInformation("Fetching emotion statistics with date range: {StartDate} to {EndDate}", parsedStartDate, parsedEndDate);
                 var statistics = await journalOrchestrationService.GetUserEmotionStatisticsAsync(userId, parsedStartDate, parsedEndDate);
                 return SuccessResponse(statistics);
