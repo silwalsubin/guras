@@ -24,7 +24,7 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
           { color: themeColors.textSecondary },
         ]}
       >
-        Time Period
+        Your Emotional State
       </Text>
       <ScrollView
         horizontal
