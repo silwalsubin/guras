@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,16 @@ import {
   TouchableOpacity,
   FlatList,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getThemeColors, getBrandColors } from '@/config/colors';
 import { TYPOGRAPHY } from '@/config/fonts';
-import { RootState } from '@/store';
+import { RootState, AppDispatch } from '@/store';
 import { EmotionTriggerData, Trigger } from '@/data/mockEmotionTriggersData';
+import { fetchEmotionStatistics, setSelectedDateRange } from '@/store/emotionStatisticsSlice';
+import { calculateDateRange, DateRangeOption } from '@/constants/dateRanges';
 import EmotionDonutChart from './EmotionDonutChart';
+import DateRangeSelector from '@/components/common/DateRangeSelector';
 
 interface EmotionTriggersWidgetProps {
   topEmotion: EmotionTriggerData | null;
@@ -39,10 +42,18 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
   onPress,
   totalEntries,
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
   const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const emotionStatistics = useSelector((state: RootState) => state.emotionStatistics.data);
+  const selectedDateRange = useSelector((state: RootState) => state.emotionStatistics.selectedDateRange);
   const themeColors = getThemeColors(isDarkMode);
   const brandColors = getBrandColors();
+
+  const handleDateRangeChange = useCallback((option: DateRangeOption) => {
+    dispatch(setSelectedDateRange(option));
+    const { startDate, endDate } = calculateDateRange(option);
+    dispatch(fetchEmotionStatistics({ startDate, endDate }));
+  }, [dispatch]);
 
   // Get top 3 triggers
   const topTriggers = useMemo(() => {
@@ -97,51 +108,94 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
   }
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      style={styles.wrapper}
-    >
-      {/* Separator line */}
+    <View style={styles.container}>
+      {/* Header */}
       <View
         style={[
-          styles.separator,
+          styles.header,
           {
             backgroundColor: isDarkMode
+              ? 'rgba(255,255,255,0.05)'
+              : 'rgba(0,0,0,0.02)',
+            borderBottomColor: isDarkMode
               ? 'rgba(255,255,255,0.1)'
               : 'rgba(0,0,0,0.08)',
           },
         ]}
-      />
-
-      {/* Donut Chart - No card styling */}
-      <EmotionDonutChart emotions={allEmotions} isDarkMode={isDarkMode} />
-
-      {/* Footer with stats - positioned at bottom right */}
-      <View style={styles.statsContainer}>
-        <Text
-          style={[
-            styles.statsText,
-            { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' },
-          ]}
-        >
-          Based on {totalEntries} {totalEntries === 1 ? 'entry' : 'entries'}
-          {emotionStatistics?.dateRange?.periodLabel && ` • ${emotionStatistics.dateRange.periodLabel}`}
-        </Text>
+      >
+        <View style={styles.headerTitle}>
+          <Text
+            style={[
+              styles.title,
+              { color: themeColors.textPrimary },
+            ]}
+          >
+            Your emotional state
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              { color: themeColors.textSecondary },
+            ]}
+          >
+            What triggers your emotions
+          </Text>
+        </View>
       </View>
 
-      {/* Separator line after stats */}
-      <View
-        style={[
-          styles.separatorBottom,
-          {
-            backgroundColor: isDarkMode
-              ? 'rgba(255,255,255,0.1)'
-              : 'rgba(0,0,0,0.08)',
-          },
-        ]}
-      />
-    </TouchableOpacity>
+      {/* Content */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={onPress}
+        style={styles.wrapper}
+      >
+        {/* Date Range Selector */}
+        <DateRangeSelector
+          selectedOption={selectedDateRange}
+          onSelect={handleDateRangeChange}
+          isDarkMode={isDarkMode}
+        />
+
+        {/* Separator line */}
+        <View
+          style={[
+            styles.separator,
+            {
+              backgroundColor: isDarkMode
+                ? 'rgba(255,255,255,0.1)'
+                : 'rgba(0,0,0,0.08)',
+            },
+          ]}
+        />
+
+        {/* Donut Chart - No card styling */}
+        <EmotionDonutChart emotions={allEmotions} isDarkMode={isDarkMode} />
+
+        {/* Footer with stats - positioned at bottom right */}
+        <View style={styles.statsContainer}>
+          <Text
+            style={[
+              styles.statsText,
+              { color: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' },
+            ]}
+          >
+            Based on {totalEntries} {totalEntries === 1 ? 'entry' : 'entries'} • {selectedDateRange.label}
+          </Text>
+        </View>
+
+        {/* Separator line after stats */}
+        <View
+          style={[
+            styles.separatorBottom,
+            {
+              backgroundColor: isDarkMode
+                ? 'rgba(255,255,255,0.1)'
+                : 'rgba(0,0,0,0.08)',
+            },
+          ]}
+        />
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -225,6 +279,25 @@ const TriggerBadge: React.FC<TriggerBadgeProps> = ({
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
+    flex: 1,
+  },
+  title: {
+    ...TYPOGRAPHY.BODY_BOLD,
+    fontSize: 18,
+  },
+  subtitle: {
+    fontSize: 13,
+    marginTop: 2,
+  },
   wrapper: {
     marginHorizontal: 16,
     marginVertical: 12,
@@ -236,12 +309,6 @@ const styles = StyleSheet.create({
   separatorBottom: {
     height: 1,
     marginTop: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
   },
   emotionInfo: {
     flexDirection: 'row',
