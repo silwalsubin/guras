@@ -24,7 +24,7 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
           { color: themeColors.textSecondary },
         ]}
       >
-        Your Emotional State
+        Your emotional state
       </Text>
       <ScrollView
         horizontal
@@ -80,8 +80,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   scrollView: {
     marginHorizontal: -16,
