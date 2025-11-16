@@ -319,13 +319,7 @@ Only include emotions from the available list above. If you cannot determine emo
                 {
                     Emotions = new List<EmotionDetailResponse>(),
                     TotalEntries = 0,
-                    CalculatedAt = DateTime.UtcNow,
-                    DateRange = new DateRangeResponse
-                    {
-                        StartDate = startDate,
-                        EndDate = endDate,
-                        PeriodLabel = GetPeriodLabel(startDate, endDate)
-                    }
+                    CalculatedAt = DateTime.UtcNow
                 };
             }
 
@@ -365,13 +359,7 @@ Only include emotions from the available list above. If you cannot determine emo
             {
                 Emotions = emotionDetails,
                 TotalEntries = totalEntries,
-                CalculatedAt = DateTime.UtcNow,
-                DateRange = new DateRangeResponse
-                {
-                    StartDate = startDate,
-                    EndDate = endDate,
-                    PeriodLabel = GetPeriodLabel(startDate, endDate)
-                }
+                CalculatedAt = DateTime.UtcNow
             };
 
             _logger.LogInformation("Retrieved emotion statistics for user: {UserId}. Total entries: {TotalEntries}, Unique emotions: {EmotionCount}",
@@ -384,20 +372,6 @@ Only include emotions from the available list above. If you cannot determine emo
             _logger.LogError(ex, "Error getting emotion statistics for user: {UserId} in date range", userId);
             throw;
         }
-    }
-
-    private string GetPeriodLabel(DateTime startDate, DateTime endDate)
-    {
-        var daysDifference = (endDate.Date - startDate.Date).Days;
-
-        // Use ranges to account for timezone/rounding differences
-        return daysDifference switch
-        {
-            >= 6 and <= 8 => "Last 7 days",
-            >= 29 and <= 31 => "Last 30 days",
-            >= 89 and <= 91 => "Last 90 days",
-            _ => daysDifference > 365 ? "All time" : $"Last {daysDifference} days"
-        };
     }
 }
 

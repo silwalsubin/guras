@@ -291,7 +291,7 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
                 { color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' },
               ]}
             >
-              Based on {emotionStatistics.totalEntries} {emotionStatistics.totalEntries === 1 ? 'entry' : 'entries'} • {emotionStatistics.dateRange?.periodLabel}
+              Based on {emotionStatistics.totalEntries} {emotionStatistics.totalEntries === 1 ? 'entry' : 'entries'} • {selectedDateRange.label}
             </Text>
           </View>
         )}
