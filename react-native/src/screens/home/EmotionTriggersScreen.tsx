@@ -229,7 +229,7 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
               { color: themeColors.textPrimary },
             ]}
           >
-            Emotion Insights
+            Your emotional state
           </Text>
           <Text
             style={[
