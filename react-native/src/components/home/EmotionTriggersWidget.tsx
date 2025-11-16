@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   FlatList,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -20,7 +19,6 @@ import DateRangeSelector from '@/components/common/DateRangeSelector';
 interface EmotionTriggersWidgetProps {
   topEmotion: EmotionTriggerData | null;
   allEmotions: EmotionTriggerData[];
-  onPress: () => void;
   totalEntries: number;
 }
 
@@ -39,7 +37,6 @@ const getEmotionIcon = (emotion: string): string => {
 const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
   topEmotion,
   allEmotions,
-  onPress,
   totalEntries,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -64,9 +61,7 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
   // Empty state
   if (!topEmotion || totalEntries === 0) {
     return (
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={onPress}
+      <View
         style={[
           styles.container,
           {
@@ -103,16 +98,12 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
             Start journaling to discover what triggers your emotions
           </Text>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   }
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      style={styles.wrapper}
-    >
+    <View style={styles.wrapper}>
         {/* Separator line */}
         <View
           style={[
@@ -158,7 +149,7 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
             },
           ]}
         />
-    </TouchableOpacity>
+    </View>
   );
 };
 

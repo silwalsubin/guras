@@ -21,7 +21,6 @@ import { MeditationRecommendation } from '@/components/meditation/Recommendation
 import { recommendationAnalyticsService } from '@/services/recommendationAnalyticsService';
 import { setJournalCreateOpen } from '@/store/bottomNavSlice';
 import JournalCreateScreen from '@/screens/journal/JournalCreateScreen';
-import EmotionTriggersScreen from '@/screens/home/EmotionTriggersScreen';
 import { useAuth } from '@/contexts/AuthContext';
 import { mockEmotionTriggersData } from '@/data/mockEmotionTriggersData';
 
@@ -35,7 +34,6 @@ const HomeScreen: React.FC = () => {
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [showJournalCreate, setShowJournalCreate] = useState(false);
-  const [showEmotionTriggers, setShowEmotionTriggers] = useState(false);
 
   useEffect(() => {
     dispatch(fetchRecommendations(3));
@@ -80,14 +78,6 @@ const HomeScreen: React.FC = () => {
     dispatch(setJournalCreateOpen(false));
   }, [dispatch]);
 
-  const handleEmotionTriggersPress = useCallback(() => {
-    setShowEmotionTriggers(true);
-  }, []);
-
-  const handleEmotionTriggersClose = useCallback(() => {
-    setShowEmotionTriggers(false);
-  }, []);
-
   const handleRecommendationPress = useCallback((recommendation: MeditationRecommendation) => {
     console.log('Selected recommendation:', recommendation.title);
 
@@ -100,11 +90,6 @@ const HomeScreen: React.FC = () => {
       { source: 'home_screen' }
     );
   }, []);
-
-  // If emotion triggers screen is open, show it full screen
-  if (showEmotionTriggers) {
-    return <EmotionTriggersScreen onClose={handleEmotionTriggersClose} />;
-  }
 
   // If journal create screen is open, show it full screen
   if (showJournalCreate) {
@@ -166,7 +151,6 @@ const HomeScreen: React.FC = () => {
               }))
             : mockEmotionTriggersData.emotions
         }
-        onPress={handleEmotionTriggersPress}
         totalEntries={emotionStatistics?.totalEntries || mockEmotionTriggersData.totalEntries}
       />
 
