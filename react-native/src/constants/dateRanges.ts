@@ -40,8 +40,15 @@ export const calculateDateRange = (
   const endDate = new Date();
   endDate.setHours(23, 59, 59, 999); // End of today
 
-  const startDate = new Date(endDate);
-  startDate.setDate(startDate.getDate() - option.days);
+  let startDate = new Date(endDate);
+
+  // For "all time", use a very early date (e.g., 10 years ago)
+  if (option.id === 'all') {
+    startDate.setFullYear(startDate.getFullYear() - 10);
+  } else {
+    startDate.setDate(startDate.getDate() - option.days);
+  }
+
   startDate.setHours(0, 0, 0, 0); // Start of that day
 
   return {
