@@ -388,13 +388,14 @@ Only include emotions from the available list above. If you cannot determine emo
 
     private string GetPeriodLabel(DateTime startDate, DateTime endDate)
     {
-        var daysDifference = (endDate - startDate).Days;
+        var daysDifference = (endDate.Date - startDate.Date).Days;
 
+        // Use ranges to account for timezone/rounding differences
         return daysDifference switch
         {
-            7 => "Last 7 days",
-            30 => "Last 30 days",
-            90 => "Last 90 days",
+            >= 6 and <= 8 => "Last 7 days",
+            >= 29 and <= 31 => "Last 30 days",
+            >= 89 and <= 91 => "Last 90 days",
             _ => daysDifference > 365 ? "All time" : $"Last {daysDifference} days"
         };
     }
