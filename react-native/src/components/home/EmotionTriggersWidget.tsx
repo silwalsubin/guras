@@ -109,38 +109,24 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: isDarkMode
-              ? 'rgba(255,255,255,0.05)'
-              : 'rgba(0,0,0,0.02)',
-            borderBottomColor: isDarkMode
-              ? 'rgba(255,255,255,0.1)'
-              : 'rgba(0,0,0,0.08)',
-          },
-        ]}
-      >
-        <View style={styles.headerTitle}>
-          <Text
-            style={[
-              styles.title,
-              { color: themeColors.textPrimary },
-            ]}
-          >
-            Your emotional state
-          </Text>
-          <Text
-            style={[
-              styles.subtitle,
-              { color: themeColors.textSecondary },
-            ]}
-          >
-            What triggers your emotions
-          </Text>
-        </View>
+      {/* Header - No bar styling */}
+      <View style={styles.headerSection}>
+        <Text
+          style={[
+            styles.title,
+            { color: themeColors.textPrimary },
+          ]}
+        >
+          Your emotional state
+        </Text>
+        <Text
+          style={[
+            styles.subtitle,
+            { color: themeColors.textSecondary },
+          ]}
+        >
+          What triggers your emotions
+        </Text>
       </View>
 
       {/* Content */}
@@ -282,13 +268,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  headerSection: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    flex: 1,
   },
   title: {
     ...TYPOGRAPHY.BODY_BOLD,
