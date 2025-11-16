@@ -18,14 +18,6 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text
-        style={[
-          styles.label,
-          { color: themeColors.textSecondary },
-        ]}
-      >
-        Your emotional state
-      </Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -75,11 +67,6 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 8,
   },
   scrollView: {
     marginHorizontal: -16,
