@@ -113,13 +113,6 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
       onPress={onPress}
       style={styles.wrapper}
     >
-        {/* Date Range Selector */}
-        <DateRangeSelector
-          selectedOption={selectedDateRange}
-          onSelect={handleDateRangeChange}
-          isDarkMode={isDarkMode}
-        />
-
         {/* Separator line */}
         <View
           style={[
@@ -130,6 +123,13 @@ const EmotionTriggersWidget: React.FC<EmotionTriggersWidgetProps> = ({
                 : 'rgba(0,0,0,0.08)',
             },
           ]}
+        />
+
+        {/* Date Range Selector */}
+        <DateRangeSelector
+          selectedOption={selectedDateRange}
+          onSelect={handleDateRangeChange}
+          isDarkMode={isDarkMode}
         />
 
         {/* Donut Chart - No card styling */}

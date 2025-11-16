@@ -232,6 +232,18 @@ const EmotionTriggersScreen: React.FC<EmotionTriggersScreenProps> = ({
           />
         }
       >
+        {/* Separator line */}
+        <View
+          style={[
+            styles.horizontalDivider,
+            {
+              backgroundColor: isDarkMode
+                ? 'rgba(255,255,255,0.1)'
+                : 'rgba(0,0,0,0.08)',
+            },
+          ]}
+        />
+
         {/* Date Range Selector */}
         <DateRangeSelector
           selectedOption={selectedDateRange}
